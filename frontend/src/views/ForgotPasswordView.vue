@@ -43,7 +43,7 @@
             type="email"
             placeholder="you@example.com"
             described-by="forgot-form-error"
-            :invalid="!!error"
+            :error="fieldErrors.email"
           >
             <template #prefix>
               <span class="material-icons text-lg">mail_outline</span>
@@ -96,23 +96,25 @@ import { ref } from 'vue'
 import AuthLayout from '@/layouts/AuthLayout.vue'
 import AppInput from '@/components/ui/AppInput.vue'
 import AppButton from '@/components/ui/AppButton.vue'
-import { authService, normalizeApiError } from '@/services'
+import { authService, normalizeApiError, getValidationErrors } from '@/services'
 
 const email = ref('')
 const loading = ref(false)
 const error = ref('')
+const fieldErrors = ref({ email: '' })
 const sent = ref(false)
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 function validateEmail() {
+  fieldErrors.value = { email: '' }
   const e = email.value.trim()
   if (!e) {
-    error.value = 'Please enter your email address.'
+    fieldErrors.value.email = 'Please enter your email address.'
     return false
   }
   if (!EMAIL_RE.test(e)) {
-    error.value = 'Please enter a valid email address.'
+    fieldErrors.value.email = 'Please enter a valid email address.'
     return false
   }
   return true
@@ -120,12 +122,15 @@ function validateEmail() {
 
 async function handleSubmit() {
   error.value = ''
+  fieldErrors.value = { email: '' }
   if (!validateEmail()) return
   loading.value = true
   try {
     await authService.forgotPassword({ email: email.value.trim() })
     sent.value = true
   } catch (e) {
+    const errors = getValidationErrors(e)
+    if (errors.email) fieldErrors.value.email = errors.email
     const { message } = normalizeApiError(e)
     error.value = message || 'Something went wrong. Please try again.'
   } finally {

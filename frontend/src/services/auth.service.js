@@ -1,9 +1,14 @@
 /**
- * Auth API service. Components and stores use these methods to perform auth-related API calls.
- * Responses should be passed to models (e.g. User.fromApi(data)) in the caller.
+ * Auth API service. Responses that include a user payload return a User instance (new User(data.user)).
  */
 
+import User from '@/models/User'
 import api, { getBaseUrl, normalizeApiError } from './api'
+
+function withUser(data) {
+  if (!data || data.user == null) return data
+  return { ...data, user: data.user instanceof User ? data.user : new User(data.user) }
+}
 
 /** Social OAuth: API expects POST with access_token/id_token in body (no redirect flow). */
 export const OAUTH_PROVIDERS = Object.freeze({
@@ -15,20 +20,20 @@ export const OAUTH_PROVIDERS = Object.freeze({
 /**
  * Sign in. Backend returns 403 "Your email address is not verified." for unverified users; protected routes also return 403 for unverified.
  * @param {{ email: string, password: string }} payload
- * @returns {Promise<{ user: object, token: string, token_type: string }>}
+ * @returns {Promise<{ user: User, token: string, token_type: string }>}
  */
 export async function login(payload) {
   const { data } = await api.post('/login', {
     email: payload.email,
     password: payload.password,
   })
-  return data
+  return withUser(data)
 }
 
 /**
  * Register. Backend returns user only (no token); user must verify email before logging in.
  * @param {{ name: string, email: string, password: string, password_confirmation?: string }} payload
- * @returns {Promise<{ message: string, user: object }>}
+ * @returns {Promise<{ message: string, user: User }>}
  */
 export async function register(payload) {
   const { data } = await api.post('/register', {
@@ -37,7 +42,7 @@ export async function register(payload) {
     password: payload.password,
     password_confirmation: payload.password_confirmation ?? payload.password,
   })
-  return data
+  return withUser(data)
 }
 
 /**
@@ -63,16 +68,33 @@ export async function resendVerificationEmail(payload = {}) {
 }
 
 /**
- * Verify email via signed link params (from email link). GET /email/verify/{id}/{hash}?expires=...&signature=...
- * @param {{ id: string|number, hash: string, expires: string, signature: string }} params
- * @returns {Promise<{ message: string, user?: object }>}
+ * Verify email via signed link params (from email link). GET /email/verify/{uuid}/{hash}?expires=...&signature=...
+ * @param {{ uuid: string, hash: string, expires: string, signature: string }} params (uuid may be passed as id for backward compat)
+ * @returns {Promise<{ message: string, user?: User }>}
  */
 export async function verifyEmail(params) {
-  const { id, hash, expires, signature } = params
-  const { data } = await api.get(`/email/verify/${encodeURIComponent(id)}/${encodeURIComponent(hash)}`, {
+  const { uuid, hash, expires, signature } = params
+  const uid = uuid ?? params.id
+  if (!uid || !hash) throw new Error('uuid and hash are required')
+  const { data } = await api.get(`/email/verify/${encodeURIComponent(uid)}/${encodeURIComponent(hash)}`, {
     params: { expires, signature },
   })
-  return data
+  return withUser(data)
+}
+
+/**
+ * Verify new email (after profile email change). Signed link sent to new address. GET /email/verify-new/{uuid}/{hash}?expires=...&signature=...
+ * @param {{ uuid: string, hash: string, expires: string, signature: string }} params (uuid may be passed as id for backward compat)
+ * @returns {Promise<{ message: string, user: User }>}
+ */
+export async function verifyNewEmail(params) {
+  const { uuid, hash, expires, signature } = params
+  const uid = uuid ?? params.id
+  if (!uid || !hash) throw new Error('uuid and hash are required')
+  const { data } = await api.get(`/email/verify-new/${encodeURIComponent(uid)}/${encodeURIComponent(hash)}`, {
+    params: { expires, signature },
+  })
+  return withUser(data)
 }
 
 /**
@@ -92,10 +114,35 @@ export async function resetPassword(payload) {
 
 /**
  * Get current user (protected; requires Bearer token, verified email). Backend uses GET /user. Returns 403 if email not verified.
- * @returns {Promise<{ user: object }>} use User.fromApi(data.user) in store.
+ * @returns {Promise<{ user: User }>}
  */
 export async function getMe() {
   const { data } = await api.get('/user')
+  return withUser(data)
+}
+
+/**
+ * Update profile. Uses the shared api client (Bearer token + Accept: application/json). Sends PATCH /user.
+ * Name updates immediately; new email sends verification to new address and sets pending_email until verified.
+ * @param {{ name?: string, email?: string }} payload
+ * @returns {Promise<{ message: string, user: User }>}
+ */
+export async function updateProfile(payload) {
+  const { data } = await api.patch('/user', payload)
+  return withUser(data)
+}
+
+/**
+ * Change password. POST /profile/password. Requires current password.
+ * @param {{ current_password: string, password: string, password_confirmation?: string }} payload
+ * @returns {Promise<{ message: string }>}
+ */
+export async function changePassword(payload) {
+  const { data } = await api.post('/profile/password', {
+    current_password: payload.current_password,
+    password: payload.password,
+    password_confirmation: payload.password_confirmation ?? payload.password,
+  })
   return data
 }
 
@@ -114,17 +161,17 @@ export async function logout() {
 /** Social: POST provider token to backend (e.g. Google id_token). Backend returns { user, token }. */
 export async function loginWithGoogle(payload) {
   const { data } = await api.post('/auth/google', payload)
-  return data
+  return withUser(data)
 }
 
 export async function loginWithFacebook(payload) {
   const { data } = await api.post('/auth/facebook', payload)
-  return data
+  return withUser(data)
 }
 
 export async function loginWithInstagram(payload) {
   const { data } = await api.post('/auth/instagram', payload)
-  return data
+  return withUser(data)
 }
 
 /**
@@ -179,7 +226,10 @@ export const authService = {
   resetPassword,
   resendVerificationEmail,
   verifyEmail,
+  verifyNewEmail,
   getMe,
+  updateProfile,
+  changePassword,
   logout,
   loginWithGoogle,
   loginWithFacebook,

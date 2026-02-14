@@ -137,6 +137,22 @@ function firstValidationError(data) {
 }
 
 /**
+ * Get per-field validation errors from Laravel 422 response. Use for showing errors under each form field.
+ * @param {unknown} err - Axios error (err.response?.data?.errors)
+ * @returns {{ [field: string]: string }} e.g. { email: 'The email has already been taken.', password: '...' }
+ */
+export function getValidationErrors(err) {
+  const data = err?.response?.data
+  const errors = data?.errors
+  if (!errors || typeof errors !== 'object') return {}
+  const out = {}
+  for (const [key, list] of Object.entries(errors)) {
+    if (Array.isArray(list) && list[0] && typeof list[0] === 'string') out[key] = list[0]
+  }
+  return out
+}
+
+/**
  * Normalized API error shape for UI, logging, and analytics.
  * @typedef {{ message: string, status?: number, code?: string, group: string }} NormalizedApiError
  */

@@ -1,7 +1,7 @@
 ---
 description: When working with backend APIs on the frontend, use docs/API-REFERENCE.md
 globs: frontend/**/*
-alwaysApply: false
+alwaysApply: true
 ---
 
 # API reference – frontend

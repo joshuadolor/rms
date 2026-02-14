@@ -57,8 +57,8 @@
                   :type="showPassword ? 'text' : 'password'"
                   placeholder="At least 8 characters"
                   autocomplete="new-password"
-                  aria-describedby="reset-form-error"
-                  :aria-invalid="!!error"
+                  :aria-describedby="fieldErrors.password ? 'reset-password-error' : 'reset-form-error'"
+                  :aria-invalid="!!fieldErrors.password"
                   class="block w-full pl-10 pr-10 py-3 border border-primary/20 rounded-lg bg-white dark:bg-white/5 text-charcoal dark:text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                 />
                 <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-charcoal/40 dark:text-white/40">
@@ -73,7 +73,8 @@
                   <span class="material-icons text-lg">{{ showPassword ? 'visibility' : 'visibility_off' }}</span>
                 </button>
               </div>
-              <p class="text-xs text-charcoal/60 dark:text-white/60">Minimum 8 characters</p>
+              <p v-if="fieldErrors.password" id="reset-password-error" class="text-xs text-red-600 dark:text-red-400" role="alert">{{ fieldErrors.password }}</p>
+              <p v-else class="text-xs text-charcoal/60 dark:text-white/60">Minimum 8 characters</p>
             </div>
             <div class="space-y-1">
               <label for="reset-confirm" class="block text-sm font-medium text-charcoal/80 dark:text-white/80">Confirm password</label>
@@ -84,15 +85,16 @@
                   :type="showConfirm ? 'text' : 'password'"
                   placeholder="Repeat password"
                   autocomplete="new-password"
-                  aria-describedby="reset-form-error"
-                  :aria-invalid="!!error"
+                  :aria-describedby="fieldErrors.password_confirmation ? 'reset-confirm-error' : 'reset-form-error'"
+                  :aria-invalid="!!fieldErrors.password_confirmation"
                   class="block w-full pl-10 pr-4 py-3 border border-primary/20 rounded-lg bg-white dark:bg-white/5 text-charcoal dark:text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                 />
                 <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-charcoal/40 dark:text-white/40">
                   <span class="material-icons text-lg">lock_outline</span>
                 </span>
               </div>
-              <p v-if="confirmPassword && password !== confirmPassword" class="text-xs text-red-600 dark:text-red-400">
+              <p v-if="fieldErrors.password_confirmation" id="reset-confirm-error" class="text-xs text-red-600 dark:text-red-400" role="alert">{{ fieldErrors.password_confirmation }}</p>
+              <p v-else-if="confirmPassword && password !== confirmPassword" class="text-xs text-red-600 dark:text-red-400">
                 Passwords don’t match
               </p>
             </div>
@@ -126,7 +128,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AuthLayout from '@/layouts/AuthLayout.vue'
 import AppButton from '@/components/ui/AppButton.vue'
-import { authService, normalizeApiError } from '@/services'
+import { authService, normalizeApiError, getValidationErrors } from '@/services'
 
 const route = useRoute()
 const router = useRouter()
@@ -141,8 +143,16 @@ const showConfirm = ref(false)
 const loading = ref(false)
 const success = ref(false)
 const error = ref('')
+const fieldErrors = ref({ password: '', password_confirmation: '' })
 
 const MIN_PASSWORD_LENGTH = 8
+
+function validatePasswordStrength(p) {
+  if (p.length < MIN_PASSWORD_LENGTH) return `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`
+  if (!/[a-zA-Z]/.test(p)) return 'Password must include at least one letter.'
+  if (!/\d/.test(p)) return 'Password must include at least one number.'
+  return ''
+}
 
 onMounted(() => {
   if (!token.value || !email.value) {
@@ -151,22 +161,24 @@ onMounted(() => {
 })
 
 function validate() {
+  fieldErrors.value = { password: '', password_confirmation: '' }
   const p = password.value
   const c = confirmPassword.value
   if (!p) {
-    error.value = 'Please enter a password.'
+    fieldErrors.value.password = 'Please enter a password.'
     return false
   }
-  if (p.length < MIN_PASSWORD_LENGTH) {
-    error.value = `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`
+  const pwdMsg = validatePasswordStrength(p)
+  if (pwdMsg) {
+    fieldErrors.value.password = pwdMsg
     return false
   }
   if (!c) {
-    error.value = 'Please confirm your password.'
+    fieldErrors.value.password_confirmation = 'Please confirm your password.'
     return false
   }
   if (p !== c) {
-    error.value = 'Passwords do not match.'
+    fieldErrors.value.password_confirmation = 'Passwords do not match.'
     return false
   }
   return true
@@ -174,6 +186,7 @@ function validate() {
 
 async function handleSubmit() {
   error.value = ''
+  fieldErrors.value = { password: '', password_confirmation: '' }
   if (!token.value || !email.value) {
     error.value = 'Invalid reset link. Please use the link from your email.'
     return
@@ -189,6 +202,10 @@ async function handleSubmit() {
     })
     success.value = true
   } catch (e) {
+    const errors = getValidationErrors(e)
+    if (Object.keys(errors).length > 0) {
+      fieldErrors.value = { ...fieldErrors.value, ...errors }
+    }
     const { message } = normalizeApiError(e)
     error.value = message ?? 'Something went wrong. Please try again or request a new reset link.'
   } finally {

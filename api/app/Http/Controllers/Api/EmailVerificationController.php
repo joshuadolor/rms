@@ -2,60 +2,49 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Application\EmailVerification\VerifyEmail;
+use App\Application\EmailVerification\VerifyNewEmail;
+use App\Domain\Auth\Contracts\UserRepositoryInterface;
 use App\Http\Controllers\Controller;
-use App\Models\User;
-use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
 class EmailVerificationController extends Controller
 {
+    public function __construct(
+        private readonly VerifyEmail $verifyEmail,
+        private readonly VerifyNewEmail $verifyNewEmail,
+        private readonly UserRepositoryInterface $userRepository
+    ) {}
+
     /**
-     * Verify email via signed URL (id, hash, expires, signature).
+     * Verify email via signed URL (uuid, hash, expires, signature).
      * Link in verification email points here.
      */
     public function verify(Request $request): JsonResponse
     {
-        $id = $request->route('id');
+        $uuid = $request->route('uuid');
         $hash = $request->route('hash');
 
-        if (! $id || ! $hash) {
+        if (! $uuid || ! $hash) {
             throw ValidationException::withMessages([
                 'email' => [__('Invalid verification link.')],
             ]);
         }
 
-        $user = User::query()->find((int) $id);
-
-        if (! $user) {
-            throw ValidationException::withMessages([
-                'email' => [__('Invalid verification link.')],
-            ]);
-        }
-
-        if (! hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
-            throw ValidationException::withMessages([
-                'email' => [__('Invalid verification link.')],
-            ]);
-        }
-
-        if ($user->hasVerifiedEmail()) {
-            return response()->json([
-                'message' => __('Email already verified.'),
-                'user' => $user->only(['id', 'name', 'email', 'email_verified_at']),
-            ]);
-        }
-
-        // Signature is validated by the 'signed' route middleware before we get here.
-
-        $user->forceFill(['email_verified_at' => $user->freshTimestamp()])->save();
-
-        event(new Verified($user));
+        $result = $this->verifyEmail->handle((string) $uuid, (string) $hash);
 
         return response()->json([
-            'message' => __('Email verified successfully. You can now log in.'),
-            'user' => $user->only(['id', 'name', 'email', 'email_verified_at']),
+            'message' => $result['already_verified']
+                ? __('Email already verified.')
+                : __('Email verified successfully. You can now log in.'),
+            'user' => [
+                'uuid' => $result['user']->uuid,
+                'name' => $result['user']->name,
+                'email' => $result['user']->email,
+                'email_verified_at' => $result['user']->email_verified_at,
+            ],
         ]);
     }
 
@@ -85,11 +74,37 @@ class EmailVerificationController extends Controller
             'email' => ['required', 'string', 'email'],
         ]);
 
-        $user = User::query()->where('email', $request->string('email'))->first();
+        $user = $this->userRepository->findByEmail($request->string('email')->toString());
         if ($user && ! $user->hasVerifiedEmail()) {
             $user->sendEmailVerificationNotification();
         }
 
         return response()->json(['message' => $genericMessage]);
+    }
+
+    /**
+     * Verify new email (after profile email change). Signed URL with uuid + hash of pending_email.
+     */
+    public function verifyNewEmail(Request $request): JsonResponse
+    {
+        $uuid = $request->route('uuid');
+        $hash = $request->route('hash');
+
+        if (! $uuid || ! $hash) {
+            throw ValidationException::withMessages([
+                'email' => [__('Invalid verification link.')],
+            ]);
+        }
+        $user = $this->verifyNewEmail->handle((string) $uuid, (string) $hash);
+
+        return response()->json([
+            'message' => __('Your email has been updated and verified.'),
+            'user' => [
+                'uuid' => $user->uuid,
+                'name' => $user->name,
+                'email' => $user->email,
+                'email_verified_at' => $user->email_verified_at,
+            ],
+        ]);
     }
 }

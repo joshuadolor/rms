@@ -21,7 +21,7 @@ class EmailVerificationTest extends TestCase
 
         $response->assertStatus(201)
             ->assertJsonPath('message', 'Registered. Please verify your email using the link we sent you.')
-            ->assertJsonStructure(['message', 'user' => ['id', 'name', 'email', 'email_verified_at']])
+            ->assertJsonStructure(['message', 'user' => ['uuid', 'name', 'email', 'email_verified_at']])
             ->assertJsonMissing(['token', 'token_type']);
 
         $this->assertDatabaseHas('users', ['email' => 'new@example.com']);
@@ -35,7 +35,7 @@ class EmailVerificationTest extends TestCase
         $url = URL::temporarySignedRoute(
             'api.verification.verify',
             now()->addMinutes(60),
-            ['id' => $user->id, 'hash' => sha1($user->email)]
+            ['uuid' => $user->uuid, 'hash' => sha1($user->email)]
         );
 
         $response = $this->getJson($url);
@@ -55,7 +55,7 @@ class EmailVerificationTest extends TestCase
         $url = URL::temporarySignedRoute(
             'api.verification.verify',
             now()->addMinutes(60),
-            ['id' => $user->id, 'hash' => sha1($user->email)]
+            ['uuid' => $user->uuid, 'hash' => sha1($user->email)]
         );
 
         $response = $this->getJson($url);
@@ -109,6 +109,6 @@ class EmailVerificationTest extends TestCase
         ]);
 
         $response->assertOk()
-            ->assertJsonStructure(['user' => ['id', 'name', 'email', 'email_verified_at']]);
+            ->assertJsonStructure(['user' => ['uuid', 'name', 'email', 'email_verified_at', 'pending_email']]);
     }
 }

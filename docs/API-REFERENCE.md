@@ -15,10 +15,11 @@ Used wherever the API returns a user object:
 
 ```ts
 {
-  id: number;
+  uuid: string;                      // public identifier (UUID); internal id is never exposed
   name: string;
   email: string;
   email_verified_at: string | null;  // ISO 8601 datetime
+  pending_email?: string | null;     // when an email change is pending (e.g. GET /user, PATCH /user)
 }
 ```
 
@@ -65,7 +66,7 @@ Used wherever the API returns a user object:
 ```json
 {
   "message": "Registered. Please verify your email using the link we sent you.",
-  "user": { "id", "name", "email", "email_verified_at" }
+  "user": { "uuid", "name", "email", "email_verified_at" }
 }
 ```
 
@@ -89,7 +90,7 @@ Used wherever the API returns a user object:
 ```json
 {
   "message": "Logged in successfully.",
-  "user": { "id", "name", "email", "email_verified_at" },
+  "user": { "uuid", "name", "email", "email_verified_at" },
   "token": "string",
   "token_type": "Bearer"
 }
@@ -154,11 +155,11 @@ Used wherever the API returns a user object:
 
 #### Verify email (signed link)
 
-The verification email contains a link to the **frontend** at `{FRONTEND_URL}/email/verify?id=...&hash=...&expires=...&signature=...`. The frontend page calls the API below to perform verification, then shows success or error.
+The verification email contains a link to the **frontend** at `{FRONTEND_URL}/email/verify?uuid=...&hash=...&expires=...&signature=...`. The frontend page calls the API below to perform verification, then shows success or error.
 
 | Method | Path | Auth |
 |--------|------|------|
-| GET | `/api/email/verify/{id}/{hash}?expires=...&signature=...` | No (signed) |
+| GET | `/api/email/verify/{uuid}/{hash}?expires=...&signature=...` | No (signed) |
 
 Query params `expires` and `signature` are added by the backend when building the link.
 
@@ -166,7 +167,7 @@ Query params `expires` and `signature` are added by the backend when building th
 ```json
 {
   "message": "Email verified successfully. You can now log in.",
-  "user": { "id", "name", "email", "email_verified_at" }
+  "user": { "uuid", "name", "email", "email_verified_at" }
 }
 ```
 
@@ -174,7 +175,27 @@ If already verified:
 ```json
 {
   "message": "Email already verified.",
-  "user": { "id", "name", "email", "email_verified_at" }
+  "user": { "uuid", "name", "email", "email_verified_at" }
+}
+```
+
+**Errors:** 422 for invalid/expired link (`errors.email`).
+
+---
+
+#### Verify new email (after profile email change)
+
+When a user changes their email in profile, a verification link is sent to the **new** address. That link points to the frontend at `{FRONTEND_URL}/email/verify-new?uuid=...&hash=...&expires=...&signature=...`. The frontend calls the API below to complete the change.
+
+| Method | Path | Auth |
+|--------|------|------|
+| GET | `/api/email/verify-new/{uuid}/{hash}?expires=...&signature=...` | No (signed) |
+
+**Response (200):**
+```json
+{
+  "message": "Your email has been updated and verified.",
+  "user": { "uuid", "name", "email", "email_verified_at" }
 }
 ```
 
@@ -242,7 +263,7 @@ or
 ```json
 {
   "message": "Logged in successfully.",
-  "user": { "id", "name", "email", "email_verified_at" },
+  "user": { "uuid", "name", "email", "email_verified_at" },
   "token": "string",
   "token_type": "Bearer"
 }
@@ -304,11 +325,74 @@ All require `Authorization: Bearer <token>` and **verified email**.
 **Response (200):**
 ```json
 {
-  "user": { "id", "name", "email", "email_verified_at" }
+  "user": { "uuid", "name", "email", "email_verified_at", "pending_email" }
 }
 ```
 
 **Errors:** 401 if invalid/missing token; **403** if email not verified (body: `{ "message": "Your email address is not verified." }`).
+
+---
+
+#### Update profile
+
+| Method | Path | Auth |
+|--------|------|------|
+| PATCH | `/api/user` | Bearer + verified |
+
+**Body:** Send only the fields you want to change.
+```json
+{
+  "name": "string (optional, max 255)",
+  "email": "string (optional, email, unique; triggers verification flow)"
+}
+```
+
+- **Name:** Updated immediately.
+- **Email:** If provided and different from current email, the new address is stored as **pending**. A verification link is sent to the new email; the stored `email` is only updated after the user clicks that link. Until then, login and account remain on the current email.
+
+**Response (200) when only name updated or no email change:**
+```json
+{
+  "message": "Profile updated.",
+  "user": { "uuid", "name", "email", "email_verified_at", "pending_email" }
+}
+```
+
+**Response (200) when email change requested (verification sent):**
+```json
+{
+  "message": "A verification link has been sent to your new email address. Please confirm to complete the change.",
+  "user": { "uuid", "name", "email", "email_verified_at", "pending_email" }
+}
+```
+
+**Errors:** 422 validation (e.g. email already in use). **401/403** as for other protected routes.
+
+---
+
+#### Change password
+
+| Method | Path | Auth |
+|--------|------|------|
+| POST | `/api/profile/password` | Bearer + verified |
+
+**Body:**
+```json
+{
+  "current_password": "string (required)",
+  "password": "string (required, min 8, letters + numbers)",
+  "password_confirmation": "string (required)"
+}
+```
+
+**Response (200):**
+```json
+{
+  "message": "Password updated successfully."
+}
+```
+
+**Errors:** 422 if current password wrong or validation fails (`errors.current_password`, `errors.password`).
 
 ---
 
@@ -344,6 +428,8 @@ All require `Authorization: Bearer <token>` and **verified email**.
 
 ## Changelog
 
+- **2025-02-15**: User payload and verification URLs use **uuid** (public identifier); internal numeric **id** is no longer exposed in any API response. Routes: GET `/api/email/verify/{uuid}/{hash}`, GET `/api/email/verify-new/{uuid}/{hash}`.
+- **2025-02-14**: Profile API: PATCH `/api/user` (update name and/or email; email change requires verification at new address), POST `/api/profile/password` (change password with current password). GET `/api/email/verify-new/{uuid}/{hash}` for new-email verification (signed). User payload may include `pending_email` in profile responses.
 - **2025-02-13**: Verification email link now points to frontend `/email/verify` (frontend then calls API). Reset link already points to frontend `/reset-password`.
 - **2025-02-13**: Login when email not verified: return **403** with `{ "message": "Your email address is not verified." }`; keep **422** for wrong credentials/validation only. API reference Login section and errors clarified.
 - **2025-02-13**: Initial document – health, register (no token, verify email), login (block unverified), forgot/reset password, email verify/resend, social login (Google/Facebook/Instagram), user, logout, logout-all.

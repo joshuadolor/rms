@@ -36,7 +36,7 @@
               placeholder="you@example.com"
               autocomplete="email"
               described-by="login-form-error"
-              :invalid="!!error"
+              :error="fieldErrors.email"
             >
             <template #prefix>
               <span class="material-icons text-lg">mail_outline</span>
@@ -52,6 +52,7 @@
                 Forgot password?
               </router-link>
             </div>
+            <div class="space-y-1">
             <div class="relative">
               <input
                 id="password"
@@ -59,8 +60,8 @@
                 :type="showPassword ? 'text' : 'password'"
                 placeholder="••••••••"
                 autocomplete="current-password"
-                :aria-describedby="'login-form-error'"
-                :aria-invalid="!!error"
+                :aria-describedby="fieldErrors.password ? 'login-password-error' : 'login-form-error'"
+                :aria-invalid="!!fieldErrors.password"
                 class="block w-full pl-10 pr-10 py-3 border border-primary/20 rounded-lg bg-white dark:bg-white/5 text-charcoal dark:text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
               />
               <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-charcoal/40 dark:text-white/40">
@@ -75,6 +76,8 @@
                 <span class="material-icons text-lg">{{ showPassword ? 'visibility' : 'visibility_off' }}</span>
               </button>
             </div>
+            <p v-if="fieldErrors.password" id="login-password-error" class="text-xs text-red-600 dark:text-red-400" role="alert">{{ fieldErrors.password }}</p>
+          </div>
           </div>
         </div>
         <div class="flex items-center">
@@ -160,7 +163,7 @@ import AppInput from '@/components/ui/AppInput.vue'
 import AppButton from '@/components/ui/AppButton.vue'
 import GoogleSignInButton from '@/components/auth/GoogleSignInButton.vue'
 import { useAppStore } from '@/stores/app'
-import { authService, normalizeApiError } from '@/services'
+import { authService, normalizeApiError, getValidationErrors } from '@/services'
 
 const router = useRouter()
 const route = useRoute()
@@ -177,22 +180,24 @@ const remember = ref(false)
 const showPassword = ref(false)
 const loading = ref(false)
 const error = ref('')
+const fieldErrors = ref({ email: '', password: '' })
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 function validateLogin() {
+  fieldErrors.value = { email: '', password: '' }
   const e = email.value.trim()
   const p = password.value
   if (!e) {
-    error.value = 'Please enter your email address.'
+    fieldErrors.value.email = 'Please enter your email address.'
     return false
   }
   if (!EMAIL_RE.test(e)) {
-    error.value = 'Please enter a valid email address.'
+    fieldErrors.value.email = 'Please enter a valid email address.'
     return false
   }
   if (!p) {
-    error.value = 'Please enter your password.'
+    fieldErrors.value.password = 'Please enter your password.'
     return false
   }
   return true
@@ -200,6 +205,7 @@ function validateLogin() {
 
 async function handleSubmit() {
   error.value = ''
+  fieldErrors.value = { email: '', password: '' }
   if (!validateLogin()) return
   loading.value = true
   try {
@@ -209,6 +215,10 @@ async function handleSubmit() {
     const redirect = route.query.redirect || '/app'
     router.push(redirect)
   } catch (e) {
+    const errors = getValidationErrors(e)
+    if (Object.keys(errors).length > 0) {
+      fieldErrors.value = { ...fieldErrors.value, ...errors }
+    }
     const { message } = normalizeApiError(e)
     error.value = message || 'Sign in failed. Please try again.'
   } finally {

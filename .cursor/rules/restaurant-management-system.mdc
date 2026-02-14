@@ -14,7 +14,7 @@ Free-to-use system for owners to manage one or more restaurants, publish menus v
 - **Public URLs = subdomain only.** All public/generic restaurant pages (menu, restaurant page) use subdomains (e.g. `{restaurant-slug}.yourapp.com`). Do not use path-based public URLs for menus.
 - **Free tier:** One restaurant per owner (one subdomain). Multiple restaurants / extra subdomains = paid tier (future).
 - **Clarity first:** Prioritize clarity and simplicity for non-technical restaurant owners.
-- **Mobile-first:** Public menu pages must work well on mobile (QR codes are often scanned on phones).
+- **Mobile-first (frontend):** All frontend UI must be designed and built mobile-first (small screens first, then larger breakpoints). Public menu pages and QR flows are especially critical on mobile. See `.cursor/rules/frontend-mobile-first.mdc` for frontend-specific guidance.
 
 ## Must-Have Behavior
 

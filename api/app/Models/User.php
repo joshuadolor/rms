@@ -6,6 +6,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable implements MustVerifyEmail
@@ -22,18 +23,27 @@ class User extends Authenticatable implements MustVerifyEmail
         'name',
         'email',
         'password',
-        'email_verified_at',
     ];
 
     /**
-     * The attributes that should be hidden for serialization.
+     * The attributes that should be hidden for serialization (id is internal-only; API uses uuid).
      *
      * @var list<string>
      */
     protected $hidden = [
+        'id',
         'password',
         'remember_token',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (User $model): void {
+            if (empty($model->uuid)) {
+                $model->uuid = (string) Str::uuid();
+            }
+        });
+    }
 
     /**
      * Get the attributes that should be cast.
@@ -68,5 +78,17 @@ class User extends Authenticatable implements MustVerifyEmail
     public function sendEmailVerificationNotification(): void
     {
         $this->notify(new \App\Notifications\VerifyEmailNotification);
+    }
+
+    /**
+     * When sending VerifyNewEmailNotification, send to pending_email (the new address).
+     */
+    public function routeNotificationForMail(object $notification): mixed
+    {
+        if ($notification instanceof \App\Notifications\VerifyNewEmailNotification && $this->pending_email) {
+            return $this->pending_email;
+        }
+
+        return $this->email;
     }
 }

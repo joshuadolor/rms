@@ -45,6 +45,12 @@ const routes = [
     meta: { requiresAuth: false },
   },
   {
+    path: '/email/verify-new',
+    name: 'EmailVerifyNew',
+    component: () => import('@/views/EmailVerifyNewView.vue'),
+    meta: { requiresAuth: false },
+  },
+  {
     path: '/',
     name: 'Landing',
     component: () => import('@/views/LandingView.vue'),
@@ -52,9 +58,20 @@ const routes = [
   },
   {
     path: '/app',
-    name: 'App',
-    component: () => import('@/views/HomeView.vue'),
+    component: () => import('@/layouts/AppLayout.vue'),
     meta: { requiresAuth: true, requiresVerified: true },
+    children: [
+      {
+        path: '',
+        name: 'App',
+        component: () => import('@/views/DashboardView.vue'),
+      },
+      {
+        path: 'profile',
+        name: 'Profile',
+        component: () => import('@/views/ProfileView.vue'),
+      },
+    ],
   },
 ]
 

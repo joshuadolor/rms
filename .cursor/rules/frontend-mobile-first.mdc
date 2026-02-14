@@ -1,0 +1,16 @@
+---
+description: When working on the frontend, always prioritize mobile-first design and implementation
+globs: frontend/**/*
+alwaysApply: true
+---
+
+# Frontend: Mobile-first
+
+When working on the **frontend** (Vue components, views, layouts, styles):
+
+1. **Prioritize mobile-first.** Design and implement for small screens first, then enhance for larger breakpoints (e.g. `md:`, `lg:` in Tailwind).
+2. **Default layout and styles** should target mobile viewports. Add tablet/desktop styles as progressive enhancements.
+3. **Touch targets:** Buttons, links, and interactive elements must be large enough and spaced for touch (e.g. min ~44px tap area where possible).
+4. **Responsive patterns:** Use mobile-first breakpoints (e.g. single column by default; multi-column or sidebar only from `md:` or `lg:` up). Test that core flows work on a narrow viewport before adding wide-layout refinements.
+
+This applies to all frontend work: auth pages, dashboard, profile, future menu/restaurant UIs, and public menu pages.

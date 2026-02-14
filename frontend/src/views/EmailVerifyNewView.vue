@@ -5,7 +5,7 @@
         <div class="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
           <span class="material-icons text-3xl text-primary animate-spin">sync</span>
         </div>
-        <p class="text-charcoal/70 dark:text-white/70">Verifying your email…</p>
+        <p class="text-charcoal/70 dark:text-white/70">Verifying your new email…</p>
       </div>
 
       <template v-else-if="result">
@@ -16,10 +16,10 @@
           <div class="w-16 h-16 mx-auto rounded-full bg-sage/20 flex items-center justify-center">
             <span class="material-icons text-3xl text-sage">check_circle</span>
           </div>
-          <h2 class="text-2xl font-bold text-charcoal dark:text-white">Email verified</h2>
+          <h2 class="text-2xl font-bold text-charcoal dark:text-white">Email updated</h2>
           <p class="text-charcoal/60 dark:text-white/60">{{ result.message }}</p>
-          <router-link :to="{ name: 'Login' }">
-            <AppButton variant="primary" class="w-full justify-center py-3.5">Sign in</AppButton>
+          <router-link :to="{ name: 'App' }">
+            <AppButton variant="primary" class="w-full justify-center py-3.5">Go to dashboard</AppButton>
           </router-link>
         </div>
 
@@ -46,9 +46,11 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import AuthLayout from '@/layouts/AuthLayout.vue'
 import AppButton from '@/components/ui/AppButton.vue'
+import { useAppStore } from '@/stores/app'
 import { authService, normalizeApiError } from '@/services'
 
 const route = useRoute()
+const appStore = useAppStore()
 const loading = ref(true)
 const result = ref(null)
 
@@ -65,16 +67,17 @@ onMounted(async () => {
     return
   }
   try {
-    const data = await authService.verifyEmail({
+    const data = await authService.verifyNewEmail({
       uuid: route.query.uuid ?? route.query.id,
       hash: route.query.hash,
       expires: route.query.expires,
       signature: route.query.signature,
     })
-    result.value = { success: true, message: data.message ?? 'You can sign in.' }
+    if (data.user) appStore.setUserFromApi(data.user)
+    result.value = { success: true, message: data.message ?? 'Your email has been updated and verified.' }
   } catch (e) {
     const { message } = normalizeApiError(e)
-    result.value = { success: false, message: message ?? 'Invalid or expired link. Please request a new verification email.' }
+    result.value = { success: false, message: message ?? 'Invalid or expired link. Please try changing your email again from Profile & Settings.' }
   } finally {
     loading.value = false
   }

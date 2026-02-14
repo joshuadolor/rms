@@ -55,7 +55,7 @@ test.describe('Login', () => {
     await page.getByPlaceholder(/••••••••/).fill('wrongpass')
     await page.getByRole('button', { name: /sign in/i }).click()
 
-    await expect(page.getByRole('alert')).toContainText(/credentials are incorrect|sign in failed/i)
+    await expect(page.locator('#login-form-error')).toContainText(/credentials are incorrect|sign in failed/i)
     await expect(page).toHaveURL(/\/login/)
   })
 
@@ -109,7 +109,7 @@ test.describe('Register', () => {
     await page.getByPlaceholder(/you@example\.com/i).fill('jane@example.com')
     await page.getByRole('button', { name: 'Continue', exact: true }).click()
 
-    await expect(page.getByRole('alert')).toContainText(/enter your name/i)
+    await expect(page.getByText('Please enter your name.')).toBeVisible()
   })
 
   test('full registration redirects to verify-email', async ({ page }) => {

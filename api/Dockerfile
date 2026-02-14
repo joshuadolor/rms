@@ -19,6 +19,7 @@ RUN composer dump-autoload --optimize
 
 RUN cp .env.example .env 2>/dev/null || true \
     && sed -i '/^MAIL_/d' .env \
+    && echo 'DB_DATABASE=/app/storage/db/database.sqlite' >> .env \
     && echo 'MAIL_MAILER=smtp' >> .env \
     && echo 'MAIL_HOST=mailhog' >> .env \
     && echo 'MAIL_PORT=1025' >> .env \
@@ -28,7 +29,8 @@ RUN cp .env.example .env 2>/dev/null || true \
     && echo 'MAIL_FROM_ADDRESS=noreply@rms.local' >> .env \
     && echo "MAIL_FROM_NAME=RMS" >> .env \
     && php artisan key:generate --no-interaction \
-    && touch database/database.sqlite \
+    && mkdir -p storage/db \
+    && touch storage/db/database.sqlite \
     && php artisan migrate --force --no-interaction \
     && php artisan config:clear 2>/dev/null || true
 
@@ -44,5 +46,5 @@ ENV MAIL_ENCRYPTION=
 ENV MAIL_FROM_ADDRESS=noreply@rms.local
 ENV MAIL_FROM_NAME=RMS
 
-# Clear config on start so runtime env (e.g. MAIL_* from docker-compose) is used, not cached build-time config.
-CMD sh -c "php artisan config:clear && exec php artisan serve --host=0.0.0.0 --port=3000"
+# On start: ensure DB path exists in volume, run migrations (from image /app/database), then serve.
+CMD sh -c "php artisan config:clear && mkdir -p /app/storage/db && touch /app/storage/db/database.sqlite && php artisan migrate --force --no-interaction && exec php artisan serve --host=0.0.0.0 --port=3000"

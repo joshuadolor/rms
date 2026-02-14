@@ -17,13 +17,13 @@ class VerifyEmailNotification extends VerifyEmail
     protected function verificationUrl($notifiable): string
     {
         $expiration = Carbon::now()->addMinutes(Config::get('auth.verification.expire', 60));
-        $id = $notifiable->getKey();
+        $uuid = $notifiable->uuid;
         $hash = sha1($notifiable->getEmailForVerification());
 
         $apiUrl = URL::temporarySignedRoute(
             'api.verification.verify',
             $expiration,
-            ['id' => $id, 'hash' => $hash]
+            ['uuid' => $uuid, 'hash' => $hash]
         );
 
         $parsed = parse_url($apiUrl);
@@ -31,7 +31,7 @@ class VerifyEmailNotification extends VerifyEmail
         parse_str($query, $params);
 
         $frontendUrl = rtrim(config('app.frontend_url'), '/');
-        $params = array_merge(['id' => $id, 'hash' => $hash], $params);
+        $params = array_merge(['uuid' => $uuid, 'hash' => $hash], $params);
 
         return $frontendUrl . '/email/verify?' . http_build_query($params);
     }

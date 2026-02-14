@@ -84,7 +84,7 @@
             type="text"
             placeholder="Jane Smith"
             described-by="register-step1-error"
-            :invalid="!!error"
+            :error="fieldErrors.name"
           >
             <template #prefix>
               <span class="material-icons text-lg">person_outline</span>
@@ -96,7 +96,7 @@
             type="email"
             placeholder="you@example.com"
             described-by="register-step1-error"
-            :invalid="!!error"
+            :error="fieldErrors.email"
           >
             <template #prefix>
               <span class="material-icons text-lg">mail_outline</span>
@@ -141,9 +141,10 @@
                   id="reg-password"
                   v-model="password"
                   :type="showPassword ? 'text' : 'password'"
+                  autocomplete="new-password"
                   placeholder="At least 8 characters"
-                  aria-describedby="register-step2-error"
-                  :aria-invalid="!!error"
+                  :aria-describedby="fieldErrors.password ? 'reg-password-error' : 'register-step2-error'"
+                  :aria-invalid="!!fieldErrors.password"
                   class="block w-full pl-10 pr-10 py-3 border border-primary/20 rounded-lg bg-white dark:bg-white/5 text-charcoal dark:text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                 />
                 <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-charcoal/40 dark:text-white/40">
@@ -158,7 +159,8 @@
                   <span class="material-icons text-lg">{{ showPassword ? 'visibility' : 'visibility_off' }}</span>
                 </button>
               </div>
-              <p class="text-xs text-charcoal/60 dark:text-white/60">Minimum 8 characters</p>
+              <p v-if="fieldErrors.password" id="reg-password-error" class="text-xs text-red-600 dark:text-red-400" role="alert">{{ fieldErrors.password }}</p>
+              <p v-else class="text-xs text-charcoal/60 dark:text-white/60">Minimum 8 characters</p>
             </div>
             <div class="space-y-1">
               <label for="reg-confirm" class="block text-sm font-medium text-charcoal/80 dark:text-white/80">Confirm password</label>
@@ -167,16 +169,18 @@
                   id="reg-confirm"
                   v-model="confirmPassword"
                   :type="showConfirm ? 'text' : 'password'"
+                  autocomplete="new-password"
                   placeholder="Repeat password"
-                  aria-describedby="register-step2-error"
-                  :aria-invalid="!!error"
+                  :aria-describedby="fieldErrors.password_confirmation ? 'reg-confirm-error' : 'register-step2-error'"
+                  :aria-invalid="!!fieldErrors.password_confirmation"
                   class="block w-full pl-10 pr-4 py-3 border border-primary/20 rounded-lg bg-white dark:bg-white/5 text-charcoal dark:text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                 />
                 <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-charcoal/40 dark:text-white/40">
                   <span class="material-icons text-lg">lock_outline</span>
                 </span>
               </div>
-              <p v-if="confirmPassword && password !== confirmPassword" class="text-xs text-red-600 dark:text-red-400">
+              <p v-if="fieldErrors.password_confirmation" id="reg-confirm-error" class="text-xs text-red-600 dark:text-red-400" role="alert">{{ fieldErrors.password_confirmation }}</p>
+              <p v-else-if="confirmPassword && password !== confirmPassword" class="text-xs text-red-600 dark:text-red-400">
                 Passwords don’t match
               </p>
             </div>
@@ -233,7 +237,7 @@ import AppInput from '@/components/ui/AppInput.vue'
 import AppButton from '@/components/ui/AppButton.vue'
 import GoogleSignInButton from '@/components/auth/GoogleSignInButton.vue'
 import { useAppStore } from '@/stores/app'
-import { authService, normalizeApiError } from '@/services'
+import { authService, normalizeApiError, getValidationErrors } from '@/services'
 
 const router = useRouter()
 const appStore = useAppStore()
@@ -253,45 +257,67 @@ const showConfirm = ref(false)
 const acceptedTerms = ref(false)
 const loading = ref(false)
 const error = ref('')
+const fieldErrors = ref({ name: '', email: '', password: '', password_confirmation: '' })
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const MIN_PASSWORD_LENGTH = 8
+const MAX_NAME_LENGTH = 255
+const MAX_EMAIL_LENGTH = 255
 
 function goToStep2() {
   error.value = ''
-  if (!name.value.trim()) {
-    error.value = 'Please enter your name.'
+  fieldErrors.value = { name: '', email: '', password: '', password_confirmation: '' }
+  const nameTrimmed = name.value.trim()
+  if (!nameTrimmed) {
+    fieldErrors.value.name = 'Please enter your name.'
+    return
+  }
+  if (nameTrimmed.length > MAX_NAME_LENGTH) {
+    fieldErrors.value.name = `Name must be at most ${MAX_NAME_LENGTH} characters.`
     return
   }
   const e = email.value.trim()
   if (!e) {
-    error.value = 'Please enter your email address.'
+    fieldErrors.value.email = 'Please enter your email address.'
     return
   }
   if (!EMAIL_RE.test(e)) {
-    error.value = 'Please enter a valid email address.'
+    fieldErrors.value.email = 'Please enter a valid email address.'
+    return
+  }
+  if (e.length > MAX_EMAIL_LENGTH) {
+    fieldErrors.value.email = `Email must be at most ${MAX_EMAIL_LENGTH} characters.`
     return
   }
   step.value = 2
 }
 
+function validatePasswordStrength(p) {
+  if (p.length < MIN_PASSWORD_LENGTH) return `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`
+  if (!/[a-zA-Z]/.test(p)) return 'Password must include at least one letter.'
+  if (!/\d/.test(p)) return 'Password must include at least one number.'
+  return ''
+}
+
 function validateStep2() {
+  fieldErrors.value = { ...fieldErrors.value, password: '', password_confirmation: '' }
   const p = password.value
   const c = confirmPassword.value
   if (!p) {
-    error.value = 'Please enter a password.'
+    fieldErrors.value.password = 'Please enter a password.'
     return false
   }
-  if (p.length < MIN_PASSWORD_LENGTH) {
-    error.value = `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`
+  const pwdMsg = validatePasswordStrength(p)
+  if (pwdMsg) {
+    fieldErrors.value.password = pwdMsg
     return false
   }
   if (!c) {
-    error.value = 'Please confirm your password.'
+    fieldErrors.value.password_confirmation = 'Please confirm your password.'
     return false
   }
   if (p !== c) {
-    error.value = 'Passwords do not match.'
+    fieldErrors.value.password_confirmation = 'Passwords do not match.'
     return false
   }
   if (!acceptedTerms.value) {
@@ -303,6 +329,7 @@ function validateStep2() {
 
 async function handleSubmit() {
   error.value = ''
+  fieldErrors.value = { ...fieldErrors.value, password: '', password_confirmation: '' }
   if (!validateStep2()) return
   loading.value = true
   try {
@@ -317,8 +344,19 @@ async function handleSubmit() {
       query: { email: email.value.trim() },
     })
   } catch (e) {
+    const errors = getValidationErrors(e)
+    if (Object.keys(errors).length > 0) {
+      fieldErrors.value = { ...fieldErrors.value, ...errors }
+    }
     const { message } = normalizeApiError(e)
     error.value = message || 'Registration failed. Please try again.'
+    const isEmailTaken =
+      e?.response?.status === 422 &&
+      (e?.response?.data?.errors?.email?.length > 0 ||
+        /already been taken|email.*taken/i.test(message ?? ''))
+    if (isEmailTaken) {
+      step.value = 1
+    }
   } finally {
     loading.value = false
   }

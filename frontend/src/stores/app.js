@@ -7,10 +7,11 @@ function getStoredUser() {
   if (!localStorage.getItem('rms-auth')) return null
   const verified = localStorage.getItem('rms-user-verified') === '1'
   return User.fromApi({
-    id: localStorage.getItem('rms-user-id') || null,
+    uuid: localStorage.getItem('rms-user-id') || null,
     name: localStorage.getItem('rms-user-name') || 'Restaurant Owner',
     email: localStorage.getItem('rms-user-email') || 'owner@example.com',
     email_verified_at: verified ? new Date().toISOString() : null,
+    pending_email: localStorage.getItem('rms-user-pending-email') || null,
   })
 }
 
@@ -19,16 +20,21 @@ export const useAppStore = defineStore('app', () => {
 
   const isAuthenticated = computed(() => !!user.value)
 
+  /**
+   * Set user from a plain payload (e.g. after login/register before token is stored).
+   * Prefer setUserFromApi(data) when you have an API user response; this is kept for legacy/custom flows.
+   */
   function login(payload = {}) {
     const data = {
-      id: payload.id ?? user.value?.id,
+      uuid: payload.uuid ?? payload.id ?? user.value?.id,
       name: payload.name ?? user.value?.name ?? 'Restaurant Owner',
       email: payload.email ?? user.value?.email ?? 'owner@example.com',
       email_verified_at: payload.email_verified_at ?? (payload.emailVerifiedAt !== undefined ? payload.emailVerifiedAt : user.value?.emailVerifiedAt ?? null),
     }
     user.value = User.fromApi(data)
     localStorage.setItem('rms-auth', '1')
-    if (data.id != null) localStorage.setItem('rms-user-id', String(data.id))
+    const uid = data.uuid ?? data.id
+    if (uid != null) localStorage.setItem('rms-user-id', String(uid))
     if (data.name) localStorage.setItem('rms-user-name', data.name)
     if (data.email) localStorage.setItem('rms-user-email', data.email)
     localStorage.setItem('rms-user-verified', user.value.isEmailVerified ? '1' : '')
@@ -51,16 +57,20 @@ export const useAppStore = defineStore('app', () => {
     localStorage.removeItem('rms-user-name')
     localStorage.removeItem('rms-user-email')
     localStorage.removeItem('rms-user-verified')
+    localStorage.removeItem('rms-user-pending-email')
   }
 
   /** Set user from API response (e.g. after auth fetch). Persists verification status for route guards. */
   function setUserFromApi(data) {
     user.value = User.fromApi(data)
     localStorage.setItem('rms-auth', '1')
-    if (data.id != null) localStorage.setItem('rms-user-id', String(data.id))
+    const uid = data.uuid ?? data.id
+    if (uid != null) localStorage.setItem('rms-user-id', String(uid))
     if (data.name) localStorage.setItem('rms-user-name', data.name ?? '')
     if (data.email) localStorage.setItem('rms-user-email', data.email ?? '')
     localStorage.setItem('rms-user-verified', user.value.isEmailVerified ? '1' : '')
+    if (data.pending_email != null) localStorage.setItem('rms-user-pending-email', data.pending_email)
+    else localStorage.removeItem('rms-user-pending-email')
   }
 
   return { user, isAuthenticated, login, logout, clearAuthState, setUserFromApi }

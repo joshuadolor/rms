@@ -66,11 +66,19 @@ class AuthController extends Controller
     }
 
     /**
+     * Public user payload for API responses. Never include internal id.
+     *
      * @param \App\Models\User $user
-     * @return array{id: int, name: string, email: string, email_verified_at: \Illuminate\Support\Carbon|null}
+     * @return array{uuid: string, name: string, email: string, email_verified_at: \Illuminate\Support\Carbon|null, pending_email: string|null}
      */
     private function userPayload($user): array
     {
-        return $user->only(['id', 'name', 'email', 'email_verified_at']);
+        return [
+            'uuid' => $user->uuid,
+            'name' => $user->name,
+            'email' => $user->email,
+            'email_verified_at' => $user->email_verified_at,
+            'pending_email' => $user->pending_email ?? null,
+        ];
     }
 }

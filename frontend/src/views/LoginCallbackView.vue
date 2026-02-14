@@ -1,6 +1,9 @@
 <template>
   <div class="min-h-screen bg-background-light dark:bg-background-dark flex items-center justify-center font-display">
-    <div class="text-center">
+    <div class="text-center px-4">
+      <div v-if="!error" class="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center mb-4">
+        <span class="material-icons text-3xl text-primary animate-spin" aria-hidden="true">sync</span>
+      </div>
       <p class="text-charcoal/60 dark:text-white/60 mb-2">{{ message }}</p>
       <p v-if="error" class="text-red-600 dark:text-red-400 text-sm">{{ error }}</p>
     </div>
@@ -46,7 +49,7 @@ onMounted(async () => {
         : await authService.loginWithInstagram({ access_token: accessToken })
       if (data.token) localStorage.setItem('rms-auth-token', data.token)
       if (data.user) appStore.setUserFromApi(data.user)
-      const isVerified = data.user?.email_verified_at != null
+      const isVerified = data.user?.isEmailVerified ?? false
       router.replace(isVerified ? redirect : { name: 'VerifyEmail' })
     } catch (e) {
       const { message: msg } = normalizeApiError(e)

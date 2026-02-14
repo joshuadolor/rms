@@ -2,16 +2,17 @@
  * User model — shapes API user payloads with defaults and derived values.
  * Use User.fromApi(apiResponse) when consuming auth/user endpoints.
  *
- * Backend response (AuthController::userPayload, SocialAuthController):
- * { id, name, email, email_verified_at }
+ * Backend response (AuthController::userPayload, ProfileController::userPayload):
+ * { uuid, name, email, email_verified_at, pending_email? } — uuid is the public identifier (internal id not exposed).
  */
 
 export default class User {
   constructor(data = {}) {
-    this._id = data.id ?? data._id ?? null
+    this._id = data.uuid ?? data.id ?? data._id ?? null
     this._name = data.name ?? ''
     this._email = data.email ?? ''
     this._emailVerifiedAt = data.email_verified_at ?? data.emailVerifiedAt ?? null
+    this._pendingEmail = data.pending_email ?? data.pendingEmail ?? null
     // Optional if backend adds later (e.g. profile, OAuth)
     this._firstName = data.first_name ?? data.firstName ?? ''
     this._lastName = data.last_name ?? data.lastName ?? ''
@@ -36,6 +37,11 @@ export default class User {
 
   get isEmailVerified() {
     return this._emailVerifiedAt != null
+  }
+
+  /** New email awaiting verification (after profile email change). */
+  get pendingEmail() {
+    return this._pendingEmail
   }
 
   get firstName() {
@@ -73,6 +79,7 @@ export default class User {
       email: this._email,
       emailVerifiedAt: this._emailVerifiedAt,
       isEmailVerified: this.isEmailVerified,
+      pendingEmail: this._pendingEmail,
       fullName: this.fullName,
       firstName: this._firstName,
       lastName: this._lastName,

@@ -16,13 +16,16 @@ services:
       dockerfile: Dockerfile
     ports:
       - "3000:3000"
+    volumes:
+      # Persist only the DB file so /app/database (migrations) stays from image
+      - api_database:/app/storage/db
     environment:
       - APP_ENV=local
       - APP_DEBUG=true
       - APP_URL=http://localhost
       - FRONTEND_URL=http://localhost
       - DB_CONNECTION=sqlite
-      - DB_DATABASE=/app/database/database.sqlite
+      - DB_DATABASE=/app/storage/db/database.sqlite
       # Mailhog: API sends mail to mailhog:1025 (SMTP). View at http://localhost:8025
       - MAIL_MAILER=smtp
       - MAIL_HOST=mailhog
@@ -60,3 +63,4 @@ services:
 
 volumes:
   frontend_node_modules:
+  api_database:

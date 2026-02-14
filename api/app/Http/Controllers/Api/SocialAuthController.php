@@ -108,7 +108,13 @@ class SocialAuthController extends Controller
     {
         return response()->json([
             'message' => 'Logged in successfully.',
-            'user' => $result['user']->only(['id', 'name', 'email', 'email_verified_at']),
+            'user' => [
+                'uuid' => $result['user']->uuid,
+                'name' => $result['user']->name,
+                'email' => $result['user']->email,
+                'email_verified_at' => $result['user']->email_verified_at,
+                'pending_email' => $result['user']->pending_email ?? null,
+            ],
             'token' => $result['token'],
             'token_type' => 'Bearer',
         ]);

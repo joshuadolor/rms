@@ -24,4 +24,5 @@ npm run test:e2e:ui
 
 ## Scope
 
-- **auth.spec.js**: Landing, login (email/password), register (email), forgot password, reset password page, verify-email page, route guards, logout. **SSO (Google/Facebook/Instagram) is not tested** and is left for later.
+- **auth.spec.cjs**: Landing, login (email/password), register (email), forgot password, reset password page, verify-email page, route guards, logout. **SSO (Google/Facebook/Instagram) is not tested** and is left for later.
+- **profile.spec.cjs**: Profile & Settings — unauthenticated redirect, page content (profile form, change password form), navigation from sidebar, update profile (success and validation error), change password (wrong current password error, success and form clear). All API calls (GET/PATCH `/api/user`, POST `/api/profile/password`) are mocked.

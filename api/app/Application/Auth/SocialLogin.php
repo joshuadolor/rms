@@ -39,11 +39,11 @@ final readonly class SocialLogin
                     'email' => $email ?? $provider . '_' . $providerId . '@placeholder.rms.local',
                     'password' => bcrypt(Str::random(32)),
                 ];
+                $user = $this->userRepository->create($attributes);
                 // Social provider supplied a verified email; treat as verified so they can use the app.
                 if ($email) {
-                    $attributes['email_verified_at'] = now();
+                    $user->forceFill(['email_verified_at' => now()])->save();
                 }
-                $user = $this->userRepository->create($attributes);
             }
             $this->socialAccountRepository->createForUser($user, $provider, $providerId);
         }

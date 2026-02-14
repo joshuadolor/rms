@@ -75,8 +75,12 @@ class SocialLoginTest extends TestCase
             return $data['name'] === 'New User'
                 && $data['email'] === 'new@example.com'
                 && isset($data['password'])
-                && isset($data['email_verified_at']); // social provider email treated as verified
+                && ! array_key_exists('email_verified_at', $data); // set after create via forceFill (security)
         }))->andReturn($user);
+        $user->shouldReceive('forceFill')->once()->with(Mockery::on(function (array $data) {
+            return array_key_exists('email_verified_at', $data);
+        }))->andReturnSelf();
+        $user->shouldReceive('save')->once();
 
         $useCase = new SocialLogin($userRepo, $socialRepo);
         $result = $useCase->handle([

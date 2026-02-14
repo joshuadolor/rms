@@ -1,0 +1,19 @@
+---
+description: Frontend forms use JavaScript validation, not native HTML form validation
+globs: frontend/**/*
+alwaysApply: true
+---
+
+# Frontend: Form validation
+
+When working on **forms** in the frontend:
+
+1. **Validate on the frontend first, before calling the API.** Whenever the API accepts or documents validation rules (required fields, format, length, etc.), implement equivalent checks in the frontend. Only send the request after frontend validation passes. This improves UX (instant feedback), reduces unnecessary API calls, and keeps behavior consistent with backend validation.
+2. **Do not rely on native HTML form validation.** We do not use the browser’s built-in validation (e.g. `required`, `pattern`, `minlength`, or `novalidate` + submit-triggered browser messages).
+3. **Handle validation in JavaScript.** Validate on submit (and optionally on blur/input) in the component: check required fields, format (e.g. email), length, and custom rules. Show error messages in the UI (inline or via a shared error area).
+4. **Use `novalidate` on `<form>`** so the browser does not show its own validation UI when the user submits. All validation and error display is controlled by our code.
+5. Keep validation logic in one place (e.g. a submit handler or a small validator function) and surface errors via component state (e.g. `error` ref, `fieldErrors` object) so they can be styled and announced consistently.
+
+6. **Password fields:** use appropriate `autocomplete` values: `current-password` for "current password" fields (e.g. login, change password), and `new-password` for new/confirm password fields (register, reset password, profile).
+
+This applies to all forms: login, register, forgot password, reset password, profile, and any future forms.

@@ -12,6 +12,7 @@ export {
   api,
   getBaseUrl,
   normalizeApiError,
+  getValidationErrors,
   API_ERROR_GROUPS,
   getErrorGroup,
   reportApiError,

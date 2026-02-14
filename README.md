@@ -130,7 +130,8 @@ Current migrations are **auth-only** (Laravel + Sanctum + social):
 | `personal_access_tokens` | Sanctum API tokens |
 | `social_accounts` | OAuth provider link (provider, provider_id) |
 
-Run: `cd api && php artisan migrate`. If you previously ran removed restaurant migrations, use `php artisan migrate:fresh` for a clean auth-only DB.
+- **Local (no Docker):** `cd api && php artisan migrate`. To reset: `cd api && php artisan migrate:fresh --force`.
+- **Docker:** The app uses the DB in the volume at `/app/storage/db`, so running migrate inside the container affects that DB. To reset: `docker compose exec api php artisan migrate:fresh --force`. Running `php artisan migrate:fresh` on the **host** (`cd api`) resets the host file only, not the volume—run it in the container when using Docker.
 
 ## Auth API (for frontend)
 

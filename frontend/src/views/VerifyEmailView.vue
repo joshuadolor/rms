@@ -30,10 +30,11 @@
           Check your spam folder. Didn’t get it?
           <button
             type="button"
-            class="font-medium text-primary hover:text-primary/80 disabled:opacity-50 disabled:cursor-not-allowed"
+            class="inline-flex items-center gap-1.5 font-medium text-primary hover:text-primary/80 disabled:opacity-50 disabled:cursor-not-allowed"
             :disabled="resendCooldown > 0 || resendLoading"
             @click="user ? handleResendAuthenticated() : (resendEmail ? handleResendGuest() : (showGuestEmail = true))"
           >
+            <span v-if="resendLoading" class="material-icons animate-spin text-lg" aria-hidden="true">sync</span>
             {{ resendCooldown > 0 ? `Resend in ${resendCooldown}s` : resendLoading ? 'Sending…' : 'Resend link' }}
           </button>
         </p>
@@ -41,6 +42,7 @@
         <form
           v-if="!user && showGuestEmail"
           class="flex flex-wrap items-center gap-2"
+          novalidate
           @submit.prevent="handleResendGuest"
         >
           <input
@@ -48,13 +50,17 @@
             type="email"
             placeholder="your@email.com"
             class="flex-1 min-w-[140px] px-3 py-2 text-sm border border-primary/20 rounded-lg bg-white dark:bg-white/5 text-charcoal dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-            required
+            :aria-required="true"
+            :aria-invalid="!!resendError"
+            :aria-describedby="resendError ? 'verify-resend-email-error' : undefined"
           />
+          <p v-if="resendError" id="verify-resend-email-error" class="text-xs text-red-600 dark:text-red-400 w-full basis-full" role="alert">{{ resendError }}</p>
           <button
             type="submit"
-            class="text-sm font-medium text-primary hover:text-primary/80 disabled:opacity-50"
+            class="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 disabled:opacity-50"
             :disabled="resendCooldown > 0 || resendLoading"
           >
+            <span v-if="resendLoading" class="material-icons animate-spin text-base" aria-hidden="true">sync</span>
             {{ resendLoading ? 'Sending…' : 'Resend' }}
           </button>
         </form>
@@ -142,17 +148,23 @@ async function handleResendAuthenticated() {
   }
 }
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
 async function handleResendGuest() {
-  const email = resendEmail.value?.trim()
-  if (!email) {
+  const emailVal = resendEmail.value?.trim()
+  if (!emailVal) {
     resendError.value = 'Please enter your email address.'
+    return
+  }
+  if (!EMAIL_RE.test(emailVal)) {
+    resendError.value = 'Please enter a valid email address.'
     return
   }
   resendError.value = ''
   resendSuccess.value = ''
   resendLoading.value = true
   try {
-    const data = await authService.resendVerificationEmail({ email })
+    const data = await authService.resendVerificationEmail({ email: emailVal })
     resendSuccess.value = data.message ?? 'If that email is registered and unverified, we sent a new link.'
     startCooldown()
   } catch (e) {

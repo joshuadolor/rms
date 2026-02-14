@@ -1,10 +1,16 @@
 ---
 description: When adding a new API endpoint, document it in docs/API-REFERENCE.md
 globs: api/routes/**/*.php, api/app/Http/Controllers/Api/**/*.php
-alwaysApply: false
+alwaysApply: true
 ---
 
 # API reference – backend
+
+## Security: no internal id in responses
+
+**Never expose the internal numeric `id` (primary key) in any API response.** Use the public **`uuid`** (or entity-specific public identifier) only. This avoids enumeration and keeps internal IDs hidden. All user/entity payloads must return `uuid` (and other safe fields), never `id`.
+
+## Documenting endpoints
 
 When you add or change an **API endpoint** in this project:
 

@@ -11,3 +11,6 @@ storage/logs/*
 storage/framework/cache/*
 storage/framework/sessions/*
 storage/framework/views/*
+# Avoid a second DB file in the image; Docker uses /app/storage/db (volume).
+database/database.sqlite
+database/*.sqlite

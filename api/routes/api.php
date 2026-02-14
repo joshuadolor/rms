@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\EmailVerificationController;
 use App\Http\Controllers\Api\ForgotPasswordController;
+use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\ResetPasswordController;
 use App\Http\Controllers\Api\SocialAuthController;
 use Illuminate\Support\Facades\Route;
@@ -52,10 +53,15 @@ Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:au
 Route::post('/forgot-password', ForgotPasswordController::class)->middleware('throttle:auth.forgot-password');
 Route::post('/reset-password', ResetPasswordController::class);
 
-// Email verification (signed URL from verification email; no auth required)
-Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])
+// Email verification (signed URL; uses uuid so internal id is not exposed)
+Route::get('/email/verify/{uuid}/{hash}', [EmailVerificationController::class, 'verify'])
     ->middleware('signed')
     ->name('api.verification.verify');
+
+// New email verification (after profile email change; signed link sent to new address)
+Route::get('/email/verify-new/{uuid}/{hash}', [EmailVerificationController::class, 'verifyNewEmail'])
+    ->middleware('signed')
+    ->name('api.verification.verify-new');
 
 // Resend verification: guest (email in body) or authenticated
 Route::post('/email/resend', [EmailVerificationController::class, 'resend'])->middleware('throttle:auth.forgot-password');
@@ -70,4 +76,6 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/logout-all', [AuthController::class, 'logoutAll']);
     Route::get('/user', [AuthController::class, 'user']);
+    Route::match(['patch', 'put'], '/user', [ProfileController::class, 'update']);
+    Route::post('/profile/password', [ProfileController::class, 'changePassword']);
 });

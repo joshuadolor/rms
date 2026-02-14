@@ -15,8 +15,8 @@
         :autocomplete="autocomplete"
         :required="required"
         :disabled="disabled"
-        :aria-describedby="describedBy || undefined"
-        :aria-invalid="invalid"
+        :aria-describedby="describedBy || (error ? errorId : undefined)"
+        :aria-invalid="invalid || !!error"
         class="w-full rounded-lg ring-1 ring-gray-200 dark:ring-zinc-700 focus:ring-2 focus:ring-primary transition-all bg-background-light dark:bg-zinc-800 border-0 py-3"
         :class="[
           $slots.prefix ? 'pl-10' : 'pl-4',
@@ -28,7 +28,8 @@
         <slot name="suffix" />
       </span>
     </div>
-    <p v-if="hint" class="text-xs text-gray-500">{{ hint }}</p>
+    <p v-if="hint && !error" class="text-xs text-gray-500">{{ hint }}</p>
+    <p v-if="error" :id="errorId" class="text-xs text-red-600 dark:text-red-400" role="alert">{{ error }}</p>
   </div>
 </template>
 
@@ -48,9 +49,12 @@ const props = defineProps({
   describedBy: { type: String, default: '' },
   /** When true, sets aria-invalid for screen readers. */
   invalid: { type: Boolean, default: false },
+  /** Validation error message shown underneath the field (after submit). */
+  error: { type: String, default: '' },
 })
 
 defineEmits(['update:modelValue'])
 
 const inputId = computed(() => `input-${Math.random().toString(36).slice(2, 9)}`)
+const errorId = computed(() => `${inputId.value}-error`)
 </script>

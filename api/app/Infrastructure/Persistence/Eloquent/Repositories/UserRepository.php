@@ -21,4 +21,9 @@ final class UserRepository implements UserRepositoryInterface
     {
         return User::query()->find($id);
     }
+
+    public function findByUuid(string $uuid): ?User
+    {
+        return User::query()->where('uuid', $uuid)->first();
+    }
 }

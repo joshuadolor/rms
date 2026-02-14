@@ -37,7 +37,7 @@ class SocialLoginTest extends TestCase
         ]);
 
         $response->assertOk()
-            ->assertJsonStructure(['message', 'user' => ['id', 'name', 'email'], 'token', 'token_type'])
+            ->assertJsonStructure(['message', 'user' => ['uuid', 'name', 'email'], 'token', 'token_type'])
             ->assertJson(['message' => 'Logged in successfully.', 'token_type' => 'Bearer']);
 
         $this->assertDatabaseHas('users', ['email' => 'sso@example.com', 'name' => 'SSO User']);
@@ -73,7 +73,7 @@ class SocialLoginTest extends TestCase
         ]);
 
         $response->assertOk()
-            ->assertJsonStructure(['user' => ['id', 'name', 'email'], 'token']);
+            ->assertJsonStructure(['user' => ['uuid', 'name', 'email'], 'token']);
 
         $this->assertDatabaseHas('users', ['email' => 'fb@example.com']);
         $this->assertDatabaseHas('social_accounts', ['provider' => 'facebook', 'provider_id' => 'fb-456']);
@@ -90,7 +90,7 @@ class SocialLoginTest extends TestCase
         ]);
 
         $response->assertOk()
-            ->assertJsonStructure(['user' => ['id', 'name', 'email'], 'token']);
+            ->assertJsonStructure(['user' => ['uuid', 'name', 'email'], 'token']);
 
         $this->assertDatabaseHas('users', ['email' => 'instagram_ig-789@placeholder.rms.local', 'name' => 'iguser']);
         $this->assertDatabaseHas('social_accounts', ['provider' => 'instagram', 'provider_id' => 'ig-789']);
