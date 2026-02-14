@@ -1,11 +1,11 @@
 # Dev: docker compose up. Then open http://localhost (via nginx) or http://localhost:8080 (Vite). Mailhog: :8025
 services:
   nginx:   # Single origin: / → frontend, /api → API. Use http://localhost
-    image: nginx:alpine
+    build:
+      context: ./docker/nginx
+      dockerfile: Dockerfile
     ports:
       - "80:80"
-    volumes:
-      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
       - api
       - frontend
