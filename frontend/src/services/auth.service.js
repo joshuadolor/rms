@@ -127,10 +127,50 @@ export async function loginWithInstagram(payload) {
   return data
 }
 
-/** No-op: API expects POST with token; use loginWithGoogle({ id_token }) when you have a provider token. */
-export function redirectToGoogle() {}
-export function redirectToFacebook() {}
-export function redirectToInstagram() {}
+/**
+ * Frontend origin for OAuth redirect_uri (where provider redirects back). Must match provider app config.
+ */
+export function getOAuthCallbackUrl(provider) {
+  const origin = typeof window !== 'undefined' ? window.location.origin : (import.meta.env.VITE_APP_URL || '')
+  return `${origin.replace(/\/$/, '')}/login/callback?provider=${provider}`
+}
+
+/** Google: use GoogleSignInButton component; it gets id_token and you call loginWithGoogle({ id_token }). */
+export function redirectToGoogle() {
+  /* No redirect; Google Sign-In is handled by GoogleSignInButton + loginWithGoogle */
+}
+
+/** Redirect to Facebook OAuth. User returns to /login/callback?provider=facebook#access_token=... */
+export function redirectToFacebook() {
+  const appId = import.meta.env.VITE_FACEBOOK_APP_ID
+  if (!appId) {
+    console.warn('[auth] VITE_FACEBOOK_APP_ID not set; Facebook SSO disabled')
+    return
+  }
+  const redirectUri = getOAuthCallbackUrl('facebook')
+  const url = new URL('https://www.facebook.com/v18.0/dialog/oauth')
+  url.searchParams.set('client_id', appId)
+  url.searchParams.set('redirect_uri', redirectUri)
+  url.searchParams.set('response_type', 'token')
+  url.searchParams.set('scope', 'email,public_profile')
+  if (typeof window !== 'undefined') window.location.href = url.toString()
+}
+
+/** Redirect to Instagram OAuth. User returns to /login/callback?provider=instagram#access_token=... (or with code; backend only accepts access_token). */
+export function redirectToInstagram() {
+  const appId = import.meta.env.VITE_INSTAGRAM_APP_ID
+  if (!appId) {
+    console.warn('[auth] VITE_INSTAGRAM_APP_ID not set; Instagram SSO disabled')
+    return
+  }
+  const redirectUri = getOAuthCallbackUrl('instagram')
+  const url = new URL('https://api.instagram.com/oauth/authorize')
+  url.searchParams.set('client_id', appId)
+  url.searchParams.set('redirect_uri', redirectUri)
+  url.searchParams.set('response_type', 'token')
+  url.searchParams.set('scope', 'user_profile,user_username')
+  if (typeof window !== 'undefined') window.location.href = url.toString()
+}
 
 export const authService = {
   login,
@@ -144,6 +184,7 @@ export const authService = {
   loginWithGoogle,
   loginWithFacebook,
   loginWithInstagram,
+  getOAuthCallbackUrl,
   redirectToGoogle,
   redirectToFacebook,
   redirectToInstagram,
