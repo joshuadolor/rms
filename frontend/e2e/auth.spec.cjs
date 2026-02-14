@@ -136,7 +136,7 @@ test.describe('Register', () => {
     await page.getByRole('button', { name: /create account/i }).click()
 
     await expect(page).toHaveURL(/\/verify-email/)
-    await expect(page.getByRole('heading', { name: /check your email/i })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Check your email' })).toBeVisible()
   })
 })
 
@@ -186,8 +186,8 @@ test.describe('Reset password', () => {
 test.describe('Verify email page', () => {
   test('shows resend option after register flow', async ({ page }) => {
     await page.goto('/verify-email?email=user@example.com')
-    await expect(page.getByRole('heading', { name: /check your email/i })).toBeVisible()
-    await expect(page.getByRole('button', { name: /resend link/i })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Check your email' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Resend link' })).toBeVisible()
   })
 })
 
@@ -210,6 +210,15 @@ test.describe('Route guards', () => {
           token: MOCK_TOKEN,
           token_type: 'Bearer',
         }),
+      })
+    })
+    // App.vue onMounted calls getMe() when token exists; mock so it doesn't redirect to Landing
+    await page.route('**/api/user', (route) => {
+      if (route.request().method() !== 'GET') return route.continue()
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ user: MOCK_VERIFIED_USER }),
       })
     })
 
