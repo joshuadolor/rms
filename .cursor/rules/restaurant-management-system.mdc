@@ -1,0 +1,54 @@
+---
+description: Restaurant Management System — product vision, requirements, and conventions
+alwaysApply: true
+---
+
+# Restaurant Management System (RMS) — Project Rules
+
+## Product Vision
+
+Free-to-use system for owners to manage one or more restaurants, publish menus via public links and QR codes, and control availability (menu items, opening hours, siesta-style breaks).
+
+## Core Conventions
+
+- **Public URLs = subdomain only.** All public/generic restaurant pages (menu, restaurant page) use subdomains (e.g. `{restaurant-slug}.yourapp.com`). Do not use path-based public URLs for menus.
+- **Free tier:** One restaurant per owner (one subdomain). Multiple restaurants / extra subdomains = paid tier (future).
+- **Clarity first:** Prioritize clarity and simplicity for non-technical restaurant owners.
+- **Mobile-first:** Public menu pages must work well on mobile (QR codes are often scanned on phones).
+
+## Must-Have Behavior
+
+1. **Menus:** Categories (e.g. Starters, Mains) containing menu items. Categories and items are **draggable**; persist order and show it on the public menu.
+2. **Combos:** Combo items reference other menu items (e.g. "Burger + Fries + Drink"); own name, optional price, availability rules. When copying menus between restaurants, resolve combo references to items in the target restaurant.
+3. **Availability:** Per-item rules (times/days); configurable opening/closing hours; **split/siesta** schedules (e.g. 12:00–15:00, 19:00–23:00)—no single continuous block assumed.
+4. **Public access:** Stable subdomain URL per restaurant; QR code per menu with owner choice: (A) open menu directly or (B) open restaurant main page first.
+5. **Templates:** Exactly **three** distinct website/menu templates for the public menu or restaurant page.
+6. **Menu copy:** Owners with 2+ restaurants can copy a menu (full or selected items) from one restaurant to another.
+
+## Frontend: API modeling
+
+- **Every API consumed on the frontend must be modeled.** Do not use raw API responses in components or stores.
+- **Location:** Place models under `frontend/src/models/` (e.g. `User.js`, `Restaurant.js`). One file per domain entity or response shape.
+- **Each model should:**
+  - Accept a single `data` (or similar) argument in the constructor, with **default values** for every field (e.g. `data.name ?? ''`) so missing API fields never break the app.
+  - Expose **derived or combined values** for easy use in the UI (e.g. `fullName` from `firstName` + `lastName`, or `displayLabel`).
+  - Provide a static factory for API payloads, e.g. `ModelName.fromApi(apiResponse)`, and use it wherever the API is consumed (stores, composables, or services).
+  - Optionally expose `toJSON()` (or similar) for serialization or sending data back to the API.
+- **Use models in:** Pinia stores, composables, or API service layer—not raw response objects in components.
+
+## Frontend: Services (API calls)
+
+- **All API calls must go through the services layer.** Components and stores must not use `axios`, `fetch`, or any HTTP client directly.
+- **Location:** `frontend/src/services/`. One module per domain (e.g. `auth.service.js`, `restaurant.service.js`). Export a single base client from `api.js` and domain services from `index.js`.
+- **Conventions:**
+  - Use the shared `api` client from `services/api.js` (base URL from `VITE_API_URL`, auth token attached via interceptor).
+  - Services are plain functions or objects of functions; they return the raw API response (or extracted `data`). The **caller** (store or composable) is responsible for passing responses into models (e.g. `User.fromApi(data.user)`).
+  - On errors, use `normalizeApiError(err)` from `services/api.js` to get a consistent `{ message, status?, code? }` for UI.
+  - Import from `@/services` (or `@/services/auth.service`) in components/stores.
+- **Flow:** Component/store → service method → API → return data → caller applies model if needed.
+
+## Definition of Done & Scope
+
+- **E2E tests:** For every feature, add e2e tests covering main flows (e.g. owner creates restaurant, adds menu, visits public subdomain; guest scans QR and sees menu).
+- **Feature complete:** Do not treat a feature as finished without **user confirmation**. Ask first whether they consider it complete.
+- **MVP only:** Implement only the features above unless the user explicitly asks for more. Post-MVP (e.g. table reservation, paid-only features) must not be built until requested; design data/architecture to allow future paid tiers and feature gating.

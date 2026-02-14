@@ -4,6 +4,7 @@ namespace Tests\Unit\Auth;
 
 use App\Application\Auth\LoginUser;
 use App\Domain\Auth\Contracts\UserRepositoryInterface;
+use App\Exceptions\UnverifiedEmailException;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
@@ -20,12 +21,13 @@ class LoginUserTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_handle_returns_user_and_token_when_credentials_valid(): void
+    public function test_handle_returns_user_and_token_when_credentials_valid_and_email_verified(): void
     {
         $user = Mockery::mock(User::class)->makePartial();
         $user->id = 1;
         $user->email = 'test@example.com';
         $user->password = Hash::make('password123');
+        $user->shouldReceive('hasVerifiedEmail')->once()->andReturn(true);
         $user->shouldReceive('createToken')->once()->with('auth')->andReturn(
             (object) ['plainTextToken' => 'login-token-456']
         );
@@ -41,6 +43,28 @@ class LoginUserTest extends TestCase
 
         $this->assertSame($user, $result['user']);
         $this->assertSame('login-token-456', $result['token']);
+    }
+
+    public function test_handle_throws_unverified_email_exception_when_email_not_verified(): void
+    {
+        $user = Mockery::mock(User::class)->makePartial();
+        $user->email = 'unverified@example.com';
+        $user->password = Hash::make('password123');
+        $user->shouldReceive('hasVerifiedEmail')->once()->andReturn(false);
+        $user->shouldNotReceive('createToken');
+
+        $repo = Mockery::mock(UserRepositoryInterface::class);
+        $repo->shouldReceive('findByEmail')->once()->with('unverified@example.com')->andReturn($user);
+
+        $useCase = new LoginUser($repo);
+
+        $this->expectException(UnverifiedEmailException::class);
+        $this->expectExceptionMessage('Your email address is not verified.');
+
+        $useCase->handle([
+            'email' => 'unverified@example.com',
+            'password' => 'password123',
+        ]);
     }
 
     public function test_handle_throws_when_user_not_found(): void

@@ -1,0 +1,25 @@
+/**
+ * Frontend services — use these in components or stores to initiate API calls.
+ * Do not call axios/fetch directly from components; go through a service.
+ *
+ * Usage:
+ *   import { authService } from '@/services'
+ *   const data = await authService.login({ email, password })
+ *   appStore.setUserFromApi(data.user)
+ */
+
+export {
+  api,
+  getBaseUrl,
+  normalizeApiError,
+  API_ERROR_GROUPS,
+  getErrorGroup,
+  reportApiError,
+} from './api'
+export {
+  authService,
+  OAUTH_PROVIDERS,
+  redirectToGoogle,
+  redirectToFacebook,
+  redirectToInstagram,
+} from './auth.service'

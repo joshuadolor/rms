@@ -12,8 +12,61 @@ docker compose up --build
 
 Then open:
 
-- **http://localhost:3000** — API welcome (JSON)
-- **http://localhost:3000/api/health** — Health check (JSON)
+- **http://localhost** — App via nginx (frontend + API on one origin; no CORS)
+- **http://localhost:8080** — Frontend only (Vite; proxies `/api` to the API)
+- **http://localhost:3000** — API only (e.g. `http://localhost:3000/api/health`)
+- **http://localhost:8025** — Mailhog (dev mail; outbound mail from the API appears here)
+
+Nginx uses **keepalive** to the API and frontend so repeated requests reuse connections and feel faster. If the first request is slow, later ones should be quicker.
+
+### Update `/etc/hosts` (optional)
+
+To use a custom local domain (e.g. `http://rms.local` instead of `http://localhost`), add it to your hosts file so it points to `127.0.0.1`.
+
+**macOS / Linux:** edit `/etc/hosts` (needs `sudo`):
+
+```bash
+sudo nano /etc/hosts
+```
+
+Add a line:
+
+```
+127.0.0.1   rms.local
+```
+
+Save, then open **http://rms.local** in the browser. If you later use subdomains (e.g. `demo.rms.local` for restaurant menus), add those too:
+
+```
+127.0.0.1   rms.local
+127.0.0.1   demo.rms.local
+```
+
+**Windows:** edit `C:\Windows\System32\drivers\etc\hosts` as Administrator and add the same lines.
+
+After changing hosts, nginx still listens on port 80, so use **http://rms.local** (no port). If you use a custom domain, set `APP_URL` and `FRONTEND_URL` in the API’s `.env` (or docker-compose) to that URL (e.g. `http://rms.local`).
+
+### Testing mail locally (Mailhog)
+
+With Docker, the API sends mail to **Mailhog** (SMTP on port 1025). Open **http://localhost:8025** to see captured messages.
+
+**1. Quick test (dev only)**  
+Call the test endpoint to send a single email and confirm the mail driver:
+
+```bash
+curl http://localhost/api/test-mail
+```
+
+You should get `"message": "Test email sent. Check Mailhog at http://localhost:8025"` and see `mail_driver: smtp`, `smtp_host: mailhog`. Then open http://localhost:8025 and the test email should be there.
+
+**2. Real flows**  
+- **Register** — After registering a new user, a verification email is sent. Check Mailhog for it.  
+- **Forgot password** — Use "Forgot password" with an existing email; the reset link appears in Mailhog.
+
+**If no mail appears:**  
+- Ensure containers are up: `docker compose ps` (api, mailhog, nginx, frontend).  
+- Call `http://localhost/api/test-mail`. If the response shows `mail_driver: log` or an error, the API is not using SMTP. Rebuild and restart: `docker compose up --build -d`, then `docker compose exec api php artisan config:clear`.  
+- Check API logs: `docker compose logs api`.
 
 ## Run locally without Docker
 

@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Elysian Grove | Culinary Excellence Redefined</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#D4AF37","charcoal": "#0D0D0D","cream": "#F5F5DC","gold-accent": "#B8860B",
+                        "dark-surface": "#1A1A1A",
+                    },
+                    fontFamily: {
+                        "display": ["Plus Jakarta Sans"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .hero-overlay { background: linear-gradient(rgba(13, 13, 13, 0.4), rgba(13, 13, 13, 0.8)); }
+        .menu-underline { position: relative; }
+        .menu-underline::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background-color: #D4AF37;
+            transition: width 0.3s ease;
+        }
+        .menu-underline:hover::after { width: 100%; }
+        .gold-gradient-text {
+            background: linear-gradient(to right, #D4AF37, #F5F5DC, #B8860B);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<body class="bg-charcoal text-cream antialiased">
+<nav class="fixed top-0 w-full z-50 bg-charcoal/90 backdrop-blur-md border-b border-primary/10">
+<div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-10 h-10 border border-primary/30 flex items-center justify-center rounded-lg">
+<span class="material-icons text-primary">restaurant</span>
+</div>
+<span class="text-2xl font-bold tracking-tighter text-white">ELYSIAN <span class="text-primary">GROVE</span></span>
+</div>
+<div class="hidden md:flex items-center gap-10">
+<a class="menu-underline text-xs font-semibold uppercase tracking-widest text-cream/80 hover:text-primary transition-colors" href="#">Home</a>
+<a class="menu-underline text-xs font-semibold uppercase tracking-widest text-cream/80 hover:text-primary transition-colors" href="#menu">Menu</a>
+<a class="menu-underline text-xs font-semibold uppercase tracking-widest text-cream/80 hover:text-primary transition-colors" href="#story">Our Story</a>
+<a class="menu-underline text-xs font-semibold uppercase tracking-widest text-cream/80 hover:text-primary transition-colors" href="#contact">Contact</a>
+</div>
+<a class="border border-primary text-primary hover:bg-primary hover:text-charcoal px-6 py-2.5 rounded-sm font-bold text-xs uppercase tracking-widest transition-all" href="#reserve">
+            Book a Table
+        </a>
+</div>
+</nav>
+<section class="relative h-screen w-full flex items-center justify-center overflow-hidden">
+<img alt="Signature Dish" class="absolute inset-0 w-full h-full object-cover" data-alt="Exquisite plating of a fine dining gourmet dish" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBY23VlTCUOwP5uDy0bLVE509rEOKEQGsma5W6w-oAnBgUIT0PCPSn-zl59TADVIfbXJBQWx3Pnz7rBizenpyivAdVv81njKKeIJzU6cU3kbsAxSdyS8SB8vEJPEIuM6ytrVxfnKwT9wo27MKgP_IaqamTX_e05L9lJoKdKhulNcaaslQJM0ydAf0-7btipCoXRzOVLLCQ9kcYB9qxgJTNK2pWSihL1Olp6hkAkyKfUKezOMC5CdTg0uLoDK-jO4fo183X8hmAWLl0"/>
+<div class="absolute inset-0 hero-overlay"></div>
+<div class="relative z-10 text-center px-4">
+<span class="text-primary font-semibold tracking-[0.4em] uppercase mb-4 block text-sm">Modern Gastronomy</span>
+<h1 class="text-6xl md:text-9xl font-bold text-white mb-8 tracking-tighter">Art on a Plate.</h1>
+<p class="text-cream/70 max-w-2xl mx-auto text-lg md:text-xl mb-12 font-light leading-relaxed">
+            Experience a symphony of flavors crafted from the freshest seasonal ingredients, 
+            where every bite tells a story of tradition and innovation.
+        </p>
+<div class="flex flex-col md:flex-row gap-6 justify-center">
+<a class="bg-primary text-charcoal px-10 py-4 rounded-sm font-bold uppercase tracking-widest hover:bg-white transition-colors" href="#menu">
+                Explore Menu
+            </a>
+<a class="bg-transparent hover:bg-white/5 text-white border border-white/20 px-10 py-4 rounded-sm font-bold uppercase tracking-widest transition-all" href="#reserve">
+                Reservations
+            </a>
+</div>
+</div>
+<div class="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce text-primary">
+<span class="material-icons">expand_more</span>
+</div>
+</section>
+<section class="py-32 px-6 bg-charcoal" id="story">
+<div class="max-w-7xl mx-auto grid md:grid-cols-2 gap-20 items-center">
+<div class="space-y-10">
+<div class="inline-block border-b border-primary/50 pb-2">
+<span class="text-primary text-xs font-bold uppercase tracking-[0.3em]">Est. 2014</span>
+</div>
+<h2 class="text-4xl md:text-6xl font-bold leading-tight text-white">Crafting Memories Through <span class="gold-gradient-text italic">Flavor</span></h2>
+<div class="space-y-6">
+<p class="text-cream/60 text-lg leading-relaxed font-light">
+                    Founded on the principles of sustainability and culinary artistry, Elysian Grove has been a sanctuary for food lovers for over a decade. Our Executive Chef brings a global perspective to local ingredients, creating an ever-evolving menu that surprises and delights.
+                </p>
+<p class="text-cream/60 text-lg leading-relaxed font-light">
+                    We believe that dining is more than just a meal; it's a sensory journey. From the soft glow of our custom lighting to the curated playlist, every detail is designed to transport you.
+                </p>
+</div>
+<div class="pt-8 border-t border-primary/10">
+<div class="flex items-center gap-6">
+<div class="w-20 h-20 rounded-full p-1 border border-primary/20">
+<img alt="Chef Signature" class="w-full h-full object-cover rounded-full filter grayscale hover:grayscale-0 transition-all duration-700" data-alt="Professional chef in a white uniform smiling" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA7W1iPnQFPRGU8HaG0_ZeSrX-3LxgLYbXBj2lejVfugA01o-bg5dQDKlNmjLouo1qaCuQv9eXnx5iTyjEe4X2k4G7Ds_ACvMdIclp4yQVhIjj4Bbp-G3ZFE3JDCoQP5fyQjNZubnSXJ8bl03RjdkINX7BqfhG652IAXilDHTxzYCP_T8xSGGfNiMrkMrtxKSgWxvq5RF1u2x9-vxtqJkp8E22Gwns9gPwMsuwKI76S36hrV0KaXGU_8GCG6_ij7Wut0MrXmcpvcQ0"/>
+</div>
+<div>
+<p class="font-bold text-xl text-white">Marcus Sterling</p>
+<p class="text-xs text-primary uppercase tracking-[0.2em] mt-1">Executive Chef &amp; Founder</p>
+</div>
+</div>
+</div>
+</div>
+<div class="relative">
+<div class="aspect-[4/5] rounded-sm overflow-hidden border border-primary/10">
+<img alt="Interior" class="w-full h-full object-cover" data-alt="Modern upscale restaurant interior with warm lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCPeO6iD4IeF6ZLPkQkLuciWe2M781UgiMgCKH2_O9GAhHTCVaRPeUwMlAgsJtStdY5BunzTHhjkGWFw9qhoKsWX0-NO965Q8kxg6fAoug4BY8mT0B5Ed0EtfQoPv2Z0fh7i-RqDBl1S6hu1fo_EqslMK_BikjBhvIX20Fvyq4IGggr3xlwl1lcvycvwVq92C0UDOEjBKN1kFgSWdA7-UulpoPnGG4hf9vW7p_9hiVH1bTdN8PUcZudGItrF_xx8wdOQhV_ZQQ53A"/>
+</div>
+<div class="absolute -bottom-8 -left-8 w-64 h-64 border border-primary/10 -z-10 hidden lg:block"></div>
+<div class="absolute -top-8 -right-8 w-48 h-48 border border-primary/10 -z-10 hidden lg:block"></div>
+</div>
+</div>
+</section>
+<section class="py-32 bg-dark-surface" id="menu">
+<div class="max-w-7xl mx-auto px-6">
+<div class="text-center mb-20">
+<span class="text-primary font-bold tracking-[0.4em] uppercase text-xs">The Selection</span>
+<h2 class="text-4xl md:text-5xl font-bold mt-4 text-white">Chef's Signature Selection</h2>
+<div class="w-16 h-px bg-primary mx-auto mt-8"></div>
+</div>
+<div class="grid md:grid-cols-3 gap-12">
+<div class="group">
+<div class="aspect-[4/5] overflow-hidden mb-8 relative border border-white/5">
+<img alt="Dish 1" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" data-alt="Fresh seasonal salad with avocado and seeds" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAfc885cpKVXpkh8CcWw2fXVdlqnmJPI8QSNucKgm7fmIIjsY4e7f89Y54THrPpI7_cg4Z73g4lSUlkuquXpy4zjWNl2uaGqHUw_WoI8NCnUJPDVM9BJ1-rIZTQggEAu3xetw4RSolqHpUJfIUoMDYGe2bHYFfrfoimKOfRztggfIBjAPK9VsXfuvvfVCnfCN-qIzrPAY-JTljCbK6oxL69Kk03j_PudD9rVsSm19XwnaARJOgppRiVDwsFldawSmG2BwK0KhG76YU"/>
+<div class="absolute top-0 right-0 bg-primary text-charcoal text-[10px] font-bold px-4 py-1 uppercase tracking-widest">New Arrival</div>
+</div>
+<div class="flex justify-between items-baseline mb-3">
+<h3 class="text-xl font-bold text-white group-hover:text-primary transition-colors">Truffle Glazed Wagyu</h3>
+<div class="h-px flex-grow mx-4 bg-primary/20"></div>
+<span class="text-primary font-bold">$42</span>
+</div>
+<p class="text-cream/50 text-sm leading-relaxed font-light italic">
+                    Aged Japanese Wagyu, black truffle reduction, smoked parsnip puree, and charred seasonal roots.
+                </p>
+</div>
+<div class="group">
+<div class="aspect-[4/5] overflow-hidden mb-8 border border-white/5">
+<img alt="Dish 2" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" data-alt="Saffron risotto with seafood and herbs" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAlnTZ9YXWR-7foEXEFNeo2XzKUzaTJhlxGo_FMvad_UlQcxzJc5qwEHBTTM3BkgtSHQ3UDbaBqRVVxCUneMF8pBUgAKk7U2UnZeHYjA5ZIfLOQxoBSO24dzFWj8l1NkC_QUV_oqMLlyI9MaetFjxP30gMLOgwVmHhCiix6poxz1Q6uei14EdIEyehbVoOnsLWyuc4oEz7AQE5zXYSzEo_G1g_I0o6drtkDWEees7J-2Ew8Z8XuI2lQaPDY9iNAcR3iTY9YRngid7Q"/>
+</div>
+<div class="flex justify-between items-baseline mb-3">
+<h3 class="text-xl font-bold text-white group-hover:text-primary transition-colors">Saffron Risotto</h3>
+<div class="h-px flex-grow mx-4 bg-primary/20"></div>
+<span class="text-primary font-bold">$34</span>
+</div>
+<p class="text-cream/50 text-sm leading-relaxed font-light italic">
+                    Arborio rice infused with Persian saffron, seared scallops, and a lemon-herb oil drizzle.
+                </p>
+</div>
+<div class="group">
+<div class="aspect-[4/5] overflow-hidden mb-8 border border-white/5">
+<img alt="Dish 3" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" data-alt="Smoked heritage carrots with honey glaze" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCdi5OfOlomBLhvArd7fZ0uzqoq_TIjqRG5KIfVPMGshgAmx-C5LyfNNSeRNX24JQ_V_wK12f9WW3F6VzBWxH34qY0jTfOz2MGklLxsFfBfNSeBaPkQHfEn3YYNL3YNRxJouyb2jO3VKTkmDg2JDygdXKYCzSL4YGc1PT6mk0O1KoNJYIcILhVCQm0R8rDLGwG-r_j8KklShJhaX-scrEqqIQf6HQYLOfJi9iMRsaSeR0GI8v0Rw7AZDPrf2Dl768zyfBHaMtBkMeY"/>
+</div>
+<div class="flex justify-between items-baseline mb-3">
+<h3 class="text-xl font-bold text-white group-hover:text-primary transition-colors">Heritage Salmon</h3>
+<div class="h-px flex-grow mx-4 bg-primary/20"></div>
+<span class="text-primary font-bold">$38</span>
+</div>
+<p class="text-cream/50 text-sm leading-relaxed font-light italic">
+                    Wild-caught salmon, maple-soy glaze, roasted heirloom carrots, and crispy quinoa.
+                </p>
+</div>
+</div>
+<div class="mt-20 text-center">
+<button class="border border-primary text-primary px-12 py-4 rounded-sm font-bold uppercase tracking-[0.2em] hover:bg-primary hover:text-charcoal transition-all text-xs">
+                View Full Menu
+            </button>
+</div>
+</div>
+</section>
+<section class="py-32 px-6 relative overflow-hidden" id="reserve">
+<div class="absolute inset-0 bg-charcoal -z-10">
+<img alt="Booking Background" class="w-full h-full object-cover opacity-30 grayscale" data-alt="Dark abstract restaurant atmosphere background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCgil7EPKWmLVjXYm198R2hsUJVq9lt-1b4Mtubb9CuBg2k5B5WXVudtZ3ubpSypqV_lyO2Wm159VzFyxdREJy_uBcb5UxuL1HlkQ-bllmOddFBrMaSYf8ySUDqQ2I8q0co__NP3YM-0qPlXtKh3Ka9Ktq9YNAmeY_6BufBZE9tbZwPZhUKoUeDo4_e0ybE3EeP13rqQQDUgo1eepjH0oBzew0GEUFzQlLU7I-3ZRLb42vQSmSs6P8OXkI98y_OGcbFOSJUZIM3pvA"/>
+<div class="absolute inset-0 bg-gradient-to-t from-charcoal via-charcoal/80 to-charcoal"></div>
+</div>
+<div class="max-w-4xl mx-auto bg-white/5 backdrop-blur-xl p-10 md:p-20 rounded-sm border border-white/10 shadow-2xl">
+<div class="text-center mb-16">
+<h2 class="text-4xl font-bold text-white mb-6 tracking-tight">Reserve Your Table</h2>
+<p class="text-cream/60 font-light text-lg">Indulge in an evening of refined culinary exploration.</p>
+</div>
+<form class="grid md:grid-cols-2 gap-8">
+<div class="space-y-3">
+<label class="text-[10px] font-bold text-primary uppercase tracking-[0.2em]">Full Name</label>
+<input class="w-full bg-transparent border-b border-white/20 border-x-0 border-t-0 rounded-none py-3 px-0 text-white placeholder-white/20 focus:ring-0 focus:border-primary transition-colors" placeholder="Gourmet Enthusiast" type="text"/>
+</div>
+<div class="space-y-3">
+<label class="text-[10px] font-bold text-primary uppercase tracking-[0.2em]">Guests</label>
+<select class="w-full bg-transparent border-b border-white/20 border-x-0 border-t-0 rounded-none py-3 px-0 text-white focus:ring-0 focus:border-primary transition-colors">
+<option class="bg-charcoal text-white">2 Guests</option>
+<option class="bg-charcoal text-white">4 Guests</option>
+<option class="bg-charcoal text-white">6 Guests</option>
+<option class="bg-charcoal text-white">Private Party (8+)</option>
+</select>
+</div>
+<div class="space-y-3">
+<label class="text-[10px] font-bold text-primary uppercase tracking-[0.2em]">Date</label>
+<input class="w-full bg-transparent border-b border-white/20 border-x-0 border-t-0 rounded-none py-3 px-0 text-white focus:ring-0 focus:border-primary transition-colors" type="date"/>
+</div>
+<div class="space-y-3">
+<label class="text-[10px] font-bold text-primary uppercase tracking-[0.2em]">Time</label>
+<select class="w-full bg-transparent border-b border-white/20 border-x-0 border-t-0 rounded-none py-3 px-0 text-white focus:ring-0 focus:border-primary transition-colors">
+<option class="bg-charcoal text-white">7:00 PM</option>
+<option class="bg-charcoal text-white">8:30 PM</option>
+<option class="bg-charcoal text-white">9:30 PM</option>
+</select>
+</div>
+<button class="md:col-span-2 bg-primary hover:bg-white text-charcoal font-bold py-5 rounded-sm uppercase tracking-[0.3em] transition-all text-sm mt-8">
+                Confirm Reservation
+            </button>
+</form>
+</div>
+</section>
+<footer class="bg-charcoal pt-32 pb-16 border-t border-white/5" id="contact">
+<div class="max-w-7xl mx-auto px-6">
+<div class="grid md:grid-cols-4 gap-16 mb-24">
+<div class="space-y-8">
+<div class="flex items-center gap-2">
+<span class="text-xl font-bold tracking-tighter text-white uppercase">Elysian <span class="text-primary">Grove</span></span>
+</div>
+<p class="text-cream/50 text-sm leading-relaxed font-light">
+                    Redefining the fine dining experience through fresh ingredients, innovative techniques, and a passion for hospitality.
+                </p>
+<div class="flex gap-6">
+<a class="text-cream/40 hover:text-primary transition-colors" href="#">
+<i class="material-icons text-xl">facebook</i>
+</a>
+<a class="text-cream/40 hover:text-primary transition-colors" href="#">
+<span class="material-icons text-xl">camera_alt</span>
+</a>
+</div>
+</div>
+<div>
+<h4 class="font-bold text-white uppercase tracking-[0.2em] text-xs mb-8">Contact</h4>
+<ul class="space-y-5 text-cream/50 text-sm font-light">
+<li class="flex gap-4 items-start">
+<span class="material-icons text-primary text-lg">location_on</span>
+<span>123 Culinary Lane, Gastronomy District<br/>New York, NY 10001</span>
+</li>
+<li class="flex gap-4 items-center">
+<span class="material-icons text-primary text-lg">phone</span>
+<span>+1 (555) 000-0000</span>
+</li>
+<li class="flex gap-4 items-center">
+<span class="material-icons text-primary text-lg">email</span>
+<span>hello@elysiangrove.com</span>
+</li>
+</ul>
+</div>
+<div>
+<h4 class="font-bold text-white uppercase tracking-[0.2em] text-xs mb-8">Hours</h4>
+<ul class="space-y-5 text-cream/50 text-sm font-light">
+<li class="flex justify-between border-b border-white/5 pb-2">
+<span>Tue - Thu</span>
+<span class="text-white">5 PM - 10 PM</span>
+</li>
+<li class="flex justify-between border-b border-white/5 pb-2">
+<span>Fri - Sat</span>
+<span class="text-white">5 PM - 11 PM</span>
+</li>
+<li class="flex justify-between border-b border-white/5 pb-2">
+<span>Sun</span>
+<span class="text-white">4 PM - 9 PM</span>
+</li>
+</ul>
+</div>
+<div class="rounded-sm overflow-hidden h-48 border border-white/10 grayscale opacity-40 hover:opacity-100 transition-opacity">
+<img alt="Location Map" class="w-full h-full object-cover" data-alt="Map of New York City showing restaurant location" data-location="New York City" src="https://lh3.googleusercontent.com/aida-public/AB6AXuATpNdB5OEp2vfRUY0vNsnnn46pX18IL_sFC2qI-TUxeLjusb7zxXExCgRO4xYnvOzXvs_GFLmllDGkTAbHGVp740wMjAbDWaziMCzZ6vXAw8xGZ79yM8CLPHKDUlutJhfXAZ5PIsG7FQ7YVmH6p1gFB2y02nE_4NXaLmHel3x4ZOat1XubePd9yqCsGSRgIROAz1CSfyfyphhLU1T6xDDTUewzwyOuzNhgVGD_JbjFAePuWCWitXhdAGPgv6mQLzuG8_LTS9Wj7GU"/>
+</div>
+</div>
+<div class="pt-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6 text-[10px] text-cream/30 uppercase tracking-[0.2em] font-medium">
+<p>© 2024 Elysian Grove Restaurant Group. All rights reserved.</p>
+<div class="flex gap-12">
+<a class="hover:text-primary transition-colors" href="#">Privacy Policy</a>
+<a class="hover:text-primary transition-colors" href="#">Terms of Service</a>
+</div>
+</div>
+</div>
+</footer>
+
+</body></html>

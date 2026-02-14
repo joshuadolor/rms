@@ -12,8 +12,10 @@ final readonly class RegisterUser
     ) {}
 
     /**
+     * Create user, send verification email. No token is issued until email is verified.
+     *
      * @param array{name: string, email: string, password: string} $input
-     * @return array{user: User, token: string}
+     * @return array{user: User}
      */
     public function handle(array $input): array
     {
@@ -23,11 +25,10 @@ final readonly class RegisterUser
             'password' => $input['password'],
         ]);
 
-        $token = $user->createToken('auth')->plainTextToken;
+        $user->sendEmailVerificationNotification();
 
         return [
             'user' => $user,
-            'token' => $token,
         ];
     }
 }

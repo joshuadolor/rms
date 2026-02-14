@@ -74,7 +74,8 @@ class SocialLoginTest extends TestCase
         $userRepo->shouldReceive('create')->once()->with(Mockery::on(function (array $data) {
             return $data['name'] === 'New User'
                 && $data['email'] === 'new@example.com'
-                && isset($data['password']);
+                && isset($data['password'])
+                && isset($data['email_verified_at']); // social provider email treated as verified
         }))->andReturn($user);
 
         $useCase = new SocialLogin($userRepo, $socialRepo);
@@ -127,7 +128,8 @@ class SocialLoginTest extends TestCase
         $userRepo->shouldNotReceive('findByEmail'); // not called when email is null
         $userRepo->shouldReceive('create')->once()->with(Mockery::on(function (array $data) {
             return $data['email'] === 'instagram_ig-999@placeholder.rms.local'
-                && $data['name'] === 'iguser';
+                && $data['name'] === 'iguser'
+                && ! array_key_exists('email_verified_at', $data); // no email from provider
         }))->andReturn($user);
 
         $useCase = new SocialLogin($userRepo, $socialRepo);

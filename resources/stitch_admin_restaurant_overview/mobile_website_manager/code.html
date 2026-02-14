@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Website Content Manager - Admin Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#e3623b",
+                        "background-light": "#f8f6f6",
+                        "background-dark": "#211511",
+                    },
+                    fontFamily: {
+                        "display": ["Plus Jakarta Sans", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+</head>
+<body class="font-display bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-100 min-h-screen">
+<!-- Header / Navigation -->
+<header class="sticky top-0 z-30 bg-white/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-primary/10">
+<div class="max-w-2xl mx-auto px-4 h-16 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<button class="p-2 hover:bg-primary/10 rounded-lg transition-colors">
+<span class="material-icons-round text-primary">arrow_back</span>
+</button>
+<h1 class="text-lg font-bold">Website Manager</h1>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-xs font-medium text-slate-400 mr-2">AUTO-SAVED</span>
+<button class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-sm transition-all">
+                    Publish
+                </button>
+</div>
+</div>
+</header>
+<main class="max-w-2xl mx-auto p-4 pb-32">
+<!-- Status Bar -->
+<div class="mb-6 p-4 bg-primary/5 border border-primary/20 rounded-xl flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+<div>
+<p class="text-sm font-semibold">Live Site Status</p>
+<p class="text-xs text-slate-500">Last updated today at 10:42 AM</p>
+</div>
+</div>
+<button class="text-primary text-xs font-bold uppercase tracking-wider">View Logs</button>
+</div>
+<!-- Section List -->
+<div class="space-y-4">
+<!-- Hero Section Editor -->
+<div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">
+<button class="w-full px-5 py-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+<div class="flex items-center gap-4 text-left">
+<div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-icons-round">campaign</span>
+</div>
+<div>
+<h3 class="font-bold text-slate-900 dark:text-white">Hero Section</h3>
+<p class="text-xs text-slate-500">Headline, subtext, and main background</p>
+</div>
+</div>
+<span class="material-icons-round text-slate-400">expand_more</span>
+</button>
+<div class="px-5 pb-5 pt-2 border-t border-slate-100 dark:border-slate-800 space-y-4">
+<div class="space-y-1">
+<label class="text-xs font-bold text-slate-500 uppercase">Main Headline</label>
+<input class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg focus:ring-primary focus:border-primary text-sm" type="text" value="Authentic Italian Flavors"/>
+</div>
+<div class="space-y-1">
+<label class="text-xs font-bold text-slate-500 uppercase">Hero Background</label>
+<div class="relative group aspect-video rounded-lg overflow-hidden border-2 border-dashed border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-800">
+<img class="absolute inset-0 w-full h-full object-cover opacity-60" data-alt="High quality close up of gourmet restaurant dish" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCLHPTHEEhMKtWU0feht8BQFlJ9LmnwdAAHabDtRalooMsrta4whF4iy_q_z04cvQwq0EJJPQrmr2LzobmE8XVXyGv1se06pxfW95Ige5JpLEjfYiuS9mJywXoFRMRKwAtpV0i458lEOT25AdsSjqg7dUQhW0jUv0pfi6KWe4pbEeAqddrOOTQmKhPsPeGueYS2frvNId--HRdSv7BmCXb0gwnqEF5fnxrQSz-vYMtQ2RnVhtbnbSl1vKGP77ctF20qCS8VgTi27fs"/>
+<div class="relative z-10 text-center p-4">
+<span class="material-icons-round text-slate-400 mb-1">photo_camera</span>
+<p class="text-xs font-semibold text-slate-600 dark:text-slate-300">Tap to change photo</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- About Us Editor -->
+<div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">
+<button class="w-full px-5 py-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+<div class="flex items-center gap-4 text-left">
+<div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-icons-round">history_edu</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<h3 class="font-bold text-slate-900 dark:text-white">Our Story</h3>
+<span class="bg-amber-100 text-amber-700 text-[10px] px-1.5 py-0.5 rounded font-bold uppercase tracking-tight">Draft</span>
+</div>
+<p class="text-xs text-slate-500">Restaurant bio and interior gallery</p>
+</div>
+</div>
+<span class="material-icons-round text-slate-400">chevron_right</span>
+</button>
+</div>
+<!-- Contact & Location -->
+<div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">
+<button class="w-full px-5 py-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+<div class="flex items-center gap-4 text-left">
+<div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-icons-round">place</span>
+</div>
+<div>
+<h3 class="font-bold text-slate-900 dark:text-white">Contact &amp; Hours</h3>
+<p class="text-xs text-slate-500">Address, phone, and opening hours</p>
+</div>
+</div>
+<span class="material-icons-round text-slate-400 text-sm">edit</span>
+</button>
+<div class="px-5 pb-5 pt-2 border-t border-slate-100 dark:border-slate-800 space-y-4">
+<div class="grid grid-cols-2 gap-3">
+<div class="space-y-1">
+<label class="text-xs font-bold text-slate-500 uppercase">Phone Number</label>
+<input class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg focus:ring-primary focus:border-primary text-sm" type="tel" value="+1 (555) 012-3456"/>
+</div>
+<div class="space-y-1">
+<label class="text-xs font-bold text-slate-500 uppercase">Reservation Link</label>
+<input class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg focus:ring-primary focus:border-primary text-sm" type="text" value="opentable.com/res"/>
+</div>
+</div>
+<div class="space-y-1">
+<label class="text-xs font-bold text-slate-500 uppercase">Google Maps Location</label>
+<div class="h-32 rounded-lg bg-slate-100 dark:bg-slate-800 overflow-hidden relative border border-slate-200 dark:border-slate-700">
+<img class="w-full h-full object-cover" data-alt="Stylized map showing restaurant location marker" data-location="New York City" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBdO5Ia6VSdPKWO-TDSWXWa_pYEaBQKbJjWzI5-S08_OesyLKhWMifl9tawfZxS-vTnFbXwH0GrncNI7xZbLLkR9FHq2SGANislpJ-80g9Yxu8QKfe4x9HmWxxQpC9O6hI4Q4U5g7wRBvU-IUbMfDfKyk5OZV6MXcOnGA4xh8tKPYyAZJlCCx4U270gkfdpOGG8lJV0IXo6Qix5xZB6Gw6rIcRj0vaxmbU-xS0B0EVJQuTUN1zvNE1y7XBu-XBiJ8rEDZ-k7zFRdkY"/>
+<div class="absolute inset-0 bg-black/10 flex items-center justify-center">
+<span class="bg-white/90 dark:bg-slate-900/90 text-[10px] font-bold px-3 py-1 rounded-full shadow-lg">Change Location</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Social Links -->
+<div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">
+<button class="w-full px-5 py-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+<div class="flex items-center gap-4 text-left">
+<div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-icons-round">share</span>
+</div>
+<div>
+<h3 class="font-bold text-slate-900 dark:text-white">Social Media</h3>
+<p class="text-xs text-slate-500">Instagram, Facebook, and TikTok links</p>
+</div>
+</div>
+<span class="material-icons-round text-slate-400">chevron_right</span>
+</button>
+</div>
+</div>
+<!-- SEO Quick Settings -->
+<div class="mt-8 pt-8 border-t border-slate-200 dark:border-slate-800">
+<h2 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4 px-1">Settings &amp; SEO</h2>
+<div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 space-y-4">
+<div class="flex items-center justify-between">
+<div>
+<p class="text-sm font-bold">Search Engine Indexing</p>
+<p class="text-xs text-slate-500">Allow Google to find your site</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<div class="space-y-1">
+<label class="text-xs font-bold text-slate-500 uppercase">Site Favicon</label>
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-lg bg-slate-50 dark:bg-slate-800 border-2 border-dashed border-slate-200 dark:border-slate-700 flex items-center justify-center">
+<span class="material-icons-round text-slate-300 text-xl">upload</span>
+</div>
+<p class="text-[11px] text-slate-500">Upload a square icon (min 32x32px). Recommended PNG or SVG format.</p>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Floating Action Button - Preview -->
+<div class="fixed bottom-6 left-1/2 -translate-x-1/2 z-40">
+<button class="bg-primary hover:bg-primary/95 text-white flex items-center gap-3 px-6 py-3.5 rounded-full shadow-xl shadow-primary/30 transform transition-transform active:scale-95 group">
+<span class="material-icons-round group-hover:animate-pulse">visibility</span>
+<span class="font-bold tracking-tight">Preview Site</span>
+</button>
+</div>
+<!-- Background Decoration for Desktop View -->
+<div class="hidden lg:block fixed right-0 top-0 bottom-0 w-1/3 bg-slate-50 dark:bg-slate-950/50 border-l border-slate-200 dark:border-slate-800 p-8 overflow-y-auto">
+<div class="w-full max-w-sm mx-auto aspect-[9/19] bg-slate-900 rounded-[3rem] p-3 shadow-2xl ring-8 ring-slate-800 border-4 border-slate-700 relative overflow-hidden">
+<!-- Mock Phone Content -->
+<div class="bg-white h-full w-full rounded-[2.2rem] overflow-hidden relative">
+<!-- Status bar -->
+<div class="h-8 bg-white flex items-center justify-between px-6 pt-2">
+<span class="text-[10px] font-bold">9:41</span>
+<div class="flex items-center gap-1">
+<span class="material-icons-round text-xs">signal_cellular_alt</span>
+<span class="material-icons-round text-xs">wifi</span>
+<span class="material-icons-round text-xs">battery_full</span>
+</div>
+</div>
+<!-- Mini Site Preview -->
+<div class="p-0 overflow-y-auto h-full scrollbar-hide">
+<div class="h-48 relative overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Hero image preview in mobile frame" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDjsvTBN3iE8XE5yNpM02e2cm8rDcbJpfqezcA3AWdeabu_3zMyRVIhPtv_jC172B4SvVQ7IvVJK050NPadvT3eFCS-SwSlTQxS_cPapqdIi0A09ehFYV2AtMXu7Aft-QgCl4u1M0DFXNgKIH72pa5QWoOzXbe21R4lRXBDYz_4sYNYUdUX9Lv2Bwff29lYdKsoGac_LL_NVpFGq2EJLyyfxsdy1oOJE6VSfK-XkAzevCBdeW4pmEWw49JfRH1Ec7IlfGXaR2SQdu4"/>
+<div class="absolute inset-0 bg-black/40 flex flex-col items-center justify-center p-4 text-center">
+<h4 class="text-white text-lg font-bold">Authentic Italian Flavors</h4>
+<div class="h-0.5 w-10 bg-primary mt-2"></div>
+</div>
+</div>
+<div class="p-6 space-y-4">
+<div class="h-4 w-2/3 bg-slate-100 rounded"></div>
+<div class="space-y-2">
+<div class="h-2 w-full bg-slate-50 rounded"></div>
+<div class="h-2 w-full bg-slate-50 rounded"></div>
+<div class="h-2 w-4/5 bg-slate-50 rounded"></div>
+</div>
+<div class="pt-4 flex justify-center">
+<div class="px-6 py-2 bg-primary/10 rounded-full border border-primary/20">
+<span class="text-[10px] font-bold text-primary uppercase">Reserve Now</span>
+</div>
+</div>
+</div>
+<div class="h-32 bg-slate-100 m-4 rounded-xl flex items-center justify-center">
+<span class="material-icons-round text-slate-300">image</span>
+</div>
+</div>
+</div>
+</div>
+<p class="text-center text-xs font-bold text-slate-400 mt-6 uppercase tracking-widest">Live Preview (Mobile View)</p>
+</div>
+</body></html>

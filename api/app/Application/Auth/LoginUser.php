@@ -3,6 +3,7 @@
 namespace App\Application\Auth;
 
 use App\Domain\Auth\Contracts\UserRepositoryInterface;
+use App\Exceptions\UnverifiedEmailException;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
@@ -18,6 +19,7 @@ final readonly class LoginUser
      * @return array{user: User, token: string}
      *
      * @throws ValidationException
+     * @throws UnverifiedEmailException
      */
     public function handle(array $input): array
     {
@@ -27,6 +29,10 @@ final readonly class LoginUser
             throw ValidationException::withMessages([
                 'email' => [__('The provided credentials are incorrect.')],
             ]);
+        }
+
+        if (! $user->hasVerifiedEmail()) {
+            throw new UnverifiedEmailException();
         }
 
         $token = $user->createToken('auth')->plainTextToken;

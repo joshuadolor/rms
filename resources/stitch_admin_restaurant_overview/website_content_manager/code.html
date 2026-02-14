@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Website Content Manager - Admin Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#e3623b",
+                        "background-light": "#f8f6f6",
+                        "background-dark": "#211511",
+                        "charcoal": "#120d0b",
+                        "terracotta-light": "#ec8f73",
+                    },
+                    fontFamily: {
+                        "display": ["Plus Jakarta Sans", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(227, 98, 59, 0.2);
+            border-radius: 10px;
+        }
+        .preview-container {
+            aspect-ratio: 16 / 9;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-100 min-h-screen flex flex-col font-display">
+<!-- Top Navigation Bar -->
+<header class="h-16 border-b border-primary/10 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md flex items-center justify-between px-6 sticky top-0 z-50">
+<div class="flex items-center gap-4">
+<div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+<span class="material-icons text-white text-sm">restaurant</span>
+</div>
+<h1 class="font-bold text-lg tracking-tight">Culina<span class="text-primary">Admin</span></h1>
+<div class="h-4 w-px bg-primary/20 mx-2"></div>
+<div class="flex items-center gap-2 px-3 py-1 bg-primary/10 rounded-full">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+<span class="text-xs font-medium text-primary">DRAFT SAVED</span>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-3 bg-primary/5 p-1 rounded-full border border-primary/10">
+<button class="flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary text-white text-xs font-semibold">
+<span class="material-icons text-sm">dark_mode</span>
+                    Dark Site
+                </button>
+<button class="flex items-center gap-2 px-4 py-1.5 rounded-full text-slate-400 text-xs font-semibold hover:text-primary transition-colors">
+<span class="material-icons text-sm">light_mode</span>
+                    Light Site
+                </button>
+</div>
+<div class="flex items-center gap-2">
+<button class="px-5 py-2 text-xs font-bold text-primary hover:bg-primary/5 rounded-lg transition-all border border-primary/20">PREVIEW SITE</button>
+<button class="px-5 py-2 text-xs font-bold bg-primary text-white rounded-lg hover:shadow-lg hover:shadow-primary/20 transition-all flex items-center gap-2">
+<span class="material-icons text-sm">publish</span>
+                    PUBLISH CHANGES
+                </button>
+</div>
+</div>
+</header>
+<main class="flex-1 flex overflow-hidden">
+<!-- Main Navigation Sidebar -->
+<aside class="w-20 lg:w-64 border-r border-primary/10 flex flex-col bg-background-light dark:bg-charcoal transition-all">
+<nav class="flex-1 py-6 px-4 space-y-2">
+<a class="flex items-center gap-4 px-4 py-3 rounded-xl bg-primary/10 text-primary" href="#">
+<span class="material-icons">dashboard</span>
+<span class="hidden lg:block font-semibold">General</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 rounded-xl text-slate-500 hover:bg-primary/5 hover:text-primary transition-all" href="#">
+<span class="material-icons">view_quilt</span>
+<span class="hidden lg:block font-semibold">Hero Section</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 rounded-xl text-slate-500 hover:bg-primary/5 hover:text-primary transition-all" href="#">
+<span class="material-icons">menu_book</span>
+<span class="hidden lg:block font-semibold">Menu Highlights</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 rounded-xl text-slate-500 hover:bg-primary/5 hover:text-primary transition-all border-l-4 border-transparent" href="#">
+<span class="material-icons">info</span>
+<span class="hidden lg:block font-semibold">About Us</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 rounded-xl text-slate-500 hover:bg-primary/5 hover:text-primary transition-all" href="#">
+<span class="material-icons">vertical_align_bottom</span>
+<span class="hidden lg:block font-semibold">Footer</span>
+</a>
+</nav>
+<div class="p-4 border-t border-primary/10">
+<div class="p-4 bg-primary/5 rounded-xl border border-primary/10">
+<p class="text-[10px] text-slate-400 uppercase tracking-widest mb-1">Signed in as</p>
+<p class="text-xs font-bold truncate">manager@theculina.com</p>
+</div>
+</div>
+</aside>
+<!-- Editor and Preview Split Screen -->
+<div class="flex-1 flex overflow-hidden">
+<!-- Left: Editing Panel -->
+<section class="w-[420px] border-r border-primary/10 overflow-y-auto custom-scrollbar bg-background-light dark:bg-background-dark p-6">
+<div class="flex items-center justify-between mb-8">
+<h2 class="text-xl font-bold">Hero Section</h2>
+<div class="flex items-center gap-2">
+<span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Visible</span>
+<button class="relative w-10 h-5 bg-primary rounded-full">
+<span class="absolute right-1 top-1 w-3 h-3 bg-white rounded-full"></span>
+</button>
+</div>
+</div>
+<div class="space-y-8">
+<!-- Text Controls -->
+<div class="space-y-4">
+<div class="flex flex-col gap-1.5">
+<label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Main Headline</label>
+<input class="w-full bg-white dark:bg-charcoal border border-primary/20 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all" type="text" value="Experience Culinary Artistry"/>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Sub-Headline</label>
+<textarea class="w-full bg-white dark:bg-charcoal border border-primary/20 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all" rows="3">A symphony of flavors served in a sophisticated atmosphere. Located in the heart of the city.</textarea>
+</div>
+</div>
+<!-- CTA Button -->
+<div class="p-4 bg-primary/5 rounded-xl border border-primary/10 space-y-4">
+<h3 class="text-xs font-bold uppercase tracking-widest text-primary">Call to Action Button</h3>
+<div class="flex flex-col gap-1.5">
+<label class="text-xs font-medium text-slate-500">Label</label>
+<input class="w-full bg-white dark:bg-charcoal border border-primary/20 rounded-lg px-4 py-2 text-sm" type="text" value="Reserve a Table"/>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="text-xs font-medium text-slate-500">Link URL</label>
+<input class="w-full bg-white dark:bg-charcoal border border-primary/20 rounded-lg px-4 py-2 text-sm" type="text" value="/reservations"/>
+</div>
+</div>
+<!-- Image Uploader -->
+<div class="space-y-3">
+<label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Background Media</label>
+<div class="relative group cursor-pointer border-2 border-dashed border-primary/20 rounded-xl overflow-hidden hover:border-primary/40 transition-all aspect-video">
+<img alt="Restaurant Interior" class="w-full h-full object-cover opacity-60 group-hover:opacity-40 transition-opacity" data-alt="High-end restaurant interior with ambient lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuARH4jesxH-sc9wlXS-qjDaLsnqLTWahmjrYNQPBN2HmGIJsbWDg7NJjbEATmWMEteUqqKiC72vIvmFxmifvxKJQ5ULfQ0MSXM0RA8kwbsx4u73zqMTcVeAXKiTXku4_8oOA-GzEtmXRjxxvuUre2dUEpW3CMHq5wbRuLzr62AhAwx0A0GT_-LhWOvaTDo-Zz_xcbejf5D4S4b2tH0AT84lEYCbn9lDIBOxmjNzTepRrIK76e5sg1pH_Sg-RI7gluWKwUV0VeyvJ50"/>
+<div class="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
+<span class="material-icons text-primary text-3xl mb-2">cloud_upload</span>
+<p class="text-xs font-bold">Click to replace image</p>
+<p class="text-[10px] text-slate-500 mt-1">Recommend 1920x1080 (JPG, PNG, WebP)</p>
+</div>
+</div>
+</div>
+<!-- Overlay Settings -->
+<div class="space-y-4">
+<div class="flex items-center justify-between">
+<label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Background Dim</label>
+<span class="text-xs font-bold text-primary">40%</span>
+</div>
+<input class="w-full accent-primary" max="100" min="0" type="range" value="40"/>
+</div>
+</div>
+<div class="mt-12 mb-6 text-center">
+<p class="text-[10px] text-slate-400 italic">Last saved 2 minutes ago</p>
+</div>
+</section>
+<!-- Right: Real-time Preview Window -->
+<section class="flex-1 bg-slate-200 dark:bg-charcoal/50 p-8 flex flex-col items-center">
+<!-- Preview Device Toggles -->
+<div class="flex items-center gap-2 mb-6 bg-white dark:bg-background-dark p-1.5 rounded-full shadow-sm border border-primary/10">
+<button class="p-1.5 rounded-full bg-primary/10 text-primary">
+<span class="material-icons text-lg">desktop_windows</span>
+</button>
+<button class="p-1.5 rounded-full text-slate-400 hover:text-primary transition-colors">
+<span class="material-icons text-lg">tablet_mac</span>
+</button>
+<button class="p-1.5 rounded-full text-slate-400 hover:text-primary transition-colors">
+<span class="material-icons text-lg">smartphone</span>
+</button>
+<div class="w-px h-4 bg-primary/20 mx-1"></div>
+<button class="p-1.5 rounded-full text-slate-400 hover:text-primary transition-colors">
+<span class="material-icons text-lg">open_in_new</span>
+</button>
+</div>
+<!-- The Preview Mockup -->
+<div class="w-full max-w-5xl bg-background-dark shadow-2xl rounded-xl overflow-hidden border border-white/5 flex flex-col flex-1">
+<!-- Preview Browser Header -->
+<div class="h-8 bg-charcoal border-b border-white/5 px-4 flex items-center gap-1.5">
+<div class="w-2.5 h-2.5 rounded-full bg-red-500/30"></div>
+<div class="w-2.5 h-2.5 rounded-full bg-yellow-500/30"></div>
+<div class="w-2.5 h-2.5 rounded-full bg-green-500/30"></div>
+<div class="mx-4 flex-1 h-5 bg-white/5 rounded-full flex items-center px-4">
+<span class="text-[9px] text-slate-500">theculina.com</span>
+</div>
+</div>
+<!-- Preview Content Area -->
+<div class="flex-1 overflow-y-auto custom-scrollbar relative">
+<!-- Hero Section Preview -->
+<div class="relative h-[450px] w-full flex flex-col">
+<div class="absolute inset-0 bg-black/40 z-10"></div>
+<img alt="Preview Background" class="absolute inset-0 w-full h-full object-cover" data-alt="Cinematic restaurant interior background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCF-jJulyE6R2yjsBg9kvdXNeodoKrJZpqp8E5hil3WIDOP70ogXlNIozx7ubo4o5O8Sy9G9kddBma-fcn4x10l0OEobwvgghTGF5k_il0jx3GQr1bEQJ2xrrUEKHH6oIRBVaWgUNZlawnxnv3Q8vNtWKZ2UP93A-GmUQH-DRoDsp12B1t5faRx1xkj9xbIuHwpnZV17caQNMjjMMNCfN3rYBbTcK2LbxXuhZ85QmpDA8eEq6OSLXmmieWhM-ZTdEOkfCyB3cyyXtQ"/>
+<!-- Preview Navbar -->
+<nav class="relative z-20 flex items-center justify-between px-12 py-8">
+<div class="text-xl font-bold text-white tracking-widest uppercase">Culina</div>
+<div class="hidden md:flex gap-8 text-[11px] font-semibold text-white/80 uppercase tracking-widest">
+<a class="hover:text-primary transition-colors" href="#">Experience</a>
+<a class="hover:text-primary transition-colors" href="#">The Menu</a>
+<a class="hover:text-primary transition-colors" href="#">Reservations</a>
+<a class="hover:text-primary transition-colors" href="#">Journal</a>
+</div>
+</nav>
+<!-- Hero Text Preview -->
+<div class="relative z-20 flex-1 flex flex-col items-center justify-center text-center px-6">
+<span class="text-primary text-sm font-bold tracking-[0.3em] uppercase mb-4">Fine Dining Redefined</span>
+<h1 class="text-white text-5xl md:text-6xl font-light mb-6 leading-tight max-w-3xl">Experience <span class="italic font-serif">Culinary Artistry</span></h1>
+<p class="text-white/70 text-base max-w-xl mb-10 leading-relaxed">A symphony of flavors served in a sophisticated atmosphere. Located in the heart of the city.</p>
+<button class="px-10 py-4 bg-primary text-white text-xs font-bold uppercase tracking-widest hover:scale-105 transition-transform">
+                                    Reserve a Table
+                                </button>
+</div>
+</div>
+<!-- Menu Highlights Preview Snippet -->
+<div class="bg-background-dark py-16 px-12">
+<div class="flex items-end justify-between mb-12 border-b border-primary/10 pb-6">
+<div>
+<p class="text-primary text-xs font-bold uppercase tracking-widest mb-2">Our Signature</p>
+<h2 class="text-white text-3xl font-light">The Winter Collection</h2>
+</div>
+<a class="text-white/50 text-[10px] font-bold uppercase tracking-widest hover:text-primary" href="#">Full Menu</a>
+</div>
+<div class="grid grid-cols-2 gap-12">
+<div class="flex gap-4">
+<div class="w-20 h-20 overflow-hidden rounded-lg flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Gourmet meat dish styling" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC5Us7LyzxzFIik5Bhw2jSOskqJPbjrw7Xo1XLeTWdSFELY3_FqQyuv0p_E8pzEYs5_GoWzUzSSZegp3vJ9av_6_SXHm1yM3JHH7ik_wmHJVzx4o1hRRVnslPHHcp1BQyVpWRnPv4oaahTtjsVxH5H_McGtWV_gnA4ddyZiNzUWpqkM5r2soND68VK5rWnVj4pm8IAveIPEWEw9SG2Y3_aK7BwpZS3uIErC6l64zDgW7BRG4Knc61_71A2Q_FTHVYiZxPSJzp9IuIw"/>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-baseline mb-1">
+<h4 class="text-white font-medium">Glazed Wagyu Rib</h4>
+<span class="text-primary font-bold text-sm">$48</span>
+</div>
+<p class="text-white/40 text-[11px] leading-relaxed">Honey-balsamic glaze, smoked parsnip puree, heritage carrots.</p>
+</div>
+</div>
+<div class="flex gap-4">
+<div class="w-20 h-20 overflow-hidden rounded-lg flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Artisanal dessert plate" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCj7gTLS3sRsRLwD4b69oEQ4D2Zq9fyY2zmeB_Sefk_cmMlOmrJ9LfjK41ANivEPOZw0WTmOVo10897MyRMxXnKXMvK0dba-ynBoycPaIT_xE_PRlZEu5X02JurizdiEiLnwwrjuhuruO0ncLDpK6ce24ZiLSHrkIKGvu9yc-Z77-mY2Oy2R__w6QPs1Hl54fmI-Rsc1NAaq-ITJlhP0MGxIesThmbXlmlrpKw3i4ugtqqys8OVgLQmAMl3NwYfHl6U3CUPTEmIlD0"/>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-baseline mb-1">
+<h4 class="text-white font-medium">Truffle Scallops</h4>
+<span class="text-primary font-bold text-sm">$32</span>
+</div>
+<p class="text-white/40 text-[11px] leading-relaxed">Hand-dived scallops, black truffle shavings, leek velouté.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Helper Tip -->
+<div class="mt-4 flex items-center gap-2 text-slate-500">
+<span class="material-icons text-sm">lightbulb</span>
+<p class="text-[11px] font-medium">Pro-tip: Dark mode websites have a 40% higher conversion rate for evening dining bookings.</p>
+</div>
+</section>
+</div>
+</main>
+</body></html>

@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Menu Builder Management | Admin Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13ec5b",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                    },
+                    fontFamily: {
+                        "display": ["Plus Jakarta Sans"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-[#102216] dark:text-[#f6f8f6] min-h-screen flex flex-col">
+<!-- Header / Navbar -->
+<header class="h-16 border-b border-[#13ec5b]/10 bg-white dark:bg-[#102216] flex items-center justify-between px-8 sticky top-0 z-50">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+<span class="material-icons text-white">restaurant_menu</span>
+</div>
+<h1 class="text-xl font-bold tracking-tight">Menu<span class="text-primary">Master</span></h1>
+<nav class="ml-10 hidden md:flex items-center gap-6 text-sm font-medium text-[#102216]/60 dark:text-[#f6f8f6]/60">
+<a class="hover:text-primary transition-colors" href="#">Dashboard</a>
+<a class="text-primary underline underline-offset-4" href="#">Menu Builder</a>
+<a class="hover:text-primary transition-colors" href="#">Orders</a>
+<a class="hover:text-primary transition-colors" href="#">Analytics</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="flex items-center gap-2 px-4 py-2 border border-[#13ec5b]/20 rounded-lg hover:bg-primary/10 transition-colors text-sm font-semibold">
+<span class="material-icons text-sm">visibility</span>
+                Preview Store
+            </button>
+<button class="bg-primary text-[#102216] px-6 py-2 rounded-lg font-bold text-sm shadow-lg shadow-primary/20 hover:brightness-105 transition-all">
+                Publish Changes
+            </button>
+<div class="w-10 h-10 rounded-full bg-[#13ec5b]/20 border-2 border-primary overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Admin user profile picture" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBKG36R3TlIkBafF5aYqu1T9zrhDY3VUvXhrYYISjJcP4XZEH4CqeJHyTLNoLvNI6iG28lqg8p9WDVKGxAtWag7_Oy3Izb5CthL6ooJGEPLSa2ObxfVzuROxXlA5yUm8SnhxqbdJzb4vgRFFUu2cfWDx6FGo3dSA2A8myEs1z0GIvtzxtUt8aff-f8r6yxuydEBf5mOa3jqpq8VTkBMaOoYz6ioGvSJO1kqZD71nmE3WGpg_0_DDm9UjHLFkGh192kp1_My4O0FyKQ"/>
+</div>
+</div>
+</header>
+<main class="flex-1 flex overflow-hidden">
+<!-- Sidebar - Categories -->
+<aside class="w-72 bg-white dark:bg-[#102216]/50 border-r border-[#13ec5b]/10 p-6 flex flex-col gap-6">
+<div class="flex items-center justify-between">
+<h2 class="font-bold text-sm uppercase tracking-wider text-[#102216]/40 dark:text-[#f6f8f6]/40">Categories</h2>
+<button class="p-1 hover:bg-primary/20 rounded-md transition-colors">
+<span class="material-icons text-primary text-xl">add_circle</span>
+</button>
+</div>
+<div class="flex flex-col gap-2">
+<button class="flex items-center justify-between group px-4 py-3 bg-primary/10 border-l-4 border-primary rounded-r-lg text-primary font-bold transition-all">
+<span class="flex items-center gap-3"><span class="material-icons text-xl">star_border</span> Starters</span>
+<span class="text-xs bg-primary text-[#102216] px-2 py-0.5 rounded-full">12</span>
+</button>
+<button class="flex items-center justify-between group px-4 py-3 hover:bg-primary/5 rounded-lg text-[#102216]/70 dark:text-[#f6f8f6]/70 font-medium transition-all">
+<span class="flex items-center gap-3"><span class="material-icons text-xl">local_pizza</span> Signature Pizzas</span>
+<span class="text-xs bg-[#13ec5b]/20 text-[#102216]/60 px-2 py-0.5 rounded-full">8</span>
+</button>
+<button class="flex items-center justify-between group px-4 py-3 hover:bg-primary/5 rounded-lg text-[#102216]/70 dark:text-[#f6f8f6]/70 font-medium transition-all">
+<span class="flex items-center gap-3"><span class="material-icons text-xl">dinner_dining</span> Pasta &amp; Main</span>
+<span class="text-xs bg-[#13ec5b]/20 text-[#102216]/60 px-2 py-0.5 rounded-full">15</span>
+</button>
+<button class="flex items-center justify-between group px-4 py-3 hover:bg-primary/5 rounded-lg text-[#102216]/70 dark:text-[#f6f8f6]/70 font-medium transition-all">
+<span class="flex items-center gap-3"><span class="material-icons text-xl">icecream</span> Desserts</span>
+<span class="text-xs bg-[#13ec5b]/20 text-[#102216]/60 px-2 py-0.5 rounded-full">6</span>
+</button>
+<button class="flex items-center justify-between group px-4 py-3 hover:bg-primary/5 rounded-lg text-[#102216]/70 dark:text-[#f6f8f6]/70 font-medium transition-all">
+<span class="flex items-center gap-3"><span class="material-icons text-xl">local_bar</span> Beverages</span>
+<span class="text-xs bg-[#13ec5b]/20 text-[#102216]/60 px-2 py-0.5 rounded-full">24</span>
+</button>
+</div>
+<div class="mt-auto p-4 rounded-xl bg-[#13ec5b]/5 border border-[#13ec5b]/20">
+<p class="text-xs font-semibold text-[#102216]/50 dark:text-[#f6f8f6]/50 mb-2">QUICK TIP</p>
+<p class="text-xs leading-relaxed">Drag items to reorder them within a category or drop them into another category to move them.</p>
+</div>
+</aside>
+<!-- Builder Workspace -->
+<section class="flex-1 overflow-y-auto p-8 bg-background-light dark:bg-background-dark/80">
+<!-- Toolbar -->
+<div class="flex flex-wrap items-center justify-between gap-4 mb-8">
+<div>
+<h2 class="text-2xl font-bold">Starters</h2>
+<p class="text-[#102216]/50 dark:text-[#f6f8f6]/50 text-sm">Manage items in your appetizers and small plates section.</p>
+</div>
+<div class="flex items-center gap-3">
+<div class="relative">
+<span class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-[#102216]/40">search</span>
+<input class="pl-10 pr-4 py-2 rounded-lg border-[#13ec5b]/20 bg-white dark:bg-[#102216] focus:ring-primary focus:border-primary text-sm w-64" placeholder="Search items..." type="text"/>
+</div>
+<button class="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#102216] border border-[#13ec5b]/20 rounded-lg text-sm font-semibold hover:bg-primary/5 transition-colors">
+<span class="material-icons text-sm">filter_list</span>
+                        Filter
+                    </button>
+<button class="flex items-center gap-2 px-4 py-2 bg-primary text-[#102216] rounded-lg text-sm font-bold shadow-md hover:brightness-105 transition-all">
+<span class="material-icons text-sm font-bold">add</span>
+                        Add Item
+                    </button>
+</div>
+</div>
+<!-- Draggable Grid -->
+<div class="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-6">
+<!-- Menu Item Card 1 -->
+<div class="bg-white dark:bg-[#102216] border-2 border-transparent hover:border-primary/40 rounded-xl p-4 shadow-sm group cursor-move relative overflow-hidden transition-all">
+<div class="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-1">
+<button class="p-1.5 bg-white shadow-md rounded-md hover:text-primary transition-colors">
+<span class="material-icons text-lg">edit</span>
+</button>
+<button class="p-1.5 bg-white shadow-md rounded-md hover:text-red-500 transition-colors">
+<span class="material-icons text-lg">delete</span>
+</button>
+</div>
+<div class="flex gap-4">
+<div class="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 relative">
+<img class="w-full h-full object-cover" data-alt="Crispy calamari rings with lemon" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA3VBGX0g6iUrMjY6sT4qS8Sq4JDLQgcWsXiIXUTdWhqDQXd1qvkKqgYvne4l75mgGNTIv1qJ_ifvnjFS1-A0oX1GDMqOaNA-jWxb69YPXciilADOAGy4BSqGqfblsEcZParKVad2rMIIwUq-PX7BogF32NSA0bA5KDrJ7Gse4aUZMhcl3v6OK1q_lHZhA60Lr_OvWF9F9hnkPWgqYkKQLpKzjMtH33aYG7FpIF6WMUi3ZFeEbxf16jqLFnsvI9eV9589stPQ9Pci4"/>
+<div class="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-icons text-white">drag_indicator</span>
+</div>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start mb-1">
+<h3 class="font-bold text-lg">Crispy Calamari</h3>
+<span class="text-primary font-bold">$14.50</span>
+</div>
+<p class="text-xs text-[#102216]/60 dark:text-[#f6f8f6]/60 leading-relaxed mb-3 line-clamp-2">Fresh squid lightly battered and fried. Served with spicy marinara and lemon wedges.</p>
+<div class="flex items-center justify-between">
+<div class="flex gap-2">
+<span class="px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-bold rounded uppercase">Spicy</span>
+<span class="px-2 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-bold rounded uppercase">Popular</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-[10px] font-semibold text-[#13ec5b]">ACTIVE</span>
+<div class="w-8 h-4 bg-primary/20 rounded-full relative">
+<div class="absolute right-0.5 top-0.5 w-3 h-3 bg-primary rounded-full"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Menu Item Card 2 -->
+<div class="bg-white dark:bg-[#102216] border-2 border-transparent hover:border-primary/40 rounded-xl p-4 shadow-sm group cursor-move relative overflow-hidden transition-all">
+<div class="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-1">
+<button class="p-1.5 bg-white shadow-md rounded-md hover:text-primary transition-colors">
+<span class="material-icons text-lg">edit</span>
+</button>
+<button class="p-1.5 bg-white shadow-md rounded-md hover:text-red-500 transition-colors">
+<span class="material-icons text-lg">delete</span>
+</button>
+</div>
+<div class="flex gap-4">
+<div class="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 relative">
+<img class="w-full h-full object-cover" data-alt="Truffle mushroom arancini balls" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAS9FnmwyJ8Fm1Aa6mqzI_VtpFLiTJXEgl5mXaCmFKu70QpkJxcz_GD72qnGfHO2NhMz5ms_m-0Cn8boDKijxQLnYLqi7IjSxPSkdYQTZNHe7yeh89VGuC2bFVNJZghmPJoTk52XE7nMoYjb0AdQ0sauTbJq-Z2rEYx9go5KuvpI7sP2B9oSBq9-XEUvNC57_zhJqixVoaX1gyTqzojK8FbKXZcg08aVEP7Ktvs1stoJt-IeVQOQHDsXo2tzzyjO1HUYJSUoeriXJ4"/>
+<div class="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-icons text-white">drag_indicator</span>
+</div>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start mb-1">
+<h3 class="font-bold text-lg">Truffle Arancini</h3>
+<span class="text-primary font-bold">$12.00</span>
+</div>
+<p class="text-xs text-[#102216]/60 dark:text-[#f6f8f6]/60 leading-relaxed mb-3 line-clamp-2">Wild mushroom risotto balls stuffed with mozzarella and truffle oil. Four per serving.</p>
+<div class="flex items-center justify-between">
+<div class="flex gap-2">
+<span class="px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold rounded uppercase">Vegetarian</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-[10px] font-semibold text-[#13ec5b]">ACTIVE</span>
+<div class="w-8 h-4 bg-primary/20 rounded-full relative">
+<div class="absolute right-0.5 top-0.5 w-3 h-3 bg-primary rounded-full"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Menu Item Card 3 (Dragged State Example) -->
+<div class="bg-primary/5 border-2 border-dashed border-primary/50 rounded-xl p-4 shadow-sm cursor-move relative overflow-hidden transition-all ring-2 ring-primary ring-offset-2">
+<div class="flex gap-4 opacity-50">
+<div class="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 relative">
+<img class="w-full h-full object-cover" data-alt="Classic bruschetta with tomato" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBJtv4CCSVY3UlQf5TCyrXARUCfNmSS6gz3WHdEPKLVuaxwK6tvzhIAYw26Ae2wWYnUdiI-fgXj0We1iXfwO_nx0XqJUezf4Dz88ipxEdXrQmDXLgxsyrkkvNn26ObhRNtr4nRLkw21hq9ikG9c3X55E4qgQX5lkL4Kf3aUFs9cwaKWwkTTBs-rYOP6qarA6suoq6DalLhKYp4_UNDhU30mHCty0o2_qVz7K7NQQpS0uQ0mK8wQrkRN14v_-RDZSaE1j6P_0YZc47M"/>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start mb-1">
+<h3 class="font-bold text-lg">Garlic Bruschetta</h3>
+<span class="text-primary font-bold">$9.00</span>
+</div>
+<p class="text-xs text-[#102216]/60 dark:text-[#f6f8f6]/60 leading-relaxed mb-3 line-clamp-2">Toasted sourdough topped with heirloom tomatoes, basil, and balsamic glaze.</p>
+</div>
+</div>
+</div>
+<!-- Menu Item Card 4 -->
+<div class="bg-white dark:bg-[#102216] border-2 border-transparent hover:border-primary/40 rounded-xl p-4 shadow-sm group cursor-move relative overflow-hidden transition-all">
+<div class="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-1">
+<button class="p-1.5 bg-white shadow-md rounded-md hover:text-primary transition-colors">
+<span class="material-icons text-lg">edit</span>
+</button>
+<button class="p-1.5 bg-white shadow-md rounded-md hover:text-red-500 transition-colors">
+<span class="material-icons text-lg">delete</span>
+</button>
+</div>
+<div class="flex gap-4">
+<div class="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 relative">
+<img class="w-full h-full object-cover" data-alt="Beef carpaccio with arugula" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCGBfM7DWqAwniNavtZes2hr5wlvi3DXBXhhosc2HRsvgOV2PXwuSSSTgXquHPTY0bzgFILiqCGNirvipsPrzbbRBSHtGoNX-pYmpHlIBiKD_bHO5c9KdZv8vZjwGGakcSHF29GZ5IgI2qFIjQViZZSKtoTAWSJGE3jXyHVg6v2PWYMlsw2Qm3hnlhqqvi0AXD5BDshCOhOvVFG0dF3EaACiJigFIv5PN4weAFBNm-qXNoqpWBtVI4exCi2mi2bV13a8bgwfUJiuoc"/>
+<div class="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-icons text-white">drag_indicator</span>
+</div>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start mb-1">
+<h3 class="font-bold text-lg">Beef Carpaccio</h3>
+<span class="text-primary font-bold">$16.50</span>
+</div>
+<p class="text-xs text-[#102216]/60 dark:text-[#f6f8f6]/60 leading-relaxed mb-3 line-clamp-2">Thinly sliced raw beef tenderloin, capers, arugula, and shaved parmesan.</p>
+<div class="flex items-center justify-between">
+<div class="flex gap-2">
+<span class="px-2 py-0.5 bg-purple-100 text-purple-700 text-[10px] font-bold rounded uppercase">Premium</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-[10px] font-semibold text-[#102216]/40">OFFLINE</span>
+<div class="w-8 h-4 bg-gray-200 rounded-full relative">
+<div class="absolute left-0.5 top-0.5 w-3 h-3 bg-white rounded-full"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Add New Placeholder -->
+<button class="border-2 border-dashed border-[#13ec5b]/30 rounded-xl p-6 flex flex-col items-center justify-center gap-3 text-[#102216]/40 dark:text-[#f6f8f6]/40 hover:bg-primary/5 hover:border-primary/60 hover:text-primary transition-all min-h-[140px]">
+<span class="material-icons text-4xl">add_circle_outline</span>
+<span class="font-bold">Add New Item to Starters</span>
+</button>
+</div>
+<!-- Drag & Drop Overlay Visual -->
+<div class="mt-12 p-8 border-2 border-dashed border-[#13ec5b]/20 rounded-2xl bg-white/50 dark:bg-[#102216]/20 flex flex-col items-center justify-center text-center">
+<div class="w-16 h-16 bg-[#13ec5b]/10 rounded-full flex items-center justify-center mb-4">
+<span class="material-icons text-primary text-3xl">move_up</span>
+</div>
+<h3 class="font-bold text-lg mb-1">Quick Organize</h3>
+<p class="text-sm text-[#102216]/50 dark:text-[#f6f8f6]/50 max-w-sm">Drag any item from the grid above and drop it onto a category in the sidebar to move it instantly.</p>
+</div>
+</section>
+</main>
+<!-- Footer Stats / Status -->
+<footer class="h-10 bg-white dark:bg-[#102216] border-t border-[#13ec5b]/10 flex items-center justify-between px-8 text-[10px] font-semibold text-[#102216]/50 dark:text-[#f6f8f6]/50 uppercase tracking-widest">
+<div class="flex gap-6">
+<span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-primary"></span> System Online</span>
+<span>Last saved: 2 minutes ago</span>
+</div>
+<div class="flex gap-6">
+<span>Total Items: 65</span>
+<span>Active Menu: Summer 2024 Special</span>
+</div>
+</footer>
+</body></html>

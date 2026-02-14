@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>QR Code Manager - Admin Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13ec5b",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                        "terracotta": "#E2725B",
+                        "charcoal": "#36454F",
+                        "cream": "#FDFBF7",
+                    },
+                    fontFamily: {
+                        "display": ["Plus Jakarta Sans"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .qr-gradient-terracotta {
+            background: linear-gradient(135deg, #E2725B 0%, #c05d49 100%);
+        }
+        .qr-gradient-charcoal {
+            background: linear-gradient(135deg, #36454F 0%, #1a2328 100%);
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-800 dark:text-slate-100 min-h-screen">
+<!-- Sidebar Navigation (Placeholder for context) -->
+<aside class="fixed left-0 top-0 h-full w-64 bg-white dark:bg-slate-900 border-r border-primary/10 hidden lg:flex flex-col">
+<div class="p-6">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 bg-primary rounded flex items-center justify-center">
+<span class="material-icons text-white text-sm">restaurant</span>
+</div>
+<span class="font-bold text-xl tracking-tight">Gusteau's</span>
+</div>
+</div>
+<nav class="flex-1 px-4 space-y-2 mt-4">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/10 transition-colors" href="#">
+<span class="material-icons text-slate-400">dashboard</span>
+<span class="font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg bg-primary/10 text-primary border border-primary/20" href="#">
+<span class="material-icons">qr_code_2</span>
+<span class="font-medium">QR Manager</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/10 transition-colors" href="#">
+<span class="material-icons text-slate-400">menu_book</span>
+<span class="font-medium">Menu Editor</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/10 transition-colors" href="#">
+<span class="material-icons text-slate-400">settings</span>
+<span class="font-medium">Settings</span>
+</a>
+</nav>
+<div class="p-6 border-t border-primary/10">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+<span class="material-icons text-primary">person</span>
+</div>
+<div>
+<p class="text-sm font-semibold leading-none">Admin User</p>
+<p class="text-xs text-slate-500 mt-1">Store Manager</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="lg:ml-64 p-8">
+<!-- Header -->
+<header class="mb-10">
+<div class="flex items-center gap-2 text-sm text-slate-500 mb-2">
+<span>Dashboard</span>
+<span class="material-icons text-xs">chevron_right</span>
+<span class="text-primary font-medium">QR Code Manager</span>
+</div>
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+<div>
+<h1 class="text-3xl font-bold tracking-tight">QR Code Manager</h1>
+<p class="text-slate-500 mt-1">Generate and customize digital access points for your restaurant.</p>
+</div>
+<div class="flex items-center gap-3">
+<button class="flex items-center gap-2 px-4 py-2 border border-primary/20 rounded-lg hover:bg-primary/5 transition-colors">
+<span class="material-icons text-sm">help_outline</span>
+<span>Guide</span>
+</button>
+<button class="bg-primary hover:opacity-90 text-white font-semibold px-6 py-2 rounded-lg flex items-center gap-2 transition-all">
+<span class="material-icons text-sm">add</span>
+<span>New Custom QR</span>
+</button>
+</div>
+</div>
+</header>
+<!-- QR Code Grid -->
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+<!-- Menu QR Code Card -->
+<div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-primary/10 overflow-hidden flex flex-col">
+<div class="p-6 border-b border-primary/5 flex items-center justify-between">
+<div>
+<h2 class="text-xl font-bold">Menu QR Code</h2>
+<p class="text-sm text-slate-500">Direct link to your digital menu</p>
+</div>
+<span class="px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full uppercase tracking-wider">Active</span>
+</div>
+<div class="flex-1 p-8 bg-cream dark:bg-slate-800/50 flex items-center justify-center relative">
+<div class="relative group">
+<div class="absolute -inset-4 bg-white dark:bg-slate-900 rounded-2xl shadow-xl transition-all group-hover:shadow-2xl"></div>
+<!-- Mock QR Code with Charcoal Theme -->
+<div class="relative p-6 bg-white dark:bg-slate-900 rounded-xl flex flex-col items-center">
+<div class="w-64 h-64 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center relative">
+<img alt="Menu QR Code" class="w-full h-full rounded" data-alt="Modern geometric QR code in charcoal color" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAjSuPk5QUfwiz6qwmJft96RPcAou0MCEgEONGAjWgjRWaDjWRmuXXS0V0dNw6b_yMCFToHjzsU3Ehy3Mg-NgoCTkvrhtxWw3L58mudANYERhoWHePVtX-B4-7lTV3LyuCT0xycQS5t7wyaQuf1IvY_KmV4ncTNqSmCm2zhfrI_8H7oA2yb3Oo_DSi0ws17M7QRMTdoGvP-sgTQ4uGy-8yu2zwz8AVQVvp941l2O5Bpt7ssZOgO25Hn2iNdB25klHln0u6xOYmv34Q"/>
+<!-- Logo Overlay -->
+<div class="absolute inset-0 flex items-center justify-center">
+<div class="w-16 h-16 bg-white rounded-lg shadow-lg flex items-center justify-center p-2 border-2 border-slate-50">
+<img alt="Restaurant Logo" class="w-full h-full object-cover rounded" data-alt="Small circular minimalist restaurant brand logo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCwhocImF_XzTvGP60jMYMGLhKvSnow4TOGH8flDirW8AuBWZVhHh-E6pbrPRUwsewXLJxO5CF65iieTg4Uz9weeqkmYInO8m2uacfG51REfs1jqwELAnuHON_cnEudPBQPPyrSEmuR7pu0GvxLXs9-n_GLWP8TSAfQk5qyMr8FwBPsabU7vInhMB1MsyqA6L0tRAKnpzZiSdlteXAAGlrQ2w9_5JGqe-ietFq3Ra7GU0n3mVyKRk8JIjiRC_B6SQJmtm3MNXr94_s"/>
+</div>
+</div>
+</div>
+<p class="mt-4 text-xs font-mono text-slate-400 uppercase tracking-widest">gusteau.menu/order</p>
+</div>
+</div>
+</div>
+<div class="p-6 bg-white dark:bg-slate-900 border-t border-primary/5">
+<div class="space-y-6">
+<!-- Customization Toggles -->
+<div class="grid grid-cols-2 gap-4">
+<div>
+<label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">QR Color</label>
+<div class="flex gap-3">
+<button class="w-8 h-8 rounded-full bg-charcoal ring-2 ring-primary ring-offset-2 ring-offset-white dark:ring-offset-slate-900 transition-all"></button>
+<button class="w-8 h-8 rounded-full bg-terracotta hover:scale-110 transition-all"></button>
+</div>
+</div>
+<div>
+<label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Brand Overlay</label>
+<div class="flex items-center gap-3 h-8">
+<div class="relative inline-flex h-6 w-11 items-center rounded-full bg-primary cursor-pointer">
+<span class="translate-x-6 inline-block h-4 w-4 transform rounded-full bg-white transition"></span>
+</div>
+<span class="text-sm font-medium">Include Logo</span>
+</div>
+</div>
+</div>
+<!-- Action Buttons -->
+<div class="flex flex-wrap gap-3">
+<button class="flex-1 bg-primary text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 hover:opacity-90 transition-all shadow-lg shadow-primary/20">
+<span class="material-icons text-sm">download</span>
+<span>PNG</span>
+</button>
+<button class="flex-1 bg-primary/20 text-primary font-bold py-3 rounded-lg flex items-center justify-center gap-2 hover:bg-primary/30 transition-all border border-primary/10">
+<span class="material-icons text-sm">picture_as_pdf</span>
+<span>SVG</span>
+</button>
+<button class="w-full md:w-auto px-6 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold py-3 rounded-lg flex items-center justify-center gap-2 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">
+<span class="material-icons text-sm">print</span>
+<span>Print Flyer</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Public Website QR Code Card -->
+<div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-primary/10 overflow-hidden flex flex-col">
+<div class="p-6 border-b border-primary/5 flex items-center justify-between">
+<div>
+<h2 class="text-xl font-bold">Public Website</h2>
+<p class="text-sm text-slate-500">For marketing and social media</p>
+</div>
+<span class="px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full uppercase tracking-wider">Active</span>
+</div>
+<div class="flex-1 p-8 bg-cream dark:bg-slate-800/50 flex items-center justify-center relative">
+<div class="relative group">
+<div class="absolute -inset-4 bg-white dark:bg-slate-900 rounded-2xl shadow-xl transition-all group-hover:shadow-2xl"></div>
+<!-- Mock QR Code with Terracotta Theme -->
+<div class="relative p-6 bg-white dark:bg-slate-900 rounded-xl flex flex-col items-center">
+<div class="w-64 h-64 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center relative">
+<img alt="Website QR Code" class="w-full h-full rounded" data-alt="Professional QR code in terracotta orange color" src="https://lh3.googleusercontent.com/aida-public/AB6AXuClIrCbIezePVLzicdw0J2Jdw-3AJxD0208uUhlzUHFOrqwwYyWGNfIQ-iMAWbxZmsW1AGFSDSeNBeCqQzynKLdIEsqaSkx6XnwA_r2wjL3CO3H8Cagyt2_Qzms3wrQ7H-6DPJKkW40fmu26QUK_SqEKjJsuEIgkw-3waAxVFkGypbz5aBspyImq5BBwDu_dwTZ0SNzafJIQDdsI2V7-PjbZRD85Sl51PKmrhYPPBIFiR2KQAsIZ7QUPSPZ2Ig7qPtAHPIcPa9HowM"/>
+<!-- Logo Overlay (Disabled state simulation) -->
+<div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-10 transition-opacity">
+<span class="material-icons text-6xl text-slate-400">add_photo_alternate</span>
+</div>
+</div>
+<p class="mt-4 text-xs font-mono text-slate-400 uppercase tracking-widest">gusteau.com/welcome</p>
+</div>
+</div>
+</div>
+<div class="p-6 bg-white dark:bg-slate-900 border-t border-primary/5">
+<div class="space-y-6">
+<!-- Customization Toggles -->
+<div class="grid grid-cols-2 gap-4">
+<div>
+<label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">QR Color</label>
+<div class="flex gap-3">
+<button class="w-8 h-8 rounded-full bg-charcoal hover:scale-110 transition-all"></button>
+<button class="w-8 h-8 rounded-full bg-terracotta ring-2 ring-primary ring-offset-2 ring-offset-white dark:ring-offset-slate-900 transition-all"></button>
+</div>
+</div>
+<div>
+<label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Brand Overlay</label>
+<div class="flex items-center gap-3 h-8">
+<div class="relative inline-flex h-6 w-11 items-center rounded-full bg-slate-300 dark:bg-slate-700 cursor-pointer">
+<span class="translate-x-1 inline-block h-4 w-4 transform rounded-full bg-white transition"></span>
+</div>
+<span class="text-sm font-medium text-slate-400">Include Logo</span>
+</div>
+</div>
+</div>
+<!-- Action Buttons -->
+<div class="flex flex-wrap gap-3">
+<button class="flex-1 bg-primary text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 hover:opacity-90 transition-all shadow-lg shadow-primary/20">
+<span class="material-icons text-sm">download</span>
+<span>PNG</span>
+</button>
+<button class="flex-1 bg-primary/20 text-primary font-bold py-3 rounded-lg flex items-center justify-center gap-2 hover:bg-primary/30 transition-all border border-primary/10">
+<span class="material-icons text-sm">picture_as_pdf</span>
+<span>SVG</span>
+</button>
+<button class="w-full md:w-auto px-6 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold py-3 rounded-lg flex items-center justify-center gap-2 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">
+<span class="material-icons text-sm">print</span>
+<span>Print Flyer</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Utility Information -->
+<section class="mt-12 bg-primary/5 border border-primary/10 rounded-xl p-8">
+<div class="flex flex-col md:flex-row gap-8 items-start">
+<div class="flex-1">
+<h3 class="text-lg font-bold mb-2">How to use your QR codes</h3>
+<p class="text-slate-600 dark:text-slate-400 leading-relaxed mb-4">
+                        Download the <strong class="text-primary">SVG</strong> format for professional printing on menus, table tents, and window decals. The <strong class="text-primary">PNG</strong> format is best suited for your website, email signatures, and social media posts.
+                    </p>
+<div class="flex flex-wrap gap-4">
+<div class="flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-400">
+<span class="material-icons text-primary text-base">check_circle</span>
+<span>High Resolution</span>
+</div>
+<div class="flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-400">
+<span class="material-icons text-primary text-base">check_circle</span>
+<span>Vector Compatible</span>
+</div>
+<div class="flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-400">
+<span class="material-icons text-primary text-base">check_circle</span>
+<span>Scalable Design</span>
+</div>
+</div>
+</div>
+<div class="w-full md:w-72">
+<div class="bg-white dark:bg-slate-900 p-4 rounded-lg shadow-sm border border-primary/10">
+<div class="aspect-video bg-slate-100 dark:bg-slate-800 rounded mb-3 overflow-hidden">
+<img alt="QR usage context" class="w-full h-full object-cover opacity-80" data-alt="Restaurant interior with QR codes on table tents" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAbFFhvFS8QreO_CZ81Llhrixt_FvVtfID4uOElkQHDblwSVY5faTJ5LLEnPWIDm9FASwioi9wnCCqQlDmR24Lx6yygBv5zGM70mQ6l0iprtmReKysIth2CXasJrLhdYNsMdJekn_-2Emp57EJCTaZewrW8bhbcY2jhy2X-k0Pz9ZKGn53nZh8TNxlTD5gRqYLdUkzm3niL3SfM14xxqKGVie3dyK3QyF9gH55vgbqJZC13PslS1plpwu0wrSCmtEjSaFT49DtX8_k"/>
+</div>
+<p class="text-xs font-semibold text-slate-500 uppercase mb-1">Pro Tip</p>
+<p class="text-sm">Place QR codes in natural eye-line positions for 40% higher scan rates.</p>
+</div>
+</div>
+</div>
+</section>
+</main>
+</body></html>

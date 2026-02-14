@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>404 - Page Off The Menu</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#a43d2d",
+                        "background-light": "#f8f6f6",
+                        "background-dark": "#1f1513",
+                    },
+                    fontFamily: {
+                        "display": ["Plus Jakarta Sans", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark min-h-screen flex flex-col items-center justify-center p-6 transition-colors duration-300">
+<!-- Navigation Header (Subtle) -->
+<header class="fixed top-0 left-0 w-full p-6 flex justify-between items-center">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 bg-primary rounded flex items-center justify-center shadow-lg">
+<span class="material-icons text-white text-xl">restaurant</span>
+</div>
+<span class="text-xl font-bold text-primary tracking-tight">CulinaAdmin</span>
+</div>
+<div>
+<button class="text-primary/70 hover:text-primary font-medium flex items-center gap-2 transition-colors">
+<span class="material-icons text-sm">help_outline</span>
+<span>Help Center</span>
+</button>
+</div>
+</header>
+<main class="max-w-4xl w-full text-center relative">
+<!-- Giant Background 404 Text -->
+<div class="absolute inset-0 -top-24 flex items-center justify-center pointer-events-none opacity-5 dark:opacity-10 select-none">
+<span class="text-[20rem] font-bold text-primary">404</span>
+</div>
+<div class="relative z-10">
+<!-- Central Illustration -->
+<div class="mb-12 relative inline-block">
+<div class="absolute -inset-4 bg-primary/5 rounded-full blur-3xl"></div>
+<img alt="Empty kitchen workspace" class="w-64 h-64 md:w-80 md:h-80 object-cover rounded-xl shadow-2xl mx-auto border-4 border-white dark:border-primary/20" data-alt="Creative illustration of an empty restaurant kitchen" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBg44kh38RxFv-mJNgnYc9cZCEctX3AS44488RUJgcMJ4uTaV0tGMCsBEfzuilI6mUJuvG1qbQOTszdf7Ih_hRFzGNjFD57h0siKwYhIf5-9A_F4GxoCKCRsYa1_71II41X3lohu-FE9PQBZkQQa3uvLKDvypV87o3Y0QYWXnwLooVhP_N7cSGrGmop5pHKZxjpGSVNjuxk20OOrouXG-bpoydKVQI5JfY-6vV3ibGY_NHScBQ6L5jgXkNgyGAUr0Aaggg84V4ds7g"/>
+<!-- Spilled salt icon element -->
+<div class="absolute -bottom-4 -right-4 bg-white dark:bg-zinc-800 p-4 rounded-xl shadow-lg border border-primary/10">
+<span class="material-icons text-primary text-4xl">kitchen</span>
+</div>
+</div>
+<!-- Content Area -->
+<div class="space-y-6">
+<div class="space-y-2">
+<h1 class="text-4xl md:text-5xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
+                        Oops! This page is <span class="text-primary italic">off the menu.</span>
+</h1>
+<p class="text-lg text-zinc-600 dark:text-zinc-400 max-w-lg mx-auto leading-relaxed">
+                        It seems the recipe for this page is missing or has been moved. 
+                        Let’s get you back to the kitchen to manage your restaurant.
+                    </p>
+</div>
+<!-- CTA Actions -->
+<div class="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8">
+<a class="w-full sm:w-auto px-8 py-4 bg-primary hover:bg-primary/90 text-white font-bold rounded-lg shadow-xl shadow-primary/20 flex items-center justify-center gap-2 transition-all transform hover:-translate-y-1" href="#">
+<span class="material-icons">dashboard</span>
+                        Return to Dashboard
+                    </a>
+<a class="w-full sm:w-auto px-8 py-4 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-semibold rounded-lg transition-all flex items-center justify-center gap-2" href="#">
+<span class="material-icons text-lg">arrow_back</span>
+                        Go Back
+                    </a>
+</div>
+<!-- Support Information -->
+<div class="pt-12">
+<p class="text-sm text-zinc-500 dark:text-zinc-500 flex items-center justify-center gap-4">
+<span>Error Code: <strong>404</strong></span>
+<span class="w-1 h-1 bg-zinc-300 dark:bg-zinc-700 rounded-full"></span>
+<a class="underline hover:text-primary transition-colors" href="#">Contact Support</a>
+<span class="w-1 h-1 bg-zinc-300 dark:bg-zinc-700 rounded-full"></span>
+<a class="underline hover:text-primary transition-colors" href="#">System Status</a>
+</p>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer Decoration -->
+<footer class="fixed bottom-0 left-0 w-full p-8 flex justify-center opacity-40">
+<div class="flex gap-8">
+<span class="material-icons text-zinc-400 dark:text-zinc-600">restaurant_menu</span>
+<span class="material-icons text-zinc-400 dark:text-zinc-600">liquor</span>
+<span class="material-icons text-zinc-400 dark:text-zinc-600">dinner_dining</span>
+<span class="material-icons text-zinc-400 dark:text-zinc-600">set_meal</span>
+<span class="material-icons text-zinc-400 dark:text-zinc-600">bakery_dining</span>
+</div>
+</footer>
+</body></html>

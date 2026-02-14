@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>L'Essence | Haute Cuisine</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#C5A059", // Brushed Gold
+                        "cream": "#FDFBF7",
+                        "charcoal": "#1A1A1A",
+                        "gold-muted": "#A68953",
+                    },
+                    fontFamily: {
+                        "serif": ["Cormorant Garamond", "serif"],
+                        "sans": ["Inter", "sans-serif"]
+                    },
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        body {
+            @apply bg-cream text-charcoal font-sans antialiased;
+        }
+        .serif-heading {
+            @apply font-serif tracking-tight;
+        }
+        .gold-btn {
+            @apply bg-primary hover:bg-gold-muted text-cream px-8 py-4 transition-all duration-500 uppercase tracking-[0.2em] text-xs font-semibold;
+        }
+        .hero-gradient {
+            background: linear-gradient(to bottom, rgba(26, 26, 26, 0.4), rgba(26, 26, 26, 0.6));
+        }
+        .nav-link {
+            @apply text-xs uppercase tracking-[0.2em] hover:text-primary transition-colors duration-300;
+        }
+    </style>
+</head>
+<body>
+<nav class="fixed top-0 w-full z-50 border-b border-charcoal/5 bg-cream/90 backdrop-blur-sm">
+<div class="max-w-[1440px] mx-auto px-8 h-24 flex items-center justify-between">
+<div class="hidden lg:flex items-center gap-12 w-1/3">
+<a class="nav-link" href="#experience">The Experience</a>
+<a class="nav-link" href="#dishes">Signature Dishes</a>
+</div>
+<div class="flex flex-col items-center justify-center w-1/3">
+<span class="serif-heading text-3xl font-medium tracking-[0.1em] uppercase">L'Essence</span>
+<span class="text-[8px] uppercase tracking-[0.5em] mt-1 text-primary">Gastronomique</span>
+</div>
+<div class="flex items-center justify-end gap-12 w-1/3">
+<div class="hidden lg:flex items-center gap-12">
+<a class="nav-link" href="#menu">Menu</a>
+<a class="nav-link" href="#contact">Contact</a>
+</div>
+<a class="hidden md:block border border-primary text-primary hover:bg-primary hover:text-cream px-6 py-2.5 text-[10px] uppercase tracking-[0.25em] transition-all duration-500" href="#reserve">
+                Reserve
+            </a>
+</div>
+</div>
+</nav>
+<section class="relative h-screen w-full flex flex-col items-center justify-center overflow-hidden">
+<img alt="Signature Dish" class="absolute inset-0 w-full h-full object-cover scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBY23VlTCUOwP5uDy0bLVE509rEOKEQGsma5W6w-oAnBgUIT0PCPSn-zl59TADVIfbXJBQWx3Pnz7rBizenpyivAdVv81njKKeIJzU6cU3kbsAxSdyS8SB8vEJPEIuM6ytrVxfnKwT9wo27MKgP_IaqamTX_e05L9lJoKdKhulNcaaslQJM0ydAf0-7btipCoXRzOVLLCQ9kcYB9qxgJTNK2pWSihL1Olp6hkAkyKfUKezOMC5CdTg0uLoDK-jO4fo183X8hmAWLl0"/>
+<div class="absolute inset-0 hero-gradient"></div>
+<div class="relative z-10 text-center px-4 max-w-5xl">
+<span class="text-primary serif-heading italic text-2xl md:text-3xl mb-6 block font-light">Elegance in every bite</span>
+<h1 class="serif-heading text-6xl md:text-[7rem] text-cream mb-12 font-medium leading-[0.9] lowercase italic">
+            the art of <span class="not-italic">refinement.</span>
+</h1>
+<div class="flex justify-center">
+<a class="gold-btn shadow-2xl" href="#reserve">
+                Reserve a Table
+            </a>
+</div>
+</div>
+<div class="absolute bottom-12 left-1/2 -translate-x-1/2 text-cream/40 flex flex-col items-center gap-4">
+<span class="text-[10px] uppercase tracking-[0.3em]">Scroll</span>
+<div class="w-px h-12 bg-cream/20 relative overflow-hidden">
+<div class="absolute top-0 left-0 w-full h-1/2 bg-primary"></div>
+</div>
+</div>
+</section>
+<section class="py-32 bg-cream" id="experience">
+<div class="max-w-7xl mx-auto px-8">
+<div class="grid lg:grid-cols-12 gap-16 items-center">
+<div class="lg:col-span-5 space-y-12">
+<div class="space-y-6">
+<span class="text-primary text-xs uppercase tracking-[0.3em] font-semibold">The Experience</span>
+<h2 class="serif-heading text-5xl md:text-6xl leading-tight">A narrative of culinary heritage.</h2>
+</div>
+<div class="space-y-8">
+<p class="text-charcoal/70 text-lg font-light leading-relaxed">
+                        At L'Essence, we believe that dining is a profound sensory dialogue. Our kitchen is a laboratory of tradition, where local ingredients are elevated through centuries-old techniques met with contemporary vision.
+                    </p>
+<p class="text-charcoal/70 text-lg font-light leading-relaxed">
+                        Every plate is a canvas, every service an occasion. We invite you to lose yourself in an atmosphere designed for the connoisseur of life.
+                    </p>
+</div>
+<div class="pt-8 border-t border-charcoal/10 flex items-center gap-6">
+<div class="w-14 h-14 rounded-full overflow-hidden grayscale">
+<img alt="Chef" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA7W1iPnQFPRGU8HaG0_ZeSrX-3LxgLYbXBj2lejVfugA01o-bg5dQDKlNmjLouo1qaCuQv9eXnx5iTyjEe4X2k4G7Ds_ACvMdIclp4yQVhIjj4Bbp-G3ZFE3JDCoQP5fyQjNZubnSXJ8bl03RjdkINX7BqfhG652IAXilDHTxzYCP_T8xSGGfNiMrkMrtxKSgWxvq5RF1u2x9-vxtqJkp8E22Gwns9gPwMsuwKI76S36hrV0KaXGU_8GCG6_ij7Wut0MrXmcpvcQ0"/>
+</div>
+<div>
+<p class="serif-heading text-xl font-medium">Jean-Luc Moreau</p>
+<p class="text-[10px] uppercase tracking-[0.2em] text-primary mt-1">Maître de Cuisine</p>
+</div>
+</div>
+</div>
+<div class="lg:col-span-7 relative">
+<div class="aspect-[16/10] overflow-hidden">
+<img alt="Interior" class="w-full h-full object-cover grayscale-[0.2] hover:scale-105 transition-transform duration-[2s]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCPeO6iD4IeF6ZLPkQkLuciWe2M781UgiMgCKH2_O9GAhHTCVaRPeUwMlAgsJtStdY5BunzTHhjkGWFw9qhoKsWX0-NO965Q8kxg6fAoug4BY8mT0B5Ed0EtfQoPv2Z0fh7i-RqDBl1S6hu1fo_EqslMK_BikjBhvIX20Fvyq4IGggr3xlwl1lcvycvwVq92C0UDOEjBKN1kFgSWdA7-UulpoPnGG4hf9vW7p_9hiVH1bTdN8PUcZudGItrF_xx8wdOQhV_ZQQ53A"/>
+</div>
+<div class="absolute -bottom-8 -left-8 bg-charcoal p-12 hidden lg:block">
+<p class="text-cream serif-heading text-2xl italic">"Taste is the only memory that never fades."</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section class="py-32 bg-charcoal text-cream overflow-hidden" id="dishes">
+<div class="max-w-7xl mx-auto px-8">
+<div class="flex flex-col md:flex-row md:items-end justify-between mb-24 gap-8">
+<div class="max-w-xl space-y-4">
+<span class="text-primary text-xs uppercase tracking-[0.3em] font-semibold">Le Menu</span>
+<h2 class="serif-heading text-5xl md:text-6xl leading-tight">Signature Creations</h2>
+</div>
+<a class="text-xs uppercase tracking-[0.2em] border-b border-primary/40 pb-2 hover:border-primary transition-colors" href="#">View full menu</a>
+</div>
+<div class="grid md:grid-cols-3 gap-12">
+<div class="group">
+<div class="aspect-[4/5] overflow-hidden mb-8 relative">
+<img alt="Dish 1" class="w-full h-full object-cover transition-transform duration-[1.5s] group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAfc885cpKVXpkh8CcWw2fXVdlqnmJPI8QSNucKgm7fmIIjsY4e7f89Y54THrPpI7_cg4Z73g4lSUlkuquXpy4zjWNl2uaGqHUw_WoI8NCnUJPDVM9BJ1-rIZTQggEAu3xetw4RSolqHpUJfIUoMDYGe2bHYFfrfoimKOfRztggfIBjAPK9VsXfuvvfVCnfCN-qIzrPAY-JTljCbK6oxL69Kk03j_PudD9rVsSm19XwnaARJOgppRiVDwsFldawSmG2BwK0KhG76YU"/>
+<div class="absolute inset-0 bg-charcoal/20 group-hover:bg-transparent transition-colors duration-500"></div>
+</div>
+<div class="space-y-4">
+<div class="flex justify-between items-baseline">
+<h3 class="serif-heading text-2xl">Black Truffle Wagyu</h3>
+<span class="text-primary font-serif italic text-lg">$68</span>
+</div>
+<p class="text-cream/50 text-sm font-light leading-relaxed">Aged A5 Wagyu, shaved Perigord truffles, reduction of vintage port.</p>
+</div>
+</div>
+<div class="group">
+<div class="aspect-[4/5] overflow-hidden mb-8 relative">
+<img alt="Dish 2" class="w-full h-full object-cover transition-transform duration-[1.5s] group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAlnTZ9YXWR-7foEXEFNeo2XzKUzaTJhlxGo_FMvad_UlQcxzJc5qwEHBTTM3BkgtSHQ3UDbaBqRVVxCUneMF8pBUgAKk7U2UnZeHYjA5ZIfLOQxoBSO24dzFWj8l1NkC_QUV_oqMLlyI9MaetFjxP30gMLOgwVmHhCiix6poxz1Q6uei14EdIEyehbVoOnsLWyuc4oEz7AQE5zXYSzEo_G1g_I0o6drtkDWEees7J-2Ew8Z8XuI2lQaPDY9iNAcR3iTY9YRngid7Q"/>
+<div class="absolute inset-0 bg-charcoal/20 group-hover:bg-transparent transition-colors duration-500"></div>
+</div>
+<div class="space-y-4">
+<div class="flex justify-between items-baseline">
+<h3 class="serif-heading text-2xl">Saffron Langoustine</h3>
+<span class="text-primary font-serif italic text-lg">$54</span>
+</div>
+<p class="text-cream/50 text-sm font-light leading-relaxed">Hand-dived langoustines, saffron risotto, emulsion of wild herbs.</p>
+</div>
+</div>
+<div class="group">
+<div class="aspect-[4/5] overflow-hidden mb-8 relative">
+<img alt="Dish 3" class="w-full h-full object-cover transition-transform duration-[1.5s] group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCdi5OfOlomBLhvArd7fZ0uzqoq_TIjqRG5KIfVPMGshgAmx-C5LyfNNSeRNX24JQ_V_wK12f9WW3F6VzBWxH34qY0jTfOz2MGklLxsFfBfNSeBaPkQHfEn3YYNL3YNRxJouyb2jO3VKTkmDg2JDygdXKYCzSL4YGc1PT6mk0O1KoNJYIcILhVCQm0R8rDLGwG-r_j8KklShJhaX-scrEqqIQf6HQYLOfJi9iMRsaSeR0GI8v0Rw7AZDPrf2Dl768zyfBHaMtBkMeY"/>
+<div class="absolute inset-0 bg-charcoal/20 group-hover:bg-transparent transition-colors duration-500"></div>
+</div>
+<div class="space-y-4">
+<div class="flex justify-between items-baseline">
+<h3 class="serif-heading text-2xl">Glazed Heritage Roots</h3>
+<span class="text-primary font-serif italic text-lg">$42</span>
+</div>
+<p class="text-cream/50 text-sm font-light leading-relaxed">Honey-lacquered seasonal roots, smoked cream, toasted hazelnuts.</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section class="py-32 bg-cream relative" id="reserve">
+<div class="max-w-4xl mx-auto px-8 relative z-10">
+<div class="text-center mb-16 space-y-4">
+<span class="text-primary text-xs uppercase tracking-[0.3em] font-semibold">Booking</span>
+<h2 class="serif-heading text-5xl">Secure your table.</h2>
+<div class="w-12 h-px bg-primary/30 mx-auto mt-8"></div>
+</div>
+<form class="grid md:grid-cols-2 gap-x-12 gap-y-8">
+<div class="space-y-2">
+<label class="text-[10px] uppercase tracking-widest text-charcoal/40">Full Name</label>
+<input class="w-full bg-transparent border-b border-charcoal/10 py-3 focus:outline-none focus:border-primary transition-colors text-sm" placeholder="Monsieur / Madame" type="text"/>
+</div>
+<div class="space-y-2">
+<label class="text-[10px] uppercase tracking-widest text-charcoal/40">Party Size</label>
+<select class="w-full bg-transparent border-b border-charcoal/10 py-3 focus:outline-none focus:border-primary transition-colors text-sm appearance-none cursor-pointer">
+<option>2 Guests</option>
+<option>4 Guests</option>
+<option>Private Dining (6+)</option>
+</select>
+</div>
+<div class="space-y-2">
+<label class="text-[10px] uppercase tracking-widest text-charcoal/40">Date</label>
+<input class="w-full bg-transparent border-b border-charcoal/10 py-3 focus:outline-none focus:border-primary transition-colors text-sm" type="date"/>
+</div>
+<div class="space-y-2">
+<label class="text-[10px] uppercase tracking-widest text-charcoal/40">Preferred Time</label>
+<select class="w-full bg-transparent border-b border-charcoal/10 py-3 focus:outline-none focus:border-primary transition-colors text-sm appearance-none cursor-pointer">
+<option>19:00</option>
+<option>20:30</option>
+<option>21:00</option>
+</select>
+</div>
+<div class="md:col-span-2 pt-8">
+<button class="gold-btn w-full">Request Reservation</button>
+</div>
+</form>
+</div>
+</section>
+<footer class="bg-charcoal text-cream/40 py-24" id="contact">
+<div class="max-w-7xl mx-auto px-8">
+<div class="grid md:grid-cols-4 gap-16 pb-24">
+<div class="space-y-8">
+<div class="flex flex-col">
+<span class="serif-heading text-2xl text-cream font-medium tracking-widest uppercase">L'Essence</span>
+<span class="text-[8px] uppercase tracking-[0.4em] text-primary">Gastronomique</span>
+</div>
+<p class="text-xs leading-loose font-light">
+                    Redefining the fine dining experience through fresh ingredients and a passion for hospitality.
+                </p>
+</div>
+<div class="space-y-6">
+<h4 class="text-[10px] uppercase tracking-widest text-cream font-semibold">Location</h4>
+<address class="not-italic text-xs leading-loose font-light">
+                    Place Vendôme, 15<br/>
+                    75001 Paris, France
+                </address>
+</div>
+<div class="space-y-6">
+<h4 class="text-[10px] uppercase tracking-widest text-cream font-semibold">Contact</h4>
+<div class="text-xs leading-loose font-light">
+<p>+33 (1) 00 00 00 00</p>
+<p>contact@lessence.com</p>
+</div>
+</div>
+<div class="space-y-6">
+<h4 class="text-[10px] uppercase tracking-widest text-cream font-semibold">Social</h4>
+<div class="flex gap-8">
+<a class="hover:text-primary transition-colors text-xs uppercase tracking-widest" href="#">Instagram</a>
+<a class="hover:text-primary transition-colors text-xs uppercase tracking-widest" href="#">Facebook</a>
+</div>
+</div>
+</div>
+<div class="pt-8 border-t border-cream/5 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] uppercase tracking-[0.2em]">
+<p>© 2024 L'Essence. All Rights Reserved.</p>
+<div class="flex gap-12">
+<a class="hover:text-cream transition-colors" href="#">Privacy</a>
+<a class="hover:text-cream transition-colors" href="#">Terms</a>
+</div>
+</div>
+</div>
+</footer>
+
+</body></html>

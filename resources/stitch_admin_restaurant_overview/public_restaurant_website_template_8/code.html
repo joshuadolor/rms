@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Restaurant Portal | Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0F172A", // Navy
+                        "accent": "#2563EB",  // Functional Blue
+                        "surface": "#F8FAFC",
+                        "border-muted": "#E2E8F0",
+                    },
+                    fontFamily: {
+                        "sans": ["Inter", "sans-serif"],
+                    },
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        body {
+            @apply bg-white text-slate-900 font-sans antialiased;
+        }
+        .dashboard-card {
+            @apply bg-white border border-border-muted rounded-xl shadow-sm overflow-hidden;
+        }
+        .btn-primary {
+            @apply bg-primary hover:bg-slate-800 text-white px-6 py-3 rounded-lg font-bold transition-all duration-200 flex items-center justify-center gap-2;
+        }
+        .btn-accent {
+            @apply bg-accent hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-bold transition-all duration-200 flex items-center justify-center gap-2;
+        }
+        .nav-link {
+            @apply text-sm font-medium text-slate-600 hover:text-accent transition-colors;
+        }
+        details summary::-webkit-details-marker {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-surface">
+<nav class="sticky top-0 w-full z-50 bg-white border-b border-border-muted">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+<div class="flex items-center gap-6">
+<a class="flex items-center gap-2" href="#">
+<div class="w-8 h-8 bg-primary rounded flex items-center justify-center text-white">
+<span class="material-symbols-outlined text-xl">restaurant</span>
+</div>
+<span class="text-xl font-extrabold tracking-tight text-primary">RESTAURANT.</span>
+</a>
+<div class="hidden md:flex items-center gap-6">
+<a class="nav-link" href="#specials">Today's Specials</a>
+<a class="nav-link" href="#menu">Full Menu</a>
+<a class="nav-link" href="#location">Location</a>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<a class="hidden sm:flex btn-primary !py-2 !text-sm" href="#reserve">Book Now</a>
+<a class="btn-accent !py-2 !text-sm" href="#">Order Online</a>
+</div>
+</div>
+</nav>
+<header class="bg-white border-b border-border-muted">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 py-12 lg:py-20">
+<div class="grid lg:grid-cols-2 gap-12 items-center">
+<div class="space-y-8">
+<div>
+<h1 class="text-4xl lg:text-6xl font-extrabold text-primary leading-tight">
+                        Fresh Ingredients.<br/>
+<span class="text-accent">Prepared Daily.</span>
+</h1>
+<p class="mt-4 text-lg text-slate-600 max-w-lg">
+                        Simple, honest food served in a comfortable atmosphere. Open for lunch, dinner, and private events.
+                    </p>
+</div>
+<div class="grid sm:grid-cols-2 gap-4">
+<div class="p-4 bg-surface rounded-lg border border-border-muted">
+<span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Call for Reservations</span>
+<a class="text-lg font-bold text-primary hover:text-accent transition-colors" href="tel:+123456789">+1 (555) 000-1234</a>
+</div>
+<div class="p-4 bg-surface rounded-lg border border-border-muted">
+<span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Current Status</span>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+<span class="text-lg font-bold text-primary">Open Until 10PM</span>
+</div>
+</div>
+</div>
+<div class="flex flex-col sm:flex-row gap-4">
+<a class="btn-accent text-lg px-10" href="#">Order Pickup</a>
+<a class="btn-primary text-lg px-10" href="#reserve">Reserve a Table</a>
+</div>
+</div>
+<div class="relative rounded-2xl overflow-hidden shadow-2xl aspect-[4/3] lg:aspect-square">
+<img alt="Modern dining atmosphere" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBY23VlTCUOwP5uDy0bLVE509rEOKEQGsma5W6w-oAnBgUIT0PCPSn-zl59TADVIfbXJBQWx3Pnz7rBizenpyivAdVv81njKKeIJzU6cU3kbsAxSdyS8SB8vEJPEIuM6ytrVxfnKwT9wo27MKgP_IaqamTX_e05L9lJoKdKhulNcaaslQJM0ydAf0-7btipCoXRzOVLLCQ9kcYB9qxgJTNK2pWSihL1Olp6hkAkyKfUKezOMC5CdTg0uLoDK-jO4fo183X8hmAWLl0"/>
+</div>
+</div>
+</div>
+</header>
+<main class="max-w-7xl mx-auto px-4 sm:px-6 py-12">
+<div class="grid lg:grid-cols-3 gap-8">
+<div class="lg:col-span-1 space-y-6">
+<section class="dashboard-card p-6">
+<h2 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Location &amp; Hours</h2>
+<div class="space-y-4">
+<div class="flex gap-3">
+<span class="material-symbols-outlined text-accent">location_on</span>
+<p class="text-sm font-medium text-slate-700">123 Culinary Ave, Suite 100<br/>Downtown Metro, 54321</p>
+</div>
+<div class="flex gap-3 pt-2 border-t border-border-muted">
+<span class="material-symbols-outlined text-accent">schedule</span>
+<div class="text-sm font-medium text-slate-700 w-full">
+<div class="flex justify-between"><span>Mon - Thu</span> <span>11am - 9pm</span></div>
+<div class="flex justify-between font-bold text-primary"><span>Fri - Sat</span> <span>11am - 11pm</span></div>
+<div class="flex justify-between"><span>Sunday</span> <span>10am - 8pm</span></div>
+</div>
+</div>
+</div>
+</section>
+<section class="dashboard-card p-6 bg-primary text-white">
+<h2 class="text-sm font-bold text-slate-300 uppercase tracking-widest mb-4">Live Updates</h2>
+<div class="space-y-4">
+<div class="p-3 bg-white/10 rounded-lg border border-white/10">
+<p class="text-sm font-bold">Today's Special</p>
+<p class="text-xs text-slate-300">Herb-Crusted Salmon with seasonal greens.</p>
+</div>
+<div class="p-3 bg-white/10 rounded-lg border border-white/10">
+<p class="text-sm font-bold">Wait Time</p>
+<p class="text-xs text-slate-300">Approx. 15-20 minutes for walk-ins.</p>
+</div>
+</div>
+</section>
+</div>
+<div class="lg:col-span-2 space-y-6">
+<section class="dashboard-card" id="specials">
+<div class="p-6 border-b border-border-muted flex justify-between items-center">
+<h2 class="text-xl font-bold text-primary">Today's Specials</h2>
+<span class="px-3 py-1 bg-accent/10 text-accent text-xs font-bold rounded-full">Limited Time</span>
+</div>
+<div class="divide-y divide-border-muted">
+<div class="p-6 flex gap-6 items-center">
+<img alt="Special 1" class="w-20 h-20 rounded-lg object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAfc885cpKVXpkh8CcWw2fXVdlqnmJPI8QSNucKgm7fmIIjsY4e7f89Y54THrPpI7_cg4Z73g4lSUlkuquXpy4zjWNl2uaGqHUw_WoI8NCnUJPDVM9BJ1-rIZTQggEAu3xetw4RSolqHpUJfIUoMDYGe2bHYFfrfoimKOfRztggfIBjAPK9VsXfuvvfVCnfCN-qIzrPAY-JTljCbK6oxL69Kk03j_PudD9rVsSm19XwnaARJOgppRiVDwsFldawSmG2BwK0KhG76YU"/>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<h3 class="font-bold text-lg">Signature Catch</h3>
+<span class="font-bold text-accent">$28.50</span>
+</div>
+<p class="text-sm text-slate-500 line-clamp-2">Locally sourced fish with citrus glaze and roasted root vegetables.</p>
+</div>
+</div>
+<div class="p-6 flex gap-6 items-center">
+<img alt="Special 2" class="w-20 h-20 rounded-lg object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAlnTZ9YXWR-7foEXEFNeo2XzKUzaTJhlxGo_FMvad_UlQcxzJc5qwEHBTTM3BkgtSHQ3UDbaBqRVVxCUneMF8pBUgAKk7U2UnZeHYjA5ZIfLOQxoBSO24dzFWj8l1NkC_QUV_oqMLlyI9MaetFjxP30gMLOgwVmHhCiix6poxz1Q6uei14EdIEyehbVoOnsLWyuc4oEz7AQE5zXYSzEo_G1g_I0o6drtkDWEees7J-2Ew8Z8XuI2lQaPDY9iNAcR3iTY9YRngid7Q"/>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<h3 class="font-bold text-lg">Garden Risotto</h3>
+<span class="font-bold text-accent">$22.00</span>
+</div>
+<p class="text-sm text-slate-500 line-clamp-2">Arborio rice with seasonal greens, parmesan, and truffle oil.</p>
+</div>
+</div>
+</div>
+</section>
+<section class="dashboard-card" id="menu">
+<div class="p-6 border-b border-border-muted">
+<h2 class="text-xl font-bold text-primary">Full Menu</h2>
+</div>
+<div class="divide-y divide-border-muted">
+<details class="group">
+<summary class="p-6 flex justify-between items-center cursor-pointer hover:bg-surface transition-colors">
+<h3 class="font-bold text-lg">Appetizers</h3>
+<span class="material-symbols-outlined transition-transform group-open:rotate-180">expand_more</span>
+</summary>
+<div class="px-6 pb-6 space-y-4">
+<div class="flex justify-between">
+<div>
+<p class="font-semibold">Calamari Fritti</p>
+<p class="text-xs text-slate-500">Served with spicy marinara</p>
+</div>
+<span class="font-medium">$14</span>
+</div>
+<div class="flex justify-between">
+<div>
+<p class="font-semibold">Bruschetta</p>
+<p class="text-xs text-slate-500">Fresh tomato, basil, garlic</p>
+</div>
+<span class="font-medium">$12</span>
+</div>
+</div>
+</details>
+<details class="group" open="">
+<summary class="p-6 flex justify-between items-center cursor-pointer hover:bg-surface transition-colors">
+<h3 class="font-bold text-lg">Main Courses</h3>
+<span class="material-symbols-outlined transition-transform group-open:rotate-180">expand_more</span>
+</summary>
+<div class="px-6 pb-6 space-y-4">
+<div class="flex justify-between">
+<div>
+<p class="font-semibold">Grilled Sirloin</p>
+<p class="text-xs text-slate-500">12oz cut, garlic butter</p>
+</div>
+<span class="font-medium">$32</span>
+</div>
+<div class="flex justify-between">
+<div>
+<p class="font-semibold">Herb Chicken</p>
+<p class="text-xs text-slate-500">Roasted with seasonal veggies</p>
+</div>
+<span class="font-medium">$26</span>
+</div>
+</div>
+</details>
+<details class="group">
+<summary class="p-6 flex justify-between items-center cursor-pointer hover:bg-surface transition-colors">
+<h3 class="font-bold text-lg">Desserts &amp; Beverages</h3>
+<span class="material-symbols-outlined transition-transform group-open:rotate-180">expand_more</span>
+</summary>
+<div class="px-6 pb-6 space-y-4">
+<div class="flex justify-between">
+<div>
+<p class="font-semibold">Tiramisu</p>
+<p class="text-xs text-slate-500">House-made classic</p>
+</div>
+<span class="font-medium">$10</span>
+</div>
+</div>
+</details>
+</div>
+</section>
+</div>
+</div>
+</main>
+<section class="py-16 bg-white border-t border-border-muted" id="reserve">
+<div class="max-w-3xl mx-auto px-4">
+<div class="text-center mb-10">
+<h2 class="text-3xl font-extrabold text-primary">Online Reservation</h2>
+<p class="text-slate-500 mt-2">Book your table in seconds. No credit card required.</p>
+</div>
+<form class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<input class="w-full border border-border-muted rounded-lg px-4 py-3 focus:ring-2 focus:ring-accent focus:border-accent transition-all" placeholder="Full Name" type="text"/>
+<input class="w-full border border-border-muted rounded-lg px-4 py-3 focus:ring-2 focus:ring-accent focus:border-accent transition-all" placeholder="Email Address" type="email"/>
+<div class="relative">
+<input class="w-full border border-border-muted rounded-lg px-4 py-3 focus:ring-2 focus:ring-accent focus:border-accent transition-all" type="date"/>
+</div>
+<select class="w-full border border-border-muted rounded-lg px-4 py-3 focus:ring-2 focus:ring-accent focus:border-accent transition-all appearance-none bg-white">
+<option>2 Guests</option>
+<option>4 Guests</option>
+<option>6+ Guests</option>
+</select>
+<div class="md:col-span-2">
+<button class="btn-accent w-full text-lg py-4">Confirm Reservation</button>
+</div>
+</form>
+</div>
+</section>
+<footer class="bg-primary text-slate-400 py-12">
+<div class="max-w-7xl mx-auto px-6">
+<div class="grid md:grid-cols-3 gap-12 mb-12">
+<div class="space-y-4">
+<div class="flex items-center gap-2 text-white">
+<span class="material-symbols-outlined">restaurant</span>
+<span class="text-xl font-bold">RESTAURANT.</span>
+</div>
+<p class="text-sm">
+                    Providing high-quality dining experiences since 2012. Our commitment to freshness and service is our hallmark.
+                </p>
+</div>
+<div class="grid grid-cols-2 gap-8">
+<div class="space-y-4">
+<h4 class="text-white font-bold text-sm uppercase tracking-widest">Navigation</h4>
+<ul class="text-sm space-y-2">
+<li><a class="hover:text-white" href="#">Menu</a></li>
+<li><a class="hover:text-white" href="#">Specials</a></li>
+<li><a class="hover:text-white" href="#">Careers</a></li>
+</ul>
+</div>
+<div class="space-y-4">
+<h4 class="text-white font-bold text-sm uppercase tracking-widest">Support</h4>
+<ul class="text-sm space-y-2">
+<li><a class="hover:text-white" href="#">Help Center</a></li>
+<li><a class="hover:text-white" href="#">Privacy</a></li>
+<li><a class="hover:text-white" href="#">Terms</a></li>
+</ul>
+</div>
+</div>
+<div class="space-y-4">
+<h4 class="text-white font-bold text-sm uppercase tracking-widest">Newsletter</h4>
+<p class="text-xs">Subscribe for weekly specials and event updates.</p>
+<div class="flex gap-2">
+<input class="bg-slate-800 border-none rounded-lg px-3 py-2 text-sm w-full focus:ring-1 focus:ring-accent" placeholder="Enter email" type="email"/>
+<button class="bg-accent text-white px-4 py-2 rounded-lg"><span class="material-symbols-outlined text-sm">send</span></button>
+</div>
+</div>
+</div>
+<div class="pt-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] font-bold uppercase tracking-widest">
+<p>© 2024 Restaurant Portal Template. All Rights Reserved.</p>
+<div class="flex gap-6">
+<a class="hover:text-white transition-colors" href="#">Instagram</a>
+<a class="hover:text-white transition-colors" href="#">Facebook</a>
+<a class="hover:text-white transition-colors" href="#">Twitter</a>
+</div>
+</div>
+</div>
+</footer>
+
+</body></html>

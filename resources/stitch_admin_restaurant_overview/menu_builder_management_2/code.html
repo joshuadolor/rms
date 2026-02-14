@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Accessible Menu Builder | Admin Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style type="text/tailwindcss">
+        :root {
+            --primary: #C25E00;
+            --sage-bg: #E8F0E8;
+            --text-main: #1A1C1A;
+            --text-muted: #444944;
+            --border-color: #CBD5CB;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }*:focus-visible {
+            outline: 3px solid var(--primary);
+            outline-offset: 2px;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#C25E00",
+                        "sage": "#E8F0E8",
+                        "background-light": "#F9FAF9",
+                        "dark-charcoal": "#1A1C1A",
+                    },
+                    fontFamily: {
+                        "display": ["Plus Jakarta Sans", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.375rem", "lg": "0.5rem", "xl": "1rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background-light font-display text-dark-charcoal min-h-screen flex flex-col">
+<header class="h-20 border-b-2 border-sage bg-white flex items-center justify-between px-10 sticky top-0 z-50 shadow-sm">
+<div class="flex items-center gap-6">
+<div class="w-12 h-12 bg-primary rounded-xl flex items-center justify-center shadow-md">
+<span class="material-symbols-outlined text-white text-3xl">restaurant_menu</span>
+</div>
+<div>
+<h1 class="text-2xl font-extrabold tracking-tight">Menu<span class="text-primary">Builder</span></h1>
+<p class="text-xs font-semibold text-primary uppercase tracking-wider">Admin Dashboard</p>
+</div>
+<nav class="ml-12 hidden lg:flex items-center gap-8 text-base font-bold">
+<a class="text-dark-charcoal hover:text-primary border-b-2 border-transparent hover:border-primary py-1 transition-all" href="#">Dashboard</a>
+<a aria-current="page" class="text-primary border-b-2 border-primary py-1" href="#">Menu Builder</a>
+<a class="text-dark-charcoal hover:text-primary border-b-2 border-transparent hover:border-primary py-1 transition-all" href="#">Orders</a>
+<a class="text-dark-charcoal hover:text-primary border-b-2 border-transparent hover:border-primary py-1 transition-all" href="#">Analytics</a>
+</nav>
+</div>
+<div class="flex items-center gap-5">
+<button class="flex items-center gap-2 px-5 py-2.5 border-2 border-primary text-primary rounded-lg hover:bg-primary hover:text-white transition-all text-sm font-bold">
+<span class="material-symbols-outlined text-xl">visibility</span>
+            Preview Store
+        </button>
+<button class="bg-primary text-white px-8 py-2.5 rounded-lg font-bold text-sm shadow-lg hover:brightness-110 transition-all">
+            Publish Changes
+        </button>
+<div class="w-11 h-11 rounded-full border-2 border-primary p-0.5">
+<img alt="Admin user profile picture" class="w-full h-full rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBKG36R3TlIkBafF5aYqu1T9zrhDY3VUvXhrYYISjJcP4XZEH4CqeJHyTLNoLvNI6iG28lqg8p9WDVKGxAtWag7_Oy3Izb5CthL6ooJGEPLSa2ObxfVzuROxXlA5yUm8SnhxqbdJzb4vgRFFUu2cfWDx6FGo3dSA2A8myEs1z0GIvtzxtUt8aff-f8r6yxuydEBf5mOa3jqpq8VTkBMaOoYz6ioGvSJO1kqZD71nmE3WGpg_0_DDm9UjHLFkGh192kp1_My4O0FyKQ"/>
+</div>
+</div>
+</header>
+<main class="flex-1 flex overflow-hidden">
+<aside class="w-80 bg-sage border-r border-[#CBD5CB] p-8 flex flex-col gap-8 overflow-y-auto">
+<div class="flex items-center justify-between">
+<h2 class="font-extrabold text-sm uppercase tracking-[0.15em] text-dark-charcoal">Menu Categories</h2>
+<button aria-label="Add new category" class="w-8 h-8 flex items-center justify-center bg-primary text-white rounded-md hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-xl">add</span>
+</button>
+</div>
+<div class="flex flex-col gap-3">
+<button class="flex items-center justify-between group px-5 py-4 bg-primary text-white rounded-xl shadow-md font-bold transition-all ring-offset-2 ring-primary">
+<span class="flex items-center gap-4">
+<span class="material-symbols-outlined">star</span>
+<span class="text-lg">Starters</span>
+</span>
+<span class="text-sm bg-white text-primary px-3 py-1 rounded-full font-black">12</span>
+</button>
+<button class="flex items-center justify-between group px-5 py-4 bg-white border-2 border-transparent hover:border-primary text-dark-charcoal rounded-xl font-bold transition-all">
+<span class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary">local_pizza</span>
+<span class="text-lg">Signature Pizzas</span>
+</span>
+<span class="text-sm bg-sage text-dark-charcoal px-3 py-1 rounded-full font-black">8</span>
+</button>
+<button class="flex items-center justify-between group px-5 py-4 bg-white border-2 border-transparent hover:border-primary text-dark-charcoal rounded-xl font-bold transition-all">
+<span class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary">dinner_dining</span>
+<span class="text-lg">Pasta &amp; Main</span>
+</span>
+<span class="text-sm bg-sage text-dark-charcoal px-3 py-1 rounded-full font-black">15</span>
+</button>
+<button class="flex items-center justify-between group px-5 py-4 bg-white border-2 border-transparent hover:border-primary text-dark-charcoal rounded-xl font-bold transition-all">
+<span class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary">icecream</span>
+<span class="text-lg">Desserts</span>
+</span>
+<span class="text-sm bg-sage text-dark-charcoal px-3 py-1 rounded-full font-black">6</span>
+</button>
+</div>
+<div class="mt-auto p-6 rounded-2xl bg-white border-2 border-primary/20 shadow-sm">
+<p class="text-xs font-black text-primary mb-3 flex items-center gap-2 uppercase tracking-widest">
+<span class="material-symbols-outlined text-sm">info</span> Accessibility Tip
+            </p>
+<p class="text-sm leading-relaxed text-dark-charcoal font-medium">
+                Drag items using the high-contrast handle to reorder. Items highlighted in white are your active selections.
+            </p>
+</div>
+</aside>
+<section class="flex-1 overflow-y-auto p-10 bg-white">
+<div class="flex flex-wrap items-center justify-between gap-6 mb-10 pb-6 border-b border-sage">
+<div>
+<h2 class="text-3xl font-black text-dark-charcoal">Starters</h2>
+<p class="text-dark-charcoal/70 font-medium text-lg mt-1">Manage appetizers and small plates section.</p>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-dark-charcoal font-bold">search</span>
+<input class="pl-12 pr-6 py-3 rounded-xl border-2 border-sage bg-background-light focus:ring-primary focus:border-primary text-base w-72 placeholder:text-dark-charcoal/40" placeholder="Search menu items..." type="text"/>
+</div>
+<button class="flex items-center gap-2 px-6 py-3 bg-white border-2 border-primary text-primary rounded-xl text-base font-bold hover:bg-sage transition-colors">
+<span class="material-symbols-outlined">filter_list</span>
+                    Filter
+                </button>
+<button class="flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-xl text-base font-black shadow-lg hover:brightness-110 transition-all">
+<span class="material-symbols-outlined">add_circle</span>
+                    Add New Item
+                </button>
+</div>
+</div>
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+<div class="bg-sage/30 border-2 border-sage hover:border-primary rounded-2xl p-6 shadow-sm group cursor-move relative transition-all">
+<div class="absolute right-4 top-4 flex items-center gap-2">
+<button aria-label="Edit item" class="w-10 h-10 bg-white border border-sage shadow-sm rounded-lg hover:text-primary transition-colors flex items-center justify-center">
+<span class="material-symbols-outlined">edit</span>
+</button>
+<button aria-label="Delete item" class="w-10 h-10 bg-white border border-sage shadow-sm rounded-lg hover:text-red-700 transition-colors flex items-center justify-center">
+<span class="material-symbols-outlined text-red-600">delete</span>
+</button>
+</div>
+<div class="flex gap-6">
+<div class="w-32 h-32 rounded-xl overflow-hidden flex-shrink-0 relative border-2 border-white shadow-inner">
+<img alt="Crispy calamari rings with lemon" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA3VBGX0g6iUrMjY6sT4qS8Sq4JDLQgcWsXiIXUTdWhqDQXd1qvkKqgYvne4l75mgGNTIv1qJ_ifvnjFS1-A0oX1GDMqOaNA-jWxb69YPXciilADOAGy4BSqGqfblsEcZParKVad2rMIIwUq-PX7BogF32NSA0bA5KDrJ7Gse4aUZMhcl3v6OK1q_lHZhA60Lr_OvWF9F9hnkPWgqYkKQLpKzjMtH33aYG7FpIF6WMUi3ZFeEbxf16jqLFnsvI9eV9589stPQ9Pci4"/>
+<div class="absolute inset-0 bg-primary/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-white scale-150 drop-shadow-md">drag_indicator</span>
+</div>
+</div>
+<div class="flex-1 pr-24">
+<div class="flex flex-col mb-2">
+<h3 class="font-black text-xl text-dark-charcoal">Crispy Calamari</h3>
+<span class="text-primary font-black text-lg">$14.50</span>
+</div>
+<p class="text-sm text-dark-charcoal font-medium leading-snug mb-4">Fresh squid lightly battered and fried. Served with spicy marinara and lemon wedges.</p>
+<div class="flex items-center justify-between">
+<div class="flex gap-2">
+<span class="px-3 py-1 bg-primary text-white text-xs font-black rounded uppercase tracking-wider">Spicy</span>
+<span class="px-3 py-1 bg-dark-charcoal text-white text-xs font-black rounded uppercase tracking-wider">Popular</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="text-xs font-black text-dark-charcoal uppercase tracking-widest">Active</span>
+<div class="w-10 h-5 bg-primary rounded-full relative">
+<div class="absolute right-1 top-1 w-3 h-3 bg-white rounded-full"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-sage/30 border-2 border-sage hover:border-primary rounded-2xl p-6 shadow-sm group cursor-move relative transition-all">
+<div class="absolute right-4 top-4 flex items-center gap-2">
+<button aria-label="Edit item" class="w-10 h-10 bg-white border border-sage shadow-sm rounded-lg hover:text-primary transition-colors flex items-center justify-center">
+<span class="material-symbols-outlined">edit</span>
+</button>
+<button aria-label="Delete item" class="w-10 h-10 bg-white border border-sage shadow-sm rounded-lg hover:text-red-700 transition-colors flex items-center justify-center">
+<span class="material-symbols-outlined text-red-600">delete</span>
+</button>
+</div>
+<div class="flex gap-6">
+<div class="w-32 h-32 rounded-xl overflow-hidden flex-shrink-0 relative border-2 border-white shadow-inner">
+<img alt="Truffle mushroom arancini balls" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAS9FnmwyJ8Fm1Aa6mqzI_VtpFLiTJXEgl5mXaCmFKu70QpkJxcz_GD72qnGfHO2NhMz5ms_m-0Cn8boDKijxQLnYLqi7IjSxPSkdYQTZNHe7yeh89VGuC2bFVNJZghmPJoTk52XE7nMoYjb0AdQ0sauTbJq-Z2rEYx9go5KuvpI7sP2B9oSBq9-XEUvNC57_zhJqixVoaX1gyTqzojK8FbKXZcg08aVEP7Ktvs1stoJt-IeVQOQHDsXo2tzzyjO1HUYJSUoeriXJ4"/>
+<div class="absolute inset-0 bg-primary/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-white scale-150 drop-shadow-md">drag_indicator</span>
+</div>
+</div>
+<div class="flex-1 pr-24">
+<div class="flex flex-col mb-2">
+<h3 class="font-black text-xl text-dark-charcoal">Truffle Arancini</h3>
+<span class="text-primary font-black text-lg">$12.00</span>
+</div>
+<p class="text-sm text-dark-charcoal font-medium leading-snug mb-4">Wild mushroom risotto balls stuffed with mozzarella and truffle oil. Four per serving.</p>
+<div class="flex items-center justify-between">
+<div class="flex gap-2">
+<span class="px-3 py-1 bg-[#1E4D2B] text-white text-xs font-black rounded uppercase tracking-wider">Vegetarian</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="text-xs font-black text-dark-charcoal uppercase tracking-widest">Active</span>
+<div class="w-10 h-5 bg-primary rounded-full relative">
+<div class="absolute right-1 top-1 w-3 h-3 bg-white rounded-full"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-white border-2 border-dashed border-primary rounded-2xl p-6 shadow-xl cursor-move relative transition-all ring-4 ring-primary ring-opacity-20 translate-y-[-4px]">
+<div class="flex gap-6 opacity-60">
+<div class="w-32 h-32 rounded-xl overflow-hidden flex-shrink-0 relative bg-sage">
+<img alt="Classic bruschetta with tomato" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBJtv4CCSVY3UlQf5TCyrXARUCfNmSS6gz3WHdEPKLVuaxwK6tvzhIAYw26Ae2wWYnUdiI-fgXj0We1iXfwO_nx0XqJUezf4Dz88ipxEdXrQmDXLgxsyrkkvNn26ObhRNtr4nRLkw21hq9ikG9c3X55E4qgQX5lkL4Kf3aUFs9cwaKWwkTTBs-rYOP6qarA6suoq6DalLhKYp4_UNDhU30mHCty0o2_qVz7K7NQQpS0uQ0mK8wQrkRN14v_-RDZSaE1j6P_0YZc47M"/>
+</div>
+<div class="flex-1">
+<div class="flex flex-col mb-2">
+<h3 class="font-black text-xl text-dark-charcoal">Garlic Bruschetta</h3>
+<span class="text-primary font-black text-lg">$9.00</span>
+</div>
+<p class="text-sm text-dark-charcoal font-medium leading-snug mb-4">Toasted sourdough topped with heirloom tomatoes, basil, and balsamic glaze.</p>
+</div>
+</div>
+<div class="absolute inset-0 flex items-center justify-center bg-white/40">
+<span class="material-symbols-outlined text-primary text-5xl">drag_pan</span>
+</div>
+</div>
+<button class="border-4 border-dashed border-sage rounded-2xl p-8 flex flex-col items-center justify-center gap-4 text-dark-charcoal/60 hover:border-primary hover:text-primary hover:bg-sage/10 transition-all min-h-[200px]">
+<span class="material-symbols-outlined text-6xl">add_circle</span>
+<span class="font-black text-xl">Add New Starter Item</span>
+</button>
+</div>
+<div class="mt-16 p-10 border-2 border-sage rounded-3xl bg-sage/20 flex items-center gap-10">
+<div class="w-20 h-20 bg-primary text-white rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0">
+<span class="material-symbols-outlined text-4xl">move_up</span>
+</div>
+<div>
+<h3 class="font-black text-2xl text-dark-charcoal mb-2">Efficient Organization</h3>
+<p class="text-lg text-dark-charcoal/80 font-medium max-w-2xl leading-relaxed">
+                    Improve your workflow by dragging items across categories. Our interface is designed with high contrast elements for maximum legibility and ease of use.
+                </p>
+</div>
+</div>
+</section>
+</main>
+<footer class="h-12 bg-dark-charcoal text-white flex items-center justify-between px-10 text-xs font-black uppercase tracking-[0.2em]">
+<div class="flex gap-8">
+<span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-primary animate-pulse"></span> System Live &amp; Accessible</span>
+<span class="text-white/60">Auto-save: Active</span>
+</div>
+<div class="flex gap-10">
+<span>Total Items: 65</span>
+<span class="text-primary">Summer Menu 2024</span>
+</div>
+</footer>
+
+</body></html>

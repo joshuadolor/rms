@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Admin Restaurant Overview</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              colors: {
+                "primary": "#13ec5b",
+                "background-light": "#f6f8f6",
+                "background-dark": "#102216",
+              },
+              fontFamily: {
+                "display": ["Plus Jakarta Sans"]
+              },
+              borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+            },
+          },
+        }
+      </script>
+<style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-100 min-h-screen flex font-display">
+<!-- Sidebar -->
+<aside class="w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col fixed h-full z-50">
+<div class="p-6">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+<span class="material-icons-outlined text-white text-xl">restaurant</span>
+</div>
+<h1 class="font-bold text-xl tracking-tight text-slate-900 dark:text-white">GustoAdmin</h1>
+</div>
+</div>
+<nav class="flex-1 px-4 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2.5 bg-primary/10 text-primary rounded-lg font-medium transition-colors" href="#">
+<span class="material-icons-outlined">storefront</span>
+<span>Restaurants</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg font-medium transition-colors" href="#">
+<span class="material-icons-outlined">menu_book</span>
+<span>Menus</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg font-medium transition-colors" href="#">
+<span class="material-icons-outlined">insights</span>
+<span>Analytics</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg font-medium transition-colors" href="#">
+<span class="material-icons-outlined">settings</span>
+<span>Settings</span>
+</a>
+</nav>
+<div class="p-4 border-t border-slate-200 dark:border-slate-800">
+<div class="flex items-center gap-3 p-2">
+<img alt="Profile" class="w-10 h-10 rounded-full bg-slate-200" data-alt="Admin user profile headshot" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD9KUggNZw7s8pXmKXuEuC47dwlGp4YVFQ3hXOH5C0PHz3lRG3ZF56jUcAxeC33IQKM-7czhkmQbjoEuZsS_CluRCAo9jeYo6B89iQv5dpwjUqMoSa9FJ2-pplPvCH6ulobU3E1wkBt84AtIl36hmAi0UHvGIQNS2gkIrI9xoD3so0gc7NDBkGjSR8XaHJyIZbbH-Wl-oMYdbL0CAKR-vYRi7hZ6_GGFqgeV6vLLVZNLvYwwReuh3XOa3mBLwC8oSLW4U-DbGJCUEE"/>
+<div class="flex-1 min-w-0">
+<p class="text-sm font-semibold text-slate-900 dark:text-white truncate">Marcus Chen</p>
+<p class="text-xs text-slate-500 truncate">System Admin</p>
+</div>
+<button class="text-slate-400 hover:text-slate-600">
+<span class="material-icons-outlined text-xl">logout</span>
+</button>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="ml-64 flex-1 p-8">
+<!-- Header -->
+<header class="flex justify-between items-center mb-8">
+<div>
+<h2 class="text-2xl font-bold text-slate-900 dark:text-white">Restaurant Overview</h2>
+<p class="text-slate-500 dark:text-slate-400">Manage and monitor all your locations in one place.</p>
+</div>
+<button class="bg-primary hover:bg-opacity-90 text-white px-5 py-2.5 rounded-lg font-semibold flex items-center gap-2 transition-all shadow-lg shadow-primary/20">
+<span class="material-icons-outlined">add</span>
+<span>Add New Restaurant</span>
+</button>
+</header>
+<!-- Stats Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-primary/10 rounded-lg">
+<span class="material-icons-outlined text-primary">shopping_bag</span>
+</div>
+<span class="text-primary text-xs font-bold px-2 py-1 bg-primary/10 rounded-full">+12%</span>
+</div>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Total Orders</p>
+<h3 class="text-2xl font-bold text-slate-900 dark:text-white">4,821</h3>
+</div>
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-primary/10 rounded-lg">
+<span class="material-icons-outlined text-primary">payments</span>
+</div>
+<span class="text-primary text-xs font-bold px-2 py-1 bg-primary/10 rounded-full">+8%</span>
+</div>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Total Revenue</p>
+<h3 class="text-2xl font-bold text-slate-900 dark:text-white">$84,230.00</h3>
+</div>
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-primary/10 rounded-lg">
+<span class="material-icons-outlined text-primary">groups</span>
+</div>
+<span class="text-primary text-xs font-bold px-2 py-1 bg-primary/10 rounded-full">+5%</span>
+</div>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Active Customers</p>
+<h3 class="text-2xl font-bold text-slate-900 dark:text-white">12,490</h3>
+</div>
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-primary/10 rounded-lg">
+<span class="material-icons-outlined text-primary">star</span>
+</div>
+<span class="text-primary text-xs font-bold px-2 py-1 bg-primary/10 rounded-full">4.8 avg</span>
+</div>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Global Rating</p>
+<h3 class="text-2xl font-bold text-slate-900 dark:text-white">1,204 Reviews</h3>
+</div>
+</div>
+<!-- Filter & Search Section -->
+<div class="flex flex-col md:flex-row gap-4 mb-6">
+<div class="relative flex-1">
+<span class="material-icons-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+<input class="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all" placeholder="Search restaurants by name or ID..." type="text"/>
+</div>
+<div class="flex gap-3">
+<button class="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50">
+<span class="material-icons-outlined text-lg">filter_list</span>
+<span>Filter</span>
+</button>
+<button class="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50">
+<span class="material-icons-outlined text-lg">sort</span>
+<span>Sort</span>
+</button>
+</div>
+</div>
+<!-- Restaurant Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+<!-- Restaurant Card 1 -->
+<div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden group hover:border-primary transition-all shadow-sm">
+<div class="relative h-48">
+<img alt="The Green Bistro" class="w-full h-full object-cover" data-alt="Modern interior of a high-end bistro" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBSB-khZx4cv8YUiGj1T2kB2ocR8OPpbEhoZhgH1yaNAz4EA0BrKRz1_lmYS0BCSR0-Twq5WSGjRhKn1oiPZiN5-lZuEPAQApfoejINGdAj3SDrw-pFsJA_sKvxuMvCcBCZfmp77rFtfre6-RKaU_CFbPY6e9IDyok4tLY0sM5lPVmGxtPSUx_AGUKzN7qehgsigue-gDf64i8vt2FBmBqHVE_elDRCZA7MRWaK575mk2TXnGj2Ie3GYmd8MouSyNgWbVuaUHtBPis"/>
+<div class="absolute top-4 left-4">
+<span class="bg-primary text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1">
+<span class="w-2 h-2 bg-white rounded-full animate-pulse"></span>
+                            OPEN
+                        </span>
+</div>
+</div>
+<div class="p-6">
+<div class="flex justify-between items-start mb-4">
+<div>
+<h4 class="text-xl font-bold text-slate-900 dark:text-white">The Green Bistro</h4>
+<p class="text-sm text-slate-500">124 Main St, Downtown</p>
+</div>
+<button class="text-slate-400 hover:text-primary">
+<span class="material-icons-outlined">more_vert</span>
+</button>
+</div>
+<div class="grid grid-cols-2 gap-4 mb-6">
+<div class="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
+<p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">Orders Today</p>
+<p class="text-lg font-bold text-slate-900 dark:text-white">124</p>
+</div>
+<div class="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
+<p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">Daily Revenue</p>
+<p class="text-lg font-bold text-slate-900 dark:text-white">$2.4k</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="flex-1 bg-slate-900 dark:bg-slate-100 dark:text-slate-900 text-white py-2 rounded-lg font-semibold hover:bg-slate-800 transition-colors">Edit Branch</button>
+<button class="w-10 h-10 border border-slate-200 dark:border-slate-800 flex items-center justify-center rounded-lg hover:bg-primary/10 hover:border-primary text-slate-400 hover:text-primary transition-all">
+<span class="material-icons-outlined">visibility</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Restaurant Card 2 -->
+<div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden group hover:border-primary transition-all shadow-sm">
+<div class="relative h-48">
+<img alt="Pasta Palace" class="w-full h-full object-cover grayscale" data-alt="Traditional Italian pasta restaurant interior" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCPJoyl5aeZj-Hl50C9qk9Mio4KuSIPLBDAbQKbcZencx_lYUJvHVgC-uI04c4FJVkZRNpiF_rBSD-V6yCYWIq52xf1QbtwS62YGrGk3VXoZjIeVqHC4tQZn_uhjz8e0vyko62z4hv3_s3WwBN1fPak_b_iXg99orE9gbp0l8cg8HQHhFzYPPmM7wN6aMH66pVvYSSrs9CzNeZAOAM7gsuTxvgTts5CB4d2jVz36UCtY4_awK6wy8sy7V48K0trjj35On98kjTKR4g"/>
+<div class="absolute top-4 left-4">
+<span class="bg-slate-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
+                            CLOSED
+                        </span>
+</div>
+</div>
+<div class="p-6">
+<div class="flex justify-between items-start mb-4">
+<div>
+<h4 class="text-xl font-bold text-slate-900 dark:text-white">Pasta Palace</h4>
+<p class="text-sm text-slate-500">45 Riverside Dr, Northside</p>
+</div>
+<button class="text-slate-400 hover:text-primary">
+<span class="material-icons-outlined">more_vert</span>
+</button>
+</div>
+<div class="grid grid-cols-2 gap-4 mb-6">
+<div class="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
+<p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">Orders Today</p>
+<p class="text-lg font-bold text-slate-900 dark:text-white">82</p>
+</div>
+<div class="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
+<p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">Daily Revenue</p>
+<p class="text-lg font-bold text-slate-900 dark:text-white">$1.8k</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="flex-1 bg-slate-900 dark:bg-slate-100 dark:text-slate-900 text-white py-2 rounded-lg font-semibold hover:bg-slate-800 transition-colors">Edit Branch</button>
+<button class="w-10 h-10 border border-slate-200 dark:border-slate-800 flex items-center justify-center rounded-lg hover:bg-primary/10 hover:border-primary text-slate-400 hover:text-primary transition-all">
+<span class="material-icons-outlined">visibility</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Restaurant Card 3 -->
+<div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden group hover:border-primary transition-all shadow-sm">
+<div class="relative h-48">
+<img alt="Sushi Zen" class="w-full h-full object-cover" data-alt="Chic sushi bar with neon lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB9GRuWMZwWe64JCHM_vjrN_RA5OInKY17SVS5jriNziDkNAhAB5PvOQ-e8o-JHxDpcv4KUeh9pGPQNojz7tCXm_nCHqKjRwC5xifMrVhQgTAuihk9AROthHCp3VPawMZ6-luHSv3LzMuDd65naxy-J-rXDsLom4dYJBiTygzp_-TCs8B3nuKbcuNlCInZOjmqI460E3GGiGmCJxx2fgZiF-qdy03IOwy6tTRrguLlYvZ0QYI5O09Kfw2QPwQYQ6UVa2cBX1mwpdSw"/>
+<div class="absolute top-4 left-4">
+<span class="bg-primary text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1">
+<span class="w-2 h-2 bg-white rounded-full animate-pulse"></span>
+                            OPEN
+                        </span>
+</div>
+</div>
+<div class="p-6">
+<div class="flex justify-between items-start mb-4">
+<div>
+<h4 class="text-xl font-bold text-slate-900 dark:text-white">Sushi Zen</h4>
+<p class="text-sm text-slate-500">89 Harbor Lane, Pier 7</p>
+</div>
+<button class="text-slate-400 hover:text-primary">
+<span class="material-icons-outlined">more_vert</span>
+</button>
+</div>
+<div class="grid grid-cols-2 gap-4 mb-6">
+<div class="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
+<p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">Orders Today</p>
+<p class="text-lg font-bold text-slate-900 dark:text-white">215</p>
+</div>
+<div class="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
+<p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">Daily Revenue</p>
+<p class="text-lg font-bold text-slate-900 dark:text-white">$5.2k</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="flex-1 bg-slate-900 dark:bg-slate-100 dark:text-slate-900 text-white py-2 rounded-lg font-semibold hover:bg-slate-800 transition-colors">Edit Branch</button>
+<button class="w-10 h-10 border border-slate-200 dark:border-slate-800 flex items-center justify-center rounded-lg hover:bg-primary/10 hover:border-primary text-slate-400 hover:text-primary transition-all">
+<span class="material-icons-outlined">visibility</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Empty State / Add New Placeholder -->
+<div class="bg-slate-100/50 dark:bg-slate-800/20 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl flex flex-col items-center justify-center p-8 group hover:border-primary/50 transition-colors cursor-pointer">
+<div class="w-16 h-16 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center shadow-sm mb-4 group-hover:scale-110 transition-transform">
+<span class="material-icons-outlined text-slate-400 group-hover:text-primary text-3xl">add_circle_outline</span>
+</div>
+<h4 class="text-lg font-bold text-slate-900 dark:text-white mb-2">New Location</h4>
+<p class="text-sm text-slate-500 text-center max-w-[200px]">Expand your business by adding a new restaurant branch</p>
+</div>
+</div>
+<!-- Recent Activity Log (Secondary Detail) -->
+<div class="mt-12 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+<div class="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
+<h3 class="font-bold text-slate-900 dark:text-white">Recent System Activity</h3>
+<a class="text-sm text-primary font-semibold hover:underline" href="#">View All Logs</a>
+</div>
+<div class="divide-y divide-slate-100 dark:divide-slate-800">
+<div class="p-4 flex items-center gap-4">
+<div class="w-10 h-10 bg-primary/10 text-primary flex items-center justify-center rounded-full">
+<span class="material-icons-outlined text-sm">edit</span>
+</div>
+<div class="flex-1">
+<p class="text-sm font-medium text-slate-900 dark:text-white">Menu Updated: "Summer Specials" at The Green Bistro</p>
+<p class="text-xs text-slate-500">24 minutes ago by Admin Marcus</p>
+</div>
+<span class="text-xs font-medium text-slate-400">#48291</span>
+</div>
+<div class="p-4 flex items-center gap-4">
+<div class="w-10 h-10 bg-orange-100 text-orange-600 flex items-center justify-center rounded-full">
+<span class="material-icons-outlined text-sm">warning</span>
+</div>
+<div class="flex-1">
+<p class="text-sm font-medium text-slate-900 dark:text-white">Stock Alert: Low inventory on "Arborio Rice" at Pasta Palace</p>
+<p class="text-xs text-slate-500">2 hours ago</p>
+</div>
+<span class="text-xs font-medium text-slate-400">#48288</span>
+</div>
+<div class="p-4 flex items-center gap-4">
+<div class="w-10 h-10 bg-blue-100 text-blue-600 flex items-center justify-center rounded-full">
+<span class="material-icons-outlined text-sm">person_add</span>
+</div>
+<div class="flex-1">
+<p class="text-sm font-medium text-slate-900 dark:text-white">New Staff Added: Sarah J. (Server) at Sushi Zen</p>
+<p class="text-xs text-slate-500">5 hours ago by Manager Yuki</p>
+</div>
+<span class="text-xs font-medium text-slate-400">#48275</span>
+</div>
+</div>
+</div>
+</main>
+</body></html>

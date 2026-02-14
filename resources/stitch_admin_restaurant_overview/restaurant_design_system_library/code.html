@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Restaurant Design System Library</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#ee4b2b",
+              "background-light": "#f8f6f6",
+              "background-dark": "#221310",
+              "sage": "#8BA888",
+              "cream": "#FDFBF7",
+              "charcoal": "#333333",
+            },
+            fontFamily: {
+              "display": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .sidebar-link.active {
+            @apply bg-primary/10 text-primary border-r-4 border-primary;
+        }
+        .code-block {
+            font-family: 'Courier New', Courier, monospace;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-charcoal dark:text-gray-100 font-display min-h-screen flex">
+<!-- Sidebar Navigation -->
+<aside class="w-64 border-r border-primary/10 bg-white dark:bg-zinc-900 h-screen sticky top-0 hidden lg:block">
+<div class="p-6">
+<div class="flex items-center gap-2 mb-8">
+<div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+<span class="material-icons text-white text-lg">restaurant_menu</span>
+</div>
+<span class="font-bold text-xl tracking-tight">CulinaDS</span>
+</div>
+<nav class="space-y-1">
+<p class="text-[10px] uppercase font-bold text-primary/50 tracking-widest mb-2 px-3">Foundations</p>
+<a class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg text-primary bg-primary/5" href="#colors">
+<span class="material-icons text-sm">palette</span> Color Palette
+                </a>
+<a class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-800 text-gray-600 dark:text-gray-400" href="#typography">
+<span class="material-icons text-sm">text_fields</span> Typography
+                </a>
+<p class="text-[10px] uppercase font-bold text-primary/50 tracking-widest mt-6 mb-2 px-3">Elements</p>
+<a class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-800 text-gray-600 dark:text-gray-400" href="#buttons">
+<span class="material-icons text-sm">smart_button</span> Buttons
+                </a>
+<a class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-800 text-gray-600 dark:text-gray-400" href="#forms">
+<span class="material-icons text-sm">input</span> Form Inputs
+                </a>
+<p class="text-[10px] uppercase font-bold text-primary/50 tracking-widest mt-6 mb-2 px-3">Components</p>
+<a class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-800 text-gray-600 dark:text-gray-400" href="#menu-cards">
+<span class="material-icons text-sm">dashboard_customize</span> Menu Cards
+                </a>
+<a class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-800 text-gray-600 dark:text-gray-400" href="#badges">
+<span class="material-icons text-sm">label</span> Status Badges
+                </a>
+</nav>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 max-w-6xl mx-auto p-8 lg:p-12 overflow-y-auto">
+<header class="mb-12">
+<div class="flex items-center justify-between mb-2">
+<h1 class="text-4xl font-bold">Restaurant Design System</h1>
+<span class="px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full border border-primary/20">v1.2.0</span>
+</div>
+<p class="text-gray-500 dark:text-gray-400 max-w-2xl">A unified visual language for restaurant management interfaces. Built with a focus on usability, accessibility, and modern aesthetics.</p>
+</header>
+<!-- Color Palette Section -->
+<section class="mb-16" id="colors">
+<h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+<span class="w-2 h-8 bg-primary rounded-full"></span>
+                Color Palette
+            </h2>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+<!-- Primary Terracotta -->
+<div class="bg-white dark:bg-zinc-900 p-4 rounded-xl border border-gray-100 dark:border-zinc-800 shadow-sm">
+<div class="h-24 bg-primary rounded-lg mb-4 flex items-end justify-end p-2">
+<span class="bg-white/20 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded">WCAG: PASS AA</span>
+</div>
+<h3 class="font-bold">Terracotta</h3>
+<p class="text-sm text-gray-500 mb-2">Primary Action</p>
+<code class="text-xs bg-gray-100 dark:bg-zinc-800 px-2 py-1 rounded text-primary">#EE4B2B</code>
+</div>
+<!-- Cream -->
+<div class="bg-white dark:bg-zinc-900 p-4 rounded-xl border border-gray-100 dark:border-zinc-800 shadow-sm">
+<div class="h-24 bg-cream border border-gray-100 rounded-lg mb-4 flex items-end justify-end p-2">
+<span class="bg-charcoal/20 backdrop-blur-md text-charcoal text-[10px] font-bold px-2 py-1 rounded">WCAG: PASS AAA</span>
+</div>
+<h3 class="font-bold">Cream</h3>
+<p class="text-sm text-gray-500 mb-2">Background Surface</p>
+<code class="text-xs bg-gray-100 dark:bg-zinc-800 px-2 py-1 rounded">#FDFBF7</code>
+</div>
+<!-- Sage -->
+<div class="bg-white dark:bg-zinc-900 p-4 rounded-xl border border-gray-100 dark:border-zinc-800 shadow-sm">
+<div class="h-24 bg-sage rounded-lg mb-4 flex items-end justify-end p-2">
+<span class="bg-white/20 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded">WCAG: PASS AA</span>
+</div>
+<h3 class="font-bold">Sage</h3>
+<p class="text-sm text-gray-500 mb-2">Success &amp; Healthy</p>
+<code class="text-xs bg-gray-100 dark:bg-zinc-800 px-2 py-1 rounded">#8BA888</code>
+</div>
+<!-- Charcoal -->
+<div class="bg-white dark:bg-zinc-900 p-4 rounded-xl border border-gray-100 dark:border-zinc-800 shadow-sm">
+<div class="h-24 bg-charcoal rounded-lg mb-4 flex items-end justify-end p-2">
+<span class="bg-white/20 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded">WCAG: PASS AAA</span>
+</div>
+<h3 class="font-bold">Charcoal</h3>
+<p class="text-sm text-gray-500 mb-2">Primary Typography</p>
+<code class="text-xs bg-gray-100 dark:bg-zinc-800 px-2 py-1 rounded">#333333</code>
+</div>
+</div>
+</section>
+<!-- Typography Section -->
+<section class="mb-16" id="typography">
+<h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+<span class="w-2 h-8 bg-primary rounded-full"></span>
+                Typography
+            </h2>
+<div class="bg-white dark:bg-zinc-900 p-8 rounded-xl border border-gray-100 dark:border-zinc-800 shadow-sm space-y-8">
+<div class="flex items-baseline gap-12 border-b border-gray-50 dark:border-zinc-800 pb-6">
+<span class="w-24 text-xs font-bold text-gray-400 uppercase tracking-widest">H1 Display</span>
+<h1 class="text-5xl font-extrabold flex-1">Freshly Baked Pizza</h1>
+<span class="text-xs text-gray-400">Inter / ExtraBold / 48px</span>
+</div>
+<div class="flex items-baseline gap-12 border-b border-gray-50 dark:border-zinc-800 pb-6">
+<span class="w-24 text-xs font-bold text-gray-400 uppercase tracking-widest">H2 Heading</span>
+<h2 class="text-3xl font-bold flex-1">Menu Categories</h2>
+<span class="text-xs text-gray-400">Inter / Bold / 30px</span>
+</div>
+<div class="flex items-baseline gap-12 border-b border-gray-50 dark:border-zinc-800 pb-6">
+<span class="w-24 text-xs font-bold text-gray-400 uppercase tracking-widest">Body Large</span>
+<p class="text-lg text-gray-700 dark:text-gray-300 flex-1">The perfect blend of mozzarella and fresh basil leaves.</p>
+<span class="text-xs text-gray-400">Inter / Regular / 18px</span>
+</div>
+<div class="flex items-baseline gap-12">
+<span class="w-24 text-xs font-bold text-gray-400 uppercase tracking-widest">Caption</span>
+<p class="text-xs text-gray-500 flex-1 italic">Last updated: Oct 24, 2023 at 14:02 PM</p>
+<span class="text-xs text-gray-400">Inter / Regular / 12px</span>
+</div>
+</div>
+</section>
+<!-- Buttons Section -->
+<section class="mb-16" id="buttons">
+<h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+<span class="w-2 h-8 bg-primary rounded-full"></span>
+                Buttons
+            </h2>
+<div class="bg-white dark:bg-zinc-900 p-8 rounded-xl border border-gray-100 dark:border-zinc-800 shadow-sm">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<div class="space-y-4">
+<label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Primary</label>
+<div class="flex flex-col gap-3">
+<button class="bg-primary hover:bg-primary/90 text-white font-semibold py-2.5 px-6 rounded-lg transition-all shadow-sm shadow-primary/20">Add to Order</button>
+<button class="bg-primary/20 text-primary font-semibold py-2.5 px-6 rounded-lg transition-all border border-primary/10">Primary Subtle</button>
+<button class="bg-primary/50 text-white font-semibold py-2.5 px-6 rounded-lg cursor-not-allowed" disabled="">Disabled</button>
+</div>
+</div>
+<div class="space-y-4">
+<label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Secondary</label>
+<div class="flex flex-col gap-3">
+<button class="border-2 border-charcoal/10 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-zinc-800 text-charcoal dark:text-white font-semibold py-2.5 px-6 rounded-lg transition-all">Edit Item</button>
+<button class="bg-sage text-white font-semibold py-2.5 px-6 rounded-lg hover:bg-sage/90 transition-all shadow-sm shadow-sage/20">Complete Order</button>
+</div>
+</div>
+<div class="space-y-4">
+<label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Ghost &amp; Icon</label>
+<div class="flex items-center gap-4">
+<button class="text-gray-500 hover:text-primary transition-colors font-medium">Cancel</button>
+<button class="w-10 h-10 rounded-full border border-gray-100 dark:border-zinc-800 flex items-center justify-center text-primary hover:bg-primary/5 transition-all">
+<span class="material-icons">more_vert</span>
+</button>
+<button class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/25">
+<span class="material-icons">add</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Form Elements Section -->
+<section class="mb-16" id="forms">
+<h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+<span class="w-2 h-8 bg-primary rounded-full"></span>
+                Form Elements
+            </h2>
+<div class="bg-white dark:bg-zinc-900 p-8 rounded-xl border border-gray-100 dark:border-zinc-800 shadow-sm">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+<div class="space-y-6">
+<div>
+<label class="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">Menu Item Name</label>
+<input class="w-full bg-background-light dark:bg-zinc-800 border-0 rounded-lg p-3 ring-1 ring-gray-200 dark:ring-zinc-700 focus:ring-2 focus:ring-primary transition-all" placeholder="e.g. Truffle Pasta" type="text"/>
+</div>
+<div>
+<label class="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">Category Selection</label>
+<select class="w-full bg-background-light dark:bg-zinc-800 border-0 rounded-lg p-3 ring-1 ring-gray-200 dark:ring-zinc-700 focus:ring-2 focus:ring-primary transition-all">
+<option>Main Courses</option>
+<option>Beverages</option>
+<option>Desserts</option>
+</select>
+</div>
+</div>
+<div class="space-y-6">
+<div class="p-4 bg-background-light dark:bg-zinc-800 rounded-lg border border-primary/10">
+<label class="flex items-center gap-3 cursor-pointer">
+<input checked="" class="w-5 h-5 text-primary bg-white border-gray-300 rounded focus:ring-primary" type="checkbox"/>
+<span class="text-sm font-medium">Item is currently available</span>
+</label>
+</div>
+<div class="flex gap-4">
+<label class="flex items-center gap-2 cursor-pointer">
+<input class="w-4 h-4 text-primary focus:ring-primary" name="size" type="radio"/>
+<span class="text-sm">Small</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer">
+<input checked="" class="w-4 h-4 text-primary focus:ring-primary" name="size" type="radio"/>
+<span class="text-sm">Medium</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer">
+<input class="w-4 h-4 text-primary focus:ring-primary" name="size" type="radio"/>
+<span class="text-sm">Large</span>
+</label>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Components Section -->
+<section class="mb-16" id="menu-cards">
+<h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+<span class="w-2 h-8 bg-primary rounded-full"></span>
+                Complex Components
+            </h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<!-- Drag-and-Drop Menu Card -->
+<div class="space-y-4">
+<label class="text-xs font-bold text-gray-400 uppercase tracking-widest">Menu Item Card (Draggable)</label>
+<div class="group relative bg-white dark:bg-zinc-900 p-4 rounded-xl border border-gray-200 dark:border-zinc-800 shadow-md flex gap-4 items-center">
+<div class="cursor-move text-gray-300 group-hover:text-primary transition-colors">
+<span class="material-icons">drag_indicator</span>
+</div>
+<div class="w-20 h-20 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="A fresh salad bowl with avocado" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC4cASTFGCbwB9sP7cGqyw01XL0J8P9s3mqZRycxwoXhhqp0wleFe61uX-ADl_TVfZXGSIWvTSXncYiVzWO1hI_DinVjJg8N_AfFuLTHiHF1Ecn7YK2p9145xR3HijVfhSgMTx7EVj532K85qFC4T-mXizEtH5CNG79cNh8wRagzlD4MZszSIkyQIOX1stSpBfJKU_FN8vQ0lwtMIM5k7uIg60zii7IpIY7QZAfUFyHDAPXyDTx5DzOLQ8qY4RiAs3cphZB-aDbjXE"/>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<div>
+<h4 class="font-bold">Avocado Zen Bowl</h4>
+<p class="text-xs text-gray-500">Vegan, Gluten Free</p>
+</div>
+<span class="text-primary font-bold">$14.50</span>
+</div>
+<div class="mt-3 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-sage"></span>
+<span class="text-[10px] font-bold text-sage uppercase">In Stock</span>
+</div>
+<div class="flex gap-2">
+<button class="p-1 text-gray-400 hover:text-primary"><span class="material-icons text-lg">edit</span></button>
+<button class="p-1 text-gray-400 hover:text-red-500"><span class="material-icons text-lg">delete</span></button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Status Badges & Table Row -->
+<div class="space-y-4">
+<label class="text-xs font-bold text-gray-400 uppercase tracking-widest" id="badges">Status Badges &amp; List Preview</label>
+<div class="bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-800 shadow-sm overflow-hidden">
+<table class="w-full text-left text-sm">
+<thead class="bg-gray-50 dark:bg-zinc-800/50">
+<tr>
+<th class="px-4 py-3 font-semibold">Order ID</th>
+<th class="px-4 py-3 font-semibold">Status</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-gray-50 dark:divide-zinc-800">
+<tr>
+<td class="px-4 py-3 font-medium">#ORD-2401</td>
+<td class="px-4 py-3">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-primary/10 text-primary">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+                                            NEW ORDER
+                                        </span>
+</td>
+</tr>
+<tr>
+<td class="px-4 py-3 font-medium">#ORD-2398</td>
+<td class="px-4 py-3">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700">
+<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                            PREPARING
+                                        </span>
+</td>
+</tr>
+<tr>
+<td class="px-4 py-3 font-medium">#ORD-2395</td>
+<td class="px-4 py-3">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-sage/10 text-sage">
+<span class="w-1.5 h-1.5 rounded-full bg-sage"></span>
+                                            READY
+                                        </span>
+</td>
+</tr>
+<tr>
+<td class="px-4 py-3 font-medium">#ORD-2390</td>
+<td class="px-4 py-3">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-500">
+<span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
+                                            CANCELLED
+                                        </span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</section>
+<!-- Usage Code Snippet Example -->
+<section class="mb-16">
+<div class="bg-charcoal text-gray-300 p-6 rounded-xl overflow-x-auto border-l-4 border-primary">
+<div class="flex justify-between items-center mb-4 border-b border-white/10 pb-4">
+<span class="text-xs font-bold text-gray-500">HTML IMPLEMENTATION</span>
+<button class="text-[10px] font-bold bg-white/5 hover:bg-white/10 px-2 py-1 rounded">COPY CODE</button>
+</div>
+<pre class="code-block text-sm leading-relaxed"><code>&lt;!-- Primary Button Component --&gt;
+&lt;button class="bg-primary hover:bg-primary/90 text-white font-semibold py-2 px-6 rounded-lg shadow-sm"&gt;
+  Complete Order
+&lt;/button&gt;
+
+&lt;!-- Status Badge Component --&gt;
+&lt;span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-sage/10 text-sage"&gt;
+  READY
+&lt;/span&gt;</code></pre>
+</div>
+</section>
+<footer class="border-t border-gray-100 dark:border-zinc-800 pt-8 text-center pb-12">
+<p class="text-sm text-gray-500">Designed for the culinary industry with focus on efficiency. © 2023 CulinaDS Framework.</p>
+</footer>
+</main>
+</body></html>

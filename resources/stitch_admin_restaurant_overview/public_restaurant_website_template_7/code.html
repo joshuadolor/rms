@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>L'Essence | Fine Dining Experience</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1A1A1A", // Deep Charcoal
+                        "cream": "#FDFCF8", // Sophisticated Cream
+                        "accent": "#C5A059", // Subtle Metallic Gold/Bronze
+                        "neutral": "#4A4A4A",
+                        "border-gold": "rgba(197, 160, 89, 0.3)"
+                    },
+                    fontFamily: {
+                        "serif": ["'Playfair Display'", "serif"],
+                        "sans": ["'Inter'", "sans-serif"]
+                    }
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        body {
+            @apply bg-cream text-primary font-sans antialiased;
+        }
+        .section-padding {
+            @apply py-24 px-6;
+        }
+        .btn-elegant {
+            @apply bg-primary text-cream px-10 py-4 uppercase tracking-[0.2em] text-xs font-semibold hover:bg-accent transition-colors duration-500 inline-flex items-center;
+        }
+        .btn-outline {
+            @apply border border-primary text-primary px-10 py-4 uppercase tracking-[0.2em] text-xs font-semibold hover:bg-primary hover:text-cream transition-colors duration-500 inline-flex items-center;
+        }
+        .heading-serif {
+            @apply font-serif italic;
+        }
+        .nav-link {
+            @apply text-[10px] uppercase tracking-[0.3em] font-medium hover:text-accent transition-colors duration-300;
+        }
+        .two-col-container {
+            @apply max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center;
+        }
+        .menu-item-border {
+            @apply border-b border-stone-200 pb-6;
+        }
+    </style>
+</head>
+<body>
+<nav class="fixed top-0 w-full z-50 bg-cream/90 backdrop-blur-md border-b border-stone-100">
+<div class="max-w-7xl mx-auto px-6 h-24 flex items-center justify-between">
+<div class="hidden lg:flex items-center gap-12">
+<a class="nav-link" href="#experience">The Experience</a>
+<a class="nav-link" href="#menu">Menu</a>
+</div>
+<a class="flex flex-col items-center" href="#">
+<span class="text-3xl font-serif tracking-tighter">L'ESSENCE</span>
+<span class="text-[8px] tracking-[0.4em] uppercase -mt-1 opacity-60">Fine Dining</span>
+</a>
+<div class="flex items-center gap-12">
+<a class="hidden lg:block nav-link" href="#reserve">Reservations</a>
+<a class="bg-primary text-cream px-6 py-3 text-[10px] uppercase tracking-[0.2em] hover:bg-accent transition-colors" href="#reserve">
+                Book a Table
+            </a>
+</div>
+</div>
+</nav>
+<section class="min-h-screen flex flex-col lg:flex-row items-stretch pt-24">
+<div class="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-24 order-2 lg:order-1">
+<div class="max-w-xl space-y-10">
+<div class="space-y-4">
+<span class="text-accent text-sm tracking-[0.3em] uppercase block">Since MCMXCIV</span>
+<h1 class="text-5xl lg:text-7xl font-serif leading-tight">
+                    Your Culinary <br/><span class="italic font-normal">Journey Awaits</span>
+</h1>
+</div>
+<p class="text-lg text-neutral font-light leading-relaxed max-w-md">
+                Experience an orchestration of flavors where tradition meets innovation. We curate every detail to ensure an unforgettable evening of sophisticated dining.
+            </p>
+<div class="flex flex-wrap gap-6 pt-4">
+<a class="btn-elegant" href="#reserve">Reserve Your Table</a>
+<a class="btn-outline" href="#menu">The Menu</a>
+</div>
+</div>
+</div>
+<div class="w-full lg:w-1/2 relative min-h-[500px] lg:h-auto overflow-hidden order-1 lg:order-2">
+<img alt="Exquisite culinary presentation" class="absolute inset-0 w-full h-full object-cover grayscale-[20%] hover:grayscale-0 transition-all duration-1000" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBY23VlTCUOwP5uDy0bLVE509rEOKEQGsma5W6w-oAnBgUIT0PCPSn-zl59TADVIfbXJBQWx3Pnz7rBizenpyivAdVv81njKKeIJzU6cU3kbsAxSdyS8SB8vEJPEIuM6ytrVxfnKwT9wo27MKgP_IaqamTX_e05L9lJoKdKhulNcaaslQJM0ydAf0-7btipCoXRzOVLLCQ9kcYB9qxgJTNK2pWSihL1Olp6hkAkyKfUKezOMC5CdTg0uLoDK-jO4fo183X8hmAWLl0"/>
+<div class="absolute inset-0 bg-primary/5"></div>
+</div>
+</section>
+<section class="section-padding bg-stone-50" id="experience">
+<div class="two-col-container">
+<div class="relative group">
+<div class="aspect-[4/5] overflow-hidden bg-stone-200">
+<img alt="Elegant restaurant interior" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCPeO6iD4IeF6ZLPkQkLuciWe2M781UgiMgCKH2_O9GAhHTCVaRPeUwMlAgsJtStdY5BunzTHhjkGWFw9qhoKsWX0-NO965Q8kxg6fAoug4BY8mT0B5Ed0EtfQoPv2Z0fh7i-RqDBl1S6hu1fo_EqslMK_BikjBhvIX20Fvyq4IGggr3xlwl1lcvycvwVq92C0UDOEjBKN1kFgSWdA7-UulpoPnGG4hf9vW7p_9hiVH1bTdN8PUcZudGItrF_xx8wdOQhV_ZQQ53A"/>
+</div>
+<div class="absolute -bottom-8 -right-8 w-64 h-64 border border-accent/30 -z-10 hidden md:block"></div>
+</div>
+<div class="space-y-8 lg:pl-12">
+<h2 class="text-4xl md:text-5xl font-serif leading-tight">A Tradition of <br/><span class="italic font-normal">Excellence</span></h2>
+<div class="w-16 h-[1px] bg-accent"></div>
+<div class="space-y-6 text-neutral font-light leading-loose text-lg">
+<p>Rooted in the principles of classical gastronomy, our kitchen focuses on the purity of seasonal ingredients and the artistry of precise technique.</p>
+<p>Every plate tells a story of heritage, sourced from local artisans and reimagined through a lens of modern elegance. We invite you to lose yourself in the ambiance of refined hospitality.</p>
+</div>
+<div class="pt-6 flex items-center gap-6">
+<img alt="Executive Chef" class="w-20 h-20 rounded-full object-cover border border-accent/20" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA7W1iPnQFPRGU8HaG0_ZeSrX-3LxgLYbXBj2lejVfugA01o-bg5dQDKlNmjLouo1qaCuQv9eXnx5iTyjEe4X2k4G7Ds_ACvMdIclp4yQVhIjj4Bbp-G3ZFE3JDCoQP5fyQjNZubnSXJ8bl03RjdkINX7BqfhG652IAXilDHTxzYCP_T8xSGGfNiMrkMrtxKSgWxvq5RF1u2x9-vxtqJkp8E22Gwns9gPwMsuwKI76S36hrV0KaXGU_8GCG6_ij7Wut0MrXmcpvcQ0"/>
+<div>
+<h4 class="font-serif italic text-xl">Julian Vasseur</h4>
+<p class="text-[10px] uppercase tracking-[0.2em] text-accent mt-1">Executive Chef</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section class="section-padding" id="menu">
+<div class="max-w-7xl mx-auto">
+<div class="text-center mb-20 space-y-4">
+<span class="text-accent text-[10px] uppercase tracking-[0.4em] font-semibold">Seasonal Highlights</span>
+<h2 class="text-4xl md:text-5xl font-serif italic">The Chef's Selection</h2>
+</div>
+<div class="grid md:grid-cols-3 gap-12">
+<div class="group cursor-pointer">
+<div class="aspect-[1/1] overflow-hidden mb-8 bg-stone-100">
+<img alt="Signature Entrée" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAfc885cpKVXpkh8CcWw2fXVdlqnmJPI8QSNucKgm7fmIIjsY4e7f89Y54THrPpI7_cg4Z73g4lSUlkuquXpy4zjWNl2uaGqHUw_WoI8NCnUJPDVM9BJ1-rIZTQggEAu3xetw4RSolqHpUJfIUoMDYGe2bHYFfrfoimKOfRztggfIBjAPK9VsXfuvvfVCnfCN-qIzrPAY-JTljCbK6oxL69Kk03j_PudD9rVsSm19XwnaARJOgppRiVDwsFldawSmG2BwK0KhG76YU"/>
+</div>
+<div class="space-y-3">
+<div class="flex justify-between items-baseline">
+<h3 class="text-xl font-serif tracking-wide">Atlantic Seabass</h3>
+<span class="text-sm font-light text-neutral">$42</span>
+</div>
+<p class="text-sm text-neutral font-light leading-relaxed">Wild caught, served with saffron-infused fennel and a delicate champagne reduction.</p>
+</div>
+</div>
+<div class="group cursor-pointer">
+<div class="aspect-[1/1] overflow-hidden mb-8 bg-stone-100">
+<img alt="Seasonal Risotto" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAlnTZ9YXWR-7foEXEFNeo2XzKUzaTJhlxGo_FMvad_UlQcxzJc5qwEHBTTM3BkgtSHQ3UDbaBqRVVxCUneMF8pBUgAKk7U2UnZeHYjA5ZIfLOQxoBSO24dzFWj8l1NkC_QUV_oqMLlyI9MaetFjxP30gMLOgwVmHhCiix6poxz1Q6uei14EdIEyehbVoOnsLWyuc4oEz7AQE5zXYSzEo_G1g_I0o6drtkDWEees7J-2Ew8Z8XuI2lQaPDY9iNAcR3iTY9YRngid7Q"/>
+</div>
+<div class="space-y-3">
+<div class="flex justify-between items-baseline">
+<h3 class="text-xl font-serif tracking-wide">Black Truffle Risotto</h3>
+<span class="text-sm font-light text-neutral">$38</span>
+</div>
+<p class="text-sm text-neutral font-light leading-relaxed">Aged Acquerello rice, Perigord truffles, and 36-month aged Parmigiano-Reggiano.</p>
+</div>
+</div>
+<div class="group cursor-pointer">
+<div class="aspect-[1/1] overflow-hidden mb-8 bg-stone-100">
+<img alt="Heirloom Selection" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCdi5OfOlomBLhvArd7fZ0uzqoq_TIjqRG5KIfVPMGshgAmx-C5LyfNNSeRNX24JQ_V_wK12f9WW3F6VzBWxH34qY0jTfOz2MGklLxsFfBfNSeBaPkQHfEn3YYNL3YNRxJouyb2jO3VKTkmDg2JDygdXKYCzSL4YGc1PT6mk0O1KoNJYIcILhVCQm0R8rDLGwG-r_j8KklShJhaX-scrEqqIQf6HQYLOfJi9iMRsaSeR0GI8v0Rw7AZDPrf2Dl768zyfBHaMtBkMeY"/>
+</div>
+<div class="space-y-3">
+<div class="flex justify-between items-baseline">
+<h3 class="text-xl font-serif tracking-wide">Heritage Roots</h3>
+<span class="text-sm font-light text-neutral">$32</span>
+</div>
+<p class="text-sm text-neutral font-light leading-relaxed">Slow-roasted heirloom vegetables with honey-miso glaze and toasted pine nuts.</p>
+</div>
+</div>
+</div>
+<div class="mt-16 text-center">
+<a class="text-xs uppercase tracking-[0.3em] font-semibold border-b border-accent pb-2 hover:text-accent transition-colors" href="#">View Complete Menu</a>
+</div>
+</div>
+</section>
+<section class="section-padding bg-primary text-cream" id="reserve">
+<div class="max-w-7xl mx-auto grid lg:grid-cols-2 gap-20 items-center">
+<div class="space-y-10">
+<div class="space-y-4">
+<span class="text-accent text-[10px] uppercase tracking-[0.4em] font-semibold">Reservations</span>
+<h2 class="text-4xl md:text-6xl font-serif italic font-normal">Secure Your Table</h2>
+</div>
+<p class="text-stone-400 font-light text-lg leading-relaxed max-w-md">
+                Due to our intimate setting, we recommend booking in advance. For parties larger than eight, please contact our concierge directly.
+            </p>
+<div class="grid grid-cols-2 gap-8 border-t border-stone-800 pt-10">
+<div class="space-y-2">
+<p class="text-[10px] uppercase tracking-[0.2em] text-accent">Dinner Service</p>
+<p class="font-light text-sm">Tue — Sun, 6:00 PM - 11:00 PM</p>
+</div>
+<div class="space-y-2">
+<p class="text-[10px] uppercase tracking-[0.2em] text-accent">Dress Code</p>
+<p class="font-light text-sm">Business Casual / Formal</p>
+</div>
+</div>
+</div>
+<div class="bg-cream p-10 lg:p-14 shadow-2xl">
+<form class="space-y-8 text-primary">
+<div class="space-y-1">
+<label class="text-[10px] uppercase tracking-[0.2em] font-bold text-stone-400">Guest Name</label>
+<input class="w-full border-0 border-b border-stone-200 bg-transparent px-0 py-3 focus:ring-0 focus:border-accent transition-colors font-serif text-xl placeholder:text-stone-300" placeholder="Your Full Name" type="text"/>
+</div>
+<div class="grid grid-cols-2 gap-10">
+<div class="space-y-1">
+<label class="text-[10px] uppercase tracking-[0.2em] font-bold text-stone-400">Party Size</label>
+<select class="w-full border-0 border-b border-stone-200 bg-transparent px-0 py-3 focus:ring-0 focus:border-accent transition-colors font-serif text-lg">
+<option>2 Guests</option>
+<option>4 Guests</option>
+<option>6 Guests</option>
+</select>
+</div>
+<div class="space-y-1">
+<label class="text-[10px] uppercase tracking-[0.2em] font-bold text-stone-400">Preferred Date</label>
+<input class="w-full border-0 border-b border-stone-200 bg-transparent px-0 py-3 focus:ring-0 focus:border-accent transition-colors font-serif text-lg" type="date"/>
+</div>
+</div>
+<div class="space-y-4">
+<label class="text-[10px] uppercase tracking-[0.2em] font-bold text-stone-400">Preferred Time</label>
+<div class="grid grid-cols-3 gap-3">
+<button class="py-3 border border-stone-200 text-xs tracking-widest uppercase hover:border-accent hover:text-accent transition-all" type="button">6:30 PM</button>
+<button class="py-3 border border-primary bg-primary text-cream text-xs tracking-widest uppercase" type="button">8:00 PM</button>
+<button class="py-3 border border-stone-200 text-xs tracking-widest uppercase hover:border-accent hover:text-accent transition-all" type="button">9:30 PM</button>
+</div>
+</div>
+<button class="w-full btn-elegant justify-center py-6">
+                    Confirm Reservation
+                </button>
+</form>
+</div>
+</div>
+</section>
+<footer class="bg-cream border-t border-stone-100 pt-20 pb-10">
+<div class="max-w-7xl mx-auto px-6">
+<div class="grid md:grid-cols-4 gap-16 mb-20">
+<div class="space-y-8">
+<div class="flex flex-col">
+<span class="text-2xl font-serif tracking-tighter">L'ESSENCE</span>
+<span class="text-[8px] tracking-[0.3em] uppercase opacity-60">Est. 1994</span>
+</div>
+<p class="text-sm text-neutral font-light leading-relaxed">
+                    A sanctuary for epicureans, dedicated to the art of the meal and the joy of refined gathering.
+                </p>
+</div>
+<div class="space-y-6">
+<h4 class="text-[10px] uppercase tracking-[0.2em] font-bold text-accent">Location</h4>
+<p class="text-sm font-light leading-relaxed text-neutral">
+                    The Plaza Promenade, Suite 400<br/>
+                    Manhattan District<br/>
+                    New York, NY 10001
+                </p>
+</div>
+<div class="space-y-6">
+<h4 class="text-[10px] uppercase tracking-[0.2em] font-bold text-accent">Contact</h4>
+<div class="text-sm font-light space-y-2 text-neutral">
+<p>concierge@lessence-dining.com</p>
+<p>+1 (212) 555-0198</p>
+</div>
+</div>
+<div class="space-y-6">
+<h4 class="text-[10px] uppercase tracking-[0.2em] font-bold text-accent">Social</h4>
+<div class="flex gap-6">
+<a class="text-primary hover:text-accent transition-colors" href="#"><span class="material-symbols-outlined font-light">public</span></a>
+<a class="text-primary hover:text-accent transition-colors" href="#"><span class="material-symbols-outlined font-light">photo_camera</span></a>
+</div>
+</div>
+</div>
+<div class="pt-8 border-t border-stone-100 flex flex-col md:flex-row justify-between items-center gap-6 text-[9px] uppercase tracking-[0.25em] font-medium text-stone-400">
+<p>© 2024 L'Essence Restaurant Group.</p>
+<div class="flex gap-10">
+<a class="hover:text-primary transition-colors" href="#">Privacy</a>
+<a class="hover:text-primary transition-colors" href="#">Terms</a>
+<a class="hover:text-primary transition-colors" href="#">Menu PDF</a>
+</div>
+</div>
+</div>
+</footer>
+
+</body></html>

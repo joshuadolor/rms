@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mobile Customer Menu</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13ec5b",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                    },
+                    fontFamily: {
+                        "display": ["Plus Jakarta Sans"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen flex justify-center">
+<!-- Mobile Container (Centered on Desktop) -->
+<main class="w-full max-w-md bg-white dark:bg-slate-900 min-h-screen shadow-2xl relative flex flex-col">
+<!-- Header -->
+<header class="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 py-4">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-2">
+<div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
+<span class="material-icons text-background-dark">restaurant</span>
+</div>
+<div>
+<h1 class="font-bold text-lg leading-tight">Lumina Bistro</h1>
+<p class="text-xs text-slate-500 dark:text-slate-400">Open until 10:00 PM</p>
+</div>
+</div>
+<button class="w-10 h-10 rounded-full flex items-center justify-center bg-slate-100 dark:bg-slate-800 hover:bg-primary/20 transition-colors">
+<span class="material-icons text-slate-600 dark:text-slate-300">search</span>
+</button>
+</div>
+<!-- Quick Category Filter Chips -->
+<div class="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
+<button class="whitespace-nowrap px-4 py-2 rounded-full bg-primary text-background-dark font-semibold text-sm shadow-sm">All</button>
+<button class="whitespace-nowrap px-4 py-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-medium text-sm">Starters</button>
+<button class="whitespace-nowrap px-4 py-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-medium text-sm">Main Courses</button>
+<button class="whitespace-nowrap px-4 py-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-medium text-sm">Desserts</button>
+<button class="whitespace-nowrap px-4 py-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-medium text-sm">Drinks</button>
+</div>
+</header>
+<!-- Menu Content -->
+<div class="flex-1 px-4 py-6 space-y-8 pb-32">
+<!-- Category: Starters -->
+<section>
+<div class="flex items-center justify-between mb-4">
+<h2 class="text-xl font-bold flex items-center gap-2">
+<span class="w-1 h-6 bg-primary rounded-full"></span>
+                        Starters
+                    </h2>
+<span class="text-xs font-medium px-2 py-1 bg-primary/10 text-primary rounded">4 Items</span>
+</div>
+<div class="space-y-4">
+<!-- Item 1 -->
+<div class="group relative bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-4 shadow-sm hover:shadow-md transition-shadow">
+<div class="flex gap-4">
+<div class="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
+<img alt="Crispy Calamari" class="w-full h-full object-cover" data-alt="Golden fried crispy calamari with lemon" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDTzl6DtmI37JzoWOO3tguyVyHivSC3IzOfqpx-dOXl34hciW1URUHX3F3U9aqH-8i667fe61Bhl-2xmxd5opY5wGn30h0o33DSgSKTT0Zg4JZnTIbRDYAyfEEZOL2qWbUB5Srh6oEbhVo7omqkd7p5QO9knRG6h0jKvF_X9dg-gYoFkOlrJljYbYMZc8jOXjq9IZbd2PJ2cZwoMD_pa-9ax6Q-0Icm6izazUFSmBwOyGhrFML8Ziv95y_snvN4GIJDtVz5i7x6Pio"/>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<h3 class="font-bold text-slate-900 dark:text-white">Crispy Calamari</h3>
+<span class="text-primary font-bold text-lg">$14.50</span>
+</div>
+<p class="text-sm text-slate-500 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed">Lightly breaded squid rings served with spicy garlic aioli and fresh lemon wedges.</p>
+<div class="mt-3 flex items-center gap-3">
+<button class="flex-1 py-2 px-4 bg-primary/10 hover:bg-primary/20 text-slate-900 dark:text-white font-semibold text-sm rounded-lg transition-colors flex items-center justify-center gap-2">
+                                        View Details
+                                    </button>
+<button class="w-10 h-10 flex items-center justify-center rounded-lg border-2 border-slate-100 dark:border-slate-700 text-slate-400 hover:text-red-500 hover:border-red-100 transition-all">
+<span class="material-icons text-[20px]">favorite_border</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="group relative bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-4 shadow-sm">
+<div class="flex gap-4">
+<div class="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
+<img alt="Truffle Arancini" class="w-full h-full object-cover" data-alt="Italian rice balls with truffle oil" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDnx9g7SAWJA3-8nDJIXTro82v_yyp5yRiTwtcvBy1RorBcHyjwklmXkzGEc348rDCGgLbug25MqeNKcDP9YEvgGvE5lGvo7HLmQ0eePBtZPY9qSubz4c-kjNM-PDMtVL_jLlmd7Fk49ciEJfm2X4ZVubdblUtcHKHWLvjGDx1EiBNPx2lR_8d5Nl9LRmaDlVK9O3lETOuvkLtC3eSjaIe-9Aiz3BTI9Nz-W5TCWEIygZ_mwwpbtTznYDz-jqLwBdMr2iU39nnAnvY"/>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<h3 class="font-bold text-slate-900 dark:text-white">Truffle Arancini</h3>
+<span class="text-primary font-bold text-lg">$12.00</span>
+</div>
+<p class="text-sm text-slate-500 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed">Crispy risotto balls stuffed with mozzarella and infused with black truffle oil.</p>
+<div class="mt-3 flex items-center gap-3">
+<button class="flex-1 py-2 px-4 bg-primary/10 hover:bg-primary/20 text-slate-900 dark:text-white font-semibold text-sm rounded-lg transition-colors flex items-center justify-center gap-2">
+                                        View Details
+                                    </button>
+<button class="w-10 h-10 flex items-center justify-center rounded-lg bg-primary text-background-dark transition-all">
+<span class="material-icons text-[20px]">favorite</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Category: Main Courses -->
+<section>
+<div class="flex items-center justify-between mb-4">
+<h2 class="text-xl font-bold flex items-center gap-2">
+<span class="w-1 h-6 bg-primary rounded-full"></span>
+                        Main Courses
+                    </h2>
+<span class="text-xs font-medium px-2 py-1 bg-primary/10 text-primary rounded">8 Items</span>
+</div>
+<div class="space-y-4">
+<!-- Item 3 -->
+<div class="group relative bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-4 shadow-sm">
+<div class="flex flex-col gap-3">
+<div class="w-full h-32 rounded-lg overflow-hidden">
+<img alt="Salmon Bowl" class="w-full h-full object-cover" data-alt="Grilled salmon bowl with fresh vegetables" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-OAn6u3N6glZjZn3sA-HTB9wB7qn1S-agfvR6MucUyXpUvqCt3K8lxIB3P2cAANbQxxSPzg1O1NEba87jqOIFa8i2HrYPb5-oilaX7y0ZIeLF_brKPHZyKjCXTId3svOwKeQd24oJbCflfAgS7QCUuHoW_1U-jgctKpuCj6UqMoE59s_6kCSUUghZLdH4XqJgT1QMDz1GDBnOKb-G5wHtwxII9ZyDSSLspWdhMQwCD8uXi0qu9JjtlYtYcpYX6MW6timTRYbQMy0"/>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<h3 class="font-bold text-slate-900 dark:text-white">Pan-Seared Salmon</h3>
+<span class="text-primary font-bold text-lg">$28.00</span>
+</div>
+<p class="text-sm text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">Atlantic salmon served over a bed of quinoa, roasted asparagus, and citrus reduction.</p>
+<div class="flex gap-2 mt-2">
+<span class="text-[10px] uppercase tracking-wider font-bold px-2 py-1 bg-slate-100 dark:bg-slate-700 rounded text-slate-600 dark:text-slate-300">Gluten-Free</span>
+<span class="text-[10px] uppercase tracking-wider font-bold px-2 py-1 bg-slate-100 dark:bg-slate-700 rounded text-slate-600 dark:text-slate-300">Healthy</span>
+</div>
+<div class="mt-4 flex items-center gap-3">
+<button class="flex-1 py-3 px-4 bg-primary/10 hover:bg-primary/20 text-slate-900 dark:text-white font-bold text-sm rounded-lg transition-colors">
+                                        Select Options
+                                    </button>
+<button class="w-12 h-12 flex items-center justify-center rounded-lg border-2 border-slate-100 dark:border-slate-700 text-slate-400">
+<span class="material-icons">favorite_border</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Item 4 -->
+<div class="group relative bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-4 shadow-sm">
+<div class="flex gap-4">
+<div class="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
+<img alt="Margherita Pizza" class="w-full h-full object-cover" data-alt="Classic wood-fired margherita pizza" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD9NMvA63eT0Zbmq8Fxrxl9u2pYGiyZXEIQDOablJwHX20bi6AoooKFQR1D5aePS5krCWqXrKXVYnPY02sD6RtT36V4w2iTI9QFrUTOz6r3exOarEzTQ1uFkxtLC_S94KyBiZkOKKF-Kxl1ALWtl8g-DXdrAnM7xVTaR35pQddsF3dB2S4hRmfnB-jXUwsAYPuJUZrHFtAvlm4rFkL9hmy_1ZLps7R88jl-T3CFARfJUNljCAzn1xq6hVNg17Ood-qT6EHaYHqFAp8"/>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<h3 class="font-bold text-slate-900 dark:text-white">Heritage Pizza</h3>
+<span class="text-primary font-bold text-lg">$19.50</span>
+</div>
+<p class="text-sm text-slate-500 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed">Hand-tossed dough, San Marzano tomatoes, fresh buffalo mozzarella, and organic basil.</p>
+<div class="mt-3 flex items-center gap-3">
+<button class="flex-1 py-2 px-4 bg-primary/10 hover:bg-primary/20 text-slate-900 dark:text-white font-semibold text-sm rounded-lg transition-colors">
+                                        View Details
+                                    </button>
+<button class="w-10 h-10 flex items-center justify-center rounded-lg border-2 border-slate-100 dark:border-slate-700 text-slate-400">
+<span class="material-icons text-[20px]">favorite_border</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Category: Desserts -->
+<section>
+<div class="flex items-center justify-between mb-4">
+<h2 class="text-xl font-bold flex items-center gap-2">
+<span class="w-1 h-6 bg-primary rounded-full"></span>
+                        Desserts
+                    </h2>
+<span class="text-xs font-medium px-2 py-1 bg-primary/10 text-primary rounded">2 Items</span>
+</div>
+<div class="space-y-4">
+<div class="group relative bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-4 shadow-sm">
+<div class="flex gap-4">
+<div class="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
+<img alt="Chocolate Fondant" class="w-full h-full object-cover" data-alt="Molten chocolate lava cake" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBVWnwrNI0SRk-eGa_BAUp9UV2XW7gyWwuPGfMch5ie-G2KMo43LgNm4mM2Y_F-WZjoblmQ1ETw6KUy0Y6v-N78hgUFzwsLFRmreJ8da0gdKAa41sOk49I3GHFS_vrKgEkCjvBkMUZLDoL0Jym3Euh9nhUGTpBFLDyuFbRhomY8MV2RgRObTTur3WyHcSBFNxlJL1qRB4pilQyB8_KCsenPkurfpTt65fznBDFJyjNixmPl1E93NCLYT7ntD8mXJWOnp4CsQfVxygw"/>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<h3 class="font-bold text-slate-900 dark:text-white">Lava Fondant</h3>
+<span class="text-primary font-bold text-lg">$9.00</span>
+</div>
+<p class="text-sm text-slate-500 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed">Warm 70% dark chocolate fondant with a molten core, served with vanilla bean gelato.</p>
+<div class="mt-3 flex items-center gap-3">
+<button class="flex-1 py-2 px-4 bg-primary/10 hover:bg-primary/20 text-slate-900 dark:text-white font-semibold text-sm rounded-lg transition-colors">
+                                        View Details
+                                    </button>
+<button class="w-10 h-10 flex items-center justify-center rounded-lg border-2 border-slate-100 dark:border-slate-700 text-slate-400">
+<span class="material-icons text-[20px]">favorite_border</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Floating Cart/Favorites Summary -->
+<div class="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-[380px] px-4 z-50">
+<button class="w-full bg-slate-900 dark:bg-primary text-white dark:text-background-dark py-4 px-6 rounded-2xl shadow-2xl flex items-center justify-between group active:scale-95 transition-transform">
+<div class="flex items-center gap-3">
+<div class="relative">
+<span class="material-icons">shopping_bag</span>
+<span class="absolute -top-1 -right-1 w-4 h-4 bg-primary dark:bg-background-dark text-background-dark dark:text-primary text-[10px] font-bold rounded-full flex items-center justify-center border border-slate-900">2</span>
+</div>
+<span class="font-bold">View Selection</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="font-bold text-lg">$42.50</span>
+<span class="material-icons group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</div>
+</button>
+</div>
+<!-- Bottom Navigation Spacer -->
+<div class="h-24"></div>
+</main>
+</body></html>

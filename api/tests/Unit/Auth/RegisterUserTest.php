@@ -18,15 +18,14 @@ class RegisterUserTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_handle_creates_user_via_repository_and_returns_user_and_token(): void
+    public function test_handle_creates_user_sends_verification_and_returns_user_without_token(): void
     {
         $user = Mockery::mock(User::class)->makePartial();
         $user->id = 1;
         $user->name = 'Test';
         $user->email = 'test@example.com';
-        $user->shouldReceive('createToken')->once()->with('auth')->andReturn(
-            (object) ['plainTextToken' => 'secret-token-123']
-        );
+        $user->shouldReceive('sendEmailVerificationNotification')->once();
+        $user->shouldNotReceive('createToken');
 
         $repo = Mockery::mock(UserRepositoryInterface::class);
         $repo->shouldReceive('create')->once()->with(Mockery::on(function (array $data) {
@@ -43,6 +42,6 @@ class RegisterUserTest extends TestCase
         ]);
 
         $this->assertSame($user, $result['user']);
-        $this->assertSame('secret-token-123', $result['token']);
+        $this->assertArrayNotHasKey('token', $result);
     }
 }

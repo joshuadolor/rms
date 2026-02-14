@@ -1,0 +1,18 @@
+---
+description: When working with backend APIs on the frontend, use docs/API-REFERENCE.md
+globs: frontend/**/*
+alwaysApply: false
+---
+
+# API reference – frontend
+
+When you work on **API calls** from the frontend (login, register, fetch user, etc.):
+
+1. **Read `docs/API-REFERENCE.md`** first. It is the single source of truth for:
+   - Base URL and auth (Bearer token)
+   - Every endpoint: method, path, request body, response shape, errors (422, 401, 403)
+   - User payload shape, validation rules, and generic messages (e.g. forgot-password, resend verification)
+2. Use the documented request/response shapes and error formats. Do not assume endpoints or field names; follow the doc.
+3. Handle documented error cases (e.g. "Please verify your email address before logging in.", 403 for unverified on protected routes).
+
+This keeps the frontend consistent with the backend and avoids mismatched payloads or missing error handling.

@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>L'ESSENCE | Modern Architectural Elegance</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100;300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "sapphire": "#0F52BA",
+                        "charcoal": "#0F0F0F",
+                        "slate-grey": "#2D3436",
+                        "stark-white": "#FDFDFD",
+                    },
+                    fontFamily: {
+                        "sans": ["Outfit", "sans-serif"]
+                    },
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        body {
+            @apply bg-stark-white text-charcoal font-sans antialiased;
+        }
+        .geo-border {
+            border-left: 1px solid theme('colors.charcoal');
+            border-top: 1px solid theme('colors.charcoal');
+        }
+        .deep-shadow {
+            box-shadow: 20px 20px 60px rgba(0,0,0,0.1);
+        }
+        .nav-link {
+            @apply text-[10px] uppercase tracking-[0.3em] hover:text-sapphire transition-colors duration-500 font-medium;
+        }
+        .btn-modern {
+            @apply bg-charcoal text-stark-white px-10 py-5 transition-all duration-700 uppercase tracking-[0.3em] text-[10px] font-bold relative overflow-hidden;
+        }
+        .btn-modern:hover {
+            @apply bg-sapphire translate-x-1 -translate-y-1 shadow-[4px_4px_0px_0px_rgba(15,15,15,1)];
+        }
+        .asym-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+        }
+    </style>
+</head>
+<body class="selection:bg-sapphire selection:text-white">
+<nav class="fixed top-0 w-full z-50 bg-stark-white/95 backdrop-blur-md border-b border-charcoal/5">
+<div class="max-w-[1600px] mx-auto px-10 h-20 flex items-center justify-between">
+<div class="flex items-center gap-12">
+<div class="flex flex-col">
+<span class="text-xl font-bold tracking-[0.2em] leading-none uppercase">L'Essence</span>
+<span class="text-[7px] uppercase tracking-[0.6em] mt-1 text-sapphire font-semibold">The Essence of Form</span>
+</div>
+</div>
+<div class="hidden lg:flex items-center gap-12">
+<a class="nav-link" href="#artistry">Culinary Artistry</a>
+<a class="nav-link" href="#precision">Precision Dining</a>
+<a class="nav-link" href="#menu">The Form</a>
+</div>
+<div>
+<a class="btn-modern !py-3 !px-6" href="#reserve">
+                Reserve
+            </a>
+</div>
+</div>
+</nav>
+<section class="relative h-screen w-full flex flex-col overflow-hidden bg-charcoal">
+<div class="absolute inset-0 grid grid-cols-12 grid-rows-6 opacity-40 pointer-events-none">
+<div class="col-span-8 row-span-6 border-r border-stark-white/5"></div>
+<div class="col-span-4 row-span-3 border-b border-stark-white/5"></div>
+</div>
+<div class="relative z-10 h-full flex items-center">
+<div class="asym-grid w-full h-full">
+<div class="col-span-12 lg:col-span-7 flex flex-col justify-center px-10 lg:px-20 space-y-8">
+<div class="w-16 h-1 bg-sapphire mb-8"></div>
+<h1 class="text-6xl md:text-8xl lg:text-[10rem] text-stark-white font-extrabold leading-[0.85] tracking-tighter uppercase">
+                    Culinary<br/><span class="text-transparent" style="-webkit-text-stroke: 1px white;">Artistry.</span>
+</h1>
+<p class="text-stark-white/60 max-w-md text-sm tracking-widest uppercase font-light leading-relaxed">
+                    A dialogue between architectural structure and gastronomic precision.
+                </p>
+<div class="pt-8">
+<a class="btn-modern inline-block" href="#reserve">Experience the Form</a>
+</div>
+</div>
+<div class="hidden lg:block lg:col-span-5 relative">
+<img alt="Minimalist Plate" class="w-full h-full object-cover grayscale brightness-75 hover:grayscale-0 transition-all duration-1000" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBY23VlTCUOwP5uDy0bLVE509rEOKEQGsma5W6w-oAnBgUIT0PCPSn-zl59TADVIfbXJBQWx3Pnz7rBizenpyivAdVv81njKKeIJzU6cU3kbsAxSdyS8SB8vEJPEIuM6ytrVxfnKwT9wo27MKgP_IaqamTX_e05L9lJoKdKhulNcaaslQJM0ydAf0-7btipCoXRzOVLLCQ9kcYB9qxgJTNK2pWSihL1Olp6hkAkyKfUKezOMC5CdTg0uLoDK-jO4fo183X8hmAWLl0"/>
+<div class="absolute inset-0 bg-gradient-to-r from-charcoal to-transparent"></div>
+</div>
+</div>
+</div>
+</section>
+<section class="py-40 bg-stark-white" id="artistry">
+<div class="max-w-[1440px] mx-auto px-10">
+<div class="asym-grid gap-y-20">
+<div class="col-span-12 lg:col-span-5 space-y-12 lg:pr-10">
+<div class="space-y-6">
+<span class="text-sapphire text-xs uppercase tracking-[0.5em] font-bold">01 — The Concept</span>
+<h2 class="text-5xl lg:text-7xl font-bold tracking-tighter leading-none uppercase">Precision<br/>Dining</h2>
+</div>
+<div class="space-y-8 border-l-4 border-charcoal pl-8">
+<p class="text-charcoal text-xl font-light leading-relaxed">
+                        At L'Essence, we treat ingredients as structural elements. Every dish is a study in geometry, texture, and the stark contrast of flavor.
+                    </p>
+<p class="text-slate-grey/60 text-sm font-medium tracking-wide leading-loose">
+                        WE DEFINE THE NEW STANDARDS OF HIGH-CONTRAST CUISINE. OUR SPACE IS AN EXTENSION OF THE PLATE—MINIMAL, DRAMATIC, AND ABSOLUTELY INTENTIONAL.
+                    </p>
+</div>
+</div>
+<div class="col-span-12 lg:col-span-7 relative">
+<div class="relative z-10 bg-stark-white p-4 deep-shadow">
+<img alt="Architectural Interior" class="w-full aspect-[4/3] object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCPeO6iD4IeF6ZLPkQkLuciWe2M781UgiMgCKH2_O9GAhHTCVaRPeUwMlAgsJtStdY5BunzTHhjkGWFw9qhoKsWX0-NO965Q8kxg6fAoug4BY8mT0B5Ed0EtfQoPv2Z0fh7i-RqDBl1S6hu1fo_EqslMK_BikjBhvIX20Fvyq4IGggr3xlwl1lcvycvwVq92C0UDOEjBKN1kFgSWdA7-UulpoPnGG4hf9vW7p_9hiVH1bTdN8PUcZudGItrF_xx8wdOQhV_ZQQ53A"/>
+</div>
+<div class="absolute -top-10 -right-10 w-64 h-64 border-[20px] border-charcoal/5 -z-0"></div>
+<div class="absolute -bottom-10 -left-10 w-1/2 h-24 bg-sapphire/10 -z-0"></div>
+</div>
+</div>
+</div>
+</section>
+<section class="py-40 bg-charcoal text-stark-white" id="menu">
+<div class="max-w-[1440px] mx-auto px-10">
+<div class="flex flex-col lg:flex-row lg:items-end justify-between mb-32 border-b border-stark-white/10 pb-12">
+<div class="max-w-2xl space-y-4">
+<span class="text-sapphire text-xs uppercase tracking-[0.5em] font-bold">02 — The Portfolio</span>
+<h2 class="text-6xl font-black tracking-tighter uppercase leading-none">The Essence of Form</h2>
+</div>
+<div class="mt-8 lg:mt-0">
+<a class="text-[10px] uppercase tracking-[0.4em] font-bold py-4 border-b-2 border-sapphire hover:text-sapphire transition-all" href="#">Full Manifesto</a>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-1 px-1 bg-stark-white/10">
+<div class="group bg-charcoal p-8 border-r border-stark-white/10">
+<div class="aspect-square overflow-hidden mb-12 relative bg-slate-grey">
+<img alt="Monochrome Dish" class="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:scale-105 group-hover:grayscale-0" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAfc885cpKVXpkh8CcWw2fXVdlqnmJPI8QSNucKgm7fmIIjsY4e7f89Y54THrPpI7_cg4Z73g4lSUlkuquXpy4zjWNl2uaGqHUw_WoI8NCnUJPDVM9BJ1-rIZTQggEAu3xetw4RSolqHpUJfIUoMDYGe2bHYFfrfoimKOfRztggfIBjAPK9VsXfuvvfVCnfCN-qIzrPAY-JTljCbK6oxL69Kk03j_PudD9rVsSm19XwnaARJOgppRiVDwsFldawSmG2BwK0KhG76YU"/>
+<div class="absolute top-0 right-0 p-4">
+<span class="text-[40px] font-black text-stark-white/10 leading-none">01</span>
+</div>
+</div>
+<div class="space-y-6">
+<div class="flex justify-between items-start">
+<h3 class="text-2xl font-bold tracking-tighter uppercase leading-none">Black Truffle<br/>Wagyu</h3>
+<span class="text-sapphire font-black text-xl">/ 68</span>
+</div>
+<p class="text-stark-white/40 text-[11px] uppercase tracking-widest leading-relaxed">Structural Aged Wagyu. Perigord Carbon. Vintage Port Reduction.</p>
+</div>
+</div>
+<div class="group bg-charcoal p-8 border-r border-stark-white/10">
+<div class="aspect-square overflow-hidden mb-12 relative bg-slate-grey">
+<img alt="Architectural Dish" class="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:scale-105 group-hover:grayscale-0" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAlnTZ9YXWR-7foEXEFNeo2XzKUzaTJhlxGo_FMvad_UlQcxzJc5qwEHBTTM3BkgtSHQ3UDbaBqRVVxCUneMF8pBUgAKk7U2UnZeHYjA5ZIfLOQxoBSO24dzFWj8l1NkC_QUV_oqMLlyI9MaetFjxP30gMLOgwVmHhCiix6poxz1Q6uei14EdIEyehbVoOnsLWyuc4oEz7AQE5zXYSzEo_G1g_I0o6drtkDWEees7J-2Ew8Z8XuI2lQaPDY9iNAcR3iTY9YRngid7Q"/>
+<div class="absolute top-0 right-0 p-4">
+<span class="text-[40px] font-black text-stark-white/10 leading-none">02</span>
+</div>
+</div>
+<div class="space-y-6">
+<div class="flex justify-between items-start">
+<h3 class="text-2xl font-bold tracking-tighter uppercase leading-none">Saffron<br/>Langoustine</h3>
+<span class="text-sapphire font-black text-xl">/ 54</span>
+</div>
+<p class="text-stark-white/40 text-[11px] uppercase tracking-widest leading-relaxed">Linear Crustacean. Saffron Geometrics. Wild Herb Suspension.</p>
+</div>
+</div>
+<div class="group bg-charcoal p-8">
+<div class="aspect-square overflow-hidden mb-12 relative bg-slate-grey">
+<img alt="Abstract Dish" class="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:scale-105 group-hover:grayscale-0" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCdi5OfOlomBLhvArd7fZ0uzqoq_TIjqRG5KIfVPMGshgAmx-C5LyfNNSeRNX24JQ_V_wK12f9WW3F6VzBWxH34qY0jTfOz2MGklLxsFfBfNSeBaPkQHfEn3YYNL3YNRxJouyb2jO3VKTkmDg2JDygdXKYCzSL4YGc1PT6mk0O1KoNJYIcILhVCQm0R8rDLGwG-r_j8KklShJhaX-scrEqqIQf6HQYLOfJi9iMRsaSeR0GI8v0Rw7AZDPrf2Dl768zyfBHaMtBkMeY"/>
+<div class="absolute top-0 right-0 p-4">
+<span class="text-[40px] font-black text-stark-white/10 leading-none">03</span>
+</div>
+</div>
+<div class="space-y-6">
+<div class="flex justify-between items-start">
+<h3 class="text-2xl font-bold tracking-tighter uppercase leading-none">Heritage<br/>Roots</h3>
+<span class="text-sapphire font-black text-xl">/ 42</span>
+</div>
+<p class="text-stark-white/40 text-[11px] uppercase tracking-widest leading-relaxed">Lacquer-Finished Earth. Smoked Emulsion. Toasted Tectonics.</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section class="py-40 bg-stark-white relative overflow-hidden" id="reserve">
+<div class="max-w-[1440px] mx-auto px-10 asym-grid items-center">
+<div class="col-span-12 lg:col-span-6 mb-20 lg:mb-0">
+<div class="space-y-8 max-w-lg">
+<span class="text-sapphire text-xs uppercase tracking-[0.5em] font-bold">03 — Interaction</span>
+<h2 class="text-7xl font-black tracking-tighter uppercase leading-[0.9]">Secure<br/>Presence.</h2>
+<div class="w-24 h-2 bg-charcoal"></div>
+<p class="text-slate-grey text-lg font-light">Join the architectural dialogue. Reservations are mandatory for all sensory sessions.</p>
+</div>
+</div>
+<div class="col-span-12 lg:col-span-6 bg-charcoal p-12 lg:p-20 deep-shadow relative">
+<div class="absolute -top-6 -left-6 w-12 h-12 bg-sapphire"></div>
+<form class="space-y-10">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+<div class="space-y-2 border-b border-stark-white/20 pb-4">
+<label class="text-[10px] uppercase tracking-widest text-stark-white/40 font-bold">IDENTITY</label>
+<input class="w-full bg-transparent border-none p-0 focus:ring-0 text-stark-white text-sm placeholder:text-stark-white/10" placeholder="NAME" type="text"/>
+</div>
+<div class="space-y-2 border-b border-stark-white/20 pb-4">
+<label class="text-[10px] uppercase tracking-widest text-stark-white/40 font-bold">SCALE</label>
+<select class="w-full bg-transparent border-none p-0 focus:ring-0 text-stark-white text-sm cursor-pointer">
+<option class="bg-charcoal">02 PERSONS</option>
+<option class="bg-charcoal">04 PERSONS</option>
+<option class="bg-charcoal">06+ PRIVATE</option>
+</select>
+</div>
+<div class="space-y-2 border-b border-stark-white/20 pb-4">
+<label class="text-[10px] uppercase tracking-widest text-stark-white/40 font-bold">TEMPORAL</label>
+<input class="w-full bg-transparent border-none p-0 focus:ring-0 text-stark-white text-sm invert" type="date"/>
+</div>
+<div class="space-y-2 border-b border-stark-white/20 pb-4">
+<label class="text-[10px] uppercase tracking-widest text-stark-white/40 font-bold">TIMING</label>
+<select class="w-full bg-transparent border-none p-0 focus:ring-0 text-stark-white text-sm cursor-pointer">
+<option class="bg-charcoal">19:00</option>
+<option class="bg-charcoal">21:00</option>
+</select>
+</div>
+</div>
+<button class="w-full bg-stark-white text-charcoal py-6 text-[11px] font-black uppercase tracking-[0.5em] hover:bg-sapphire hover:text-white transition-all duration-500">
+                    Confirm Acquisition
+                </button>
+</form>
+</div>
+</div>
+</section>
+<footer class="bg-charcoal text-stark-white/40 py-32 border-t border-stark-white/5" id="contact">
+<div class="max-w-[1440px] mx-auto px-10">
+<div class="grid grid-cols-1 md:grid-cols-12 gap-16 pb-32">
+<div class="md:col-span-5 space-y-12">
+<div class="flex flex-col">
+<span class="text-3xl font-black text-stark-white tracking-[0.2em] uppercase leading-none">L'Essence</span>
+<span class="text-[8px] uppercase tracking-[0.8em] text-sapphire font-bold mt-2">Architectural Gastronomy</span>
+</div>
+<p class="text-xs tracking-widest leading-loose max-w-xs uppercase font-light">
+                    Redefining human interaction through geometric culinary experiences.
+                </p>
+</div>
+<div class="md:col-span-2 space-y-6">
+<h4 class="text-[11px] uppercase tracking-widest text-stark-white font-black">Coordinates</h4>
+<address class="not-italic text-[10px] uppercase tracking-widest leading-loose font-light">
+                    15 Place Vendôme<br/>
+                    75001 Paris, FR
+                </address>
+</div>
+<div class="md:col-span-2 space-y-6">
+<h4 class="text-[11px] uppercase tracking-widest text-stark-white font-black">Signal</h4>
+<div class="text-[10px] uppercase tracking-widest leading-loose font-light">
+<p>+33 (1) 00 00 00</p>
+<p>void@lessence.com</p>
+</div>
+</div>
+<div class="md:col-span-3 space-y-6 text-right">
+<h4 class="text-[11px] uppercase tracking-widest text-stark-white font-black">Social Grid</h4>
+<div class="flex gap-8 justify-end">
+<a class="hover:text-sapphire transition-colors text-[10px] font-bold tracking-widest uppercase" href="#">IG</a>
+<a class="hover:text-sapphire transition-colors text-[10px] font-bold tracking-widest uppercase" href="#">FB</a>
+<a class="hover:text-sapphire transition-colors text-[10px] font-bold tracking-widest uppercase" href="#">TW</a>
+</div>
+</div>
+</div>
+<div class="pt-12 border-t border-stark-white/5 flex flex-col md:flex-row justify-between items-center gap-8 text-[9px] uppercase tracking-[0.4em] font-medium">
+<p>© 2024 L'ESSENCE. ALL STRUCTURES RESERVED.</p>
+<div class="flex gap-16">
+<a class="hover:text-stark-white transition-colors" href="#">Manifesto</a>
+<a class="hover:text-stark-white transition-colors" href="#">Protocol</a>
+</div>
+</div>
+</div>
+</footer>
+
+</body></html>

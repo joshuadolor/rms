@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mobile Admin Login | Restaurant Management System</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#e3623b",
+                        "background-light": "#f8f6f6",
+                        "background-dark": "#211511",
+                        "neutral-warm": "#fdfbf7",
+                    },
+                    fontFamily: {
+                        "display": ["Plus Jakarta Sans"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark min-h-screen flex items-center justify-center p-4">
+<!-- Main Container - constrained for desktop to mimic mobile focus -->
+<div class="w-full max-w-[420px] bg-white dark:bg-zinc-900/50 rounded-xl shadow-xl shadow-primary/5 border border-primary/10 overflow-hidden">
+<!-- Header / Logo Section -->
+<div class="pt-10 pb-6 px-8 text-center">
+<div class="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-4">
+<span class="material-icons text-primary text-3xl">restaurant_menu</span>
+</div>
+<h1 class="text-2xl font-bold text-zinc-900 dark:text-white mb-1">Admin Login</h1>
+<p class="text-zinc-500 dark:text-zinc-400 text-sm">Access your restaurant management dashboard</p>
+</div>
+<!-- Login Form -->
+<form action="#" class="px-8 pb-10 space-y-6" method="POST">
+<!-- Email Input -->
+<div class="space-y-2">
+<label class="block text-sm font-semibold text-zinc-700 dark:text-zinc-300" for="email">
+                    Email Address
+                </label>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-icons text-zinc-400 text-xl">alternate_email</span>
+</div>
+<input class="block w-full pl-10 pr-3 py-3.5 bg-neutral-warm dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-zinc-900 dark:text-white placeholder-zinc-400 transition-all duration-200" id="email" name="email" placeholder="admin@restaurant.com" required="" type="email"/>
+</div>
+</div>
+<!-- Password Input -->
+<div class="space-y-2">
+<div class="flex items-center justify-between">
+<label class="block text-sm font-semibold text-zinc-700 dark:text-zinc-300" for="password">
+                        Password
+                    </label>
+</div>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-icons text-zinc-400 text-xl">lock_outline</span>
+</div>
+<input class="block w-full pl-10 pr-12 py-3.5 bg-neutral-warm dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-zinc-900 dark:text-white placeholder-zinc-400 transition-all duration-200" id="password" name="password" placeholder="••••••••" required="" type="password"/>
+<button class="absolute inset-y-0 right-0 pr-3 flex items-center text-zinc-400 hover:text-primary transition-colors" type="button">
+<span class="material-icons text-xl">visibility</span>
+</button>
+</div>
+</div>
+<!-- Login Button -->
+<button class="w-full bg-primary hover:bg-primary/90 text-white font-bold py-4 px-6 rounded-lg shadow-lg shadow-primary/20 transform active:scale-[0.98] transition-all duration-200 flex items-center justify-center space-x-2 focus:outline-none focus:ring-4 focus:ring-primary/30" type="submit">
+<span>Login to Dashboard</span>
+<span class="material-icons text-lg">login</span>
+</button>
+<!-- Navigation Links -->
+<div class="flex flex-col items-center space-y-4 pt-4">
+<a class="text-sm font-medium text-primary hover:text-primary/80 transition-colors" href="#">
+                    Forgot Password?
+                </a>
+<div class="w-full h-px bg-zinc-100 dark:bg-zinc-800 my-2"></div>
+<div class="flex items-center space-x-1 text-sm text-zinc-500 dark:text-zinc-400">
+<span>Having trouble?</span>
+<a class="font-semibold text-primary hover:underline" href="#">Need Help?</a>
+</div>
+</div>
+</form>
+</div>
+<!-- Decorative Background Elements -->
+<div class="fixed top-0 left-0 w-full h-full -z-10 opacity-40 overflow-hidden pointer-events-none">
+<div class="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[100px]"></div>
+<div class="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[100px]"></div>
+</div>
+<!-- Footer Credit (Optional) -->
+<footer class="fixed bottom-6 w-full text-center text-zinc-400 dark:text-zinc-600 text-xs font-medium uppercase tracking-widest pointer-events-none">
+        © 2024 Restaurant Pro Systems
+    </footer>
+</body></html>

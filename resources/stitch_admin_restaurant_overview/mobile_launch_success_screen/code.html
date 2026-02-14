@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Restaurant Live - Success Screen</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#ee4b2b",
+                        "background-light": "#f8f6f6",
+                        "background-dark": "#221310",
+                    },
+                    fontFamily: {
+                        "display": ["Plus Jakarta Sans", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .success-glow {
+            box-shadow: 0 0 40px 10px rgba(238, 75, 43, 0.1);
+        }
+        .confetti-dot {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark min-h-screen flex items-center justify-center p-4">
+<!-- Main Container - Centered Mobile View on Desktop -->
+<main class="w-full max-w-md bg-white dark:bg-background-dark/50 rounded-xl overflow-hidden shadow-2xl relative">
+<!-- Decorative Background Elements -->
+<div class="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-20">
+<div class="confetti-dot bg-primary top-10 left-10"></div>
+<div class="confetti-dot bg-primary/40 top-20 right-20"></div>
+<div class="confetti-dot bg-primary top-1/2 left-5"></div>
+<div class="confetti-dot bg-primary/60 bottom-20 right-10"></div>
+<div class="confetti-dot bg-primary/30 bottom-10 left-1/4"></div>
+</div>
+<div class="relative px-8 py-16 flex flex-col items-center text-center">
+<!-- Celebration Illustration Container -->
+<div class="relative mb-10">
+<!-- Outer Glow -->
+<div class="absolute inset-0 bg-primary/10 blur-3xl rounded-full"></div>
+<!-- Main Illustration Wrapper -->
+<div class="relative z-10 w-48 h-48 flex items-center justify-center bg-white dark:bg-background-dark rounded-full shadow-lg border-4 border-primary/10">
+<img alt="Grand Opening Ribbon" class="w-40 h-40 object-cover rounded-full" data-alt="Grand opening red ribbon and gold medal" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBNpF9lw8mHUBiw0VOwYAjVXt5gNdqtcLW2uOc4zb-GCGbogf-LNJhlRuQ3ByiOk2rfr97o615uKcDWrC2B8mH4xB27HVBM71OW0PK8JBgoXS2XblkdzOV_U5mFbzVGpwT5HEudBXScfblFuE4HByf7VfpxpnaBZOqLYm4QQKiwivr9EUf7S9hkZKMLFkYYdKfLmSeB2vd6WxplbV4j-Ry1zu4WpXJqkRyUHXQTZ3QVyl5gEPwhSCcF-cFZmX8fW0gV9oGiVYZl3K8"/>
+<!-- Floating Icon Overlay -->
+<div class="absolute -bottom-2 -right-2 bg-primary text-white p-3 rounded-full shadow-lg">
+<span class="material-icons text-3xl">restaurant</span>
+</div>
+</div>
+<!-- Decorative Sparkles (Material Icons) -->
+<span class="material-icons absolute -top-4 -left-4 text-primary opacity-40 text-3xl">auto_awesome</span>
+<span class="material-icons absolute top-8 -right-8 text-primary opacity-60 text-2xl">star_rate</span>
+<span class="material-icons absolute -bottom-4 left-8 text-primary opacity-30 text-2xl">celebration</span>
+</div>
+<!-- Content Section -->
+<header class="mb-12 space-y-4">
+<h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight leading-tight">
+                    Your Restaurant <br/>
+<span class="text-primary">is Live!</span>
+</h1>
+<p class="text-gray-500 dark:text-gray-400 text-lg font-medium leading-relaxed max-w-xs mx-auto">
+                    Start building your menu to welcome your first customers.
+                </p>
+</header>
+<!-- Action Buttons -->
+<div class="w-full space-y-4">
+<!-- Primary Action -->
+<button class="w-full bg-primary hover:bg-primary/90 text-white font-bold py-5 px-8 rounded-full shadow-xl shadow-primary/20 transition-all active:scale-95 flex items-center justify-center group">
+<span>Go to Dashboard</span>
+<span class="material-icons ml-2 group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</button>
+<!-- Secondary Action (Ghost) -->
+<button class="w-full bg-transparent border-2 border-primary/20 hover:border-primary/40 text-primary font-bold py-5 px-8 rounded-full transition-all active:scale-95">
+                    Manage Menu
+                </button>
+</div>
+<!-- Share Link Section -->
+<div class="mt-12 pt-8 border-t border-gray-100 dark:border-white/10 w-full">
+<p class="text-sm text-gray-400 dark:text-gray-500 mb-4 font-medium">Spread the word!</p>
+<div class="flex gap-3 justify-center">
+<button class="p-3 bg-primary/5 dark:bg-primary/10 text-primary rounded-full hover:bg-primary/10 transition-colors">
+<span class="material-icons">share</span>
+</button>
+<button class="p-3 bg-primary/5 dark:bg-primary/10 text-primary rounded-full hover:bg-primary/10 transition-colors">
+<span class="material-icons">content_copy</span>
+</button>
+<button class="p-3 bg-primary/5 dark:bg-primary/10 text-primary rounded-full hover:bg-primary/10 transition-colors">
+<span class="material-icons">qr_code_2</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Progress Indicator (Full State) -->
+<div class="h-2 w-full bg-gray-100 dark:bg-gray-800 flex">
+<div class="h-full bg-primary w-full shadow-[0_0_10px_rgba(238,75,43,0.5)]"></div>
+</div>
+</main>
+<!-- Footer Note -->
+<footer class="absolute bottom-6 text-center w-full">
+<p class="text-gray-400 dark:text-gray-600 text-sm font-medium">
+            Setup Complete • 100%
+        </p>
+</footer>
+</body></html>

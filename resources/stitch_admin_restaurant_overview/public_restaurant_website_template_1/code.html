@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Elysian Grove | Culinary Excellence Redefined</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13ec5b",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                        "chocolate": "#2D1B14",
+                        "gold-accent": "#C5A059",
+                    },
+                    fontFamily: {
+                        "display": ["Plus Jakarta Sans"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .hero-overlay { background: linear-gradient(rgba(45, 27, 20, 0.4), rgba(45, 27, 20, 0.7)); }
+        .menu-underline { position: relative; }
+        .menu-underline::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: #13ec5b;
+            transition: width 0.3s ease;
+        }
+        .menu-underline:hover::after { width: 100%; }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-chocolate dark:text-gray-100 antialiased">
+<!-- Navigation -->
+<nav class="fixed top-0 w-full z-50 bg-white/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-chocolate/5">
+<div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-10 h-10 bg-primary flex items-center justify-center rounded-lg">
+<span class="material-icons text-white">restaurant</span>
+</div>
+<span class="text-2xl font-bold tracking-tighter text-chocolate dark:text-white">ELYSIAN <span class="text-primary">GROVE</span></span>
+</div>
+<div class="hidden md:flex items-center gap-10">
+<a class="menu-underline text-sm font-semibold uppercase tracking-widest hover:text-primary transition-colors" href="#">Home</a>
+<a class="menu-underline text-sm font-semibold uppercase tracking-widest hover:text-primary transition-colors" href="#menu">Menu</a>
+<a class="menu-underline text-sm font-semibold uppercase tracking-widest hover:text-primary transition-colors" href="#story">Our Story</a>
+<a class="menu-underline text-sm font-semibold uppercase tracking-widest hover:text-primary transition-colors" href="#contact">Contact</a>
+</div>
+<a class="bg-primary hover:bg-primary/90 text-background-dark px-6 py-2.5 rounded-lg font-bold text-sm uppercase tracking-widest transition-all shadow-lg shadow-primary/20" href="#reserve">
+                Book a Table
+            </a>
+</div>
+</nav>
+<!-- Hero Section -->
+<section class="relative h-screen w-full flex items-center justify-center overflow-hidden">
+<img alt="Signature Dish" class="absolute inset-0 w-full h-full object-cover" data-alt="Exquisite plating of a fine dining gourmet dish" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBY23VlTCUOwP5uDy0bLVE509rEOKEQGsma5W6w-oAnBgUIT0PCPSn-zl59TADVIfbXJBQWx3Pnz7rBizenpyivAdVv81njKKeIJzU6cU3kbsAxSdyS8SB8vEJPEIuM6ytrVxfnKwT9wo27MKgP_IaqamTX_e05L9lJoKdKhulNcaaslQJM0ydAf0-7btipCoXRzOVLLCQ9kcYB9qxgJTNK2pWSihL1Olp6hkAkyKfUKezOMC5CdTg0uLoDK-jO4fo183X8hmAWLl0"/>
+<div class="absolute inset-0 hero-overlay"></div>
+<div class="relative z-10 text-center px-4">
+<span class="text-primary font-semibold tracking-[0.3em] uppercase mb-4 block">Modern Gastronomy</span>
+<h1 class="text-5xl md:text-8xl font-bold text-white mb-8 tracking-tight">Art on a Plate.</h1>
+<p class="text-gray-200 max-w-2xl mx-auto text-lg md:text-xl mb-10 font-light leading-relaxed">
+                Experience a symphony of flavors crafted from the freshest seasonal ingredients, 
+                where every bite tells a story of tradition and innovation.
+            </p>
+<div class="flex flex-col md:flex-row gap-4 justify-center">
+<a class="bg-primary text-background-dark px-10 py-4 rounded-lg font-bold uppercase tracking-widest hover:scale-105 transition-transform" href="#menu">
+                    Explore Menu
+                </a>
+<a class="bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white border border-white/30 px-10 py-4 rounded-lg font-bold uppercase tracking-widest transition-all" href="#reserve">
+                    Reservations
+                </a>
+</div>
+</div>
+<div class="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce text-white">
+<span class="material-icons">expand_more</span>
+</div>
+</section>
+<!-- Our Story Section -->
+<section class="py-24 px-6 max-w-7xl mx-auto" id="story">
+<div class="grid md:grid-cols-2 gap-16 items-center">
+<div class="space-y-8">
+<div class="inline-block px-4 py-1 bg-primary/10 rounded-full">
+<span class="text-primary text-xs font-bold uppercase tracking-widest">Est. 2014</span>
+</div>
+<h2 class="text-4xl md:text-5xl font-bold leading-tight">Crafting Memories Through <span class="text-primary italic">Flavor</span></h2>
+<p class="text-gray-600 dark:text-gray-400 text-lg leading-relaxed">
+                    Founded on the principles of sustainability and culinary artistry, Elysian Grove has been a sanctuary for food lovers for over a decade. Our Executive Chef brings a global perspective to local ingredients, creating an ever-evolving menu that surprises and delights.
+                </p>
+<p class="text-gray-600 dark:text-gray-400 text-lg leading-relaxed">
+                    We believe that dining is more than just a meal; it's a sensory journey. From the soft glow of our custom lighting to the curated playlist, every detail is designed to transport you.
+                </p>
+<div class="pt-4 border-t border-chocolate/10">
+<div class="flex items-center gap-4">
+<div class="w-16 h-16 rounded-full overflow-hidden">
+<img alt="Chef Signature" class="w-full h-full object-cover" data-alt="Professional chef in a white uniform smiling" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA7W1iPnQFPRGU8HaG0_ZeSrX-3LxgLYbXBj2lejVfugA01o-bg5dQDKlNmjLouo1qaCuQv9eXnx5iTyjEe4X2k4G7Ds_ACvMdIclp4yQVhIjj4Bbp-G3ZFE3JDCoQP5fyQjNZubnSXJ8bl03RjdkINX7BqfhG652IAXilDHTxzYCP_T8xSGGfNiMrkMrtxKSgWxvq5RF1u2x9-vxtqJkp8E22Gwns9gPwMsuwKI76S36hrV0KaXGU_8GCG6_ij7Wut0MrXmcpvcQ0"/>
+</div>
+<div>
+<p class="font-bold text-lg">Marcus Sterling</p>
+<p class="text-sm text-gray-500 uppercase tracking-widest">Executive Chef &amp; Founder</p>
+</div>
+</div>
+</div>
+</div>
+<div class="relative">
+<div class="aspect-[4/5] rounded-xl overflow-hidden shadow-2xl">
+<img alt="Interior" class="w-full h-full object-cover" data-alt="Modern upscale restaurant interior with warm lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCPeO6iD4IeF6ZLPkQkLuciWe2M781UgiMgCKH2_O9GAhHTCVaRPeUwMlAgsJtStdY5BunzTHhjkGWFw9qhoKsWX0-NO965Q8kxg6fAoug4BY8mT0B5Ed0EtfQoPv2Z0fh7i-RqDBl1S6hu1fo_EqslMK_BikjBhvIX20Fvyq4IGggr3xlwl1lcvycvwVq92C0UDOEjBKN1kFgSWdA7-UulpoPnGG4hf9vW7p_9hiVH1bTdN8PUcZudGItrF_xx8wdOQhV_ZQQ53A"/>
+</div>
+<div class="absolute -bottom-10 -left-10 w-64 h-64 bg-primary/20 rounded-xl -z-10 hidden lg:block"></div>
+<div class="absolute -top-10 -right-10 w-48 h-48 border-4 border-primary/20 rounded-xl -z-10 hidden lg:block"></div>
+</div>
+</div>
+</section>
+<!-- Menu Highlights -->
+<section class="py-24 bg-background-light dark:bg-background-dark/50" id="menu">
+<div class="max-w-7xl mx-auto px-6">
+<div class="text-center mb-16">
+<span class="text-primary font-bold tracking-[0.2em] uppercase text-sm">Selection</span>
+<h2 class="text-4xl md:text-5xl font-bold mt-2">Chef's Signature Selection</h2>
+<div class="w-24 h-1 bg-primary mx-auto mt-6"></div>
+</div>
+<div class="grid md:grid-cols-3 gap-8">
+<!-- Item 1 -->
+<div class="group bg-white dark:bg-background-dark p-4 rounded-xl shadow-sm hover:shadow-xl transition-all border border-chocolate/5">
+<div class="aspect-square rounded-lg overflow-hidden mb-6 relative">
+<img alt="Dish 1" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="Fresh seasonal salad with avocado and seeds" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAfc885cpKVXpkh8CcWw2fXVdlqnmJPI8QSNucKgm7fmIIjsY4e7f89Y54THrPpI7_cg4Z73g4lSUlkuquXpy4zjWNl2uaGqHUw_WoI8NCnUJPDVM9BJ1-rIZTQggEAu3xetw4RSolqHpUJfIUoMDYGe2bHYFfrfoimKOfRztggfIBjAPK9VsXfuvvfVCnfCN-qIzrPAY-JTljCbK6oxL69Kk03j_PudD9rVsSm19XwnaARJOgppRiVDwsFldawSmG2BwK0KhG76YU"/>
+<div class="absolute top-4 right-4 bg-primary text-background-dark text-xs font-bold px-3 py-1 rounded-full">New</div>
+</div>
+<div class="flex justify-between items-start mb-2">
+<h3 class="text-xl font-bold group-hover:text-primary transition-colors">Truffle Glazed Wagyu</h3>
+<span class="text-primary font-bold">$42</span>
+</div>
+<p class="text-gray-500 text-sm leading-relaxed">
+                        Aged Japanese Wagyu, black truffle reduction, smoked parsnip puree, and charred seasonal roots.
+                    </p>
+</div>
+<!-- Item 2 -->
+<div class="group bg-white dark:bg-background-dark p-4 rounded-xl shadow-sm hover:shadow-xl transition-all border border-chocolate/5">
+<div class="aspect-square rounded-lg overflow-hidden mb-6">
+<img alt="Dish 2" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="Saffron risotto with seafood and herbs" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAlnTZ9YXWR-7foEXEFNeo2XzKUzaTJhlxGo_FMvad_UlQcxzJc5qwEHBTTM3BkgtSHQ3UDbaBqRVVxCUneMF8pBUgAKk7U2UnZeHYjA5ZIfLOQxoBSO24dzFWj8l1NkC_QUV_oqMLlyI9MaetFjxP30gMLOgwVmHhCiix6poxz1Q6uei14EdIEyehbVoOnsLWyuc4oEz7AQE5zXYSzEo_G1g_I0o6drtkDWEees7J-2Ew8Z8XuI2lQaPDY9iNAcR3iTY9YRngid7Q"/>
+</div>
+<div class="flex justify-between items-start mb-2">
+<h3 class="text-xl font-bold group-hover:text-primary transition-colors">Saffron Risotto</h3>
+<span class="text-primary font-bold">$34</span>
+</div>
+<p class="text-gray-500 text-sm leading-relaxed">
+                        Arborio rice infused with Persian saffron, seared scallops, and a lemon-herb oil drizzle.
+                    </p>
+</div>
+<!-- Item 3 -->
+<div class="group bg-white dark:bg-background-dark p-4 rounded-xl shadow-sm hover:shadow-xl transition-all border border-chocolate/5">
+<div class="aspect-square rounded-lg overflow-hidden mb-6">
+<img alt="Dish 3" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="Smoked heritage carrots with honey glaze" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCdi5OfOlomBLhvArd7fZ0uzqoq_TIjqRG5KIfVPMGshgAmx-C5LyfNNSeRNX24JQ_V_wK12f9WW3F6VzBWxH34qY0jTfOz2MGklLxsFfBfNSeBaPkQHfEn3YYNL3YNRxJouyb2jO3VKTkmDg2JDygdXKYCzSL4YGc1PT6mk0O1KoNJYIcILhVCQm0R8rDLGwG-r_j8KklShJhaX-scrEqqIQf6HQYLOfJi9iMRsaSeR0GI8v0Rw7AZDPrf2Dl768zyfBHaMtBkMeY"/>
+</div>
+<div class="flex justify-between items-start mb-2">
+<h3 class="text-xl font-bold group-hover:text-primary transition-colors">Heritage Glazed Salmon</h3>
+<span class="text-primary font-bold">$38</span>
+</div>
+<p class="text-gray-500 text-sm leading-relaxed">
+                        Wild-caught salmon, maple-soy glaze, roasted heirloom carrots, and crispy quinoa.
+                    </p>
+</div>
+</div>
+<div class="mt-16 text-center">
+<button class="border-2 border-chocolate dark:border-white px-10 py-3 rounded-lg font-bold uppercase tracking-widest hover:bg-chocolate hover:text-white dark:hover:bg-white dark:hover:text-background-dark transition-all">
+                    View Full Menu
+                </button>
+</div>
+</div>
+</section>
+<!-- Reservation Section -->
+<section class="py-24 px-6 relative overflow-hidden" id="reserve">
+<div class="absolute inset-0 bg-chocolate -z-10">
+<img alt="Booking Background" class="w-full h-full object-cover opacity-20" data-alt="Dark abstract restaurant atmosphere background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCgil7EPKWmLVjXYm198R2hsUJVq9lt-1b4Mtubb9CuBg2k5B5WXVudtZ3ubpSypqV_lyO2Wm159VzFyxdREJy_uBcb5UxuL1HlkQ-bllmOddFBrMaSYf8ySUDqQ2I8q0co__NP3YM-0qPlXtKh3Ka9Ktq9YNAmeY_6BufBZE9tbZwPZhUKoUeDo4_e0ybE3EeP13rqQQDUgo1eepjH0oBzew0GEUFzQlLU7I-3ZRLb42vQSmSs6P8OXkI98y_OGcbFOSJUZIM3pvA"/>
+</div>
+<div class="max-w-4xl mx-auto bg-white/10 backdrop-blur-xl p-8 md:p-16 rounded-2xl border border-white/10">
+<div class="text-center mb-12">
+<h2 class="text-4xl font-bold text-white mb-4">Book Your Experience</h2>
+<p class="text-gray-300">Join us for an unforgettable evening. Reservations are highly recommended.</p>
+</div>
+<form class="grid md:grid-cols-2 gap-6">
+<div class="space-y-2">
+<label class="text-xs font-bold text-primary uppercase tracking-wider">Full Name</label>
+<input class="w-full bg-white/5 border border-white/20 rounded-lg py-3 px-4 text-white placeholder-white/40 focus:ring-primary focus:border-primary" placeholder="John Doe" type="text"/>
+</div>
+<div class="space-y-2">
+<label class="text-xs font-bold text-primary uppercase tracking-wider">Guests</label>
+<select class="w-full bg-white/5 border border-white/20 rounded-lg py-3 px-4 text-white focus:ring-primary focus:border-primary">
+<option class="text-chocolate">2 Persons</option>
+<option class="text-chocolate">3 Persons</option>
+<option class="text-chocolate">4 Persons</option>
+<option class="text-chocolate">Large Group (5+)</option>
+</select>
+</div>
+<div class="space-y-2">
+<label class="text-xs font-bold text-primary uppercase tracking-wider">Date</label>
+<input class="w-full bg-white/5 border border-white/20 rounded-lg py-3 px-4 text-white focus:ring-primary focus:border-primary" type="date"/>
+</div>
+<div class="space-y-2">
+<label class="text-xs font-bold text-primary uppercase tracking-wider">Time</label>
+<select class="w-full bg-white/5 border border-white/20 rounded-lg py-3 px-4 text-white focus:ring-primary focus:border-primary">
+<option class="text-chocolate">6:00 PM</option>
+<option class="text-chocolate">7:30 PM</option>
+<option class="text-chocolate">9:00 PM</option>
+</select>
+</div>
+<button class="md:col-span-2 bg-primary hover:bg-primary/90 text-background-dark font-bold py-4 rounded-lg uppercase tracking-widest transition-all text-lg mt-4 shadow-xl shadow-primary/20">
+                    Confirm Reservation
+                </button>
+</form>
+</div>
+</section>
+<!-- Footer -->
+<footer class="bg-background-light dark:bg-background-dark pt-24 pb-12 border-t border-chocolate/5" id="contact">
+<div class="max-w-7xl mx-auto px-6">
+<div class="grid md:grid-cols-4 gap-12 mb-16">
+<div class="space-y-6">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 bg-primary flex items-center justify-center rounded-lg">
+<span class="material-icons text-white text-sm">restaurant</span>
+</div>
+<span class="text-xl font-bold tracking-tighter text-chocolate dark:text-white uppercase">Elysian <span class="text-primary">Grove</span></span>
+</div>
+<p class="text-gray-500 text-sm leading-relaxed">
+                        Redefining the fine dining experience through fresh ingredients, innovative techniques, and a passion for hospitality.
+                    </p>
+<div class="flex gap-4">
+<a class="w-10 h-10 rounded-full bg-chocolate/5 dark:bg-white/5 flex items-center justify-center hover:bg-primary hover:text-white transition-colors" href="#">
+<i class="material-icons text-lg">facebook</i>
+</a>
+<a class="w-10 h-10 rounded-full bg-chocolate/5 dark:bg-white/5 flex items-center justify-center hover:bg-primary hover:text-white transition-colors" href="#">
+<span class="material-icons text-lg">camera_alt</span>
+</a>
+</div>
+</div>
+<div>
+<h4 class="font-bold text-chocolate dark:text-white uppercase tracking-widest text-sm mb-6">Contact Us</h4>
+<ul class="space-y-4 text-gray-500 text-sm">
+<li class="flex gap-3 items-start">
+<span class="material-icons text-primary text-base">location_on</span>
+                            123 Culinary Lane, Gastronomy District<br/>New York, NY 10001
+                        </li>
+<li class="flex gap-3 items-center">
+<span class="material-icons text-primary text-base">phone</span>
+                            +1 (555) 000-0000
+                        </li>
+<li class="flex gap-3 items-center">
+<span class="material-icons text-primary text-base">email</span>
+                            hello@elysiangrove.com
+                        </li>
+</ul>
+</div>
+<div>
+<h4 class="font-bold text-chocolate dark:text-white uppercase tracking-widest text-sm mb-6">Opening Hours</h4>
+<ul class="space-y-4 text-gray-500 text-sm">
+<li class="flex justify-between">
+<span>Mon - Thu</span>
+<span class="font-bold text-chocolate dark:text-white">5 PM - 10 PM</span>
+</li>
+<li class="flex justify-between">
+<span>Fri - Sat</span>
+<span class="font-bold text-chocolate dark:text-white">5 PM - 11 PM</span>
+</li>
+<li class="flex justify-between">
+<span>Sunday</span>
+<span class="font-bold text-chocolate dark:text-white">4 PM - 9 PM</span>
+</li>
+</ul>
+</div>
+<div class="rounded-xl overflow-hidden h-48 border border-chocolate/10">
+<img alt="Location Map" class="w-full h-full object-cover grayscale opacity-80" data-alt="Map of New York City showing restaurant location" data-location="New York City" src="https://lh3.googleusercontent.com/aida-public/AB6AXuATpNdB5OEp2vfRUY0vNsnnn46pX18IL_sFC2qI-TUxeLjusb7zxXExCgRO4xYnvOzXvs_GFLmllDGkTAbHGVp740wMjAbDWaziMCzZ6vXAw8xGZ79yM8CLPHKDUlutJhfXAZ5PIsG7FQ7YVmH6p1gFB2y02nE_4NXaLmHel3x4ZOat1XubePd9yqCsGSRgIROAz1CSfyfyphhLU1T6xDDTUewzwyOuzNhgVGD_JbjFAePuWCWitXhdAGPgv6mQLzuG8_LTS9Wj7GU"/>
+</div>
+</div>
+<div class="pt-8 border-t border-chocolate/5 flex flex-col md:row justify-between items-center gap-4 text-xs text-gray-400 font-medium">
+<p>© 2024 Elysian Grove Restaurant Group. All rights reserved.</p>
+<div class="flex gap-8">
+<a class="hover:text-primary transition-colors" href="#">Privacy Policy</a>
+<a class="hover:text-primary transition-colors" href="#">Terms of Service</a>
+</div>
+</div>
+</div>
+</footer>
+</body></html>

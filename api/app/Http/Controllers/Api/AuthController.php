@@ -24,10 +24,8 @@ class AuthController extends Controller
         $result = $this->registerUser->handle($request->validated());
 
         return response()->json([
-            'message' => 'Registered successfully.',
+            'message' => __('Registered. Please verify your email using the link we sent you.'),
             'user' => $this->userPayload($result['user']),
-            'token' => $result['token'],
-            'token_type' => 'Bearer',
         ], 201);
     }
 

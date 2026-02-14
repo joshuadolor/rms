@@ -1,0 +1,20 @@
+---
+description: When adding a new API endpoint, document it in docs/API-REFERENCE.md
+globs: api/routes/**/*.php, api/app/Http/Controllers/Api/**/*.php
+alwaysApply: false
+---
+
+# API reference – backend
+
+When you add or change an **API endpoint** in this project:
+
+1. **Update `docs/API-REFERENCE.md`** so it stays the single source of truth.
+2. For each new or changed endpoint, add or edit the entry with:
+   - Method and path (e.g. `POST /api/...`)
+   - Auth required? (No / Bearer / Bearer + verified)
+   - Rate limit if any
+   - Request body (fields and validation)
+   - Response shape (200/201 and error responses)
+3. Add a short line to the **Changelog** at the bottom of `docs/API-REFERENCE.md` with the date and what changed.
+
+This keeps the frontend (and frontend agents) aligned with the backend API.

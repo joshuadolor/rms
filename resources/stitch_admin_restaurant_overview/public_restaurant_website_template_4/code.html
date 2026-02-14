@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Joyful Table | Good Food, Good Company</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&amp;family=Nunito:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#FF9B9B", // Light Coral
+                        "secondary": "#B2E2D2", // Pale Mint
+                        "accent": "#4A90E2", // Playful Blue
+                        "warm-bg": "#FFFFFF",
+                        "card-bg": "#F9FAFB",
+                    },
+                    fontFamily: {
+                        "sans": ["Quicksand", "sans-serif"],
+                        "body": ["Nunito", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "xl": "1.5rem",
+                        "2xl": "2rem",
+                    }
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        body {
+            @apply bg-warm-bg text-slate-700 font-sans antialiased;
+        }
+        .rounded-card {
+            @apply bg-white border border-slate-100 rounded-3xl shadow-sm hover:shadow-md transition-shadow duration-300;
+        }
+        .btn-primary {
+            @apply bg-primary hover:bg-[#FF8585] text-white px-8 py-3 rounded-full font-bold transition-all duration-300 inline-flex items-center justify-center gap-2;
+        }
+        .btn-accent {
+            @apply bg-accent hover:bg-[#357ABD] text-white px-8 py-3 rounded-full font-bold transition-all duration-300;
+        }
+        .nav-link {
+            @apply text-sm font-semibold hover:text-accent transition-colors duration-300;
+        }
+        h1, h2, h3 {
+            @apply font-bold tracking-tight;
+        }
+    </style>
+</head>
+<body>
+<nav class="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-slate-100">
+<div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+<div class="flex items-center gap-8">
+<a class="flex items-center gap-2 group" href="#">
+<div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white group-hover:rotate-12 transition-transform">
+<span class="material-symbols-outlined">restaurant</span>
+</div>
+<span class="text-2xl font-bold text-slate-800">Joyful Table</span>
+</a>
+<div class="hidden lg:flex items-center gap-8 ml-8">
+<a class="nav-link" href="#about">Our Story</a>
+<a class="nav-link" href="#dishes">Tasty Bites</a>
+<a class="nav-link" href="#menu">Menu</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<a class="hidden md:block text-sm font-bold text-accent" href="tel:+123456789">Call Us</a>
+<a class="bg-secondary text-slate-800 px-6 py-2 rounded-full text-sm font-bold hover:bg-[#9ed4c2] transition-colors" href="#reserve">
+                    Book a Table
+                </a>
+</div>
+</div>
+</nav>
+<section class="pt-20 lg:pt-0 lg:h-[90vh] flex flex-col lg:flex-row items-stretch">
+<div class="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-20 bg-secondary/10">
+<div class="max-w-xl space-y-8">
+<span class="inline-block px-4 py-1.5 bg-primary/20 text-primary font-bold rounded-full text-sm">Welcome Home</span>
+<h1 class="text-5xl lg:text-7xl text-slate-800 leading-[1.1]">
+                    Good Food, <br/><span class="text-accent italic">Good Company.</span>
+</h1>
+<p class="text-xl text-slate-600 font-body leading-relaxed">
+                    At Joyful Table, we believe every meal is a celebration. Come grab a seat, share a laugh, and taste the joy in every bite.
+                </p>
+<div class="flex flex-wrap gap-4 pt-4">
+<a class="btn-primary" href="#reserve">
+<span class="material-symbols-outlined">event_seat</span>
+                        Find a Table
+                    </a>
+<a class="px-8 py-3 rounded-full font-bold border-2 border-slate-200 hover:border-accent hover:text-accent transition-all" href="#menu">
+                        Explore Menu
+                    </a>
+</div>
+</div>
+</div>
+<div class="w-full lg:w-1/2 relative h-[400px] lg:h-auto overflow-hidden">
+<img alt="Happy dining experience" class="absolute inset-0 w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBY23VlTCUOwP5uDy0bLVE509rEOKEQGsma5W6w-oAnBgUIT0PCPSn-zl59TADVIfbXJBQWx3Pnz7rBizenpyivAdVv81njKKeIJzU6cU3kbsAxSdyS8SB8vEJPEIuM6ytrVxfnKwT9wo27MKgP_IaqamTX_e05L9lJoKdKhulNcaaslQJM0ydAf0-7btipCoXRzOVLLCQ9kcYB9qxgJTNK2pWSihL1Olp6hkAkyKfUKezOMC5CdTg0uLoDK-jO4fo183X8hmAWLl0"/>
+<div class="absolute bottom-8 left-8 right-8 bg-white/90 backdrop-blur-sm p-6 rounded-2xl flex items-center gap-4 border border-white/50 shadow-xl">
+<div class="flex -space-x-3">
+<div class="w-10 h-10 rounded-full border-2 border-white bg-slate-200 overflow-hidden"><img alt="Happy guest" class="object-cover w-full h-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA7W1iPnQFPRGU8HaG0_ZeSrX-3LxgLYbXBj2lejVfugA01o-bg5dQDKlNmjLouo1qaCuQv9eXnx5iTyjEe4X2k4G7Ds_ACvMdIclp4yQVhIjj4Bbp-G3ZFE3JDCoQP5fyQjNZubnSXJ8bl03RjdkINX7BqfhG652IAXilDHTxzYCP_T8xSGGfNiMrkMrtxKSgWxvq5RF1u2x9-vxtqJkp8E22Gwns9gPwMsuwKI76S36hrV0KaXGU_8GCG6_ij7Wut0MrXmcpvcQ0"/></div>
+<div class="w-10 h-10 rounded-full border-2 border-white bg-slate-300 flex items-center justify-center text-[10px] font-bold">+12</div>
+</div>
+<p class="text-sm font-semibold text-slate-700">Join 500+ happy visitors this week!</p>
+</div>
+</div>
+</section>
+<section class="py-24 bg-white" id="about">
+<div class="max-w-7xl mx-auto px-6">
+<div class="grid lg:grid-cols-2 gap-16 items-center">
+<div class="relative order-2 lg:order-1">
+<div class="rounded-3xl overflow-hidden aspect-video shadow-2xl relative z-10">
+<img alt="Interior" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCPeO6iD4IeF6ZLPkQkLuciWe2M781UgiMgCKH2_O9GAhHTCVaRPeUwMlAgsJtStdY5BunzTHhjkGWFw9qhoKsWX0-NO965Q8kxg6fAoug4BY8mT0B5Ed0EtfQoPv2Z0fh7i-RqDBl1S6hu1fo_EqslMK_BikjBhvIX20Fvyq4IGggr3xlwl1lcvycvwVq92C0UDOEjBKN1kFgSWdA7-UulpoPnGG4hf9vW7p_9hiVH1bTdN8PUcZudGItrF_xx8wdOQhV_ZQQ53A"/>
+</div>
+<div class="absolute -top-6 -left-6 w-32 h-32 bg-primary/20 rounded-full blur-3xl"></div>
+<div class="absolute -bottom-6 -right-6 w-48 h-48 bg-secondary/30 rounded-full blur-3xl"></div>
+</div>
+<div class="space-y-8 order-1 lg:order-2">
+<div class="space-y-4">
+<h2 class="text-4xl md:text-5xl text-slate-800">Where flavor meets <span class="text-primary italic">friendship</span>.</h2>
+<div class="h-1.5 w-20 bg-accent rounded-full"></div>
+</div>
+<div class="space-y-6 text-lg text-slate-600 font-body">
+<p>We're more than just a restaurant; we're a community hub. Our space is designed to feel like your favorite living room, just with much better snacks!</p>
+<p>From our farm-fresh ingredients to our bubbly team, everything we do is aimed at putting a smile on your face. Because life is too short for boring meals.</p>
+</div>
+<div class="flex items-center gap-4 pt-4">
+<div class="w-16 h-16 rounded-full overflow-hidden border-4 border-secondary">
+<img alt="Our Chef" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA7W1iPnQFPRGU8HaG0_ZeSrX-3LxgLYbXBj2lejVfugA01o-bg5dQDKlNmjLouo1qaCuQv9eXnx5iTyjEe4X2k4G7Ds_ACvMdIclp4yQVhIjj4Bbp-G3ZFE3JDCoQP5fyQjNZubnSXJ8bl03RjdkINX7BqfhG652IAXilDHTxzYCP_T8xSGGfNiMrkMrtxKSgWxvq5RF1u2x9-vxtqJkp8E22Gwns9gPwMsuwKI76S36hrV0KaXGU_8GCG6_ij7Wut0MrXmcpvcQ0"/>
+</div>
+<div>
+<p class="font-bold text-slate-800 text-xl">Chef Mario</p>
+<p class="text-accent font-semibold">Head of Happiness</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section class="py-24 bg-slate-50" id="dishes">
+<div class="max-w-7xl mx-auto px-6">
+<div class="text-center max-w-2xl mx-auto mb-16 space-y-4">
+<h2 class="text-4xl text-slate-800 italic">Taste the Joy</h2>
+<p class="text-slate-600 font-body text-lg">Our fan-favorites that keep everyone coming back for more. Hand-crafted with love and a pinch of magic.</p>
+</div>
+<div class="grid md:grid-cols-3 gap-8">
+<div class="rounded-card p-4">
+<div class="aspect-square rounded-2xl overflow-hidden mb-6">
+<img alt="Yummy Dish" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAfc885cpKVXpkh8CcWw2fXVdlqnmJPI8QSNucKgm7fmIIjsY4e7f89Y54THrPpI7_cg4Z73g4lSUlkuquXpy4zjWNl2uaGqHUw_WoI8NCnUJPDVM9BJ1-rIZTQggEAu3xetw4RSolqHpUJfIUoMDYGe2bHYFfrfoimKOfRztggfIBjAPK9VsXfuvvfVCnfCN-qIzrPAY-JTljCbK6oxL69Kk03j_PudD9rVsSm19XwnaARJOgppRiVDwsFldawSmG2BwK0KhG76YU"/>
+</div>
+<div class="px-2 space-y-3 pb-4">
+<div class="flex justify-between items-center">
+<h3 class="text-xl font-bold">The Signature Plate</h3>
+<span class="bg-secondary/30 text-slate-700 px-3 py-1 rounded-full text-sm font-bold">$24</span>
+</div>
+<p class="text-slate-500 font-body text-sm">A comforting mix of aged beef, fresh garden herbs, and our secret family glaze.</p>
+<div class="flex gap-1">
+<span class="material-symbols-outlined text-primary text-lg">star</span>
+<span class="material-symbols-outlined text-primary text-lg">star</span>
+<span class="material-symbols-outlined text-primary text-lg">star</span>
+<span class="material-symbols-outlined text-primary text-lg">star</span>
+<span class="material-symbols-outlined text-primary text-lg">star</span>
+</div>
+</div>
+</div>
+<div class="rounded-card p-4 transform md:-translate-y-4">
+<div class="aspect-square rounded-2xl overflow-hidden mb-6">
+<img alt="Yummy Dish" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAlnTZ9YXWR-7foEXEFNeo2XzKUzaTJhlxGo_FMvad_UlQcxzJc5qwEHBTTM3BkgtSHQ3UDbaBqRVVxCUneMF8pBUgAKk7U2UnZeHYjA5ZIfLOQxoBSO24dzFWj8l1NkC_QUV_oqMLlyI9MaetFjxP30gMLOgwVmHhCiix6poxz1Q6uei14EdIEyehbVoOnsLWyuc4oEz7AQE5zXYSzEo_G1g_I0o6drtkDWEees7J-2Ew8Z8XuI2lQaPDY9iNAcR3iTY9YRngid7Q"/>
+</div>
+<div class="px-2 space-y-3 pb-4">
+<div class="flex justify-between items-center">
+<h3 class="text-xl font-bold">Garden Fresh Risotto</h3>
+<span class="bg-secondary/30 text-slate-700 px-3 py-1 rounded-full text-sm font-bold">$19</span>
+</div>
+<p class="text-slate-500 font-body text-sm">Light, creamy, and packed with seasonal vegetables. It's like a hug in a bowl!</p>
+<div class="flex gap-1 text-primary">
+<span class="text-xs font-bold px-2 py-0.5 bg-primary/10 rounded">Bestseller</span>
+</div>
+</div>
+</div>
+<div class="rounded-card p-4">
+<div class="aspect-square rounded-2xl overflow-hidden mb-6">
+<img alt="Yummy Dish" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCdi5OfOlomBLhvArd7fZ0uzqoq_TIjqRG5KIfVPMGshgAmx-C5LyfNNSeRNX24JQ_V_wK12f9WW3F6VzBWxH34qY0jTfOz2MGklLxsFfBfNSeBaPkQHfEn3YYNL3YNRxJouyb2jO3VKTkmDg2JDygdXKYCzSL4YGc1PT6mk0O1KoNJYIcILhVCQm0R8rDLGwG-r_j8KklShJhaX-scrEqqIQf6HQYLOfJi9iMRsaSeR0GI8v0Rw7AZDPrf2Dl768zyfBHaMtBkMeY"/>
+</div>
+<div class="px-2 space-y-3 pb-4">
+<div class="flex justify-between items-center">
+<h3 class="text-xl font-bold">Honey Glazed Roots</h3>
+<span class="bg-secondary/30 text-slate-700 px-3 py-1 rounded-full text-sm font-bold">$16</span>
+</div>
+<p class="text-slate-500 font-body text-sm">Slow-roasted seasonal vegetables with a local honey drizzle and crunchy nuts.</p>
+<div class="flex items-center gap-1 text-slate-400">
+<span class="material-symbols-outlined text-sm">eco</span>
+<span class="text-xs font-bold">Vegetarian Choice</span>
+</div>
+</div>
+</div>
+</div>
+<div class="text-center mt-12">
+<a class="text-accent font-bold underline decoration-2 underline-offset-4 hover:text-primary transition-colors" href="#">View Our Full Menu</a>
+</div>
+</div>
+</section>
+<section class="py-24 bg-primary/5" id="reserve">
+<div class="max-w-5xl mx-auto px-6">
+<div class="rounded-card bg-white p-8 md:p-16 flex flex-col md:flex-row gap-12 items-center">
+<div class="w-full md:w-1/3 space-y-6">
+<h2 class="text-4xl text-slate-800">Grab your <span class="text-accent italic">spot</span>!</h2>
+<p class="text-slate-600 font-body">We save some tables for walk-ins, but booking ahead ensures you'll have a seat at the party.</p>
+<div class="space-y-3">
+<div class="flex items-center gap-3 text-slate-700">
+<span class="material-symbols-outlined text-primary">schedule</span>
+<span class="text-sm font-bold">Mon-Sun: 11am - 10pm</span>
+</div>
+<div class="flex items-center gap-3 text-slate-700">
+<span class="material-symbols-outlined text-primary">group</span>
+<span class="text-sm font-bold">Great for parties &amp; families</span>
+</div>
+</div>
+</div>
+<form class="w-full md:w-2/3 grid md:grid-cols-2 gap-6 bg-slate-50/50 p-6 md:p-10 rounded-2xl border border-slate-100">
+<div class="space-y-2 md:col-span-2">
+<label class="text-xs font-bold text-slate-500 uppercase ml-2">What's your name?</label>
+<input class="w-full border-2 border-slate-100 bg-white rounded-xl px-4 py-3 focus:border-accent focus:ring-0 transition-colors" placeholder="e.g. Sarah Jenkins" type="text"/>
+</div>
+<div class="space-y-2">
+<label class="text-xs font-bold text-slate-500 uppercase ml-2">How many friends?</label>
+<select class="w-full border-2 border-slate-100 bg-white rounded-xl px-4 py-3 focus:border-accent focus:ring-0 transition-colors cursor-pointer">
+<option>2 People</option>
+<option>4 People</option>
+<option>6+ (Let's party!)</option>
+</select>
+</div>
+<div class="space-y-2">
+<label class="text-xs font-bold text-slate-500 uppercase ml-2">Which day?</label>
+<input class="w-full border-2 border-slate-100 bg-white rounded-xl px-4 py-3 focus:border-accent focus:ring-0 transition-colors" type="date"/>
+</div>
+<div class="space-y-2 md:col-span-2">
+<label class="text-xs font-bold text-slate-500 uppercase ml-2">Preferred Time</label>
+<div class="grid grid-cols-3 gap-2">
+<button class="py-2 bg-white border-2 border-slate-100 rounded-lg text-sm font-bold hover:border-accent hover:text-accent" type="button">Lunch</button>
+<button class="py-2 bg-accent text-white border-2 border-accent rounded-lg text-sm font-bold" type="button">Dinner</button>
+<button class="py-2 bg-white border-2 border-slate-100 rounded-lg text-sm font-bold hover:border-accent hover:text-accent" type="button">Late Night</button>
+</div>
+</div>
+<div class="md:col-span-2 pt-4">
+<button class="btn-accent w-full flex items-center justify-center gap-2">
+<span class="material-symbols-outlined">celebration</span>
+                            Count Me In!
+                        </button>
+</div>
+</form>
+</div>
+</div>
+</section>
+<footer class="bg-slate-900 text-slate-400 py-16" id="contact">
+<div class="max-w-7xl mx-auto px-6">
+<div class="grid md:grid-cols-4 gap-12 mb-16">
+<div class="space-y-6">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white">
+<span class="material-symbols-outlined text-lg">restaurant</span>
+</div>
+<span class="text-xl font-bold text-white">Joyful Table</span>
+</div>
+<p class="text-sm font-body leading-relaxed">
+                        Bringing people together over amazing food since 2012. We can't wait to see you!
+                    </p>
+</div>
+<div class="space-y-4">
+<h4 class="text-white font-bold">Find Us</h4>
+<p class="text-sm font-body">
+                        123 Sunny Street<br/>
+                        Cheerful District<br/>
+                        London, UK
+                    </p>
+</div>
+<div class="space-y-4">
+<h4 class="text-white font-bold">Say Hello</h4>
+<div class="text-sm font-body space-y-1">
+<p>hello@joyfultable.com</p>
+<p>+44 20 7946 0000</p>
+</div>
+</div>
+<div class="space-y-4">
+<h4 class="text-white font-bold">Follow the Fun</h4>
+<div class="flex gap-4">
+<a class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-accent transition-colors" href="#"><span class="material-symbols-outlined text-white text-lg">public</span></a>
+<a class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-primary transition-colors" href="#"><span class="material-symbols-outlined text-white text-lg">photo_camera</span></a>
+</div>
+</div>
+</div>
+<div class="pt-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-bold uppercase tracking-widest">
+<p>© 2024 Joyful Table Restaurant Group.</p>
+<div class="flex gap-8">
+<a class="hover:text-white transition-colors" href="#">Privacy Policy</a>
+<a class="hover:text-white transition-colors" href="#">Menu PDF</a>
+</div>
+</div>
+</div>
+</footer>
+
+</body></html>

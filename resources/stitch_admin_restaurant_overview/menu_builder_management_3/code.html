@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Refined Menu Builder | Admin Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style type="text/tailwindcss">
+        :root {
+            --primary: #C25E00;
+            --primary-hover: #A34F00;
+            --sage-50: #F3F7F3;
+            --sage-100: #E8F0E8;
+            --sage-200: #D1DFD1;
+            --sage-300: #B9CEB9;
+            --text-main: #1A1C1A;
+            --text-muted: #4B524B;
+            --border-color: #CBD5CB;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        *:focus-visible {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+        }
+        .menu-item-card {
+            @apply bg-white border border-[var(--border-color)] rounded-xl p-4 flex gap-5 transition-all hover:shadow-md hover:border-[var(--primary)];
+        }
+        .category-list-item {
+            @apply flex items-center justify-between px-4 py-3 rounded-lg font-semibold transition-all cursor-pointer;
+        }
+        .category-list-item.active {
+            @apply bg-[var(--sage-100)] text-[var(--primary)] border-l-4 border-[var(--primary)];
+        }
+        .category-list-item:not(.active) {
+            @apply text-[var(--text-muted)] hover:bg-[var(--sage-50)] hover:text-[var(--text-main)];
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#C25E00",
+                        "sage": {
+                            50: "#F3F7F3",
+                            100: "#E8F0E8",
+                            200: "#D1DFD1",
+                            600: "#4B524B",
+                        },
+                        "dark-charcoal": "#1A1C1A",
+                    },
+                    fontFamily: {
+                        "sans": ["Plus Jakarta Sans", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.375rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem"},
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-[#FBFCFB] font-sans text-dark-charcoal min-h-screen flex flex-col">
+<header class="h-16 border-b border-sage-200 bg-white flex items-center justify-between px-8 sticky top-0 z-50">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 bg-primary rounded flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-xl">restaurant_menu</span>
+</div>
+<h1 class="text-xl font-extrabold tracking-tight">Menu<span class="text-primary">Builder</span></h1>
+</div>
+<nav class="hidden lg:flex items-center gap-6 text-sm font-semibold">
+<a class="text-sage-600 hover:text-primary transition-colors" href="#">Dashboard</a>
+<a aria-current="page" class="text-primary border-b-2 border-primary py-5" href="#">Menu Builder</a>
+<a class="text-sage-600 hover:text-primary transition-colors" href="#">Orders</a>
+<a class="text-sage-600 hover:text-primary transition-colors" href="#">Analytics</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="px-4 py-2 border border-sage-200 text-sage-600 rounded-lg hover:bg-sage-50 transition-all text-sm font-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-lg">visibility</span>
+            Preview
+        </button>
+<button class="bg-primary text-white px-5 py-2 rounded-lg font-bold text-sm shadow-sm hover:bg-[var(--primary-hover)] transition-all">
+            Publish Changes
+        </button>
+<div class="h-8 w-[1px] bg-sage-200 mx-2"></div>
+<div class="w-9 h-9 rounded-full overflow-hidden border border-sage-200">
+<img alt="Admin profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBKG36R3TlIkBafF5aYqu1T9zrhDY3VUvXhrYYISjJcP4XZEH4CqeJHyTLNoLvNI6iG28lqg8p9WDVKGxAtWag7_Oy3Izb5CthL6ooJGEPLSa2ObxfVzuROxXlA5yUm8SnhxqbdJzb4vgRFFUu2cfWDx6FGo3dSA2A8myEs1z0GIvtzxtUt8aff-f8r6yxuydEBf5mOa3jqpq8VTkBMaOoYz6ioGvSJO1kqZD71nmE3WGpg_0_DDm9UjHLFkGh192kp1_My4O0FyKQ"/>
+</div>
+</div>
+</header>
+<main class="flex-1 flex overflow-hidden">
+<aside class="w-72 border-r border-sage-200 bg-white p-6 flex flex-col gap-6 overflow-y-auto">
+<div class="flex items-center justify-between">
+<h2 class="font-bold text-xs uppercase tracking-widest text-sage-600">Categories</h2>
+<button aria-label="Add category" class="p-1 text-primary hover:bg-sage-50 rounded transition-colors">
+<span class="material-symbols-outlined">add_box</span>
+</button>
+</div>
+<div class="flex flex-col gap-1">
+<div class="category-list-item active">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[20px]">star</span>
+<span>Starters</span>
+</div>
+<span class="text-[10px] font-bold bg-white px-2 py-0.5 rounded border border-sage-200">12</span>
+</div>
+<div class="category-list-item">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[20px]">local_pizza</span>
+<span>Signature Pizzas</span>
+</div>
+<span class="text-[10px] font-bold bg-sage-100 px-2 py-0.5 rounded">8</span>
+</div>
+<div class="category-list-item">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[20px]">dinner_dining</span>
+<span>Pasta &amp; Main</span>
+</div>
+<span class="text-[10px] font-bold bg-sage-100 px-2 py-0.5 rounded">15</span>
+</div>
+<div class="category-list-item">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[20px]">icecream</span>
+<span>Desserts</span>
+</div>
+<span class="text-[10px] font-bold bg-sage-100 px-2 py-0.5 rounded">6</span>
+</div>
+<div class="category-list-item">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[20px]">local_bar</span>
+<span>Beverages</span>
+</div>
+<span class="text-[10px] font-bold bg-sage-100 px-2 py-0.5 rounded">24</span>
+</div>
+</div>
+<div class="mt-auto bg-sage-50 rounded-xl p-4 border border-sage-100">
+<p class="text-[11px] font-bold text-primary flex items-center gap-1.5 uppercase mb-2">
+<span class="material-symbols-outlined text-sm">tips_and_updates</span> Designer Tip
+            </p>
+<p class="text-xs text-sage-600 leading-relaxed font-medium">
+                Drag handles on cards to reorder items within this category.
+            </p>
+</div>
+</aside>
+<section class="flex-1 overflow-y-auto p-10">
+<div class="max-w-5xl mx-auto">
+<div class="flex items-end justify-between mb-8">
+<div>
+<div class="flex items-center gap-2 text-sage-600 text-sm font-medium mb-1">
+<span>Menu</span>
+<span class="material-symbols-outlined text-xs">chevron_right</span>
+<span>Starters</span>
+</div>
+<h2 class="text-3xl font-extrabold">Starters</h2>
+</div>
+<div class="flex items-center gap-3">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-sage-600 text-xl">search</span>
+<input class="pl-10 pr-4 py-2 rounded-lg border border-sage-200 bg-white focus:ring-1 focus:ring-primary focus:border-primary text-sm w-64 placeholder:text-sage-600/50" placeholder="Search starters..." type="text"/>
+</div>
+<button class="bg-primary text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-[var(--primary-hover)] transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-lg">add</span>
+                        Add Item
+                    </button>
+</div>
+</div>
+<div class="grid grid-cols-1 gap-4">
+<div class="menu-item-card">
+<div class="flex-shrink-0 cursor-grab active:cursor-grabbing text-sage-300 hover:text-primary transition-colors flex items-center">
+<span class="material-symbols-outlined text-2xl">drag_indicator</span>
+</div>
+<div class="w-24 h-24 rounded-lg overflow-hidden border border-sage-100">
+<img alt="Crispy Calamari" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA3VBGX0g6iUrMjY6sT4qS8Sq4JDLQgcWsXiIXUTdWhqDQXd1qvkKqgYvne4l75mgGNTIv1qJ_ifvnjFS1-A0oX1GDMqOaNA-jWxb69YPXciilADOAGy4BSqGqfblsEcZParKVad2rMIIwUq-PX7BogF32NSA0bA5KDrJ7Gse4aUZMhcl3v6OK1q_lHZhA60Lr_OvWF9F9hnkPWgqYkKQLpKzjMtH33aYG7FpIF6WMUi3ZFeEbxf16jqLFnsvI9eV9589stPQ9Pci4"/>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start mb-1">
+<div>
+<h3 class="font-bold text-lg text-dark-charcoal">Crispy Calamari</h3>
+<p class="text-xs text-sage-600 line-clamp-2 max-w-md">Fresh squid lightly battered and fried. Served with spicy marinara and lemon wedges.</p>
+</div>
+<div class="text-right">
+<span class="text-lg font-extrabold text-primary">$14.50</span>
+<div class="flex gap-1 mt-1 justify-end">
+<span class="px-2 py-0.5 bg-sage-50 text-sage-600 text-[10px] font-bold rounded uppercase">Spicy</span>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-between mt-3 pt-3 border-t border-sage-50">
+<div class="flex gap-4">
+<button class="text-xs font-bold text-primary flex items-center gap-1 hover:underline">
+<span class="material-symbols-outlined text-sm">edit</span> Edit
+                                </button>
+<button class="text-xs font-bold text-sage-600 flex items-center gap-1 hover:text-dark-charcoal">
+<span class="material-symbols-outlined text-sm">content_copy</span> Duplicate
+                                </button>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-[10px] font-bold uppercase text-sage-600">Visible</span>
+<button class="w-8 h-4 bg-primary rounded-full relative">
+<div class="absolute right-0.5 top-0.5 w-3 h-3 bg-white rounded-full"></div>
+</button>
+</div>
+</div>
+</div>
+</div>
+<div class="menu-item-card border-primary ring-2 ring-primary/10 shadow-lg">
+<div class="flex-shrink-0 cursor-grabbing text-primary flex items-center">
+<span class="material-symbols-outlined text-2xl">drag_indicator</span>
+</div>
+<div class="w-24 h-24 rounded-lg overflow-hidden border border-sage-100">
+<img alt="Truffle Arancini" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAS9FnmwyJ8Fm1Aa6mqzI_VtpFLiTJXEgl5mXaCmFKu70QpkJxcz_GD72qnGfHO2NhMz5ms_m-0Cn8boDKijxQLnYLqi7IjSxPSkdYQTZNHe7yeh89VGuC2bFVNJZghmPJoTk52XE7nMoYjb0AdQ0sauTbJq-Z2rEYx9go5KuvpI7sP2B9oSBq9-XEUvNC57_zhJqixVoaX1gyTqzojK8FbKXZcg08aVEP7Ktvs1stoJt-IeVQOQHDsXo2tzzyjO1HUYJSUoeriXJ4"/>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start mb-1">
+<div>
+<h3 class="font-bold text-lg text-dark-charcoal">Truffle Arancini</h3>
+<p class="text-xs text-sage-600 line-clamp-2 max-w-md">Wild mushroom risotto balls stuffed with mozzarella and truffle oil. Four per serving.</p>
+</div>
+<div class="text-right">
+<span class="text-lg font-extrabold text-primary">$12.00</span>
+<div class="flex gap-1 mt-1 justify-end">
+<span class="px-2 py-0.5 bg-sage-50 text-sage-600 text-[10px] font-bold rounded uppercase">Veg</span>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-between mt-3 pt-3 border-t border-sage-50">
+<div class="flex gap-4">
+<button class="text-xs font-bold text-primary flex items-center gap-1 hover:underline">
+<span class="material-symbols-outlined text-sm">edit</span> Edit
+                                </button>
+<button class="text-xs font-bold text-sage-600 flex items-center gap-1 hover:text-dark-charcoal">
+<span class="material-symbols-outlined text-sm">content_copy</span> Duplicate
+                                </button>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-[10px] font-bold uppercase text-sage-600">Visible</span>
+<button class="w-8 h-4 bg-primary rounded-full relative">
+<div class="absolute right-0.5 top-0.5 w-3 h-3 bg-white rounded-full"></div>
+</button>
+</div>
+</div>
+</div>
+</div>
+<div class="menu-item-card">
+<div class="flex-shrink-0 cursor-grab text-sage-300 hover:text-primary transition-colors flex items-center">
+<span class="material-symbols-outlined text-2xl">drag_indicator</span>
+</div>
+<div class="w-24 h-24 rounded-lg overflow-hidden border border-sage-100">
+<img alt="Garlic Bruschetta" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBJtv4CCSVY3UlQf5TCyrXARUCfNmSS6gz3WHdEPKLVuaxwK6tvzhIAYw26Ae2wWYnUdiI-fgXj0We1iXfwO_nx0XqJUezf4Dz88ipxEdXrQmDXLgxsyrkkvNn26ObhRNtr4nRLkw21hq9ikG9c3X55E4qgQX5lkL4Kf3aUFs9cwaKWwkTTBs-rYOP6qarA6suoq6DalLhKYp4_UNDhU30mHCty0o2_qVz7K7NQQpS0uQ0mK8wQrkRN14v_-RDZSaE1j6P_0YZc47M"/>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start mb-1">
+<div>
+<h3 class="font-bold text-lg text-dark-charcoal">Garlic Bruschetta</h3>
+<p class="text-xs text-sage-600 line-clamp-2 max-w-md">Toasted sourdough topped with heirloom tomatoes, basil, and balsamic glaze.</p>
+</div>
+<div class="text-right">
+<span class="text-lg font-extrabold text-primary">$9.00</span>
+</div>
+</div>
+<div class="flex items-center justify-between mt-3 pt-3 border-t border-sage-50">
+<div class="flex gap-4">
+<button class="text-xs font-bold text-primary flex items-center gap-1 hover:underline">
+<span class="material-symbols-outlined text-sm">edit</span> Edit
+                                </button>
+<button class="text-xs font-bold text-sage-600 flex items-center gap-1 hover:text-dark-charcoal">
+<span class="material-symbols-outlined text-sm">content_copy</span> Duplicate
+                                </button>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-[10px] font-bold uppercase text-sage-600 text-sage-300">Hidden</span>
+<button class="w-8 h-4 bg-sage-200 rounded-full relative">
+<div class="absolute left-0.5 top-0.5 w-3 h-3 bg-white rounded-full"></div>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-10 pt-6 border-t border-sage-200 flex items-center justify-between">
+<div class="text-sm text-sage-600 font-medium">
+                    Last modified: Today at 2:45 PM
+                </div>
+<div class="flex items-center gap-3">
+<button class="px-6 py-2 rounded-lg text-sm font-bold text-sage-600 hover:bg-sage-50 transition-colors">
+                        Cancel
+                    </button>
+<button class="bg-primary text-white px-8 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-[var(--primary-hover)] transition-all">
+                        Save Changes
+                    </button>
+</div>
+</div>
+</div>
+</section>
+</main>
+<footer class="h-10 bg-white border-t border-sage-200 flex items-center justify-between px-8 text-[10px] font-bold text-sage-600 uppercase tracking-widest">
+<div class="flex items-center gap-6">
+<span class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-green-500"></span> Live on Production</span>
+<span>Version 2.4.0</span>
+</div>
+<div class="flex gap-6">
+<span>Help Center</span>
+<span>Settings</span>
+</div>
+</footer>
+
+</body></html>

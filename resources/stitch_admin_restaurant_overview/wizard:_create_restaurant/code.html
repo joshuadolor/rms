@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Wizard: Create Restaurant - Step 1</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              colors: {
+                "primary": "#ee5b2b",
+                "background-light": "#f8f6f6",
+                "background-dark": "#221510",
+              },
+              fontFamily: {
+                "display": ["Plus Jakarta Sans"]
+              },
+              borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+            },
+          },
+        }
+      </script>
+</head>
+<body class="font-display bg-background-light dark:bg-background-dark min-h-screen flex flex-col">
+<!-- Navigation / Header -->
+<nav class="w-full py-6 px-8 flex justify-between items-center bg-white/50 dark:bg-white/5 backdrop-blur-sm border-b border-primary/10">
+<div class="flex items-center gap-2">
+<div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-white">
+<span class="material-icons">restaurant</span>
+</div>
+<span class="font-bold text-xl tracking-tight text-primary">DishDash</span>
+</div>
+<button class="text-primary/70 hover:text-primary font-medium flex items-center gap-2 transition-colors">
+<span class="material-icons text-sm">logout</span>
+            Exit Setup
+        </button>
+</nav>
+<main class="flex-grow flex items-center justify-center p-6 lg:p-12">
+<div class="max-w-7xl w-full grid lg:grid-cols-2 bg-white dark:bg-background-dark/40 shadow-xl shadow-primary/5 rounded-xl overflow-hidden border border-primary/10">
+<!-- Left Side: Form Content -->
+<div class="p-8 lg:p-16 flex flex-col justify-center">
+<!-- Progress Stepper -->
+<div class="mb-12">
+<div class="flex items-center gap-4 mb-4">
+<div class="h-2 w-16 bg-primary rounded-full"></div>
+<div class="h-2 w-16 bg-primary/20 dark:bg-primary/10 rounded-full"></div>
+<div class="h-2 w-16 bg-primary/20 dark:bg-primary/10 rounded-full"></div>
+</div>
+<span class="text-sm font-semibold text-primary/80 uppercase tracking-widest">Step 1 of 3</span>
+</div>
+<div class="max-w-md">
+<h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">Welcome! Let’s build your restaurant profile.</h1>
+<p class="text-lg text-gray-600 dark:text-gray-400 mb-10">Tell us the name of your establishment and what kind of food you serve.</p>
+<form class="space-y-8">
+<!-- Restaurant Name -->
+<div class="space-y-2">
+<label class="block text-sm font-semibold text-gray-700 dark:text-gray-300" for="restaurant-name">
+                                Restaurant Name
+                            </label>
+<input class="w-full px-4 py-4 bg-background-light dark:bg-white/5 border border-primary/20 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all text-gray-900 dark:text-white" id="restaurant-name" placeholder="The Gourmet Bistro" type="text"/>
+</div>
+<!-- Cuisine Type -->
+<div class="space-y-2">
+<label class="block text-sm font-semibold text-gray-700 dark:text-gray-300" for="cuisine">
+                                Primary Cuisine Type
+                            </label>
+<div class="relative">
+<select class="w-full px-4 py-4 bg-background-light dark:bg-white/5 border border-primary/20 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all text-gray-900 dark:text-white appearance-none" id="cuisine">
+<option disabled="" selected="" value="">Select a cuisine</option>
+<option value="italian">Italian</option>
+<option value="fusion">Fusion</option>
+<option value="vegan">Vegan / Plant-Based</option>
+<option value="japanese">Japanese</option>
+<option value="mexican">Mexican</option>
+<option value="french">French</option>
+</select>
+<div class="absolute inset-y-0 right-4 flex items-center pointer-events-none text-primary">
+<span class="material-icons">expand_more</span>
+</div>
+</div>
+<p class="text-xs text-primary/70 font-medium">You can add more cuisines later.</p>
+</div>
+<!-- CTA Button -->
+<div class="pt-4">
+<button class="w-full bg-primary hover:bg-primary/90 text-white font-bold py-4 rounded-lg shadow-lg shadow-primary/20 flex items-center justify-center gap-2 group transition-all transform hover:-translate-y-0.5" type="submit">
+                                Continue to Step 2
+                                <span class="material-icons text-lg group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</button>
+</div>
+</form>
+</div>
+</div>
+<!-- Right Side: Illustration & Visuals -->
+<div class="hidden lg:flex relative bg-primary/5 dark:bg-primary/10 items-center justify-center p-12 overflow-hidden">
+<!-- Abstract background elements -->
+<div class="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full -mr-20 -mt-20 blur-3xl"></div>
+<div class="absolute bottom-0 left-0 w-80 h-80 bg-primary/10 rounded-full -ml-20 -mb-20 blur-3xl"></div>
+<div class="relative z-10 w-full max-w-lg aspect-square">
+<!-- Main Hero Image/Illustration -->
+<div class="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl">
+<img alt="A celebratory illustration of a professional chef" class="w-full h-full object-cover" data-alt="Professional chef smiling in a modern clean kitchen environment" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA9uSR5p-glTeh9tdIpndmT0D34dqOrvVIIrJ0DSW56zzfh8RpN84z-2tkW99kZZYSP26eM-NiEzOQTnhn7s1X8jPIi6ie_aV7J7ed7N3GrKWNNnYfmEDN7beie9qVrZg9dGxsxs9YTvfR4pTfPcWFSVh9Lxbg_bj-NUUM3-GE1si6qHRECh67mlfDpIk7CHA52UA2_VH5U6w-pN0h0vhX_KvXnLY6omumFOEuvPjudT4vmO-D_--u6BaZj6Ey2diiqem4lA871DCE"/>
+<!-- Overlay Card -->
+<div class="absolute bottom-6 left-6 right-6 p-6 bg-white/90 dark:bg-background-dark/90 backdrop-blur-md rounded-xl border border-white/20 shadow-xl">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center text-primary">
+<span class="material-icons">auto_awesome</span>
+</div>
+<div>
+<p class="text-sm font-semibold text-primary uppercase tracking-wider">Join 10k+ Restaurants</p>
+<p class="text-gray-900 dark:text-white font-medium">Start your journey to digital excellence today.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Floating Badge -->
+<div class="absolute -top-6 -right-6 w-24 h-24 bg-white dark:bg-background-dark rounded-full flex items-center justify-center shadow-lg border-4 border-primary/20">
+<div class="text-center">
+<span class="block text-primary font-bold text-xl leading-none">100%</span>
+<span class="text-[10px] text-gray-500 font-bold uppercase">Ready</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="py-8 px-8 text-center text-sm text-gray-500 dark:text-gray-400">
+<p>© 2024 DishDash Onboarding. Need help? <a class="text-primary hover:underline font-medium" href="#">Contact Support</a></p>
+</footer>
+</body></html>

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mobile Wizard Step 1 - Restaurant Onboarding</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#ee5b2b",
+              "background-light": "#f8f6f6",
+              "background-dark": "#221510",
+            },
+            fontFamily: {
+              "display": ["Plus Jakarta Sans"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark min-h-screen flex items-center justify-center p-4">
+<!-- Desktop Container (to mimic mobile view on desktop) -->
+<div class="w-full max-w-[420px] bg-white dark:bg-background-dark/50 min-h-[700px] shadow-2xl rounded-xl overflow-hidden flex flex-col border border-primary/10">
+<!-- Header / Navigation Bar -->
+<header class="px-6 py-6 flex items-center justify-between">
+<button class="text-primary hover:bg-primary/10 p-2 rounded-full transition-colors">
+<span class="material-icons">arrow_back</span>
+</button>
+<div class="h-8">
+<div class="bg-primary/10 p-2 rounded-lg">
+<div class="w-6 h-6 bg-primary rounded-md flex items-center justify-center">
+<span class="material-icons text-white text-xs">restaurant</span>
+</div>
+</div>
+</div>
+<button class="text-primary/60 font-medium text-sm hover:text-primary transition-colors">
+                Cancel
+            </button>
+</header>
+<!-- Progress Section -->
+<div class="px-8 mt-4">
+<div class="flex justify-between items-end mb-2">
+<span class="text-primary font-bold text-xs tracking-wider uppercase">Step 1 of 4</span>
+<span class="text-primary/40 text-xs font-medium">25% Complete</span>
+</div>
+<div class="h-1.5 w-full bg-primary/10 rounded-full overflow-hidden">
+<div class="h-full bg-primary w-1/4 rounded-full"></div>
+</div>
+</div>
+<!-- Main Content Area -->
+<main class="flex-grow px-8 pt-12 pb-8">
+<div class="space-y-2 mb-10">
+<h1 class="text-3xl font-bold text-gray-900 dark:text-white leading-tight">
+                    What’s the name of your restaurant?
+                </h1>
+<p class="text-gray-500 dark:text-gray-400 text-base">
+                    Give your restaurant a name that customers will easily recognize.
+                </p>
+</div>
+<!-- Image/Illustration Placeholder -->
+<div class="mb-10 flex justify-center">
+<div class="relative w-32 h-32">
+<div class="absolute inset-0 bg-primary/5 rounded-full blur-2xl"></div>
+<img alt="Restaurant interior" class="relative w-32 h-32 object-cover rounded-full border-4 border-white dark:border-background-dark shadow-lg" data-alt="Modern cozy restaurant interior view" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCG1aDaOYOKTxORdJS6SOPM4cak7rwjABLWHc-lzmExwXM4pGWVzCaJpxKocOWNzc1VFgrR7epsOSbs5QAxHrg19vZyBIbCVlZQEUEPh3djKwjtZn3OCSSdyH8qMHdHJGiqcg5K8vrvdwaIf_QG_xgnJBVvjsZ3nbL7SIL52ZUGy11WVwmC08PGvBjO0Lh1LqQf1mQUjXacFP_as93lsZXbTxspc-YGQfDxXMeY0Fu5UiHTHWgdW4DyxnwRJeY3p-0mNzL5BFTDuGI"/>
+</div>
+</div>
+<!-- Form Field -->
+<div class="space-y-6">
+<div class="group">
+<label class="block text-sm font-semibold text-primary mb-2" for="restaurantName">Restaurant Name</label>
+<div class="relative">
+<input class="w-full h-14 px-4 bg-background-light dark:bg-gray-800 border-2 border-primary/20 rounded-lg focus:border-primary focus:ring-0 transition-all text-gray-900 dark:text-white placeholder:text-gray-400 text-lg" id="restaurantName" placeholder="e.g., The Golden Spoon" type="text"/>
+<div class="absolute right-4 top-1/2 -translate-y-1/2">
+<span class="material-icons text-primary/30 group-focus-within:text-primary">store</span>
+</div>
+</div>
+</div>
+<!-- Helper text -->
+<div class="flex items-start space-x-2 px-1">
+<span class="material-icons text-primary text-xs mt-1">info</span>
+<p class="text-xs text-gray-500 dark:text-gray-400 italic">
+                        You can always change this later in your restaurant settings.
+                    </p>
+</div>
+</div>
+</main>
+<!-- Footer / Action Buttons -->
+<footer class="p-8 space-y-4">
+<button class="w-full h-14 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl shadow-lg shadow-primary/20 transition-all flex items-center justify-center space-x-2 group">
+<span>Continue</span>
+<span class="material-icons group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</button>
+<button class="w-full py-2 text-primary/60 font-semibold hover:text-primary transition-colors text-sm">
+                Skip for now
+            </button>
+</footer>
+<!-- Mobile Handle Decoration -->
+<div class="pb-3 flex justify-center">
+<div class="w-1/3 h-1 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+</div>
+</div>
+</body></html>

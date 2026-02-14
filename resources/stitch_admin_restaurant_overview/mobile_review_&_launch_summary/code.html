@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Review &amp; Launch - Restaurant Onboarding</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#ee4b2b",
+                        "background-light": "#f8f6f6",
+                        "background-dark": "#221310",
+                    },
+                    fontFamily: {
+                        "display": ["Plus Jakarta Sans"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-200 font-display flex items-center justify-center min-h-screen">
+<!-- Mobile Container (Max 450px) -->
+<div class="relative w-full max-w-[450px] h-[900px] max-h-screen bg-background-light dark:bg-background-dark shadow-2xl overflow-hidden flex flex-col mx-auto md:rounded-xl">
+<!-- Top Navigation Bar -->
+<header class="sticky top-0 z-20 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md px-6 py-4 flex items-center justify-between border-b border-primary/10">
+<button class="w-10 h-10 flex items-center justify-center rounded-full bg-white dark:bg-white/10 shadow-sm text-primary">
+<span class="material-icons">arrow_back</span>
+</button>
+<div class="text-center">
+<p class="text-[10px] uppercase tracking-widest text-primary font-bold">Step 4 of 4</p>
+<h1 class="text-sm font-bold text-gray-900 dark:text-white">Review &amp; Launch</h1>
+</div>
+<div class="w-10"></div> <!-- Spacer for symmetry -->
+</header>
+<!-- Scrollable Content Area -->
+<div class="flex-1 overflow-y-auto hide-scrollbar px-6 pb-32">
+<!-- Header Section -->
+<div class="mt-8 mb-6">
+<h2 class="text-3xl font-bold text-gray-900 dark:text-white leading-tight">Looks Great!</h2>
+<p class="text-gray-500 dark:text-primary/60 mt-2">Take a moment to review your restaurant details before we go live.</p>
+</div>
+<!-- Logo Preview Card -->
+<div class="bg-white dark:bg-white/5 p-6 rounded-lg mb-4 flex flex-col items-center shadow-sm border border-primary/5">
+<div class="relative">
+<div class="w-24 h-24 rounded-full overflow-hidden bg-primary/10 border-4 border-white dark:border-white/10 shadow-lg">
+<img alt="Restaurant Logo Preview" class="w-full h-full object-cover" data-alt="Modern circular restaurant logo featuring a stylized fork icon" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCBRRAeZ3SMMyrgh-YsrV4-B_pxo7TEkNABupQyqwtwxVtxrZXfqRtXjMYJdiMoxRXcjZLPwABKVMUc5qWPGI2V8fbIF-twBuq0hd5mAu5ig4H-iYFORiKlyk579H-cfP6wgWGrm4M7bQJ_Qdzau6bqiIItGyUwmFxUmfzIf-inoavINiFtV2aRp37otELxZR2l7TBsOqW1OzkFCLNMNi1PtQFVxbEQxmJAFnE-35Cc4i0ieAW6C8IrS-4dak1fylnpLigvJMtQHyg"/>
+</div>
+<button class="absolute bottom-0 right-0 bg-primary text-white w-8 h-8 rounded-full flex items-center justify-center shadow-md border-2 border-white">
+<span class="material-icons text-sm">edit</span>
+</button>
+</div>
+<h3 class="mt-4 font-bold text-xl text-gray-900 dark:text-white">The Terracotta Bistro</h3>
+<span class="mt-1 px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-semibold uppercase tracking-wide">Mediterranean Fusion</span>
+</div>
+<!-- Basic Details Card -->
+<div class="bg-white dark:bg-white/5 p-5 rounded-lg mb-4 shadow-sm border border-primary/5">
+<div class="flex justify-between items-start mb-4">
+<h4 class="text-xs font-bold uppercase tracking-widest text-primary">Basic Information</h4>
+<button class="text-primary/40 hover:text-primary transition-colors">
+<span class="material-icons text-lg">edit_note</span>
+</button>
+</div>
+<div class="space-y-4">
+<div>
+<p class="text-[11px] text-gray-400 font-medium uppercase tracking-wider mb-1">Official Name</p>
+<p class="text-gray-900 dark:text-white font-medium">The Terracotta Bistro &amp; Lounge</p>
+</div>
+<div>
+<p class="text-[11px] text-gray-400 font-medium uppercase tracking-wider mb-1">Primary Cuisine</p>
+<div class="flex flex-wrap gap-2">
+<span class="px-2.5 py-1 bg-background-light dark:bg-white/10 text-gray-600 dark:text-gray-300 rounded text-xs">Modern Mediterranean</span>
+<span class="px-2.5 py-1 bg-background-light dark:bg-white/10 text-gray-600 dark:text-gray-300 rounded text-xs">Wine Bar</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Location Card -->
+<div class="bg-white dark:bg-white/5 p-5 rounded-lg mb-4 shadow-sm border border-primary/5">
+<div class="flex justify-between items-start mb-4">
+<h4 class="text-xs font-bold uppercase tracking-widest text-primary">Location</h4>
+<button class="text-primary/40 hover:text-primary transition-colors">
+<span class="material-icons text-lg">map</span>
+</button>
+</div>
+<div class="space-y-4">
+<div class="flex items-start gap-3">
+<span class="material-icons text-primary/60 mt-0.5">place</span>
+<div>
+<p class="text-gray-900 dark:text-white font-medium">124 Design District Blvd</p>
+<p class="text-sm text-gray-500">Suite 405, Austin, TX 78701</p>
+</div>
+</div>
+<div class="w-full h-32 rounded bg-primary/5 overflow-hidden border border-primary/10">
+<img alt="Map Location Preview" class="w-full h-full object-cover grayscale opacity-80" data-alt="Stylized minimalist city map showing Austin Texas" data-location="Austin, Texas" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCmQsopjf_mVq6twy0Q_BiNUuzv6Cj3IfTfuPgvjqzQ8OKv4QlOieF0jGcaPLMZIdyZsGbLfniqPKSjlgAR5v0a3ahtaUGTRTIqtU-EA0F9VdCZVOzEpy6VAg85jHWa-nviDa-42cGK16yuW84541C0xysBDy74vYQ6h59dR2mVj0iTCB2UuO_rAt9S63czod5n90CEqWrSJskVq8GKVh4RcCGMyDccqG6QAcfxOms9NwgYieacSAcWu2yN9RP5lhU3wcDtm0wTiQI"/>
+</div>
+</div>
+</div>
+<!-- Operating Hours Card -->
+<div class="bg-white dark:bg-white/5 p-5 rounded-lg mb-4 shadow-sm border border-primary/5">
+<div class="flex justify-between items-start mb-4">
+<h4 class="text-xs font-bold uppercase tracking-widest text-primary">Business Hours</h4>
+<button class="text-primary/40 hover:text-primary transition-colors">
+<span class="material-icons text-lg">schedule</span>
+</button>
+</div>
+<div class="space-y-3">
+<div class="flex justify-between items-center text-sm">
+<span class="text-gray-500 font-medium">Mon - Thu</span>
+<span class="text-gray-900 dark:text-white font-semibold">11:00 AM - 10:00 PM</span>
+</div>
+<div class="flex justify-between items-center text-sm">
+<span class="text-gray-500 font-medium">Fri - Sat</span>
+<span class="text-gray-900 dark:text-white font-semibold text-primary">11:00 AM - 12:00 AM</span>
+</div>
+<div class="flex justify-between items-center text-sm">
+<span class="text-gray-500 font-medium">Sunday</span>
+<span class="text-gray-900 dark:text-white font-semibold">10:00 AM - 08:00 PM</span>
+</div>
+</div>
+</div>
+<!-- Additional Settings Card -->
+<div class="bg-white dark:bg-white/5 p-5 rounded-lg mb-4 shadow-sm border border-primary/5">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary/5 flex items-center justify-center text-primary">
+<span class="material-icons">notifications_active</span>
+</div>
+<div>
+<p class="text-sm font-bold text-gray-900 dark:text-white">Push Notifications</p>
+<p class="text-xs text-gray-500">Enable alerts for new reservations</p>
+</div>
+<div class="ml-auto">
+<div class="w-10 h-6 bg-primary rounded-full relative">
+<div class="absolute right-1 top-1 w-4 h-4 bg-white rounded-full"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Fixed Bottom Action Bar -->
+<div class="absolute bottom-0 left-0 right-0 bg-white/80 dark:bg-background-dark/80 backdrop-blur-xl border-t border-primary/10 px-6 py-6 pb-8 flex flex-col gap-3">
+<button class="w-full bg-primary hover:bg-primary/90 text-white font-bold py-4 rounded-full shadow-xl shadow-primary/20 transition-all flex items-center justify-center gap-2">
+<span class="material-icons">rocket_launch</span>
+                Launch Restaurant
+            </button>
+<button class="w-full text-gray-400 dark:text-primary/40 font-semibold py-2 text-sm hover:text-primary transition-colors">
+                Save Draft for Later
+            </button>
+</div>
+</div>
+</body></html>

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Add Restaurant - Basic Info</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#e64c19",
+                        "background-light": "#f8f6f6",
+                        "background-dark": "#211511",
+                    },
+                    fontFamily: {
+                        "display": ["Plus Jakarta Sans", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-800 dark:text-slate-100 min-h-screen flex flex-col">
+<!-- Navigation Header -->
+<nav class="w-full bg-white dark:bg-background-dark/50 border-b border-primary/10 px-6 py-4 flex justify-between items-center">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 bg-primary rounded flex items-center justify-center">
+<span class="material-icons text-white text-sm">restaurant</span>
+</div>
+<span class="font-bold text-xl tracking-tight text-primary">DineAdmin</span>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-slate-500 hover:text-primary transition-colors">
+<span class="material-icons">notifications_none</span>
+</button>
+<div class="h-8 w-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
+<span class="text-xs font-bold text-primary">JD</span>
+</div>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-grow flex flex-col items-center justify-start pt-12 pb-20 px-4">
+<!-- Header Text -->
+<div class="max-w-2xl w-full mb-8 text-center">
+<h1 class="text-3xl font-bold text-slate-900 dark:text-white mb-2">Add New Restaurant</h1>
+<p class="text-slate-500 dark:text-slate-400">Fill in the essential details to list your restaurant on our platform.</p>
+</div>
+<!-- Progress Stepper -->
+<div class="max-w-2xl w-full mb-10">
+<div class="relative flex justify-between items-center">
+<!-- Progress Line Background -->
+<div class="absolute top-1/2 left-0 w-full h-0.5 bg-slate-200 dark:bg-slate-700 -translate-y-1/2 z-0"></div>
+<!-- Active Progress Line -->
+<div class="absolute top-1/2 left-0 w-1/4 h-0.5 bg-primary -translate-y-1/2 z-0"></div>
+<!-- Step 1: Active -->
+<div class="relative z-10 flex flex-col items-center">
+<div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/20 ring-4 ring-background-light dark:ring-background-dark">
+<span class="font-bold">1</span>
+</div>
+<span class="absolute top-12 text-sm font-semibold text-primary whitespace-nowrap">Basic Info</span>
+</div>
+<!-- Step 2: Pending -->
+<div class="relative z-10 flex flex-col items-center">
+<div class="w-10 h-10 rounded-full bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-400 flex items-center justify-center ring-4 ring-background-light dark:ring-background-dark">
+<span class="font-bold">2</span>
+</div>
+<span class="absolute top-12 text-sm font-medium text-slate-400 whitespace-nowrap">Location &amp; Hours</span>
+</div>
+<!-- Step 3: Pending -->
+<div class="relative z-10 flex flex-col items-center">
+<div class="w-10 h-10 rounded-full bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-400 flex items-center justify-center ring-4 ring-background-light dark:ring-background-dark">
+<span class="font-bold">3</span>
+</div>
+<span class="absolute top-12 text-sm font-medium text-slate-400 whitespace-nowrap">Review</span>
+</div>
+</div>
+</div>
+<!-- Form Card -->
+<div class="max-w-2xl w-full bg-white dark:bg-slate-900 rounded-xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 overflow-hidden mt-6">
+<div class="p-8">
+<div class="mb-8">
+<h2 class="text-xl font-bold text-slate-900 dark:text-white">General Information</h2>
+<p class="text-sm text-slate-500 dark:text-slate-400">Step 1 of 3: Start with the basics</p>
+</div>
+<form class="space-y-6">
+<!-- Restaurant Name -->
+<div class="space-y-2">
+<label class="block text-sm font-semibold text-slate-700 dark:text-slate-300" for="res-name">
+                            Restaurant Name <span class="text-primary">*</span>
+</label>
+<input class="w-full px-4 py-3 rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-primary focus:border-primary transition-all text-slate-900 dark:text-white placeholder:text-slate-400" id="res-name" placeholder="e.g. The Terracotta Kitchen" type="text"/>
+</div>
+<!-- Cuisine Type -->
+<div class="space-y-2">
+<label class="block text-sm font-semibold text-slate-700 dark:text-slate-300" for="cuisine">
+                            Cuisine Type <span class="text-primary">*</span>
+</label>
+<div class="relative">
+<select class="w-full px-4 py-3 rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-primary focus:border-primary transition-all text-slate-900 dark:text-white appearance-none cursor-pointer" id="cuisine">
+<option disabled="" selected="" value="">Select a cuisine</option>
+<option value="italian">Italian</option>
+<option value="japanese">Japanese</option>
+<option value="mexican">Mexican</option>
+<option value="mediterranean">Mediterranean</option>
+<option value="french">French</option>
+<option value="indian">Indian</option>
+<option value="american">American</option>
+</select>
+<div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+<span class="material-icons">expand_more</span>
+</div>
+</div>
+</div>
+<!-- Description -->
+<div class="space-y-2">
+<label class="block text-sm font-semibold text-slate-700 dark:text-slate-300" for="description">
+                            Description <span class="text-primary">*</span>
+</label>
+<textarea class="w-full px-4 py-3 rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-primary focus:border-primary transition-all text-slate-900 dark:text-white placeholder:text-slate-400" id="description" placeholder="Briefly describe what makes this restaurant special..." rows="4"></textarea>
+<div class="flex justify-between items-center">
+<p class="text-xs text-slate-400">Recommended: 100-300 characters</p>
+<p class="text-xs text-slate-400">0 / 500</p>
+</div>
+</div>
+<!-- Image Upload Suggestion Placeholder -->
+<div class="pt-4 border-t border-slate-100 dark:border-slate-800">
+<label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Cover Photo</label>
+<div class="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-8 flex flex-col items-center justify-center gap-2 hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer">
+<span class="material-icons text-primary/60 text-3xl">add_photo_alternate</span>
+<p class="text-sm font-medium text-slate-600 dark:text-slate-400">Click to upload restaurant cover</p>
+<p class="text-xs text-slate-400">JPG, PNG or WEBP (Max 5MB)</p>
+</div>
+</div>
+</form>
+</div>
+<!-- Footer Actions -->
+<div class="px-8 py-5 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 flex justify-end items-center gap-4">
+<button class="px-6 py-2.5 rounded-lg text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+                    Save Draft
+                </button>
+<button class="bg-primary hover:bg-primary/90 text-white px-8 py-2.5 rounded-lg text-sm font-bold shadow-lg shadow-primary/20 flex items-center gap-2 transition-transform active:scale-[0.98]">
+                    Next Step
+                    <span class="material-icons text-sm">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Help Tooltip -->
+<div class="mt-8 flex items-center gap-2 text-slate-400 dark:text-slate-500 text-sm">
+<span class="material-icons text-base">help_outline</span>
+<span>Need help setting up? <a class="text-primary hover:underline font-medium" href="#">Read our guide</a></span>
+</div>
+</main>
+<!-- Footer Decoration -->
+<div class="fixed bottom-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-primary/50 to-primary/10"></div>
+</body></html>
