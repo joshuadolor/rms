@@ -3,8 +3,13 @@
  * E2E tests for authentication (email/password only; SSO is out of scope).
  * Most tests mock the API so they run without the backend.
  * The final "Email delivery" describe uses the real API + Mailhog (no mocks) and is skipped if API or Mailhog are unreachable.
+ * After the Email delivery tests, e2e:cleanup-users is run to remove created users (see api/docs/e2e-cleanup.md).
  */
+const path = require('path')
+const fs = require('fs')
+const { execSync } = require('child_process')
 const { test, expect } = require('@playwright/test')
+const { createE2eUser } = require('./helpers/e2e-user.cjs')
 
 const MOCK_VERIFIED_USER = {
   id: 1,
@@ -347,30 +352,43 @@ async function checkEmailDeliveryReachable(request) {
   }
 }
 
+function runE2eCleanup() {
+  const cmd = process.env.E2E_CLEANUP_CMD
+  if (cmd) {
+    try {
+      execSync(cmd, { stdio: 'pipe', encoding: 'utf8' })
+    } catch (e) {
+      console.warn('[e2e] Cleanup command failed (is the API container running?):', e.message)
+    }
+    return
+  }
+  const apiFromFrontend = path.resolve(process.cwd(), '..', 'api')
+  const apiFromRoot = path.resolve(process.cwd(), 'api')
+  const apiDir = fs.existsSync(path.join(apiFromFrontend, 'artisan')) ? apiFromFrontend : apiFromRoot
+  if (!fs.existsSync(path.join(apiDir, 'artisan'))) {
+    console.warn('[e2e] API directory not found; skip cleanup. Run manually: php artisan e2e:cleanup-users in api/')
+    return
+  }
+  try {
+    execSync('php artisan e2e:cleanup-users', { cwd: apiDir, stdio: 'pipe', encoding: 'utf8' })
+  } catch (e) {
+    console.warn('[e2e] Cleanup failed (run manually: php artisan e2e:cleanup-users in api/):', e.message)
+  }
+}
+
 test.describe('Email delivery (real API + Mailhog)', () => {
   test.setTimeout(90000)
+  test.afterAll(runE2eCleanup)
   test.describe.serial('', () => {
     test('register sends verification email to Mailhog', async ({ page, request }) => {
       const reachable = await checkEmailDeliveryReachable(request)
       test.skip(!reachable, 'API or Mailhog not reachable; start API and Mailhog to run this test.')
 
-      const email = `e2e-register-${Date.now()}@example.com`
       const bodyBefore = await (await request.get(`${MAILHOG_URL}/api/v1/messages`)).json()
       const countBefore = getMessageCount(bodyBefore)
 
-      const registerRes = await request.post(API_REGISTER, {
-        data: {
-          name: 'E2E Register User',
-          email,
-          password: 'Password123',
-          password_confirmation: 'Password123',
-        },
-      })
-      const registerBody = await registerRes.text()
-      expect(
-        registerRes.ok(),
-        `Register failed (${registerRes.status()}): ${registerBody || 'no body'}`
-      ).toBeTruthy()
+      const user = await createE2eUser(request, { emailPrefix: 'e2e-register', name: 'E2E Register User' })
+      const { email } = user
 
       let countAfter = countBefore
       let messages = []
@@ -409,20 +427,8 @@ test.describe('Email delivery (real API + Mailhog)', () => {
 
       await new Promise((r) => setTimeout(r, 2500))
 
-      const email = `e2e-resend-${Date.now()}@example.com`
-      const registerRes = await request.post(API_REGISTER, {
-        data: {
-          name: 'E2E Resend User',
-          email,
-          password: 'Password123',
-          password_confirmation: 'Password123',
-        },
-      })
-      const registerBody = await registerRes.text()
-      expect(
-        registerRes.ok(),
-        `Register failed (${registerRes.status()}): ${registerBody || 'no body'}`
-      ).toBeTruthy()
+      const user = await createE2eUser(request, { emailPrefix: 'e2e-resend', name: 'E2E Resend User' })
+      const { email } = user
 
       const bodyAfterRegister = await (await request.get(`${MAILHOG_URL}/api/v1/messages`)).json()
       const countAfterRegister = getMessageCount(bodyAfterRegister)
@@ -470,16 +476,8 @@ test.describe('Email delivery (real API + Mailhog)', () => {
 
       await new Promise((r) => setTimeout(r, 2500))
 
-      const email = `e2e-forgot-${Date.now()}@example.com`
-      const registerRes = await request.post(API_REGISTER, {
-        data: {
-          name: 'E2E Forgot User',
-          email,
-          password: 'Password123',
-          password_confirmation: 'Password123',
-        },
-      })
-      expect(registerRes.ok(), `Register failed (${registerRes.status()}): ${await registerRes.text()}`).toBeTruthy()
+      const user = await createE2eUser(request, { emailPrefix: 'e2e-forgot', name: 'E2E Forgot User' })
+      const { email } = user
 
       const bodyBefore = await (await request.get(`${MAILHOG_URL}/api/v1/messages`)).json()
       const countBefore = getMessageCount(bodyBefore)
