@@ -1,7 +1,8 @@
 // @ts-check
 /**
  * E2E tests for authentication (email/password only; SSO is out of scope).
- * API calls are mocked so tests can run without the backend.
+ * Most tests mock the API so they run without the backend.
+ * The final "Email delivery" describe uses the real API + Mailhog (no mocks) and is skipped if API or Mailhog are unreachable.
  */
 const { test, expect } = require('@playwright/test')
 
@@ -161,6 +162,20 @@ test.describe('Forgot password', () => {
     await expect(page.getByText(/user@example\.com/)).toBeVisible()
   })
 
+  test('empty email shows validation error', async ({ page }) => {
+    await page.goto('/forgot-password')
+    await page.getByPlaceholder(/you@example\.com/i).fill('')
+    await page.getByRole('button', { name: /send reset link/i }).click()
+    await expect(page.getByText('Please enter your email address.')).toBeVisible()
+  })
+
+  test('invalid email shows validation error', async ({ page }) => {
+    await page.goto('/forgot-password')
+    await page.getByPlaceholder(/you@example\.com/i).fill('not-an-email')
+    await page.getByRole('button', { name: /send reset link/i }).click()
+    await expect(page.getByText('Please enter a valid email address.')).toBeVisible()
+  })
+
   test('Back to sign in goes to /login', async ({ page }) => {
     await page.goto('/forgot-password')
     await page.getByRole('link', { name: /back to sign in/i }).click()
@@ -266,5 +281,245 @@ test.describe('Logout', () => {
     // After logout, /app should redirect to login (proves auth state was cleared)
     await page.goto('/app')
     await expect(page).toHaveURL(/\/login/)
+  })
+})
+
+// ---- Email delivery (real API + Mailhog; skipped if unreachable) ----
+const MAILHOG_URL = process.env.MAILHOG_URL || 'http://localhost:8025'
+const API_ORIGIN = (process.env.E2E_API_BASE || process.env.VITE_PROXY_TARGET || '').replace(/\/$/, '')
+const API_HEALTH = API_ORIGIN ? `${API_ORIGIN}/api/health` : '/api/health'
+const API_REGISTER = API_ORIGIN ? `${API_ORIGIN}/api/register` : '/api/register'
+const API_FORGOT_PASSWORD = API_ORIGIN ? `${API_ORIGIN}/api/forgot-password` : '/api/forgot-password'
+
+function getMessageCount(body) {
+  if (Array.isArray(body)) return body.length
+  if (body != null && typeof body === 'object') {
+    if (body.total != null) return body.total
+    if (body.count != null) return body.count
+    const list = body.messages ?? body.items
+    if (Array.isArray(list)) return list.length
+  }
+  return 0
+}
+
+function getMessagesList(body) {
+  if (Array.isArray(body)) return body
+  const o = (body ?? {})
+  const list = o.messages ?? o.items
+  return Array.isArray(list) ? list : []
+}
+
+function messageIsTo(message, email) {
+  const norm = (s) => String(s || '').toLowerCase().trim()
+  const target = norm(email)
+  const headers = message?.Content?.Headers ?? message?.Content?.headers ?? {}
+  const headerTo = headers['To'] ?? headers['to']
+  if (headerTo) {
+    const toStr = Array.isArray(headerTo) ? headerTo.join(' ') : String(headerTo)
+    if (norm(toStr).includes(target)) return true
+  }
+  const toList = message?.To
+  if (Array.isArray(toList)) {
+    for (const p of toList) {
+      const mailbox = p?.Mailbox ?? p?.mailbox ?? ''
+      const domain = p?.Domain ?? p?.domain ?? ''
+      if (mailbox && domain && norm(`${mailbox}@${domain}`) === target) return true
+      if (norm(mailbox + '@' + domain).includes(target)) return true
+    }
+  }
+  return false
+}
+
+let emailDeliveryReachable = null
+
+async function checkEmailDeliveryReachable(request) {
+  if (emailDeliveryReachable !== null) return emailDeliveryReachable
+  try {
+    const mailhogRes = await request.get(`${MAILHOG_URL}/api/v1/messages`)
+    if (!mailhogRes.ok()) return false
+    const apiHealthRes = await request.get(API_HEALTH)
+    if (!apiHealthRes.ok()) return false
+    emailDeliveryReachable = true
+    return true
+  } catch {
+    emailDeliveryReachable = false
+    return false
+  }
+}
+
+test.describe('Email delivery (real API + Mailhog)', () => {
+  test.setTimeout(90000)
+  test.describe.serial('', () => {
+    test('register sends verification email to Mailhog', async ({ page, request }) => {
+      const reachable = await checkEmailDeliveryReachable(request)
+      test.skip(!reachable, 'API or Mailhog not reachable; start API and Mailhog to run this test.')
+
+      const email = `e2e-register-${Date.now()}@example.com`
+      const bodyBefore = await (await request.get(`${MAILHOG_URL}/api/v1/messages`)).json()
+      const countBefore = getMessageCount(bodyBefore)
+
+      const registerRes = await request.post(API_REGISTER, {
+        data: {
+          name: 'E2E Register User',
+          email,
+          password: 'Password123',
+          password_confirmation: 'Password123',
+        },
+      })
+      const registerBody = await registerRes.text()
+      expect(
+        registerRes.ok(),
+        `Register failed (${registerRes.status()}): ${registerBody || 'no body'}`
+      ).toBeTruthy()
+
+      let countAfter = countBefore
+      let messages = []
+      for (let i = 0; i < 15; i++) {
+        await new Promise((r) => setTimeout(r, 400))
+        const res = await request.get(`${MAILHOG_URL}/api/v1/messages`)
+        const body = await res.json()
+        countAfter = getMessageCount(body)
+        messages = getMessagesList(body)
+        if (countAfter > countBefore) break
+      }
+      expect(
+        countAfter,
+        `Mailhog should have received the verification email (had ${countBefore}, got ${countAfter}).`
+      ).toBeGreaterThan(countBefore)
+
+      const found = messages.find((m) => messageIsTo(m, email))
+      let isToOurEmail = !!found
+      if (!isToOurEmail && messages.length > 0 && messages[0]?.ID) {
+        for (const m of messages.slice(0, 5)) {
+          if (!m?.ID) continue
+          const fullRes = await request.get(`${MAILHOG_URL}/api/v1/messages/${m.ID}`)
+          const full = await fullRes.json()
+          if (messageIsTo(full, email)) {
+            isToOurEmail = true
+            break
+          }
+        }
+      }
+      expect(isToOurEmail, `Mailhog should have a message to ${email}.`).toBeTruthy()
+    })
+
+    test('resend link sends verification email to Mailhog', async ({ page, request }) => {
+      const reachable = await checkEmailDeliveryReachable(request)
+      test.skip(!reachable, 'API or Mailhog not reachable; start API and Mailhog to run this test.')
+
+      await new Promise((r) => setTimeout(r, 2500))
+
+      const email = `e2e-resend-${Date.now()}@example.com`
+      const registerRes = await request.post(API_REGISTER, {
+        data: {
+          name: 'E2E Resend User',
+          email,
+          password: 'Password123',
+          password_confirmation: 'Password123',
+        },
+      })
+      const registerBody = await registerRes.text()
+      expect(
+        registerRes.ok(),
+        `Register failed (${registerRes.status()}): ${registerBody || 'no body'}`
+      ).toBeTruthy()
+
+      const bodyAfterRegister = await (await request.get(`${MAILHOG_URL}/api/v1/messages`)).json()
+      const countAfterRegister = getMessageCount(bodyAfterRegister)
+      expect(countAfterRegister).toBeGreaterThanOrEqual(1)
+
+      await page.goto(`/verify-email?email=${encodeURIComponent(email)}`)
+      await expect(page.getByRole('button', { name: 'Resend link' })).toBeVisible()
+
+      // Wait for resend API to succeed (ensures CORS / API is reachable from the app origin)
+      const resendResponsePromise = page.waitForResponse(
+        (res) => res.url().includes('/api/email/resend') && res.request().method() === 'POST',
+        { timeout: 15000 }
+      )
+      await page.getByRole('button', { name: 'Resend link' }).click()
+      const resendResponse = await resendResponsePromise
+      expect(
+        resendResponse.ok(),
+        `Resend request failed (${resendResponse.status()}). If 0 or CORS error, add your app origin (e.g. http://localhost:8082) to API config/cors.php allowed_origins.`
+      ).toBeTruthy()
+
+      await Promise.race([
+        page.getByRole('status').waitFor({ state: 'visible', timeout: 10000 }),
+        page.getByRole('alert').filter({ hasText: /email|link|unverified/i }).waitFor({ state: 'visible', timeout: 10000 }),
+        page.getByRole('button', { name: /Resend in \d+s/ }).waitFor({ state: 'visible', timeout: 10000 }),
+      ]).catch(() => {})
+      await page.waitForTimeout(2000)
+
+      let countAfterResend = countAfterRegister
+      for (let i = 0; i < 25; i++) {
+        await page.waitForTimeout(500)
+        const res = await request.get(`${MAILHOG_URL}/api/v1/messages`)
+        const body = await res.json()
+        countAfterResend = getMessageCount(body)
+        if (countAfterResend > countAfterRegister) break
+      }
+      expect(
+        countAfterResend,
+        `Mailhog should have received one more email after resend (had ${countAfterRegister}, got ${countAfterResend}).`
+      ).toBeGreaterThan(countAfterRegister)
+    })
+
+    test('forgot password sends reset email to Mailhog', async ({ page, request }) => {
+      const reachable = await checkEmailDeliveryReachable(request)
+      test.skip(!reachable, 'API or Mailhog not reachable; start API and Mailhog to run this test.')
+
+      await new Promise((r) => setTimeout(r, 2500))
+
+      const email = `e2e-forgot-${Date.now()}@example.com`
+      const registerRes = await request.post(API_REGISTER, {
+        data: {
+          name: 'E2E Forgot User',
+          email,
+          password: 'Password123',
+          password_confirmation: 'Password123',
+        },
+      })
+      expect(registerRes.ok(), `Register failed (${registerRes.status()}): ${await registerRes.text()}`).toBeTruthy()
+
+      const bodyBefore = await (await request.get(`${MAILHOG_URL}/api/v1/messages`)).json()
+      const countBefore = getMessageCount(bodyBefore)
+
+      const forgotRes = await request.post(API_FORGOT_PASSWORD, { data: { email } })
+      const forgotBody = await forgotRes.text()
+      expect(
+        forgotRes.ok(),
+        `Forgot password failed (${forgotRes.status()}): ${forgotBody || 'no body'}`
+      ).toBeTruthy()
+
+      let countAfter = countBefore
+      let messages = []
+      for (let i = 0; i < 15; i++) {
+        await new Promise((r) => setTimeout(r, 400))
+        const res = await request.get(`${MAILHOG_URL}/api/v1/messages`)
+        const body = await res.json()
+        countAfter = getMessageCount(body)
+        messages = getMessagesList(body)
+        if (countAfter > countBefore) break
+      }
+      expect(
+        countAfter,
+        `Mailhog should have received the reset email (had ${countBefore}, got ${countAfter}).`
+      ).toBeGreaterThan(countBefore)
+
+      const found = messages.find((m) => messageIsTo(m, email))
+      let isToOurEmail = !!found
+      if (!isToOurEmail && messages.length > 0 && messages[0]?.ID) {
+        for (const m of messages.slice(0, 5)) {
+          if (!m?.ID) continue
+          const fullRes = await request.get(`${MAILHOG_URL}/api/v1/messages/${m.ID}`)
+          const full = await fullRes.json()
+          if (messageIsTo(full, email)) {
+            isToOurEmail = true
+            break
+          }
+        }
+      }
+      expect(isToOurEmail, `Mailhog should have a message to ${email}.`).toBeTruthy()
+    })
   })
 })
