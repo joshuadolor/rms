@@ -2,17 +2,14 @@
 
 namespace App\Notifications;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\URL;
 
-class VerifyNewEmailNotification extends Notification implements ShouldQueue
+class VerifyNewEmailNotification extends Notification
 {
-    use Queueable;
 
     /**
      * Build the verification URL for the new email. Link points to frontend which then calls API.

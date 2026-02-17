@@ -46,5 +46,5 @@ ENV MAIL_ENCRYPTION=
 ENV MAIL_FROM_ADDRESS=noreply@rms.local
 ENV MAIL_FROM_NAME=RMS
 
-# On start: ensure DB path exists in volume, run migrations (from image /app/database), then serve.
-CMD sh -c "php artisan config:clear && mkdir -p /app/storage/db && touch /app/storage/db/database.sqlite && php artisan migrate --force --no-interaction && exec php artisan serve --host=0.0.0.0 --port=3000"
+# On start: force Mailhog into .env when ./api is mounted (host .env has MAIL_MAILER=log), then migrate and serve.
+CMD sh -c "sed -i '/^MAIL_/d' .env 2>/dev/null; echo 'MAIL_MAILER=smtp' >> .env; echo 'MAIL_HOST=mailhog' >> .env; echo 'MAIL_PORT=1025' >> .env; echo 'MAIL_USERNAME=null' >> .env; echo 'MAIL_PASSWORD=null' >> .env; echo 'MAIL_ENCRYPTION=null' >> .env; echo 'MAIL_FROM_ADDRESS=noreply@rms.local' >> .env; echo 'MAIL_FROM_NAME=RMS' >> .env; php artisan config:clear && mkdir -p /app/storage/db && touch /app/storage/db/database.sqlite && php artisan migrate --force --no-interaction && exec php artisan serve --host=0.0.0.0 --port=3000"

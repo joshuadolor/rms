@@ -80,7 +80,7 @@
           </div>
           </div>
         </div>
-        <div class="flex items-center">
+        <div class="flex mt-5 mb-0 items-center">
           <input
             id="remember"
             v-model="remember"

@@ -17,13 +17,16 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      # Persist only the DB file so /app/database (migrations) stays from image
+      # Mount host API code so route/code changes apply without rebuilding (run composer install on host if needed)
+      - ./api:/app
+      # Persist DB; overrides /app/storage/db from the mount above
       - api_database:/app/storage/db
     environment:
       - APP_ENV=local
       - APP_DEBUG=true
-      - APP_URL=http://localhost
-      - FRONTEND_URL=http://localhost
+      - APP_URL=http://rms.local
+      - FRONTEND_URL=http://rms.local
+      - RESTAURANT_DOMAIN=rms.local
       - DB_CONNECTION=sqlite
       - DB_DATABASE=/app/storage/db/database.sqlite
       # Mailhog: API sends mail to mailhog:1025 (SMTP). View at http://localhost:8025
@@ -52,6 +55,7 @@ services:
       # With nginx: open http://localhost (port 80); frontend uses relative /api. Without nginx: open http://localhost:8080 and Vite proxies /api.
       - VITE_PROXY_TARGET=http://api:3000
       - VITE_API_URL=
+      - VITE_APP_PUBLIC_DOMAIN=rms.local
     depends_on:
       - api
 

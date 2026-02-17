@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>App Settings &amp; Languages</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#e27312",
+                        "background-light": "#f8f7f6",
+                        "background-dark": "#221810",
+                    },
+                    fontFamily: {
+                        "display": ["Work Sans", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Work Sans', sans-serif;
+        }
+        .ios-toggle:checked + .ios-switch-bg {
+            background-color: #e27312;
+        }
+        .ios-toggle:checked + .ios-switch-bg .ios-switch-dot {
+            transform: translateX(100%);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-[#181411] dark:text-white min-h-screen flex flex-col">
+<!-- Header -->
+<header class="sticky top-0 z-10 bg-white/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-[#f4f2f0] dark:border-white/10">
+<div class="flex items-center p-4 justify-between max-w-md mx-auto w-full">
+<button class="text-primary flex items-center gap-1">
+<span class="material-symbols-outlined">arrow_back_ios</span>
+<span class="text-base font-medium">Back</span>
+</button>
+<h1 class="text-lg font-bold leading-tight tracking-tight flex-1 text-center">Language &amp; Region</h1>
+<div class="w-12 flex justify-end">
+<button class="text-primary">
+<span class="material-symbols-outlined">info</span>
+</button>
+</div>
+</div>
+</header>
+<main class="flex-1 max-w-md mx-auto w-full pb-32">
+<!-- Breadcrumbs -->
+<nav class="px-4 pt-4 pb-2">
+<div class="flex items-center gap-2 text-sm">
+<a class="text-primary/70 hover:text-primary transition-colors" href="#">Home</a>
+<span class="text-[#897461] dark:text-gray-500">
+<span class="material-symbols-outlined text-xs">chevron_right</span>
+</span>
+<a class="text-primary/70 hover:text-primary transition-colors" href="#">Settings</a>
+<span class="text-[#897461] dark:text-gray-500">
+<span class="material-symbols-outlined text-xs">chevron_right</span>
+</span>
+<span class="text-[#181411] dark:text-white font-medium">Languages</span>
+</div>
+</nav>
+<!-- Search Bar -->
+<div class="px-4 pt-4">
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors">search</span>
+<input class="w-full bg-white dark:bg-white/5 border border-[#f4f2f0] dark:border-white/10 rounded-xl py-3 pl-10 pr-4 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all placeholder:text-[#897461]" placeholder="Search languages..." type="text"/>
+</div>
+</div>
+<section class="mt-6">
+<h3 class="px-4 text-xs font-semibold text-[#897461] dark:text-gray-400 uppercase tracking-wider mb-2">Installed Languages</h3>
+<div class="bg-white dark:bg-white/5 border-y border-[#f4f2f0] dark:border-white/10">
+<!-- English Row -->
+<div class="flex items-center justify-between p-4 border-b border-[#f4f2f0] dark:border-white/10">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="US flag icon circular" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBLp6mJ7w1XSrXd_NSxLC8vpdd8A4gwAvbVo5EL7V4RuDvbvZ4QpejGFjbe8I8XNjH_A9jFTlDQPMF13RVkqaI5WgzXl-3D2vLl8NQiuW-p7OMxyv7qLKtwICIfkxQEmRxIk_9kmPzk-tFna1CL4N6mhrhiyAHx--cEFfiruJT5KTbPdpVnBRQUBHHn_yhwIOmgBwz8_tkJMeJMqzuDSQqtpqXyd45LsPJvW6rZXdvwwd56ciEG84OPsuKWN9mFb2aPdYFFQNPeGr0"/>
+</div>
+<div>
+<p class="font-semibold text-base">English (United States)</p>
+<p class="text-xs text-primary font-medium">Default System Language</p>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only ios-toggle" type="checkbox"/>
+<div class="ios-switch-bg w-12 h-7 bg-gray-200 dark:bg-gray-700 rounded-full transition-colors relative">
+<div class="ios-switch-dot absolute left-1 top-1 bg-white w-5 h-5 rounded-full transition-transform shadow-sm"></div>
+</div>
+</label>
+</div>
+<!-- Spanish Row -->
+<div class="flex items-center justify-between p-4 border-b border-[#f4f2f0] dark:border-white/10">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Spain flag icon circular" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB3BhcmhTlHTw5fOj7-zpDz2Oso1kZ8-8P-4YonmcpOyfRDr6IQUt75jEdYxTZS-jQRAOrES1jQHAnCQwD13TsqciFhP65sUDfVhXEpqEdkFM1Oos9nZ7nmcMGZDk9fino5wIlmhU7UM1eJLgwyIhLpsY5Qj0AEtt_bFDrZN_oyv67KkddsTdruM5hmyQvBmV8gMFNHjMPgxn4sDytDHc2CdAA9WywJfG3MbL5x5-nYC7AQDsf47RKht0GkVB-ZBIbTHwRB43w4qy4"/>
+</div>
+<div>
+<p class="font-semibold text-base">Spanish (Spain)</p>
+<p class="text-xs text-[#897461]">Español</p>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only ios-toggle" type="checkbox"/>
+<div class="ios-switch-bg w-12 h-7 bg-gray-200 dark:bg-gray-700 rounded-full transition-colors relative">
+<div class="ios-switch-dot absolute left-1 top-1 bg-white w-5 h-5 rounded-full transition-transform shadow-sm"></div>
+</div>
+</label>
+</div>
+<!-- French Row -->
+<div class="flex items-center justify-between p-4 border-b border-[#f4f2f0] dark:border-white/10">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="France flag icon circular" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCe2oTtEspK88-icZf9AouUdbw7AO9Bt6ZWrK016Ca7Q9CD6ErTLYF8ZMEVwYThYi58lK7yG09VBPM7hNH_0v5xJt8l2a2AKaUJqtAW07jiqunu2nqfg1dlmJuN9QsCMvyp-v46IDqQK1D6uUSjmnQet51Syq1eObEH4T1vewZsDoI7SornqbcDIR3NtMnnldA4gYPUUWhM5Q-pYMfTZn4VxwLrJOgobnCG3KE72OngSUVTWcPYKoXnmnMOQgRTAa3U-MA33Rcf_hQ"/>
+</div>
+<div>
+<p class="font-semibold text-base">French (France)</p>
+<p class="text-xs text-[#897461]">Français</p>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only ios-toggle" type="checkbox"/>
+<div class="ios-switch-bg w-12 h-7 bg-gray-200 dark:bg-gray-700 rounded-full transition-colors relative">
+<div class="ios-switch-dot absolute left-1 top-1 bg-white w-5 h-5 rounded-full transition-transform shadow-sm"></div>
+</div>
+</label>
+</div>
+<!-- German Row -->
+<div class="flex items-center justify-between p-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Germany flag icon circular" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAXXe1ZEHWF43Nd7g_tKqnkTcm1o0KJJnVH4dG9j5uPi1a1m1lPnWh6eT2yRr8UqsYiAyVYqmVNxhTqs_jNR2f_1yAtOnPD2Z6R6Rzdws4gW-GIVas-GO9XXXlHS-8miOemYqUXHXaWQ2hQSVpO45RIlS6AnIZcRpaqnMMcUW8ZFGxua-PwDr3BYE2Ll-ORDfwFvwrmCkFgIMdImcXZL7fjQ_bfSdOrydDJdMEBHCWngPT0ly9r0J9aDGFjhMpcuvW8ut0cvjY92Hk"/>
+</div>
+<div>
+<p class="font-semibold text-base">German (Germany)</p>
+<p class="text-xs text-[#897461]">Deutsch</p>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only ios-toggle" type="checkbox"/>
+<div class="ios-switch-bg w-12 h-7 bg-gray-200 dark:bg-gray-700 rounded-full transition-colors relative">
+<div class="ios-switch-dot absolute left-1 top-1 bg-white w-5 h-5 rounded-full transition-transform shadow-sm"></div>
+</div>
+</label>
+</div>
+</div>
+</section>
+<section class="mt-8 px-4">
+<button class="w-full flex items-center justify-center gap-2 border-2 border-dashed border-primary/40 text-primary py-4 rounded-xl hover:bg-primary/5 transition-colors font-medium">
+<span class="material-symbols-outlined">add_circle</span>
+                Add New Language
+            </button>
+</section>
+<!-- Region Settings Hint -->
+<div class="mt-8 px-4 text-center">
+<p class="text-[#897461] text-sm italic">
+                Changing language will restart the app to apply interface localizations.
+            </p>
+</div>
+</main>
+<!-- Save Button Container (iOS Floating Style) -->
+<div class="fixed bottom-[88px] left-0 right-0 px-4 max-w-md mx-auto z-20">
+<button class="w-full bg-primary text-white py-4 rounded-xl font-bold shadow-lg shadow-primary/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined">save</span>
+            Save Changes
+        </button>
+</div>
+<!-- Bottom Navigation Bar Component -->
+<nav class="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-background-dark/95 backdrop-blur-md border-t border-[#f4f2f0] dark:border-white/10 z-30">
+<div class="flex gap-2 px-4 pb-6 pt-2 max-w-md mx-auto">
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-[#897461] hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<p class="text-[10px] font-medium leading-normal tracking-[0.015em]">Dashboard</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-[#897461] hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">restaurant_menu</span>
+<p class="text-[10px] font-medium leading-normal tracking-[0.015em]">Menu</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-[#897461] hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">list_alt</span>
+<p class="text-[10px] font-medium leading-normal tracking-[0.015em]">Orders</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-primary" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">settings</span>
+<p class="text-[10px] font-medium leading-normal tracking-[0.015em]">Settings</p>
+</a>
+</div>
+</nav>
+</body></html>

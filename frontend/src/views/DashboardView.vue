@@ -34,7 +34,8 @@
         <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Menu Items</p>
         <h3 class="text-xl font-bold text-charcoal dark:text-white lg:text-2xl">—</h3>
       </div>
-      <div class="bg-white dark:bg-zinc-900 p-4 lg:p-6 rounded-xl border border-slate-200 dark:border-slate-800">
+      <!-- Locations stat: hidden until maps integration; set showLocationsSection to true to re-enable -->
+      <div v-if="showLocationsSection" class="bg-white dark:bg-zinc-900 p-4 lg:p-6 rounded-xl border border-slate-200 dark:border-slate-800">
         <div class="flex justify-between items-start mb-3 lg:mb-4">
           <div class="p-2 bg-primary/10 rounded-lg">
             <span class="material-icons text-primary">storefront</span>
@@ -61,4 +62,6 @@ import { useAppStore } from '@/stores/app'
 
 const appStore = useAppStore()
 const { user } = storeToRefs(appStore)
+// Re-enable when maps integration is ready
+const showLocationsSection = false
 </script>

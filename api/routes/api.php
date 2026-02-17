@@ -2,10 +2,16 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\EmailVerificationController;
+use App\Http\Controllers\Api\PublicRestaurantController;
 use App\Http\Controllers\Api\ForgotPasswordController;
+use App\Http\Controllers\Api\MenuItemController;
 use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\RestaurantController;
+use App\Http\Controllers\Api\RestaurantLanguageController;
+use App\Http\Controllers\Api\RestaurantTranslationController;
 use App\Http\Controllers\Api\ResetPasswordController;
 use App\Http\Controllers\Api\SocialAuthController;
+use App\Http\Controllers\Api\TranslateController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/health', function () {
@@ -14,6 +20,11 @@ Route::get('/health', function () {
         'service' => 'Restaurant Management System API',
         'timestamp' => now()->toIso8601String(),
     ]);
+});
+
+// Supported locales for restaurant languages (and app i18n). Public.
+Route::get('/locales', function () {
+    return response()->json(['data' => config('locales.supported', ['en', 'nl', 'ru'])]);
 });
 
 // Dev only: send a test email to verify Mailhog. Always registered; returns 404 when not local.
@@ -71,6 +82,13 @@ Route::post('/auth/google', [SocialAuthController::class, 'google'])->middleware
 Route::post('/auth/facebook', [SocialAuthController::class, 'facebook'])->middleware('throttle:auth.social');
 Route::post('/auth/instagram', [SocialAuthController::class, 'instagram'])->middleware('throttle:auth.social');
 
+// Restaurant media (public — for <img> src)
+Route::get('/restaurants/{uuid}/logo', [RestaurantController::class, 'serveLogo']);
+Route::get('/restaurants/{uuid}/banner', [RestaurantController::class, 'serveBanner']);
+
+// Public restaurant page by slug (no auth). For [slug].domain.com and /r/:slug.
+Route::get('/public/restaurants/{slug}', [PublicRestaurantController::class, 'show']);
+
 // Auth (protected) — require verified email
 Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -78,4 +96,29 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::get('/user', [AuthController::class, 'user']);
     Route::match(['patch', 'put'], '/user', [ProfileController::class, 'update']);
     Route::post('/profile/password', [ProfileController::class, 'changePassword']);
+
+    // Restaurants (owner CRUD + media upload)
+    Route::apiResource('restaurants', RestaurantController::class)->parameters(['restaurant' => 'uuid']);
+    Route::post('/restaurants/{uuid}/logo', [RestaurantController::class, 'uploadLogo'])->name('restaurants.upload-logo');
+    Route::post('/restaurants/{uuid}/banner', [RestaurantController::class, 'uploadBanner'])->name('restaurants.upload-banner');
+
+    // Restaurant languages (install / uninstall locales per restaurant)
+    Route::get('/restaurants/{restaurant}/languages', [RestaurantLanguageController::class, 'index']);
+    Route::post('/restaurants/{restaurant}/languages', [RestaurantLanguageController::class, 'store']);
+    Route::delete('/restaurants/{restaurant}/languages/{locale}', [RestaurantLanguageController::class, 'destroy']);
+
+    // Restaurant translations (description per locale)
+    Route::get('/restaurants/{restaurant}/translations', [RestaurantTranslationController::class, 'index']);
+    Route::get('/restaurants/{restaurant}/translations/{locale}', [RestaurantTranslationController::class, 'show']);
+    Route::match(['put', 'patch'], '/restaurants/{restaurant}/translations/{locale}', [RestaurantTranslationController::class, 'update']);
+
+    // Menu items (CRUD with translations: name, description per locale)
+    Route::get('/restaurants/{restaurant}/menu-items', [MenuItemController::class, 'index']);
+    Route::post('/restaurants/{restaurant}/menu-items', [MenuItemController::class, 'store']);
+    Route::get('/restaurants/{restaurant}/menu-items/{item}', [MenuItemController::class, 'show']);
+    Route::match(['put', 'patch'], '/restaurants/{restaurant}/menu-items/{item}', [MenuItemController::class, 'update']);
+    Route::delete('/restaurants/{restaurant}/menu-items/{item}', [MenuItemController::class, 'destroy']);
+
+    // Machine translation (LibreTranslate when configured)
+    Route::post('/translate', TranslateController::class);
 });

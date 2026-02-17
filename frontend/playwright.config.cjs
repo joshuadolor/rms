@@ -20,8 +20,13 @@ module.exports = defineConfig({
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
     command: 'npx vite --port 8082',
-    url: 'http://localhost:8082',
+    url: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:8082',
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
+    // Proxy /api to the Laravel API so tests can use relative URLs.
+    env: {
+      ...process.env,
+      VITE_PROXY_TARGET: process.env.VITE_PROXY_TARGET || process.env.E2E_API_BASE || 'http://localhost:3000',
+    },
   },
 })

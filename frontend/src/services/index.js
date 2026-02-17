@@ -24,3 +24,5 @@ export {
   redirectToFacebook,
   redirectToInstagram,
 } from './auth.service'
+export { restaurantService } from './restaurant.service'
+export { localeService } from './locale.service'

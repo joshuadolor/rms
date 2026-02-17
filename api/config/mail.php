@@ -1,5 +1,9 @@
 <?php
 
+// When running in Docker with MAIL_HOST=mailhog, force SMTP so Mailhog receives mail (overrides .env).
+// Skip in testing so phpunit.xml MAIL_MAILER=array is used (no real SMTP).
+$useMailhog = (getenv('APP_ENV') ?: '') !== 'testing' && (getenv('MAIL_HOST') ?: '') === 'mailhog';
+
 return [
 
     /*
@@ -14,7 +18,7 @@ return [
     |
     */
 
-    'default' => env('MAIL_MAILER', 'log'),
+    'default' => $useMailhog ? 'smtp' : env('MAIL_MAILER', 'log'),
 
     /*
     |--------------------------------------------------------------------------
@@ -41,8 +45,8 @@ return [
             'transport' => 'smtp',
             'scheme' => env('MAIL_SCHEME'),
             'url' => env('MAIL_URL'),
-            'host' => env('MAIL_HOST', '127.0.0.1'),
-            'port' => env('MAIL_PORT', 2525),
+            'host' => $useMailhog ? 'mailhog' : env('MAIL_HOST', '127.0.0.1'),
+            'port' => $useMailhog ? 1025 : (int) env('MAIL_PORT', 2525),
             'username' => env('MAIL_USERNAME'),
             'password' => env('MAIL_PASSWORD'),
             'timeout' => null,

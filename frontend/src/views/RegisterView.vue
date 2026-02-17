@@ -186,7 +186,7 @@
             </div>
           </div>
 
-          <div class="flex items-start">
+          <div class="flex mt-5 mb-0 items-start">
             <input
               id="terms"
               v-model="acceptedTerms"

@@ -25,17 +25,26 @@
       <nav class="flex-1 px-4 space-y-1">
         <router-link
           to="/app"
-          class="flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-colors text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 min-h-[44px]"
-          exact-active-class="!bg-primary/10 !text-primary"
+          class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-colors text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 min-h-[44px]"
+          exact-active-class="nav-link-active"
           @click="closeSidebar"
         >
-          <span class="material-icons">storefront</span>
+          <span class="material-icons">dashboard</span>
           <span>Dashboard</span>
         </router-link>
         <router-link
+          to="/app/restaurants"
+          class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-colors text-slate-600 dark:text-slate-400 hover:bg-sage/10 dark:hover:bg-sage/15 hover:text-sage min-h-[44px]"
+          active-class="nav-link-active"
+          @click="closeSidebar"
+        >
+          <span class="material-icons">storefront</span>
+          <span>Restaurants</span>
+        </router-link>
+        <router-link
           to="/app/profile"
-          class="flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-colors text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 min-h-[44px]"
-          active-class="!bg-primary/10 !text-primary"
+          class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-colors text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 min-h-[44px]"
+          active-class="nav-link-active"
           @click="closeSidebar"
         >
           <span class="material-icons">settings</span>
@@ -65,8 +74,8 @@
 
     <!-- Main: full width on mobile, margin when lg -->
     <div class="flex-1 min-w-0 flex flex-col lg:ml-64">
-      <!-- Mobile top bar -->
-      <header class="flex items-center justify-between gap-3 px-4 py-3 bg-white dark:bg-zinc-900 border-b border-slate-200 dark:border-slate-800 lg:hidden shrink-0">
+      <!-- Mobile top bar: fixed on mobile so it stays visible when scrolling -->
+      <header class="flex items-center justify-between gap-3 px-4 py-3 bg-white dark:bg-zinc-900 border-b border-slate-200 dark:border-slate-800 lg:hidden shrink-0 fixed top-0 left-0 right-0 z-30 lg:static">
         <router-link to="/app" class="flex items-center gap-2">
           <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shrink-0">
             <span class="material-icons text-white text-lg">restaurant</span>
@@ -83,7 +92,8 @@
           <span class="material-icons text-2xl">menu</span>
         </button>
       </header>
-      <main class="flex-1 p-4 lg:p-8">
+      <main class="flex-1 p-4 pt-6 lg:p-8 lg:pt-8">
+        <AppBreadcrumbs />
         <router-view />
       </main>
     </div>
@@ -91,16 +101,21 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useAppStore } from '@/stores/app'
+import AppBreadcrumbs from '@/components/AppBreadcrumbs.vue'
 
 const router = useRouter()
 const appStore = useAppStore()
 const { user } = storeToRefs(appStore)
 
 const sidebarOpen = ref(false)
+
+const BODY_CLASS = 'rms-app-layout'
+onMounted(() => document.body.classList.add(BODY_CLASS))
+onBeforeUnmount(() => document.body.classList.remove(BODY_CLASS))
 
 const userInitial = computed(() => {
   const n = user.value?.fullName || user.value?.email || '?'
@@ -116,3 +131,10 @@ function handleLogout() {
   router.push({ name: 'Landing' })
 }
 </script>
+
+<style scoped>
+/* Active nav: background + text color only. Do not use border-l on active states. */
+.nav-link-active {
+  @apply bg-primary/10 text-primary;
+}
+</style>

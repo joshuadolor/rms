@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Menu Management</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#e27312",
+                        "background-light": "#f8f7f6",
+                        "background-dark": "#221810",
+                    },
+                    fontFamily: {
+                        "display": ["Work Sans", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Work Sans', sans-serif;
+        }
+        .ios-shadow {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark min-h-screen text-[#181411] dark:text-white">
+<div class="relative flex h-auto min-h-screen w-full flex-col bg-background-light dark:bg-background-dark max-w-md mx-auto overflow-x-hidden border-x border-primary/10">
+<!-- Header -->
+<header class="sticky top-0 z-10 bg-white/80 dark:bg-background-dark/80 backdrop-blur-md px-4 pt-6 pb-2">
+<div class="flex items-center justify-between mb-2">
+<button class="text-primary flex items-center gap-1">
+<span class="material-symbols-outlined text-2xl">chevron_left</span>
+<span class="text-sm font-medium">Dashboard</span>
+</button>
+<button class="text-[#181411] dark:text-white">
+<span class="material-symbols-outlined">search</span>
+</button>
+</div>
+<!-- Breadcrumbs -->
+<nav class="flex items-center gap-2 mb-2">
+<span class="text-xs text-[#897461] dark:text-[#a39081]">Home</span>
+<span class="material-symbols-outlined text-xs text-[#897461]">chevron_right</span>
+<span class="text-xs font-semibold text-primary">Menu</span>
+</nav>
+<h1 class="text-2xl font-bold tracking-tight mb-4">Menu Management</h1>
+<!-- Tabbed Interface -->
+<div class="flex p-1 bg-[#f4f2f0] dark:bg-[#322820] rounded-lg">
+<button class="flex-1 py-1.5 text-sm font-semibold text-[#897461] dark:text-[#a39081] transition-all">
+                    Categories
+                </button>
+<button class="flex-1 py-1.5 text-sm font-semibold bg-white dark:bg-primary text-primary dark:text-white rounded-md shadow-sm transition-all">
+                    Items
+                </button>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="flex-1 px-4 py-4 pb-24 space-y-4">
+<div class="flex items-center justify-between mb-1">
+<h2 class="text-lg font-bold">All Items</h2>
+<span class="text-xs font-medium text-[#897461] bg-[#f4f2f0] px-2 py-1 rounded-full">24 Items</span>
+</div>
+<!-- Item List -->
+<div class="space-y-3">
+<!-- Item 1 -->
+<div class="flex items-center gap-4 bg-white dark:bg-[#2d221a] p-3 rounded-xl ios-shadow">
+<img alt="Truffle Fries" class="w-16 h-16 rounded-lg object-cover" data-alt="Gourmet crispy truffle oil fries" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCW0NoJEpaWEzbd7SJ7X2_8nXcN63Nu6_boOCH89IpJ29O6zSmOnMUQEmLIubdtVoX43Wrjw_klMD_oxZH0tI6X3z6qBWcsPDYuzcioHCi23Il9WAFt3VWUF9wlRP2WulhroYHtLsbb3op_JSrnjq-IcXBLfEWJThXREdT17lWPwzFTnp3SnN7y5GD3ag4Jt_4cgUQs63qtKg8d1CZxJdG9Y14YEZ7ILVdkH8kI050IlJvAtoKvwo1C3bEA_vjlgGPxIiFQVuoGYQw"/>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-start">
+<h3 class="font-bold text-sm truncate">Truffle Parmesan Fries</h3>
+<span class="text-primary font-bold text-sm">$12.00</span>
+</div>
+<p class="text-xs text-[#897461] dark:text-[#a39081] line-clamp-1 mb-2">Crispy fries with truffle oil and fresh parmesan.</p>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-green-500"></span>
+<span class="text-[10px] uppercase font-bold tracking-wider text-[#897461]">In Stock</span>
+</div>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="flex items-center gap-4 bg-white dark:bg-[#2d221a] p-3 rounded-xl ios-shadow">
+<img alt="Salad" class="w-16 h-16 rounded-lg object-cover" data-alt="Healthy organic fresh garden salad" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBXykL4EmGT5A4xozhso6IyuQYVo6IsP1k4jvKbNh49y3kDuDI9YmLe9xt52lEsp9fKwjMTVawcpOKbb4BIateo9TfAgrX23RaCdwk5P3nB4_wVh_SuSiK6QB9KjXLBjWkl_avEceWAvCv3j2h-38tPgxgKUUXW-DnkvCeRAqLwk-oUSHZ5uIxhu2kxYO5cVTe7yXLOnbZ8V1gWlRrpzL-7zfk28FRJDgaQBeGygkmCi-D-PK4_TSI3a4CY9YZ7OuRW7zCjgudpaxU"/>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-start">
+<h3 class="font-bold text-sm truncate">Garden Fresh Salad</h3>
+<span class="text-primary font-bold text-sm">$15.50</span>
+</div>
+<p class="text-xs text-[#897461] dark:text-[#a39081] line-clamp-1 mb-2">Organic greens with house balsamic vinaigrette.</p>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-green-500"></span>
+<span class="text-[10px] uppercase font-bold tracking-wider text-[#897461]">In Stock</span>
+</div>
+</div>
+</div>
+<!-- Item 3 -->
+<div class="flex items-center gap-4 bg-white dark:bg-[#2d221a] p-3 rounded-xl ios-shadow">
+<img alt="Ribeye Steak" class="w-16 h-16 rounded-lg object-cover" data-alt="Juicy grilled premium ribeye steak" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDbDYYvtCIpIIZbioDmbp9Bksf352CIRhnIBbF7VvYDCKR_BJp-hqax-XSmVyDM8UBBGwu3Sex7OzQFF1MwK0XTuUAGPRdB1DRehYw1g-1t8hb2IbiHQcTz03UYzdB9smMATRZDVLG3FVPejMruWl64i_bNzJVBwdL8MUjtpt7AfPDbpiZOyc_5UMers2KrbZ9VRcTub3o54NAAAn_mqOfQIzQwRL9_5osSOb5D4uTBIjJGYq9Yu-My2pT_f-VPzp0wNF-nDTyEP9Y"/>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-start">
+<h3 class="font-bold text-sm truncate">Signature Ribeye</h3>
+<span class="text-primary font-bold text-sm">$34.00</span>
+</div>
+<p class="text-xs text-[#897461] dark:text-[#a39081] line-clamp-1 mb-2">12oz grass-fed ribeye with garlic butter.</p>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-red-500"></span>
+<span class="text-[10px] uppercase font-bold tracking-wider text-[#897461]">Out of Stock</span>
+</div>
+</div>
+</div>
+<!-- Item 4 -->
+<div class="flex items-center gap-4 bg-white dark:bg-[#2d221a] p-3 rounded-xl ios-shadow opacity-90">
+<img alt="Classic Burger" class="w-16 h-16 rounded-lg object-cover" data-alt="Deluxe cheeseburger with fresh toppings" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAp7qHxMj9TCZcJX4ac6QwibAKxK8daU52CJow6CCG5WxM5IFhxzP6QXlOY_PyCp1kqRONQ5FHsYcW8bdeQIN9fKd1lze42xSHjVQUzzjv3IrhjDgnHAqehkfAk76TJrDFt0rZTzaJdou2eVycgwBuEPmQosqHOgL_B3ZnJ9aTwfDD_hiQpZIgAHUAfK4EvjGo35D6bfJh0dreN0p4MtqYZ9JyQoAV1mzLu3w4jsbvioDZpQPOn2mkwLYjEM45XilaVA-oQ-mSvc4A"/>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-start">
+<h3 class="font-bold text-sm truncate">Deluxe Wagyu Burger</h3>
+<span class="text-primary font-bold text-sm">$22.00</span>
+</div>
+<p class="text-xs text-[#897461] dark:text-[#a39081] line-clamp-1 mb-2">Wagyu beef, brioche bun, secret sauce.</p>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-green-500"></span>
+<span class="text-[10px] uppercase font-bold tracking-wider text-[#897461]">In Stock</span>
+</div>
+</div>
+</div>
+<!-- Item 5 -->
+<div class="flex items-center gap-4 bg-white dark:bg-[#2d221a] p-3 rounded-xl ios-shadow">
+<img alt="Salmon" class="w-16 h-16 rounded-lg object-cover" data-alt="Grilled Atlantic salmon fillet with herbs" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBeNIXFO0JsoS33NnyZgddmWOKVyuZsN2HPM8iLYn_vftpgN3cpbLVtcpQvxA5dDmAdbEek56SYRzoJk9oQBtGGLa9tSmfBlDse6UJZ_Z-So-kXnBU2HXJQArsbZqe-jyGa4ZZSLYn_FyqKzSWdXHG3BJs75yaxTrECtyn1AM95MzMC0-1qG9ozFufs-EmiDAsF8EvYaMXx0GwYNA5A2xAf1TWIHCoPt78fd0_7IdmBP6cK45uvhL6ulW2ZT6VnSXc5ZAx8R-yaOGA"/>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-start">
+<h3 class="font-bold text-sm truncate">Atlantic Salmon</h3>
+<span class="text-primary font-bold text-sm">$28.00</span>
+</div>
+<p class="text-xs text-[#897461] dark:text-[#a39081] line-clamp-1 mb-2">Pan-seared salmon with lemon dill sauce.</p>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-green-500"></span>
+<span class="text-[10px] uppercase font-bold tracking-wider text-[#897461]">In Stock</span>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Floating Action Button -->
+<button class="fixed bottom-24 right-6 w-14 h-14 bg-primary text-white rounded-full shadow-lg flex items-center justify-center transition-transform hover:scale-105 active:scale-95 z-20">
+<span class="material-symbols-outlined text-3xl">add</span>
+</button>
+<!-- Bottom Navigation Bar -->
+<div class="fixed bottom-0 left-0 right-0 max-w-md mx-auto z-30">
+<div class="flex gap-2 border-t border-[#f4f2f0] bg-white/95 dark:bg-[#181411]/95 backdrop-blur-md px-4 pb-6 pt-2">
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-[#897461]" href="#">
+<div class="text-[#897461] flex h-8 items-center justify-center">
+<span class="material-symbols-outlined">home</span>
+</div>
+<p class="text-xs font-medium leading-normal">Home</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-primary" href="#">
+<div class="text-primary flex h-8 items-center justify-center">
+<span class="material-symbols-outlined fill-[1]">restaurant_menu</span>
+</div>
+<p class="text-xs font-bold leading-normal">Menu</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-[#897461]" href="#">
+<div class="text-[#897461] flex h-8 items-center justify-center">
+<span class="material-symbols-outlined">receipt_long</span>
+</div>
+<p class="text-xs font-medium leading-normal">Orders</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-[#897461]" href="#">
+<div class="text-[#897461] flex h-8 items-center justify-center">
+<span class="material-symbols-outlined">settings</span>
+</div>
+<p class="text-xs font-medium leading-normal">Settings</p>
+</a>
+</div>
+</div>
+</div>
+</body></html>

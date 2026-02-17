@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Operating Hours Schedule</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#e27312",
+              "background-light": "#f8f7f6",
+              "background-dark": "#221810",
+            },
+            fontFamily: {
+              "display": ["Work Sans"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Custom iOS-style toggle override */
+        .ios-toggle:checked {
+            background-color: #e27312;
+        }
+        .ios-toggle:checked + span {
+            transform: translateX(100%);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-[#181411] dark:text-white antialiased min-h-screen flex flex-col">
+<!-- Header Section -->
+<header class="bg-white dark:bg-[#2d2218] border-b border-[#e6e0db] dark:border-[#3d2e21] sticky top-0 z-10">
+<div class="flex items-center px-4 py-3 justify-between">
+<div class="flex items-center gap-2">
+<button class="flex items-center justify-center p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full">
+<span class="material-symbols-outlined text-2xl">arrow_back_ios</span>
+</button>
+<h1 class="text-xl font-bold tracking-tight">Operating Hours</h1>
+</div>
+<button class="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full">
+<span class="material-symbols-outlined">more_horiz</span>
+</button>
+</div>
+<!-- Breadcrumbs -->
+<nav class="px-4 pb-3 flex items-center gap-1 text-sm text-[#897461] dark:text-[#b09e8e]">
+<a class="hover:underline" href="#">Home</a>
+<span class="material-symbols-outlined text-xs">chevron_right</span>
+<span class="font-medium text-primary">Availability</span>
+</nav>
+</header>
+<!-- Main Content -->
+<main class="flex-1 overflow-y-auto px-4 py-6 space-y-4 max-w-md mx-auto w-full">
+<div class="space-y-1">
+<h2 class="text-sm font-semibold uppercase tracking-wider text-[#897461] dark:text-[#b09e8e] px-1">Weekly Schedule</h2>
+<p class="text-xs text-[#897461] dark:text-[#b09e8e] px-1 pb-2">Set your restaurant's open and close times for each day.</p>
+</div>
+<div class="bg-white dark:bg-[#2d2218] rounded-xl shadow-sm border border-[#e6e0db] dark:border-[#3d2e21] overflow-hidden">
+<!-- Sunday Row -->
+<div class="flex flex-col p-4 border-b border-[#f4f2f0] dark:border-[#3d2e21]">
+<div class="flex items-center justify-between mb-3">
+<span class="text-base font-semibold">Sunday</span>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+</label>
+</div>
+<div class="flex items-center gap-3">
+<div class="flex-1 relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-primary text-sm">schedule</span>
+<input class="w-full pl-9 pr-3 py-2 text-sm bg-background-light dark:bg-[#221810] border-none rounded-lg focus:ring-2 focus:ring-primary/50" type="text" value="09:00 AM"/>
+</div>
+<span class="text-[#897461]">to</span>
+<div class="flex-1 relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-primary text-sm">schedule</span>
+<input class="w-full pl-9 pr-3 py-2 text-sm bg-background-light dark:bg-[#221810] border-none rounded-lg focus:ring-2 focus:ring-primary/50" type="text" value="10:00 PM"/>
+</div>
+</div>
+</div>
+<!-- Monday Row -->
+<div class="flex flex-col p-4 border-b border-[#f4f2f0] dark:border-[#3d2e21]">
+<div class="flex items-center justify-between mb-3">
+<span class="text-base font-semibold">Monday</span>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+</label>
+</div>
+<div class="flex items-center gap-3">
+<div class="flex-1 relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-primary text-sm">schedule</span>
+<input class="w-full pl-9 pr-3 py-2 text-sm bg-background-light dark:bg-[#221810] border-none rounded-lg focus:ring-2 focus:ring-primary/50" type="text" value="09:00 AM"/>
+</div>
+<span class="text-[#897461]">to</span>
+<div class="flex-1 relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-primary text-sm">schedule</span>
+<input class="w-full pl-9 pr-3 py-2 text-sm bg-background-light dark:bg-[#221810] border-none rounded-lg focus:ring-2 focus:ring-primary/50" type="text" value="10:00 PM"/>
+</div>
+</div>
+</div>
+<!-- Tuesday Row (Closed Example) -->
+<div class="flex flex-col p-4 border-b border-[#f4f2f0] dark:border-[#3d2e21] bg-gray-50/50 dark:bg-black/10">
+<div class="flex items-center justify-between mb-3">
+<span class="text-base font-semibold text-[#897461]">Tuesday</span>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+</label>
+</div>
+<div class="flex items-center gap-3 opacity-40 grayscale pointer-events-none">
+<div class="flex-1 relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-sm">schedule</span>
+<input class="w-full pl-9 pr-3 py-2 text-sm bg-background-light dark:bg-[#221810] border-none rounded-lg" disabled="" type="text" value="Closed"/>
+</div>
+<span class="text-[#897461]">to</span>
+<div class="flex-1 relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-sm">schedule</span>
+<input class="w-full pl-9 pr-3 py-2 text-sm bg-background-light dark:bg-[#221810] border-none rounded-lg" disabled="" type="text" value="Closed"/>
+</div>
+</div>
+</div>
+<!-- Wednesday Row -->
+<div class="flex flex-col p-4 border-b border-[#f4f2f0] dark:border-[#3d2e21]">
+<div class="flex items-center justify-between mb-3">
+<span class="text-base font-semibold">Wednesday</span>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+</label>
+</div>
+<div class="flex items-center gap-3">
+<div class="flex-1 relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-primary text-sm">schedule</span>
+<input class="w-full pl-9 pr-3 py-2 text-sm bg-background-light dark:bg-[#221810] border-none rounded-lg focus:ring-2 focus:ring-primary/50" type="text" value="09:00 AM"/>
+</div>
+<span class="text-[#897461]">to</span>
+<div class="flex-1 relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-primary text-sm">schedule</span>
+<input class="w-full pl-9 pr-3 py-2 text-sm bg-background-light dark:bg-[#221810] border-none rounded-lg focus:ring-2 focus:ring-primary/50" type="text" value="10:00 PM"/>
+</div>
+</div>
+</div>
+<!-- Thursday Row -->
+<div class="flex flex-col p-4 border-b border-[#f4f2f0] dark:border-[#3d2e21]">
+<div class="flex items-center justify-between mb-3">
+<span class="text-base font-semibold">Thursday</span>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+</label>
+</div>
+<div class="flex items-center gap-3">
+<div class="flex-1 relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-primary text-sm">schedule</span>
+<input class="w-full pl-9 pr-3 py-2 text-sm bg-background-light dark:bg-[#221810] border-none rounded-lg focus:ring-2 focus:ring-primary/50" type="text" value="09:00 AM"/>
+</div>
+<span class="text-[#897461]">to</span>
+<div class="flex-1 relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-primary text-sm">schedule</span>
+<input class="w-full pl-9 pr-3 py-2 text-sm bg-background-light dark:bg-[#221810] border-none rounded-lg focus:ring-2 focus:ring-primary/50" type="text" value="10:00 PM"/>
+</div>
+</div>
+</div>
+<!-- Friday Row -->
+<div class="flex flex-col p-4 border-b border-[#f4f2f0] dark:border-[#3d2e21]">
+<div class="flex items-center justify-between mb-3">
+<span class="text-base font-semibold">Friday</span>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+</label>
+</div>
+<div class="flex items-center gap-3">
+<div class="flex-1 relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-primary text-sm">schedule</span>
+<input class="w-full pl-9 pr-3 py-2 text-sm bg-background-light dark:bg-[#221810] border-none rounded-lg focus:ring-2 focus:ring-primary/50" type="text" value="09:00 AM"/>
+</div>
+<span class="text-[#897461]">to</span>
+<div class="flex-1 relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-primary text-sm">schedule</span>
+<input class="w-full pl-9 pr-3 py-2 text-sm bg-background-light dark:bg-[#221810] border-none rounded-lg focus:ring-2 focus:ring-primary/50" type="text" value="11:30 PM"/>
+</div>
+</div>
+</div>
+<!-- Saturday Row -->
+<div class="flex flex-col p-4">
+<div class="flex items-center justify-between mb-3">
+<span class="text-base font-semibold">Saturday</span>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+</label>
+</div>
+<div class="flex items-center gap-3">
+<div class="flex-1 relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-primary text-sm">schedule</span>
+<input class="w-full pl-9 pr-3 py-2 text-sm bg-background-light dark:bg-[#221810] border-none rounded-lg focus:ring-2 focus:ring-primary/50" type="text" value="10:00 AM"/>
+</div>
+<span class="text-[#897461]">to</span>
+<div class="flex-1 relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-primary text-sm">schedule</span>
+<input class="w-full pl-9 pr-3 py-2 text-sm bg-background-light dark:bg-[#221810] border-none rounded-lg focus:ring-2 focus:ring-primary/50" type="text" value="11:30 PM"/>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-primary/10 dark:bg-primary/20 p-4 rounded-xl border border-primary/20">
+<div class="flex gap-3">
+<span class="material-symbols-outlined text-primary">info</span>
+<p class="text-sm text-[#181411] dark:text-[#f4f2f0]">Operating hours affect your online ordering availability and automated delivery calculations.</p>
+</div>
+</div>
+<!-- Add padding at the bottom for scroll space before fixed button -->
+<div class="h-24"></div>
+</main>
+<!-- Fixed Footer Action -->
+<div class="fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-[#2d2218]/80 backdrop-blur-md border-t border-[#e6e0db] dark:border-[#3d2e21] p-4">
+<div class="max-w-md mx-auto">
+<button class="w-full py-4 bg-primary hover:bg-[#c96410] active:scale-[0.98] text-white font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined">save</span>
+                Update Schedule
+            </button>
+</div>
+</div>
+<!-- Bottom Navigation Bar Replacement (Minimal for Context) -->
+<footer class="mt-auto bg-white dark:bg-[#2d2218] border-t border-[#f4f2f0] dark:border-[#3d2e21] pb-2 pt-1 flex justify-around">
+<a class="flex flex-col items-center gap-1 text-[#897461] p-2" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="text-[10px] font-medium">Home</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-[#897461] p-2" href="#">
+<span class="material-symbols-outlined">restaurant_menu</span>
+<span class="text-[10px] font-medium">Menu</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-[#897461] p-2" href="#">
+<span class="material-symbols-outlined">list_alt</span>
+<span class="text-[10px] font-medium">Orders</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-primary p-2" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-[10px] font-medium">Settings</span>
+</a>
+</footer>
+</body></html>

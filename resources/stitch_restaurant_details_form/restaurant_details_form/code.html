@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Restaurant Details Form</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#e27312",
+                        "background-light": "#f8f7f6",
+                        "background-dark": "#221810",
+                    },
+                    fontFamily: {
+                        "display": ["Work Sans", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Work Sans', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .ios-shadow {
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark min-h-screen flex flex-col">
+<!-- Header -->
+<header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-primary/10 px-4 py-3 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<button class="flex items-center justify-center size-10 rounded-full hover:bg-primary/5 transition-colors">
+<span class="material-symbols-outlined text-gray-800">arrow_back_ios</span>
+</button>
+<h1 class="text-lg font-bold text-gray-900 tracking-tight">Restaurant Profile</h1>
+</div>
+<button class="text-primary font-semibold text-sm">Preview</button>
+</header>
+<main class="flex-1 overflow-y-auto">
+<!-- Breadcrumbs -->
+<nav class="px-6 py-4">
+<div class="flex items-center gap-2 text-sm">
+<span class="text-gray-500">Home</span>
+<span class="material-symbols-outlined text-xs text-gray-400">chevron_right</span>
+<span class="text-primary font-medium">Restaurant Profile</span>
+</div>
+</nav>
+<!-- Hero Branding Area -->
+<div class="px-6 pb-6">
+<div class="relative h-32 w-full rounded-xl overflow-hidden bg-primary/10">
+<div class="absolute inset-0 bg-gradient-to-r from-primary/20 to-transparent"></div>
+<div class="absolute bottom-4 left-4 flex items-center gap-4">
+<div class="size-20 rounded-xl bg-white border-2 border-white shadow-sm flex items-center justify-center overflow-hidden">
+<img class="size-full object-cover" data-alt="Modern restaurant logo on white background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBRRCVpFF9YlU2rVeyxhn-mfhC7h8YTiMvlReyBYUJJMSzTMI3XfTq9Vefax3md0M9yOQgnlBVoOl_tv7AsD4CSCSXqsKxE3W9jjXwIZH1ifE9FY2XAsWNYSoUj1BVgtpNURR72a8Q4C5AkrGMjaiyeKvCxDTeYdexhe2hDrDL0qyAHI2MzWeP3p691GJ0Wuwy0BnTUXdWhJnj5WXw74lPKbYH5W7K_p7bpPqEJ7A_X6OmFjTX5QhjF8s7Xnp8ge8C1i2SbCkBDNq8"/>
+</div>
+<div>
+<h2 class="text-white font-bold text-xl drop-shadow-md">The Golden Grill</h2>
+<p class="text-white/90 text-xs">Admin Dashboard</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Form Section -->
+<section class="px-6 pb-24">
+<div class="mb-6">
+<h3 class="text-xl font-bold text-gray-900 mb-1">Basic Information</h3>
+<p class="text-gray-500 text-sm">Keep your public business details up to date.</p>
+</div>
+<form class="space-y-5">
+<!-- Restaurant Name -->
+<div class="group">
+<label class="block text-sm font-semibold text-gray-700 mb-1.5 ml-1">Restaurant Name</label>
+<div class="relative">
+<input class="w-full bg-white border border-gray-200 rounded-xl py-3.5 px-4 text-gray-900 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none" placeholder="e.g. The Golden Grill" type="text" value="The Golden Grill"/>
+<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm">store</span>
+</div>
+</div>
+<!-- Address -->
+<div class="group">
+<label class="block text-sm font-semibold text-gray-700 mb-1.5 ml-1">Address</label>
+<div class="relative">
+<textarea class="w-full bg-white border border-gray-200 rounded-xl py-3.5 px-4 text-gray-900 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none resize-none" placeholder="123 Culinary Ave, Food District..." rows="3">123 Culinary Ave, Downtown Food Court, Level 2</textarea>
+<span class="material-symbols-outlined absolute right-4 top-4 text-gray-400 text-sm">location_on</span>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+<!-- Contact Number -->
+<div class="group">
+<label class="block text-sm font-semibold text-gray-700 mb-1.5 ml-1">Contact Number</label>
+<div class="relative">
+<input class="w-full bg-white border border-gray-200 rounded-xl py-3.5 px-4 text-gray-900 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none" placeholder="+1 (555) 000-0000" type="tel" value="+1 (555) 123-4567"/>
+<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm">call</span>
+</div>
+</div>
+<!-- Email Address -->
+<div class="group">
+<label class="block text-sm font-semibold text-gray-700 mb-1.5 ml-1">Email Address</label>
+<div class="relative">
+<input class="w-full bg-white border border-gray-200 rounded-xl py-3.5 px-4 text-gray-900 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none" placeholder="manager@restaurant.com" type="email" value="hello@thegoldengrill.com"/>
+<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm">mail</span>
+</div>
+</div>
+</div>
+<!-- Operating Hours (Preview/Mini Component) -->
+<div class="pt-2">
+<div class="bg-primary/5 rounded-xl p-4 flex items-center justify-between border border-primary/10">
+<div class="flex items-center gap-3">
+<div class="size-10 rounded-full bg-primary/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">schedule</span>
+</div>
+<div>
+<p class="text-sm font-bold text-gray-900">Operating Hours</p>
+<p class="text-xs text-gray-500">Mon - Sun: 09:00 AM - 10:00 PM</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-gray-400">chevron_right</span>
+</div>
+</div>
+</form>
+</section>
+</main>
+<!-- Bottom Navigation & Action -->
+<div class="fixed bottom-0 inset-x-0 bg-white border-t border-gray-100 px-6 pt-4 pb-8 flex flex-col gap-4">
+<button class="w-full bg-primary text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/20 active:scale-[0.98] transition-all">
+            Update Profile
+        </button>
+<!-- Tab Bar -->
+<div class="flex justify-between items-center px-4 pt-2">
+<a class="flex flex-col items-center gap-1 text-gray-400" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="text-[10px] font-medium">Home</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-gray-400" href="#">
+<span class="material-symbols-outlined">restaurant_menu</span>
+<span class="text-[10px] font-medium">Menu</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-gray-400" href="#">
+<span class="material-symbols-outlined">receipt_long</span>
+<span class="text-[10px] font-medium">Orders</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-primary" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1">person</span>
+<span class="text-[10px] font-medium">Profile</span>
+</a>
+</div>
+</div>
+</body></html>

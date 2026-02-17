@@ -50,11 +50,19 @@ const routes = [
     component: () => import('@/views/EmailVerifyNewView.vue'),
     meta: { requiresAuth: false },
   },
+  // Root: on subdomain (e.g. test.rms.local) show restaurant page; else landing. URL stays /
   {
     path: '/',
     name: 'Landing',
-    component: () => import('@/views/LandingView.vue'),
+    component: () => import('@/views/RootView.vue'),
     meta: { guest: true },
+  },
+  // Public restaurant by path (e.g. rms.local/r/pizza when not using subdomain)
+  {
+    path: '/r/:slug',
+    name: 'PublicRestaurant',
+    component: () => import('@/views/PublicRestaurantView.vue'),
+    meta: { requiresAuth: false },
   },
   {
     path: '/app',
@@ -65,6 +73,49 @@ const routes = [
         path: '',
         name: 'App',
         component: () => import('@/views/DashboardView.vue'),
+      },
+      {
+        path: 'restaurants',
+        name: 'Restaurants',
+        component: () => import('@/views/restaurants/RestaurantListView.vue'),
+      },
+      {
+        path: 'restaurants/new',
+        name: 'RestaurantNew',
+        component: () => import('@/views/restaurants/RestaurantFormView.vue'),
+        meta: { mode: 'create' },
+      },
+      {
+        path: 'restaurants/:uuid',
+        name: 'RestaurantDetail',
+        component: () => import('@/views/restaurants/RestaurantManageView.vue'),
+      },
+      {
+        path: 'restaurants/:uuid/edit',
+        name: 'RestaurantEdit',
+        redirect: (to) => ({ name: 'RestaurantDetail', params: to.params, query: { tab: 'profile' } }),
+      },
+      {
+        path: 'restaurants/:uuid/content',
+        name: 'RestaurantContent',
+        redirect: (to) => ({ name: 'RestaurantDetail', params: to.params, query: { tab: 'settings' } }),
+      },
+      {
+        path: 'restaurants/:uuid/menu-items',
+        name: 'RestaurantMenuItems',
+        redirect: (to) => ({ name: 'RestaurantDetail', params: to.params, query: { tab: 'menu' } }),
+      },
+      {
+        path: 'restaurants/:uuid/menu-items/new',
+        name: 'RestaurantMenuItemNew',
+        component: () => import('@/views/restaurants/MenuItemFormView.vue'),
+        meta: { mode: 'create' },
+      },
+      {
+        path: 'restaurants/:uuid/menu-items/:itemUuid/edit',
+        name: 'RestaurantMenuItemEdit',
+        component: () => import('@/views/restaurants/MenuItemFormView.vue'),
+        meta: { mode: 'edit' },
       },
       {
         path: 'profile',

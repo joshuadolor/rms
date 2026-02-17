@@ -58,6 +58,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Restaurant subdomain root (for [slug].domain.com)
+    |--------------------------------------------------------------------------
+    |
+    | Set RESTAURANT_DOMAIN to the bare domain used for restaurant subdomains.
+    | Local: RESTAURANT_DOMAIN=localhost → slug.localhost. Production: e.g.
+    | RESTAURANT_DOMAIN=menus.example.com → slug.menus.example.com. Requires
+    | wildcard DNS (A or CNAME for *.domain) and nginx server_name *.domain.
+    |
+    */
+    'restaurant_domain' => env('RESTAURANT_DOMAIN', 'localhost'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

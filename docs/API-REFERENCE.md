@@ -426,8 +426,198 @@ All require `Authorization: Bearer <token>` and **verified email**.
 
 ---
 
+## Restaurants
+
+Restaurant management: CRUD and media (logo, page banner). All write/read-own endpoints require **Bearer + verified**. Media files are served via public URLs so they can be used in `<img src="...">`.
+
+**Free tier:** Each user may have **one restaurant** only. Creating a second restaurant returns **403** with a message that the free tier allows one restaurant and to upgrade to add more.
+
+### Restaurant payload (common)
+
+Returned by list, show, create, update, and after logo/banner upload:
+
+```ts
+{
+  uuid: string;
+  name: string;
+  slug: string;
+  address: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  phone: string | null;
+  email: string | null;
+  website: string | null;
+  social_links: { facebook?: string; instagram?: string; twitter?: string; linkedin?: string };
+  logo_url: string | null;   // e.g. https://api.example.com/api/restaurants/{uuid}/logo
+  banner_url: string | null; // e.g. https://api.example.com/api/restaurants/{uuid}/banner
+  created_at: string;       // ISO 8601
+  updated_at: string;       // ISO 8601
+}
+```
+
+**Note:** Internal numeric `id` is never exposed; only `uuid` is used in URLs and responses.
+
+---
+
+### List restaurants
+
+| Method | Path | Auth |
+|--------|------|------|
+| GET | `/api/restaurants` | Bearer + verified |
+
+**Query:** `per_page` (optional, 1–50, default 15).
+
+**Response (200):**
+```json
+{
+  "data": [ { restaurant payload } ],
+  "meta": {
+    "current_page": 1,
+    "last_page": 1,
+    "per_page": 15,
+    "total": 1
+  }
+}
+```
+
+Returns only restaurants owned by the authenticated user.
+
+---
+
+### Show restaurant
+
+| Method | Path | Auth |
+|--------|------|------|
+| GET | `/api/restaurants/{uuid}` | Bearer + verified |
+
+**Response (200):** `{ "data": { restaurant payload } }`  
+**404:** Restaurant not found or not owned by user.
+
+---
+
+### Create restaurant
+
+| Method | Path | Auth |
+|--------|------|------|
+| POST | `/api/restaurants` | Bearer + verified |
+
+**Body (JSON):**
+```json
+{
+  "name": "string (required, max 255)",
+  "slug": "string (optional; default: slug from name, unique)",
+  "address": "string (optional, max 1000)",
+  "latitude": "number (optional, -90 to 90)",
+  "longitude": "number (optional, -180 to 180)",
+  "phone": "string (optional, max 50)",
+  "email": "string (optional, email)",
+  "website": "string (optional, URL, max 500)",
+  "social_links": {
+    "facebook": "string (optional, URL)",
+    "instagram": "string (optional, URL)",
+    "twitter": "string (optional, URL)",
+    "linkedin": "string (optional, URL)"
+  }
+}
+```
+
+**Response (201):**
+```json
+{
+  "message": "Restaurant created.",
+  "data": { restaurant payload }
+}
+```
+
+**Errors:**
+- **422** – Validation (e.g. invalid fields).
+- **403** – Free-tier limit: user already has one restaurant. Body: `{ "message": "Free tier allows one restaurant. Upgrade to add more." }`.
+
+---
+
+### Update restaurant
+
+| Method | Path | Auth |
+|--------|------|------|
+| PUT | `/api/restaurants/{uuid}` | Bearer + verified |
+| PATCH | `/api/restaurants/{uuid}` | Bearer + verified |
+
+**Body (JSON):** Same fields as create; all optional. Send only fields to change. **Slug** must be unique across all restaurants; if the slug is already taken by another restaurant, the server returns **422** with `errors.slug` so the client can choose another.
+
+**Response (200):** `{ "message": "Restaurant updated.", "data": { restaurant payload } }`  
+**403:** Not owner. **404:** Not found. **422:** Validation (e.g. slug already taken).
+
+---
+
+### Delete restaurant
+
+| Method | Path | Auth |
+|--------|------|------|
+| DELETE | `/api/restaurants/{uuid}` | Bearer + verified |
+
+**Response (204):** No content.  
+**403:** Not owner. **404:** Not found.
+
+---
+
+### Upload logo
+
+| Method | Path | Auth |
+|--------|------|------|
+| POST | `/api/restaurants/{uuid}/logo` | Bearer + verified |
+
+**Body:** `multipart/form-data` with field **`file`**. Allowed: image only (jpeg, jpg, png, gif, webp). Max size: **2MB**. Validation errors return **422**; the API returns a clear message for file too large (e.g. "The image must not be greater than 2MB.").
+
+**Response (200):**
+```json
+{
+  "message": "Logo updated.",
+  "data": { restaurant payload }
+}
+```
+
+**403:** Not owner. **404:** Restaurant not found. **422:** Validation (e.g. file type/size).
+
+---
+
+### Upload banner
+
+| Method | Path | Auth |
+|--------|------|------|
+| POST | `/api/restaurants/{uuid}/banner` | Bearer + verified |
+
+**Body:** Same as logo – `multipart/form-data`, field **`file`** (image: jpeg, png, gif, webp; max 2MB). Same validation and error messages.
+
+**Response (200):** `{ "message": "Banner updated.", "data": { restaurant payload } }`  
+**403/404/422:** Same as logo.
+
+---
+
+### Serve logo (public)
+
+| Method | Path | Auth |
+|--------|------|------|
+| GET | `/api/restaurants/{uuid}/logo` | No (public) |
+
+Serves the restaurant logo image. **No authentication required.** Response has the correct **Content-Type** (e.g. `image/jpeg`, `image/png`) so it can be used directly as `<img src="…/api/restaurants/{uuid}/logo">`.  
+**404:** Restaurant or file not found.
+
+---
+
+### Serve banner (public)
+
+| Method | Path | Auth |
+|--------|------|------|
+| GET | `/api/restaurants/{uuid}/banner` | No (public) |
+
+Serves the restaurant banner image. **No authentication required.** Response has the correct **Content-Type** for the image. **404:** Restaurant or file not found.
+
+---
+
 ## Changelog
 
+- **2026-02-14**: Restaurants: free-tier limit (one restaurant per user; 403 when exceeded). Update slug validated for uniqueness (422 if taken). Docs: free-tier error, public logo/banner with Content-Type, slug uniqueness, upload validation (2MB, image types, custom message).
+- **2026-02-14**: Restaurants API: CRUD (list, show, create, update, delete) and media (upload logo/banner, public serve URLs). All by `uuid`; no internal `id` in responses. Endpoints: GET/POST `/api/restaurants`, GET/PUT/PATCH/DELETE `/api/restaurants/{uuid}`, POST `/api/restaurants/{uuid}/logo`, POST `/api/restaurants/{uuid}/banner`, GET `/api/restaurants/{uuid}/logo`, GET `/api/restaurants/{uuid}/banner`.
 - **2025-02-15**: User payload and verification URLs use **uuid** (public identifier); internal numeric **id** is no longer exposed in any API response. Routes: GET `/api/email/verify/{uuid}/{hash}`, GET `/api/email/verify-new/{uuid}/{hash}`.
 - **2025-02-14**: Profile API: PATCH `/api/user` (update name and/or email; email change requires verification at new address), POST `/api/profile/password` (change password with current password). GET `/api/email/verify-new/{uuid}/{hash}` for new-email verification (signed). User payload may include `pending_email` in profile responses.
 - **2025-02-13**: Verification email link now points to frontend `/email/verify` (frontend then calls API). Reset link already points to frontend `/reset-password`.

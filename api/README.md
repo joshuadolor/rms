@@ -7,6 +7,12 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## RMS API documentation
+
+- **[E2E user cleanup](docs/e2e-cleanup.md)** — Remove users created by E2E tests. Run `php artisan e2e:cleanup-users` (safe only in local/dev). E2E can run this command directly (e.g. afterAll).
+- **[Frontend: translations & menu items](docs/frontend-translations-prompt.md)** — API contract and prompt for implementing per-restaurant languages, restaurant description translations, menu items (name/description per locale), and LibreTranslate-ready translate endpoint.
+- **Subdomain setup** — Restaurants are available at `[slug].domain.com` immediately after create. See [Subdomain setup (DNS + nginx)](../docs/subdomain-setup.md) in the repo root.
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
