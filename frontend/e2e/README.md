@@ -29,6 +29,7 @@ npm run test:e2e:ui
 
 - **auth.spec.cjs**: Landing, login (email/password), register (email), **forgot password** (success, empty/invalid email validation, back to sign in), reset password page, verify-email page, route guards, logout, and **Email delivery (real API + Mailhog)**: register sends verification email, resend link sends verification email, forgot password sends reset email (skipped if API/Mailhog unreachable). **SSO is not tested**.
 - **profile.spec.cjs**: Profile & Settings — unauthenticated redirect, page content, navigation, update profile, change password. All API calls mocked.
+- **restaurant.spec.cjs**: Restaurant module — unauthenticated redirect, list (empty state, header), create form and create flow, manage page (Profile, Menu, Availability, Settings tabs), add menu item (full page and FAB modal), not found. All API calls mocked. **Translate by default / Translate from default is not tested** (not yet implemented).
 
 ## Shared helpers
 

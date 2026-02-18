@@ -119,6 +119,6 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::match(['put', 'patch'], '/restaurants/{restaurant}/menu-items/{item}', [MenuItemController::class, 'update']);
     Route::delete('/restaurants/{restaurant}/menu-items/{item}', [MenuItemController::class, 'destroy']);
 
-    // Machine translation (LibreTranslate when configured)
-    Route::post('/translate', TranslateController::class);
+    // Machine translation (LibreTranslate when configured); rate-limited
+    Route::post('/translate', TranslateController::class)->middleware('throttle:translate');
 });

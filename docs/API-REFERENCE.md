@@ -566,7 +566,8 @@ Returns only restaurants owned by the authenticated user.
 |--------|------|------|
 | POST | `/api/restaurants/{uuid}/logo` | Bearer + verified |
 
-**Body:** `multipart/form-data` with field **`file`**. Allowed: image only (jpeg, jpg, png, gif, webp). Max size: **2MB**. Validation errors return **422**; the API returns a clear message for file too large (e.g. "The image must not be greater than 2MB.").
+**Body:** `multipart/form-data` with field **`file`**. Allowed: image only (jpeg, jpg, png, gif, webp). Max size: **2MB**. Validation errors return **422**; the API returns a clear message for file too large (e.g. "The image must not be greater than 2MB.").  
+**Storage:** The stored filename is server-derived from the file’s MIME type (e.g. `logo.jpg`, `logo.png`). The client-provided filename/extension is not used.
 
 **Response (200):**
 ```json
@@ -586,7 +587,7 @@ Returns only restaurants owned by the authenticated user.
 |--------|------|------|
 | POST | `/api/restaurants/{uuid}/banner` | Bearer + verified |
 
-**Body:** Same as logo – `multipart/form-data`, field **`file`** (image: jpeg, png, gif, webp; max 2MB). Same validation and error messages.
+**Body:** Same as logo – `multipart/form-data`, field **`file`** (image: jpeg, png, gif, webp; max 2MB). Same validation and error messages. Stored filename is server-derived from MIME (e.g. `banner.jpg`), not from the client filename.
 
 **Response (200):** `{ "message": "Banner updated.", "data": { restaurant payload } }`  
 **403/404/422:** Same as logo.
@@ -614,8 +615,39 @@ Serves the restaurant banner image. **No authentication required.** Response has
 
 ---
 
+## Machine translation
+
+### Translate text
+
+| Method | Path | Auth | Rate limit |
+|--------|------|------|------------|
+| POST | `/api/translate` | Bearer + verified | 30/min (per user or IP) |
+
+**Body (JSON):**
+```json
+{
+  "text": "string (required)",
+  "from_locale": "string (required, e.g. en)",
+  "to_locale": "string (required, e.g. nl)"
+}
+```
+
+**Response (200):**
+```json
+{
+  "translated_text": "string"
+}
+```
+
+**429:** Too many requests; wait before retrying.  
+**503:** Translation service not configured or unavailable.  
+**422:** Validation (e.g. missing or invalid fields).
+
+---
+
 ## Changelog
 
+- **2026-02-16**: Security: logo/banner uploads use server-derived file extension from MIME type (not client filename). POST `/api/translate` rate-limited (30/min per user). API reference: upload storage note, Machine translation section with rate limit.
 - **2026-02-14**: Restaurants: free-tier limit (one restaurant per user; 403 when exceeded). Update slug validated for uniqueness (422 if taken). Docs: free-tier error, public logo/banner with Content-Type, slug uniqueness, upload validation (2MB, image types, custom message).
 - **2026-02-14**: Restaurants API: CRUD (list, show, create, update, delete) and media (upload logo/banner, public serve URLs). All by `uuid`; no internal `id` in responses. Endpoints: GET/POST `/api/restaurants`, GET/PUT/PATCH/DELETE `/api/restaurants/{uuid}`, POST `/api/restaurants/{uuid}/logo`, POST `/api/restaurants/{uuid}/banner`, GET `/api/restaurants/{uuid}/logo`, GET `/api/restaurants/{uuid}/banner`.
 - **2025-02-15**: User payload and verification URLs use **uuid** (public identifier); internal numeric **id** is no longer exposed in any API response. Routes: GET `/api/email/verify/{uuid}/{hash}`, GET `/api/email/verify-new/{uuid}/{hash}`.

@@ -1,5 +1,5 @@
 <template>
-  <div :class="{ 'max-w-3xl': !embed, 'pb-24': embed }" data-testid="restaurant-form">
+  <div class="max-w-3xl" :class="{ 'pb-24': embed }" data-testid="restaurant-form">
     <header v-if="!embed" class="mb-6 lg:mb-8" data-testid="form-header">
       <h2 class="text-xl font-bold text-charcoal dark:text-white lg:text-2xl">
         {{ isEdit ? 'Edit restaurant' : 'Add new restaurant' }}
@@ -52,17 +52,27 @@
         <p class="text-xs text-slate-500 dark:text-slate-400">
           Your restaurant's web address will be created automatically from this name.
         </p>
+        <AppInput
+          v-model="form.tagline"
+          label="Tagline (optional)"
+          type="text"
+          placeholder="e.g. Fresh ingredients, bold flavors"
+          :error="fieldErrors.tagline"
+          data-testid="form-input-tagline"
+        />
         <div>
-          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Address (optional)</label>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1" for="form-input-address">Address (optional)</label>
           <textarea
+            id="form-input-address"
             v-model="form.address"
             rows="2"
             placeholder="Street, city, state"
             data-testid="form-input-address"
             class="w-full rounded-lg ring-1 ring-gray-200 dark:ring-zinc-700 focus:ring-2 focus:ring-primary transition-all bg-background-light dark:bg-zinc-800 border-0 py-3 px-4 text-charcoal dark:text-white resize-none"
             :aria-invalid="!!fieldErrors.address"
+            :aria-describedby="fieldErrors.address ? 'form-address-error' : undefined"
           />
-          <p v-if="fieldErrors.address" class="text-xs text-red-600 dark:text-red-400 mt-1" role="alert">{{ fieldErrors.address }}</p>
+          <p v-if="fieldErrors.address" id="form-address-error" class="text-xs text-red-600 dark:text-red-400 mt-1" role="alert">{{ fieldErrors.address }}</p>
         </div>
         <AppInput
           v-model="form.phone"
@@ -73,16 +83,18 @@
           data-testid="form-input-phone"
         />
         <div>
-          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Description (optional)</label>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1" for="form-input-description">Description (optional)</label>
           <textarea
+            id="form-input-description"
             v-model="form.description"
             rows="4"
             placeholder="Short description of your restaurant for the public site"
             data-testid="form-input-description"
             class="w-full rounded-lg ring-1 ring-gray-200 dark:ring-zinc-700 focus:ring-2 focus:ring-primary transition-all bg-background-light dark:bg-zinc-800 border-0 py-3 px-4 text-charcoal dark:text-white resize-none"
             :aria-invalid="!!fieldErrors.description"
+            :aria-describedby="fieldErrors.description ? 'form-description-error' : undefined"
           />
-          <p v-if="fieldErrors.description" class="text-xs text-red-600 dark:text-red-400 mt-1" role="alert">{{ fieldErrors.description }}</p>
+          <p v-if="fieldErrors.description" id="form-description-error" class="text-xs text-red-600 dark:text-red-400 mt-1" role="alert">{{ fieldErrors.description }}</p>
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Shown on your public page. Add more languages in Settings.</p>
         </div>
       </section>
@@ -168,6 +180,7 @@ import AppInput from '@/components/ui/AppInput.vue'
 import AppButton from '@/components/ui/AppButton.vue'
 import AppBackLink from '@/components/AppBackLink.vue'
 import RestaurantAvailabilitySchedule from '@/components/restaurant/RestaurantAvailabilitySchedule.vue'
+import Restaurant from '@/models/Restaurant.js'
 import { restaurantService, getValidationErrors, normalizeApiError } from '@/services'
 import { useToastStore } from '@/stores/toast'
 import { useBreadcrumbStore } from '@/stores/breadcrumb'
@@ -197,6 +210,7 @@ const moreDetailsOpen = ref(false)
 
 const form = reactive({
   name: '',
+  tagline: '',
   address: '',
   phone: '',
   email: '',
@@ -208,7 +222,7 @@ const form = reactive({
   operatingHours: {},
 })
 
-const MAX = { name: 255, address: 1000, phone: 50, email: 255, website: 500, socialUrl: 500 }
+const MAX = { name: 255, tagline: 255, address: 1000, phone: 50, email: 255, website: 500, socialUrl: 500 }
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const URL_RE = /^https?:\/\/.+/i
 
@@ -226,6 +240,7 @@ function validateForm() {
   const n = form.name.trim()
   if (!n) err.name = 'Restaurant name is required.'
   else if (n.length > MAX.name) err.name = `Name must be at most ${MAX.name} characters.`
+  if (form.tagline && form.tagline.length > MAX.tagline) err.tagline = `Tagline must be at most ${MAX.tagline} characters.`
   if (form.address && form.address.length > MAX.address) err.address = `Address must be at most ${MAX.address} characters.`
   if (form.phone && form.phone.length > MAX.phone) err.phone = `Phone must be at most ${MAX.phone} characters.`
   if (form.email && !EMAIL_RE.test(form.email)) err.email = 'Please enter a valid email address.'
@@ -243,6 +258,7 @@ function buildPayload() {
   const social = form.social_links || {}
   const payload = {
     name: form.name.trim(),
+    tagline: form.tagline.trim() || undefined,
     address: form.address.trim() || undefined,
     phone: form.phone.trim() || undefined,
     email: form.email.trim() || undefined,
@@ -267,7 +283,7 @@ async function handleSubmit() {
   try {
     if (isEdit.value) {
       const res = await restaurantService.update(uuid.value, buildPayload())
-      restaurant.value = res.data ?? restaurant.value
+      restaurant.value = res != null ? Restaurant.fromApi(res).toJSON() : restaurant.value
       const defaultLocale = restaurant.value?.default_locale
       if (defaultLocale != null && form.description !== undefined) {
         await restaurantService.putTranslation(uuid.value, defaultLocale, { description: form.description?.trim() || null })
@@ -293,11 +309,12 @@ async function loadRestaurant() {
   loading.value = true
   try {
     const res = await restaurantService.get(uuid.value)
-    const r = res.data
+    const r = res?.data != null ? Restaurant.fromApi(res).toJSON() : null
     restaurant.value = r
     breadcrumbStore.setRestaurantName(r?.name ?? null)
     if (r) {
       form.name = r.name ?? ''
+      form.tagline = r.tagline ?? ''
       form.address = r.address ?? ''
       form.phone = r.phone ?? ''
       form.description = ''

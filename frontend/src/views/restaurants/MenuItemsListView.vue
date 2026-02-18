@@ -221,6 +221,7 @@ import AppInput from '@/components/ui/AppInput.vue'
 import { useBreadcrumbStore } from '@/stores/breadcrumb'
 import AppButton from '@/components/ui/AppButton.vue'
 import { getLocaleDisplay } from '@/config/locales'
+import Restaurant from '@/models/Restaurant.js'
 import { restaurantService, normalizeApiError, getValidationErrors } from '@/services'
 import { useToastStore } from '@/stores/toast'
 
@@ -376,7 +377,7 @@ async function loadRestaurant() {
   if (!uuid.value) return
   try {
     const res = await restaurantService.get(uuid.value)
-    restaurant.value = res.data ?? null
+    restaurant.value = res?.data != null ? Restaurant.fromApi(res).toJSON() : null
     breadcrumbStore.setRestaurantName(restaurant.value?.name ?? null)
   } catch (e) {
     if (e?.response?.status === 404) restaurant.value = null

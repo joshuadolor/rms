@@ -17,7 +17,7 @@ final readonly class CreateRestaurant
     ) {}
 
     /**
-     * @param array{name: string, slug?: string, address?: string, latitude?: float|string|null, longitude?: float|string|null, phone?: string|null, email?: string|null, website?: string|null, social_links?: array|null} $input
+     * @param array{name: string, tagline?: string|null, slug?: string, address?: string, latitude?: float|string|null, longitude?: float|string|null, phone?: string|null, email?: string|null, website?: string|null, social_links?: array|null} $input
      */
     public function handle(User $user, array $input): Restaurant
     {
@@ -35,6 +35,7 @@ final readonly class CreateRestaurant
         $attributes = [
             'user_id' => $user->id,
             'name' => $input['name'],
+            'tagline' => $input['tagline'] ?? null,
             'slug' => $slug,
             'address' => $input['address'] ?? null,
             'latitude' => $input['latitude'] ?? null,

@@ -14,7 +14,7 @@ final readonly class UpdateRestaurant
     ) {}
 
     /**
-     * @param array{name?: string, address?: string, latitude?: float|string|null, longitude?: float|string|null, phone?: string|null, email?: string|null, website?: string|null, social_links?: array|null} $input
+     * @param array{name?: string, tagline?: string|null, address?: string, latitude?: float|string|null, longitude?: float|string|null, phone?: string|null, email?: string|null, website?: string|null, social_links?: array|null} $input
      */
     public function handle(User $user, Restaurant $restaurant, array $input): Restaurant
     {
@@ -26,6 +26,9 @@ final readonly class UpdateRestaurant
 
         if (array_key_exists('name', $input)) {
             $data['name'] = $input['name'];
+        }
+        if (array_key_exists('tagline', $input)) {
+            $data['tagline'] = $input['tagline'];
         }
         // Slug is immutable after create (subdomain URL).
         if (array_key_exists('address', $input)) {

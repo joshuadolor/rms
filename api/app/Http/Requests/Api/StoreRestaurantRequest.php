@@ -19,6 +19,7 @@ class StoreRestaurantRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
+            'tagline' => ['nullable', 'string', 'max:255'],
             'slug' => ['nullable', 'string', 'max:255', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/'],
             'address' => ['nullable', 'string', 'max:1000'],
             'latitude' => ['nullable', 'numeric', 'between:-90,90'],

@@ -101,7 +101,8 @@ All routes under “Auth required” need `Authorization: Bearer <token>` and a 
 - **POST /translate**  
   Body: `{ "text": "Hello world", "from_locale": "en", "to_locale": "nl" }`  
   Response: `200` and `{ "translated_text": "Hallo wereld" }`  
-  If LibreTranslate is not configured: `503` and a message. Use this to pre-fill a translation, then save via the translation endpoints above.
+  If LibreTranslate is not configured: `503` and a message. Use this to pre-fill a translation, then save via the translation endpoints above.  
+  **Rate limit:** 30 requests per minute per user; excess returns `429 Too Many Requests`.
 
 ---
 

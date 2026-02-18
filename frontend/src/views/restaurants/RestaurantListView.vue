@@ -97,8 +97,8 @@
         >
           Previous
         </AppButton>
-        <span class="text-sm text-slate-500 dark:text-slate-400 px-2">
-          Page {{ meta.current_page }} of {{ meta.last_page }}
+        <span class="text-sm text-slate-500 dark:text-slate-400 px-2" aria-live="polite">
+          Page {{ meta.current_page }} of {{ meta.last_page }}<template v-if="meta.total != null"> · {{ meta.total }} restaurant{{ meta.total === 1 ? '' : 's' }}</template>
         </span>
         <AppButton
           variant="secondary"
@@ -120,6 +120,7 @@ defineProps({
 import { ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AppButton from '@/components/ui/AppButton.vue'
+import Restaurant from '@/models/Restaurant.js'
 import { restaurantService, normalizeApiError } from '@/services'
 
 const route = useRoute()
@@ -133,7 +134,8 @@ async function fetchList(page = 1) {
   loading.value = true
   try {
     const res = await restaurantService.list({ per_page: 15, page })
-    restaurants.value = res.data ?? []
+    const items = res.data ?? []
+    restaurants.value = items.map((r) => Restaurant.fromApi(r).toJSON())
     meta.value = res.meta ?? null
   } catch (e) {
     const { message } = normalizeApiError(e)

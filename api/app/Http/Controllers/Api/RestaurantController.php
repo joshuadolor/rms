@@ -245,6 +245,7 @@ class RestaurantController extends Controller
         return [
             'uuid' => $restaurant->uuid,
             'name' => $restaurant->name,
+            'tagline' => $restaurant->tagline,
             'slug' => $restaurant->slug,
             'public_url' => $publicUrl,
             'address' => $restaurant->address,

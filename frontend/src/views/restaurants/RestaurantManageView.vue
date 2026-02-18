@@ -76,22 +76,24 @@
 
       <!-- Tabs: fixed at bottom on mobile with icons, inline on desktop -->
       <div
+        role="tablist"
+        aria-label="Restaurant management sections"
         data-testid="manage-tabs"
         class="flex p-2 gap-1 rounded-t-2xl bg-slate-100/95 dark:bg-zinc-800/95 backdrop-blur-sm overflow-x-auto z-40 border-t border-slate-200 dark:border-zinc-700 shadow-[0_-4px_12px_rgba(0,0,0,0.06)] dark:shadow-[0_-4px_12px_rgba(0,0,0,0.3)] lg:border-t-0 lg:rounded-lg lg:mb-6 lg:p-1 lg:gap-0 lg:shadow-none lg:bg-slate-100 lg:dark:bg-zinc-800 lg:backdrop-blur-none fixed bottom-0 left-0 right-0 pb-[max(0.5rem,env(safe-area-inset-bottom))] lg:static lg:pb-0"
       >
-        <button type="button" data-testid="manage-tab-profile" class="flex-1 min-w-0 py-2 px-2 text-sm font-semibold rounded-lg transition-all whitespace-nowrap lg:rounded-md flex flex-col lg:flex-row items-center justify-center gap-0.5 lg:gap-1.5 lg:py-2.5" :class="activeTab === 'profile' ? 'bg-white dark:bg-primary text-primary dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'" @click="activeTab = 'profile'">
+        <button type="button" role="tab" id="manage-tab-profile" aria-controls="manage-panel-profile" data-testid="manage-tab-profile" class="flex-1 min-w-0 py-2 px-2 text-sm font-semibold rounded-lg transition-all whitespace-nowrap lg:rounded-md flex flex-col lg:flex-row items-center justify-center gap-0.5 lg:gap-1.5 lg:py-2.5" :class="activeTab === 'profile' ? 'bg-white dark:bg-primary text-primary dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'" :aria-selected="activeTab === 'profile'" @click="activeTab = 'profile'">
           <span class="material-icons text-xl lg:text-lg">person</span>
           <span>Profile</span>
         </button>
-        <button type="button" data-testid="manage-tab-menu" class="flex-1 min-w-0 py-2 px-2 text-sm font-semibold rounded-lg transition-all whitespace-nowrap lg:rounded-md flex flex-col lg:flex-row items-center justify-center gap-0.5 lg:gap-1.5 lg:py-2.5" :class="activeTab === 'menu' ? 'bg-white dark:bg-primary text-primary dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'" @click="activeTab = 'menu'">
+        <button type="button" role="tab" id="manage-tab-menu" aria-controls="manage-panel-menu" data-testid="manage-tab-menu" class="flex-1 min-w-0 py-2 px-2 text-sm font-semibold rounded-lg transition-all whitespace-nowrap lg:rounded-md flex flex-col lg:flex-row items-center justify-center gap-0.5 lg:gap-1.5 lg:py-2.5" :class="activeTab === 'menu' ? 'bg-white dark:bg-primary text-primary dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'" :aria-selected="activeTab === 'menu'" @click="activeTab = 'menu'">
           <span class="material-icons text-xl lg:text-lg">restaurant_menu</span>
           <span>Menu</span>
         </button>
-        <button type="button" data-testid="manage-tab-availability" class="flex-1 min-w-0 py-2 px-2 text-sm font-semibold rounded-lg transition-all whitespace-nowrap lg:rounded-md flex flex-col lg:flex-row items-center justify-center gap-0.5 lg:gap-1.5 lg:py-2.5" :class="activeTab === 'availability' ? 'bg-white dark:bg-primary text-primary dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'" @click="activeTab = 'availability'">
+        <button type="button" role="tab" id="manage-tab-availability" aria-controls="manage-panel-availability" data-testid="manage-tab-availability" class="flex-1 min-w-0 py-2 px-2 text-sm font-semibold rounded-lg transition-all whitespace-nowrap lg:rounded-md flex flex-col lg:flex-row items-center justify-center gap-0.5 lg:gap-1.5 lg:py-2.5" :class="activeTab === 'availability' ? 'bg-white dark:bg-primary text-primary dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'" :aria-selected="activeTab === 'availability'" @click="activeTab = 'availability'">
           <span class="material-icons text-xl lg:text-lg">schedule</span>
           <span>Availability</span>
         </button>
-        <button type="button" data-testid="manage-tab-settings" class="flex-1 min-w-0 py-2 px-2 text-sm font-semibold rounded-lg transition-all whitespace-nowrap lg:rounded-md flex flex-col lg:flex-row items-center justify-center gap-0.5 lg:gap-1.5 lg:py-2.5" :class="activeTab === 'settings' ? 'bg-white dark:bg-primary text-primary dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'" @click="activeTab = 'settings'">
+        <button type="button" role="tab" id="manage-tab-settings" aria-controls="manage-panel-settings" data-testid="manage-tab-settings" class="flex-1 min-w-0 py-2 px-2 text-sm font-semibold rounded-lg transition-all whitespace-nowrap lg:rounded-md flex flex-col lg:flex-row items-center justify-center gap-0.5 lg:gap-1.5 lg:py-2.5" :class="activeTab === 'settings' ? 'bg-white dark:bg-primary text-primary dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'" :aria-selected="activeTab === 'settings'" @click="activeTab = 'settings'">
           <span class="material-icons text-xl lg:text-lg">settings</span>
           <span>Settings</span>
         </button>
@@ -99,7 +101,7 @@
 
       <!-- Tab content: extra bottom padding on mobile -->
       <div class="pb-24 lg:pb-0" data-testid="manage-tab-content">
-        <div v-show="activeTab === 'profile'" class="min-h-[200px] space-y-6" data-testid="manage-panel-profile">
+        <div v-show="activeTab === 'profile'" id="manage-panel-profile" role="tabpanel" aria-labelledby="manage-tab-profile" class="min-h-[200px] space-y-6" data-testid="manage-panel-profile">
           <RestaurantFormView
             :key="restaurant.uuid"
             embed
@@ -108,7 +110,7 @@
             @update:default-description="defaultDescription = $event"
           >
             <template #actions-start>
-              <AppButton data-testid="manage-delete-button" type="button" variant="secondary" class="min-h-[44px] w-full sm:w-auto text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20" :disabled="deleting || !restaurant.slug" @click="confirmDelete">
+              <AppButton ref="deleteButtonRef" data-testid="manage-delete-button" type="button" variant="secondary" class="min-h-[44px] w-full sm:w-auto text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20" :disabled="deleting || !restaurant.slug" @click="confirmDelete">
                 <template #icon>
                   <span v-if="deleting" class="material-icons animate-spin">sync</span>
                   <span v-else class="material-icons">delete_outline</span>
@@ -118,10 +120,10 @@
             </template>
           </RestaurantFormView>
         </div>
-        <div v-show="activeTab === 'menu'" class="min-h-[200px]" data-testid="manage-panel-menu">
+        <div v-show="activeTab === 'menu'" id="manage-panel-menu" role="tabpanel" aria-labelledby="manage-tab-menu" class="min-h-[200px]" data-testid="manage-panel-menu">
           <MenuItemsListView :key="'menu-' + restaurant.uuid" />
         </div>
-        <div v-show="activeTab === 'availability'" class="min-h-[200px]" data-testid="manage-panel-availability">
+        <div v-show="activeTab === 'availability'" id="manage-panel-availability" role="tabpanel" aria-labelledby="manage-tab-availability" class="min-h-[200px]" data-testid="manage-panel-availability">
           <header class="mb-4 lg:mb-6">
             <div>
               <h2 class="text-xl font-bold text-charcoal dark:text-white lg:text-2xl">Availability</h2>
@@ -130,7 +132,7 @@
           </header>
           <RestaurantAvailabilitySchedule v-model="operatingHours" />
         </div>
-        <div v-show="activeTab === 'settings'" class="min-h-[200px]" data-testid="manage-panel-settings">
+        <div v-show="activeTab === 'settings'" id="manage-panel-settings" role="tabpanel" aria-labelledby="manage-tab-settings" class="min-h-[200px]" data-testid="manage-panel-settings">
           <RestaurantContentView
             :key="'settings-' + restaurant.uuid"
             embed
@@ -189,8 +191,8 @@
       </AppModal>
 
       <!-- Delete confirm modal -->
-      <div v-if="showDeleteConfirm && restaurant?.slug" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" role="dialog" aria-modal="true" aria-labelledby="delete-title" aria-describedby="delete-description" data-testid="manage-delete-modal" @keydown.escape="closeDeleteConfirm">
-        <div class="bg-white dark:bg-zinc-900 rounded-2xl shadow-xl max-w-md w-full p-6">
+      <div v-if="showDeleteConfirm && restaurant?.slug" ref="deleteModalRef" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" role="dialog" aria-modal="true" aria-labelledby="delete-title" aria-describedby="delete-description" data-testid="manage-delete-modal" @keydown="onDeleteModalKeydown">
+        <div ref="deleteDialogRef" class="bg-white dark:bg-zinc-900 rounded-2xl shadow-xl max-w-md w-full p-6">
           <h3 id="delete-title" class="font-bold text-charcoal dark:text-white mb-2">Delete restaurant?</h3>
           <p id="delete-description" class="text-sm text-slate-500 dark:text-slate-400 mb-4">This cannot be undone.</p>
           <p class="text-sm font-medium text-charcoal dark:text-white mb-2">Type <strong class="font-mono text-red-600 dark:text-red-400">{{ restaurant.slug }}</strong> to confirm.</p>
@@ -219,13 +221,14 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AppBackLink from '@/components/AppBackLink.vue'
 import AppButton from '@/components/ui/AppButton.vue'
 import AppModal from '@/components/ui/AppModal.vue'
 import { useBreadcrumbStore } from '@/stores/breadcrumb'
 import { useToastStore } from '@/stores/toast'
+import Restaurant from '@/models/Restaurant.js'
 import { restaurantService, normalizeApiError } from '@/services'
 import RestaurantFormView from './RestaurantFormView.vue'
 import MenuItemsListView from './MenuItemsListView.vue'
@@ -251,6 +254,9 @@ const logoInputRef = ref(null)
 const logoCameraInputRef = ref(null)
 const bannerInputRef = ref(null)
 const bannerCameraInputRef = ref(null)
+const deleteButtonRef = ref(null)
+const deleteModalRef = ref(null)
+const deleteDialogRef = ref(null)
 const IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
 const MAX_IMAGE_BYTES = 2 * 1024 * 1024
 
@@ -279,6 +285,15 @@ watch(() => route.query.tab, (t) => {
 
 watch(() => route.params.uuid, () => { defaultDescription.value = '' })
 
+watch(showDeleteConfirm, (open) => {
+  if (open) {
+    nextTick(() => {
+      const focusables = getDeleteModalFocusables()
+      if (focusables.length > 0) focusables[0].focus()
+    })
+  }
+})
+
 function copyRestaurantUrl() {
   const r = restaurant.value
   if (!r?.slug) return
@@ -294,9 +309,40 @@ function confirmDelete() {
   deleteConfirmSlug.value = ''
   showDeleteConfirm.value = true
 }
+function getDeleteModalFocusables() {
+  if (!deleteDialogRef.value) return []
+  const sel = 'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+  return Array.from(deleteDialogRef.value.querySelectorAll(sel))
+}
+function onDeleteModalKeydown(e) {
+  if (e.key === 'Escape') {
+    closeDeleteConfirm()
+    return
+  }
+  if (e.key !== 'Tab' || !deleteDialogRef.value) return
+  const focusables = getDeleteModalFocusables()
+  if (focusables.length === 0) return
+  const current = document.activeElement
+  const idx = focusables.indexOf(current)
+  if (e.shiftKey) {
+    if (idx <= 0) {
+      e.preventDefault()
+      focusables[focusables.length - 1].focus()
+    }
+  } else {
+    if (idx === -1 || idx === focusables.length - 1) {
+      e.preventDefault()
+      focusables[0].focus()
+    }
+  }
+}
 function closeDeleteConfirm() {
   showDeleteConfirm.value = false
   deleteConfirmSlug.value = ''
+  nextTick(() => {
+    const el = deleteButtonRef.value?.$el ?? deleteButtonRef.value
+    if (el && typeof el.focus === 'function') el.focus()
+  })
 }
 async function doDelete() {
   if (!restaurant.value?.uuid || deleteConfirmSlug.value !== restaurant.value.slug) return
@@ -341,7 +387,7 @@ async function onModalLogoChange(ev) {
   if (!restaurant.value?.uuid) return
   try {
     const res = await restaurantService.uploadLogo(restaurant.value.uuid, file)
-    restaurant.value = res.data ?? restaurant.value
+    restaurant.value = res != null ? Restaurant.fromApi(res).toJSON() : restaurant.value
     toastStore.success('Logo updated.')
     if (logoInputRef.value) logoInputRef.value.value = ''
     if (logoCameraInputRef.value) logoCameraInputRef.value.value = ''
@@ -355,7 +401,7 @@ async function onModalBannerChange(ev) {
   if (!restaurant.value?.uuid) return
   try {
     const res = await restaurantService.uploadBanner(restaurant.value.uuid, file)
-    restaurant.value = res.data ?? restaurant.value
+    restaurant.value = res != null ? Restaurant.fromApi(res).toJSON() : restaurant.value
     toastStore.success('Banner updated.')
     if (bannerInputRef.value) bannerInputRef.value.value = ''
     if (bannerCameraInputRef.value) bannerCameraInputRef.value.value = ''
@@ -375,7 +421,7 @@ async function fetchOne() {
   restaurant.value = null
   try {
     const res = await restaurantService.get(uuid)
-    restaurant.value = res.data ?? null
+    restaurant.value = res?.data != null ? Restaurant.fromApi(res).toJSON() : null
     breadcrumbStore.setRestaurantName(restaurant.value?.name ?? null)
     operatingHours.value = restaurant.value?.operating_hours ?? {}
   } catch (e) {

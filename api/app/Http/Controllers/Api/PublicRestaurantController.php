@@ -51,6 +51,7 @@ class PublicRestaurantController extends Controller
         return response()->json([
             'data' => [
                 'name' => $restaurant->name,
+                'tagline' => $restaurant->tagline,
                 'slug' => $restaurant->slug,
                 'logo_url' => $restaurant->logo_path
                     ? $baseUrl . '/api/restaurants/' . $restaurant->uuid . '/logo'

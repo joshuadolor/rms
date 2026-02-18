@@ -16,4 +16,11 @@ When working on **forms** in the frontend:
 
 6. **Password fields:** use appropriate `autocomplete` values: `current-password` for "current password" fields (e.g. login, change password), and `new-password` for new/confirm password fields (register, reset password, profile).
 
+**Before merging or considering a form workflow done, always run** `npm run test:e2e` **to ensure all main authentication and profile flows (login, register, forgot/reset password, profile update, password change) work using E2E tests.**  
+E2E tests provide real-world validation that frontend validation, error display, and flows are correct for users.  
+If you change validation rules, field names, or error message handling, **add or update E2E tests accordingly.**  
+Never skip this step before shipping or completing a feature involving forms.
+
+
+
 This applies to all forms: login, register, forgot password, reset password, profile, and any future forms.

@@ -1,13 +1,14 @@
 <template>
   <Teleport v-if="open" to="body">
     <div
+      ref="overlayRef"
       class="fixed inset-0 z-[100] flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
       :aria-labelledby="titleId"
       :aria-describedby="descriptionId"
       data-testid="app-modal-overlay"
-      @keydown.escape="onClose"
+      @keydown="onOverlayKeydown"
     >
       <div
         class="absolute inset-0 bg-black/50 backdrop-blur-sm"
@@ -18,6 +19,7 @@
       <div :id="descriptionId" class="sr-only">{{ description }}</div>
       <div :id="titleId" class="sr-only">{{ title }}</div>
       <div
+        ref="dialogRef"
         class="relative w-full max-h-[90dvh] overflow-hidden flex flex-col bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl max-w-md sm:max-w-lg"
         data-testid="app-modal-dialog"
         @click.stop
@@ -46,7 +48,7 @@
 </template>
 
 <script setup>
-import { computed, watch } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 
 const props = defineProps({
   open: { type: Boolean, default: false },
@@ -56,15 +58,61 @@ const props = defineProps({
 
 const emit = defineEmits(['close'])
 
+const overlayRef = ref(null)
+const dialogRef = ref(null)
+let previousActiveElement = null
+
 const titleId = computed(() => `modal-title-${Math.random().toString(36).slice(2, 9)}`)
 const descriptionId = computed(() => `modal-desc-${Math.random().toString(36).slice(2, 9)}`)
+
+function getFocusables(container) {
+  if (!container) return []
+  const sel = 'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+  return Array.from(container.querySelectorAll(sel))
+}
 
 function onClose() {
   emit('close')
 }
 
+function onOverlayKeydown(e) {
+  if (e.key === 'Escape') {
+    onClose()
+    return
+  }
+  if (e.key !== 'Tab' || !dialogRef.value) return
+  const focusables = getFocusables(dialogRef.value)
+  if (focusables.length === 0) return
+  const current = document.activeElement
+  const idx = focusables.indexOf(current)
+  if (e.shiftKey) {
+    if (idx <= 0) {
+      e.preventDefault()
+      focusables[focusables.length - 1].focus()
+    }
+  } else {
+    if (idx === -1 || idx === focusables.length - 1) {
+      e.preventDefault()
+      focusables[0].focus()
+    }
+  }
+}
+
 watch(() => props.open, (isOpen) => {
-  if (isOpen) document.body.style.overflow = 'hidden'
-  else document.body.style.overflow = ''
+  if (isOpen) {
+    document.body.style.overflow = 'hidden'
+    previousActiveElement = document.activeElement
+    nextTick(() => {
+      const focusables = getFocusables(dialogRef.value)
+      if (focusables.length > 0) focusables[0].focus()
+    })
+  } else {
+    document.body.style.overflow = ''
+    nextTick(() => {
+      if (previousActiveElement && typeof previousActiveElement.focus === 'function') {
+        previousActiveElement.focus()
+      }
+    })
+  }
 })
 </script>

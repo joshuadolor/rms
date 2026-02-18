@@ -165,6 +165,7 @@ import { useRoute } from 'vue-router'
 import AppButton from '@/components/ui/AppButton.vue'
 import AppBackLink from '@/components/AppBackLink.vue'
 import { LOCALE_CODES, getLocaleDisplay } from '@/config/locales'
+import Restaurant from '@/models/Restaurant.js'
 import { restaurantService, getValidationErrors, normalizeApiError } from '@/services'
 import { useToastStore } from '@/stores/toast'
 import { useBreadcrumbStore } from '@/stores/breadcrumb'
@@ -228,7 +229,7 @@ async function loadRestaurant() {
   error.value = ''
   try {
     const res = await restaurantService.get(uuid.value)
-    restaurant.value = res.data ?? null
+    restaurant.value = res?.data != null ? Restaurant.fromApi(res).toJSON() : null
     breadcrumbStore.setRestaurantName(restaurant.value?.name ?? null)
     if (restaurant.value) {
       currency.value = restaurant.value.currency ?? 'USD'
@@ -277,11 +278,14 @@ async function saveCurrency() {
 
 async function setDefaultLocale(loc) {
   if (!restaurant.value || restaurant.value.default_locale === loc) return
+  if (savingDefault.value != null) return // prevent double run (e.g. double-click) and second toast
   savingDefault.value = loc
   error.value = ''
   try {
-    await restaurantService.update(uuid.value, { default_locale: loc })
-    restaurant.value.default_locale = loc
+    const res = await restaurantService.update(uuid.value, { default_locale: loc })
+    if (res) restaurant.value = Restaurant.fromApi(res).toJSON()
+    // Sync parent/Profile to the new default's description so it doesn't show the old default's value
+    if (props.embed) emit('update:defaultDescription', descriptions.value[loc] ?? '')
     toastStore.success('Default language updated.')
   } catch (e) {
     const errs = getValidationErrors(e)

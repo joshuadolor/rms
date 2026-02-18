@@ -19,6 +19,7 @@
     <template v-else>
       <!-- Hero: tap to open modal for changing logo & banner -->
       <button
+        ref="heroButtonRef"
         type="button"
         class="mb-6 lg:mb-8 -mx-4 lg:mx-0 w-full text-left block focus:outline-none focus:ring-2 focus:ring-primary focus:ring-inset rounded-none lg:rounded-2xl overflow-hidden"
         @click="showImageModal = true"
@@ -94,7 +95,7 @@
               Edit
             </AppButton>
           </router-link>
-          <AppButton variant="secondary" class="min-h-[44px]" :disabled="deleting || !restaurant.slug" @click="confirmDelete">
+          <AppButton ref="detailDeleteButtonRef" variant="secondary" class="min-h-[44px]" :disabled="deleting || !restaurant.slug" @click="confirmDelete">
             <template #icon>
               <span v-if="deleting" class="material-icons animate-spin">sync</span>
               <span v-else class="material-icons">delete_outline</span>
@@ -197,10 +198,10 @@
       aria-modal="true"
       aria-labelledby="image-modal-title"
       aria-describedby="image-modal-desc"
-      @keydown.escape="closeImageModal"
+      @keydown="onImageModalKeydown"
     >
       <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" aria-hidden="true" @click="closeImageModal" />
-      <div class="relative w-full max-h-[90dvh] overflow-y-auto flex flex-col bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl max-w-md sm:max-w-lg" @click.stop>
+      <div ref="detailImageDialogRef" class="relative w-full max-h-[90dvh] overflow-y-auto flex flex-col bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl max-w-md sm:max-w-lg" @click.stop>
         <div class="flex items-center justify-between shrink-0 px-4 py-3 border-b border-slate-200 dark:border-slate-800">
           <h2 id="image-modal-title" class="text-lg font-bold text-charcoal dark:text-white">Logo &amp; banner</h2>
           <button
@@ -274,8 +275,9 @@
       aria-modal="true"
       aria-labelledby="delete-title"
       aria-describedby="delete-description"
+      @keydown="onDetailDeleteModalKeydown"
     >
-      <div class="bg-white dark:bg-zinc-900 rounded-2xl shadow-xl max-w-md w-full p-6">
+      <div ref="detailDeleteDialogRef" class="bg-white dark:bg-zinc-900 rounded-2xl shadow-xl max-w-md w-full p-6">
         <h3 id="delete-title" class="font-bold text-charcoal dark:text-white mb-2">Delete restaurant?</h3>
         <p id="delete-description" class="text-sm text-slate-500 dark:text-slate-400 mb-4">
           This cannot be undone. All data for this restaurant will be removed.
@@ -292,7 +294,6 @@
           :placeholder="restaurant.slug"
           :aria-label="`Type ${restaurant.slug} to confirm deletion`"
           :aria-invalid="deleteConfirmSlug !== restaurant.slug"
-          @keydown.escape="closeDeleteConfirm"
         />
         <div class="flex gap-3 mt-6">
           <AppButton variant="secondary" class="flex-1" :disabled="deleting" @click="closeDeleteConfirm">
@@ -316,10 +317,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AppButton from '@/components/ui/AppButton.vue'
 import AppBackLink from '@/components/AppBackLink.vue'
+import Restaurant from '@/models/Restaurant.js'
 import { restaurantService, normalizeApiError } from '@/services'
 import { useBreadcrumbStore } from '@/stores/breadcrumb'
 import { useToastStore } from '@/stores/toast'
@@ -340,6 +342,10 @@ const showImageModal = ref(false)
 const imageUploadErrors = ref({ logo: '', banner: '' })
 const logoInputRef = ref(null)
 const bannerInputRef = ref(null)
+const heroButtonRef = ref(null)
+const detailImageDialogRef = ref(null)
+const detailDeleteDialogRef = ref(null)
+const detailDeleteButtonRef = ref(null)
 const IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
 const MAX_IMAGE_BYTES = 2 * 1024 * 1024
 
@@ -372,7 +378,7 @@ async function onModalLogoChange(ev) {
   if (!restaurant.value?.uuid) return
   try {
     const res = await restaurantService.uploadLogo(restaurant.value.uuid, file)
-    restaurant.value = res.data ?? restaurant.value
+    restaurant.value = res != null ? Restaurant.fromApi(res).toJSON() : restaurant.value
     toastStore.success('Logo updated.')
     if (logoInputRef.value) logoInputRef.value.value = ''
   } catch (e) {
@@ -386,7 +392,7 @@ async function onModalBannerChange(ev) {
   if (!restaurant.value?.uuid) return
   try {
     const res = await restaurantService.uploadBanner(restaurant.value.uuid, file)
-    restaurant.value = res.data ?? restaurant.value
+    restaurant.value = res != null ? Restaurant.fromApi(res).toJSON() : restaurant.value
     toastStore.success('Banner updated.')
     if (bannerInputRef.value) bannerInputRef.value.value = ''
   } catch (e) {
@@ -394,9 +400,51 @@ async function onModalBannerChange(ev) {
   }
 }
 
+function getModalFocusables(container) {
+  if (!container) return []
+  const sel = 'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+  return Array.from(container.querySelectorAll(sel))
+}
+function trapKeydown(e, dialogRef) {
+  if (e.key === 'Escape') return
+  if (e.key !== 'Tab' || !dialogRef?.value) return
+  const focusables = getModalFocusables(dialogRef.value)
+  if (focusables.length === 0) return
+  const current = document.activeElement
+  const idx = focusables.indexOf(current)
+  if (e.shiftKey) {
+    if (idx <= 0) {
+      e.preventDefault()
+      focusables[focusables.length - 1].focus()
+    }
+  } else {
+    if (idx === -1 || idx === focusables.length - 1) {
+      e.preventDefault()
+      focusables[0].focus()
+    }
+  }
+}
+function onImageModalKeydown(e) {
+  if (e.key === 'Escape') {
+    closeImageModal()
+    return
+  }
+  trapKeydown(e, detailImageDialogRef)
+}
+function onDetailDeleteModalKeydown(e) {
+  if (e.key === 'Escape') {
+    closeDeleteConfirm()
+    return
+  }
+  trapKeydown(e, detailDeleteDialogRef)
+}
 function closeImageModal() {
   showImageModal.value = false
   imageUploadErrors.value = { logo: '', banner: '' }
+  nextTick(() => {
+    const el = heroButtonRef.value
+    if (el && typeof el.focus === 'function') el.focus()
+  })
 }
 
 /** Domain suffix for subdomain URL (e.g. ".yourdomain.com"). Set VITE_APP_PUBLIC_DOMAIN in .env. */
@@ -430,12 +478,29 @@ const socialLinks = computed(() => {
     .map((n) => ({ name: n.charAt(0).toUpperCase() + n.slice(1), url: r[n] }))
 })
 
+watch(showImageModal, (open) => {
+  if (open) {
+    nextTick(() => {
+      const focusables = getModalFocusables(detailImageDialogRef.value)
+      if (focusables.length > 0) focusables[0].focus()
+    })
+  }
+})
+watch(showDeleteConfirm, (open) => {
+  if (open) {
+    nextTick(() => {
+      const focusables = getModalFocusables(detailDeleteDialogRef.value)
+      if (focusables.length > 0) focusables[0].focus()
+    })
+  }
+})
+
 async function fetchOne() {
   loading.value = true
   restaurant.value = null
   try {
     const res = await restaurantService.get(route.params.uuid)
-    restaurant.value = res.data ?? null
+    restaurant.value = res?.data != null ? Restaurant.fromApi(res).toJSON() : null
     breadcrumbStore.setRestaurantName(restaurant.value?.name ?? null)
   } catch (e) {
     if (e?.response?.status === 404) restaurant.value = null
@@ -453,6 +518,10 @@ function confirmDelete() {
 function closeDeleteConfirm() {
   showDeleteConfirm.value = false
   deleteConfirmSlug.value = ''
+  nextTick(() => {
+    const el = detailDeleteButtonRef.value?.$el ?? detailDeleteButtonRef.value
+    if (el && typeof el.focus === 'function') el.focus()
+  })
 }
 
 async function doDelete() {
