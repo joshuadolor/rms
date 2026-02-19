@@ -292,7 +292,7 @@ async function handleSubmit() {
     if (!result.valid) {
       availabilityDayErrors.value = result.errors
       const dayNames = Object.keys(result.errors).map((k) => k.charAt(0).toUpperCase() + k.slice(1))
-      const summaryMsg = `Time slots cannot overlap. Please fix overlapping slots for ${dayNames.join(', ')}.`
+      const summaryMsg = `Please fix the schedule for ${dayNames.join(', ')}.`
       error.value = summaryMsg
       availabilitySummaryError.value = summaryMsg
       if (props.embed) {

@@ -19,7 +19,7 @@
         <p class="mt-2 text-slate-500 dark:text-slate-400">{{ error }}</p>
         <router-link
           :to="{ name: 'Landing' }"
-          class="mt-6 inline-flex items-center gap-2 font-semibold hover:underline"
+          class="mt-6 min-h-[44px] inline-flex items-center gap-2 font-semibold hover:underline py-2"
           style="color: var(--public-accent)"
         >
           <span class="material-icons text-lg">arrow_back</span>
@@ -32,7 +32,12 @@
       <!-- Sticky nav -->
       <nav class="sticky top-0 z-50 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <a href="#" class="flex items-center gap-3">
+          <a
+            href="#"
+            class="flex items-center gap-3 min-h-[44px]"
+            aria-label="Scroll to top"
+            @click.prevent="scrollToTop"
+          >
             <div
               v-if="data.logo_url"
               class="w-9 h-9 rounded-lg overflow-hidden shrink-0 ring-1 ring-slate-200 dark:ring-slate-700"
@@ -52,7 +57,13 @@
           </a>
           <div class="flex items-center gap-4">
             <div class="hidden sm:flex items-center gap-6">
-              <a href="#" class="text-sm font-medium text-slate-600 dark:text-slate-400 transition-colors hover:opacity-80" style="color: var(--public-accent)">Home</a>
+              <a
+                href="#"
+                class="min-h-[44px] min-w-[44px] inline-flex items-center text-sm font-medium text-slate-600 dark:text-slate-400 transition-colors hover:opacity-80 py-2.5"
+                style="color: var(--public-accent)"
+                aria-label="Scroll to top"
+                @click.prevent="scrollToTop"
+              >Home</a>
               <a href="#menu" class="text-sm font-medium text-slate-600 dark:text-slate-400 transition-colors hover:opacity-80" style="color: var(--public-accent)">Menu</a>
               <a href="#about" class="text-sm font-medium text-slate-600 dark:text-slate-400 transition-colors hover:opacity-80" style="color: var(--public-accent)">About</a>
             </div>
@@ -61,7 +72,7 @@
                 v-for="loc in data.languages"
                 :key="loc"
                 type="button"
-                class="px-2.5 py-1 rounded-lg text-xs font-medium transition-colors"
+                class="min-h-[44px] min-w-[44px] flex items-center justify-center px-2.5 py-2.5 rounded-lg text-xs font-medium transition-colors"
                 :class="locale === loc
                   ? 'text-white'
                   : 'bg-slate-100 dark:bg-zinc-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-zinc-600'"
@@ -121,14 +132,33 @@
             <span class="w-2 h-8 rounded-full shrink-0" style="background-color: var(--public-accent)" aria-hidden="true"></span>
             About
           </h2>
-          <div class="max-w-3xl">
-            <p
-              v-if="data.description"
-              class="text-slate-600 dark:text-slate-300 text-lg leading-relaxed whitespace-pre-wrap"
-            >
-              {{ data.description }}
-            </p>
-            <p v-else class="text-slate-500 dark:text-slate-400 italic">No description yet.</p>
+          <div class="max-w-3xl space-y-8">
+            <div>
+              <p
+                v-if="data.description"
+                class="text-slate-600 dark:text-slate-300 text-lg leading-relaxed whitespace-pre-wrap"
+              >
+                {{ data.description }}
+              </p>
+              <p v-else class="text-slate-500 dark:text-slate-400 italic">No description yet.</p>
+            </div>
+            <!-- Opening hours: only when set -->
+            <div v-if="displayHours.length" class="pt-4 border-t border-slate-200 dark:border-slate-700">
+              <h3 class="text-lg font-semibold text-charcoal dark:text-white flex items-center gap-2 mb-3">
+                <span class="material-icons text-xl" style="color: var(--public-accent)">schedule</span>
+                Opening hours
+              </h3>
+              <ul class="space-y-1.5 text-slate-600 dark:text-slate-300" role="list">
+                <li
+                  v-for="row in displayHours"
+                  :key="row.day"
+                  class="flex flex-wrap items-baseline gap-2 min-h-[44px] sm:min-h-0 sm:py-0.5"
+                >
+                  <span class="w-24 sm:w-28 shrink-0 font-medium text-charcoal dark:text-white">{{ row.label }}</span>
+                  <span>{{ row.text }}</span>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
       </section>
@@ -210,7 +240,9 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import api from '@/services/api'
+import { restaurantService, normalizeApiError } from '@/services'
+import PublicRestaurant from '@/models/PublicRestaurant.js'
+import { formatOperatingHoursForDisplay } from '@/utils/availability'
 import { formatCurrency } from '@/utils/format'
 
 const props = defineProps({
@@ -223,6 +255,8 @@ const locale = ref(route.query.locale ?? '')
 const loading = ref(true)
 const error = ref(null)
 const data = ref(null)
+
+const displayHours = computed(() => formatOperatingHoursForDisplay(data.value?.operating_hours ?? null))
 
 const DEFAULT_ACCENT = '#ee4b2b'
 
@@ -247,16 +281,17 @@ async function fetchRestaurant() {
   data.value = null
   try {
     const params = locale.value ? { locale: locale.value } : {}
-    const res = await api.get(`/public/restaurants/${encodeURIComponent(slug.value)}`, { params })
-    data.value = res.data?.data ?? null
+    const res = await restaurantService.getPublicRestaurant(slug.value, params)
+    const model = PublicRestaurant.fromApi(res)
+    data.value = model.toJSON()
     if (data.value && !locale.value) {
       locale.value = data.value.locale ?? data.value.default_locale ?? 'en'
     }
   } catch (e) {
-    if (e.response?.status === 404) {
+    if (e?.response?.status === 404) {
       error.value = 'This restaurant does not exist or the link is wrong.'
     } else {
-      error.value = e.response?.data?.message ?? 'Failed to load restaurant.'
+      error.value = normalizeApiError(e).message ?? 'Failed to load restaurant.'
     }
   } finally {
     loading.value = false
@@ -266,6 +301,10 @@ async function fetchRestaurant() {
 function setLocale(loc) {
   locale.value = loc
   fetchRestaurant()
+}
+
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 watch(slug, () => {

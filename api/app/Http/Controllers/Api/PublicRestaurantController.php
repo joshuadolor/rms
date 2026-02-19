@@ -70,6 +70,7 @@ class PublicRestaurantController extends Controller
                     : null,
                 'default_locale' => $restaurant->default_locale ?? 'en',
                 'currency' => $restaurant->currency ?? 'USD',
+                'operating_hours' => $restaurant->operating_hours,
                 'languages' => $installedLocales,
                 'locale' => $locale,
                 'description' => $description,

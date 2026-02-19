@@ -39,7 +39,7 @@
           >
             {{ dayLabel(dayKey) }}
           </span>
-          <label class="relative inline-flex items-center cursor-pointer">
+          <label class="relative inline-flex items-center cursor-pointer min-h-[44px] py-2">
             <input
               :checked="dayConfig.open"
               type="checkbox"
@@ -47,7 +47,15 @@
               :aria-label="`${dayLabel(dayKey)} open for business`"
               @change="onDayToggle(dayKey)"
             >
-            <div class="w-11 h-6 bg-slate-200 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary" />
+            <span
+              class="relative inline-block w-11 h-6 shrink-0 rounded-full bg-slate-200 dark:bg-slate-600 transition-colors duration-200 peer-checked:bg-primary"
+              aria-hidden="true"
+            >
+              <span
+                class="absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200 pointer-events-none"
+                :class="{ 'translate-x-5': dayConfig.open }"
+              />
+            </span>
           </label>
         </div>
 
@@ -62,6 +70,7 @@
               <input
                 :value="slot.from"
                 type="time"
+                aria-label="Opening time"
                 class="w-full pl-9 pr-3 py-2.5 text-sm bg-background-light dark:bg-zinc-800 border-0 rounded-lg focus:ring-2 focus:ring-primary/50 text-charcoal dark:text-white min-h-[44px]"
                 @input="setSlotTime(dayKey, slotIndex, 'from', ($event.target).value)"
               >
@@ -72,13 +81,14 @@
               <input
                 :value="slot.to"
                 type="time"
+                aria-label="Closing time"
                 class="w-full pl-9 pr-3 py-2.5 text-sm bg-background-light dark:bg-zinc-800 border-0 rounded-lg focus:ring-2 focus:ring-primary/50 text-charcoal dark:text-white min-h-[44px]"
                 @input="setSlotTime(dayKey, slotIndex, 'to', ($event.target).value)"
               >
             </div>
             <button
               type="button"
-              class="p-2 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 min-h-[44px] min-w-[44px] flex items-center justify-center shrink-0"
+              class="p-2 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 min-h-[44px] min-w-[44px] flex items-center justify-center shrink-0 focus:outline-none focus:ring-2 focus:ring-primary/50"
               aria-label="Remove time slot"
               @click="removeSlot(dayKey, slotIndex)"
             >
@@ -95,7 +105,7 @@
           </p>
           <button
             type="button"
-            class="mt-1 text-sm font-medium text-primary hover:text-primary/80 flex items-center gap-1.5 min-h-[44px] min-w-[44px] px-3"
+            class="mt-1 text-sm font-medium text-primary hover:text-primary/80 flex items-center gap-1.5 min-h-[44px] min-w-[44px] px-3 focus:outline-none focus:ring-2 focus:ring-primary/50 rounded-lg"
             @click="addSlot(dayKey)"
           >
             <span class="material-icons text-lg">add</span>

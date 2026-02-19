@@ -54,6 +54,17 @@ export async function getRestaurant(uuid) {
 }
 
 /**
+ * Get public restaurant by slug (no auth). For subdomain / public menu pages.
+ * @param {string} slug
+ * @param {{ locale?: string }} params - optional locale for content
+ * @returns {Promise<{ data: object }>} data shape per docs/API-REFERENCE.md (name, slug, operating_hours, menu_items, etc.)
+ */
+export async function getPublicRestaurant(slug, params = {}) {
+  const { data } = await api.get(`/public/restaurants/${encodeURIComponent(slug)}`, { params })
+  return data
+}
+
+/**
  * Create restaurant. Invalidates restaurants list cache.
  * @param {object} payload - name (required), slug, address, latitude, longitude, phone, email, website, social_links
  * @returns {Promise<{ message: string, data: object }>}
@@ -432,6 +443,7 @@ export async function deleteMenuItem(uuid, itemUuid) {
 export const restaurantService = {
   list: listRestaurants,
   get: getRestaurant,
+  getPublicRestaurant,
   create: createRestaurant,
   update: updateRestaurant,
   delete: deleteRestaurant,

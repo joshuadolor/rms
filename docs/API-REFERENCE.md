@@ -657,6 +657,7 @@ Returns public restaurant data and menu items for subdomain or `/r/:slug` pages.
     "banner_url": "string | null",
     "default_locale": "string",
     "currency": "string",
+    "operating_hours": "object | null",
     "languages": ["en", "nl", ...],
     "locale": "string",
     "description": "string | null",
@@ -672,6 +673,8 @@ Returns public restaurant data and menu items for subdomain or `/r/:slug` pages.
   }
 }
 ```
+
+`operating_hours` has the same shape as in the restaurant payload (see **Operating hours shape** above); `null` when not set.
 
 **404:** Restaurant not found for the given slug.
 
@@ -1036,6 +1039,7 @@ When the item is a **restaurant usage of a catalog item** (added from “Menu it
 
 ## Changelog
 
+- **2026-02-19**: Public restaurant by slug: response now includes **operating_hours** (same shape as owner restaurant payload; null when not set) for display of opening hours on public pages.
 - **2026-02-19**: User-level menu items: GET `/api/menu-items` now returns **only standalone (catalog) items**. Restaurant menu items are no longer included; use GET `/api/restaurants/{restaurant}/menu-items` for per-restaurant lists. Fixes duplicate items on the Menu items (catalog) page after adding a catalog item to a restaurant category.
 - **2026-02-19**: Restaurants: **operating_hours** (optional). Column added to restaurants table (JSON, nullable). Create/update accept `operating_hours`: object keyed by day (sunday–saturday), each day `{ "open": bool, "slots": [ { "from": "HH:MM", "to": "HH:MM" }, ... ] }`. Times 24h (HH:MM or HH:MM:SS). Per day, timeslots must not overlap; `from` must be before `to`. List/show/update and create response include `operating_hours` in payload. Same structure will be reused for menu item availability.
 - **2026-02-19**: Restaurants: **currency** (ISO 4217 code, default USD). Column added to restaurants table. Update accepts `currency`; list/show/update and public GET `/api/public/restaurants/{slug}` include `currency` in payload. Frontend uses it for all price display in restaurant context.

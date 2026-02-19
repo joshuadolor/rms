@@ -65,6 +65,42 @@ class RestaurantManageAvailabilityPage {
     await this.page.getByTestId('form-submit').click()
   }
 
+  /** Click Save on the Availability tab (saves operating hours only). */
+  async clickSaveOnAvailabilityTab() {
+    await this.page.getByTestId('availability-save-button').click()
+  }
+
+  /**
+   * Set a day open or closed. When closing, unchecks "X open for business"; when opening, checks it.
+   * Clicks the label that wraps the checkbox so the visible toggle responds (checkbox is sr-only).
+   * @param {string} dayKey - e.g. 'monday', 'sunday'
+   * @param {boolean} open - true = open for business, false = closed
+   */
+  async setDayOpen(dayKey, open) {
+    const label = dayKey.charAt(0).toUpperCase() + dayKey.slice(1)
+    const checkbox = this.page.getByRole('checkbox', { name: `${label} open for business` })
+    const isChecked = await checkbox.isChecked()
+    if (isChecked !== open) {
+      await checkbox.click({ force: true })
+    }
+  }
+
+  /** Assert the given day row shows "Closed" (disabled inputs with value Closed). */
+  async expectDayShowsClosed(dayKey) {
+    const day = this.page.getByTestId(`availability-day-${dayKey}`)
+    await expect(day.locator('input[value="Closed"]').first()).toBeVisible()
+  }
+
+  /** Assert the availability summary error block contains the given text. */
+  async expectAvailabilitySummaryErrorToContain(text) {
+    await expect(this.page.getByTestId('availability-summary-error')).toContainText(text)
+  }
+
+  /** Assert the per-day error for the given day contains the given text. */
+  async expectDayErrorToContain(dayKey, text) {
+    await expect(this.page.getByTestId(`availability-day-error-${dayKey}`)).toContainText(text)
+  }
+
   /** Assert the form error block is visible (e.g. overlap summary). */
   async expectFormErrorVisible() {
     const formError = this.page.getByTestId('form-error')

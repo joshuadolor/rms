@@ -454,7 +454,7 @@ async function saveAvailability() {
   if (!result.valid) {
     availabilityDayErrors.value = result.errors
     const dayNames = Object.keys(result.errors).map((k) => k.charAt(0).toUpperCase() + k.slice(1))
-    availabilitySummaryError.value = `Time slots cannot overlap. Please fix overlapping slots for ${dayNames.join(', ')}.`
+    availabilitySummaryError.value = `Please fix the schedule for ${dayNames.join(', ')}.`
     return
   }
   availabilityDayErrors.value = {}

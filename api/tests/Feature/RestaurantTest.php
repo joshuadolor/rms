@@ -117,6 +117,68 @@ class RestaurantTest extends TestCase
         $this->assertDatabaseHas('restaurants', ['name' => 'My Bistro', 'user_id' => $user->id]);
     }
 
+    public function test_create_restaurant_with_operating_hours_persists_and_returns_in_payload(): void
+    {
+        $user = $this->createVerifiedUser();
+        $token = $user->createToken('auth')->plainTextToken;
+        $operatingHours = [
+            'sunday' => ['open' => false, 'slots' => []],
+            'monday' => ['open' => true, 'slots' => [['from' => '09:00', 'to' => '17:00']]],
+            'tuesday' => ['open' => true, 'slots' => [['from' => '09:00', 'to' => '12:00'], ['from' => '14:00', 'to' => '18:00']]],
+            'wednesday' => ['open' => false, 'slots' => []],
+            'thursday' => ['open' => true, 'slots' => [['from' => '10:00', 'to' => '22:00']]],
+            'friday' => ['open' => true, 'slots' => [['from' => '10:00', 'to' => '23:00']]],
+            'saturday' => ['open' => false, 'slots' => []],
+        ];
+
+        $response = $this->postJson('/api/restaurants', [
+            'name' => 'Bistro With Hours',
+            'default_locale' => 'en',
+            'operating_hours' => $operatingHours,
+        ], [
+            'Authorization' => 'Bearer ' . $token,
+        ]);
+
+        $response->assertStatus(201)
+            ->assertJsonPath('message', 'Restaurant created.')
+            ->assertJsonPath('data.name', 'Bistro With Hours')
+            ->assertJsonPath('data.operating_hours.monday.open', true)
+            ->assertJsonPath('data.operating_hours.monday.slots.0.from', '09:00')
+            ->assertJsonPath('data.operating_hours.monday.slots.0.to', '17:00')
+            ->assertJsonPath('data.operating_hours.tuesday.slots.1.from', '14:00')
+            ->assertJsonPath('data.operating_hours.wednesday.open', false)
+            ->assertJsonMissingPath('data.id');
+
+        $restaurant = Restaurant::where('user_id', $user->id)->where('name', 'Bistro With Hours')->first();
+        $this->assertNotNull($restaurant);
+        $this->assertSame($operatingHours, $restaurant->operating_hours);
+    }
+
+    public function test_create_restaurant_operating_hours_rejects_overlapping_slots(): void
+    {
+        $user = $this->createVerifiedUser();
+        $token = $user->createToken('auth')->plainTextToken;
+
+        $response = $this->postJson('/api/restaurants', [
+            'name' => 'Bad Hours',
+            'default_locale' => 'en',
+            'operating_hours' => [
+                'monday' => [
+                    'open' => true,
+                    'slots' => [
+                        ['from' => '09:00', 'to' => '12:00'],
+                        ['from' => '11:00', 'to' => '14:00'],
+                    ],
+                ],
+            ],
+        ], [
+            'Authorization' => 'Bearer ' . $token,
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['operating_hours']);
+    }
+
     public function test_create_second_restaurant_returns_403_free_tier(): void
     {
         $user = $this->createVerifiedUser();
@@ -269,7 +331,33 @@ class RestaurantTest extends TestCase
             ->assertJsonPath('data.slug', 'public-bistro')
             ->assertJsonPath('data.description', 'Nice place')
             ->assertJsonPath('data.menu_items', [])
-            ->assertJsonStructure(['data' => ['name', 'slug', 'logo_url', 'banner_url', 'default_locale', 'languages', 'locale', 'description', 'menu_items']]);
+            ->assertJsonPath('data.operating_hours', null)
+            ->assertJsonStructure(['data' => ['name', 'slug', 'logo_url', 'banner_url', 'default_locale', 'operating_hours', 'languages', 'locale', 'description', 'menu_items']]);
+        $response->assertJsonMissingPath('data.id');
+    }
+
+    public function test_public_restaurant_by_slug_returns_operating_hours_when_set(): void
+    {
+        $user = $this->createVerifiedUser();
+        $restaurant = $this->createRestaurantForUser($user, ['slug' => 'hours-bistro']);
+        $operatingHours = [
+            'monday' => ['open' => true, 'slots' => [['from' => '09:00', 'to' => '12:00'], ['from' => '14:00', 'to' => '21:00']]],
+            'tuesday' => ['open' => true, 'slots' => [['from' => '09:00', 'to' => '21:00']]],
+            'wednesday' => ['open' => false, 'slots' => []],
+        ];
+        $restaurant->operating_hours = $operatingHours;
+        $restaurant->save();
+
+        $response = $this->getJson('/api/public/restaurants/hours-bistro');
+
+        $response->assertOk()
+            ->assertJsonPath('data.slug', 'hours-bistro')
+            ->assertJsonPath('data.operating_hours.monday.open', true)
+            ->assertJsonPath('data.operating_hours.monday.slots.0.from', '09:00')
+            ->assertJsonPath('data.operating_hours.monday.slots.0.to', '12:00')
+            ->assertJsonPath('data.operating_hours.monday.slots.1.from', '14:00')
+            ->assertJsonPath('data.operating_hours.tuesday.slots.0.to', '21:00')
+            ->assertJsonPath('data.operating_hours.wednesday.open', false);
         $response->assertJsonMissingPath('data.id');
     }
 

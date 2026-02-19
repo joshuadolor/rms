@@ -9,6 +9,7 @@ const { CategoryMenuItemsPage } = require('./pages/CategoryMenuItemsPage.cjs')
 const { MenuItemFormPage } = require('./pages/MenuItemFormPage.cjs')
 const { RestaurantSettingsPage } = require('./pages/RestaurantSettingsPage.cjs')
 const { RestaurantManageAvailabilityPage } = require('./pages/RestaurantManageAvailabilityPage.cjs')
+const { PublicRestaurantPage } = require('./pages/PublicRestaurantPage.cjs')
 
 const MOCK_VERIFIED_USER = {
   id: 1,
@@ -123,6 +124,32 @@ function mockRestaurantGet(page, restaurant = MOCK_RESTAURANT) {
       return route.fulfill({ status: 204, body: '' })
     }
     return route.continue()
+  })
+}
+
+/**
+ * Mock GET /api/public/restaurants/:slug for public restaurant page. Pass operating_hours to show Opening hours.
+ */
+function mockPublicRestaurant(page, slug, data = {}) {
+  const payload = {
+    name: 'Test Pizza',
+    slug: slug || 'test-pizza',
+    description: null,
+    currency: 'USD',
+    languages: ['en'],
+    menu_items: [],
+    operating_hours: {},
+    ...data,
+  }
+  page.route(/^.*\/api\/public\/restaurants\/[^/]+$/, (route) => {
+    if (route.request().method() !== 'GET') return route.continue()
+    const urlSlug = route.request().url().match(/\/public\/restaurants\/([^/?#]+)/)?.[1]
+    if (decodeURIComponent(urlSlug || '') !== slug) return route.continue()
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ data: payload }),
+    })
   })
 }
 
@@ -940,10 +967,11 @@ test.describe('Restaurant module', () => {
     await availabilityPage.goToProfileTab()
     await availabilityPage.clickSaveChanges()
     await availabilityPage.expectFormErrorVisible()
-    await availabilityPage.expectFormErrorToContain('overlap')
+    await availabilityPage.expectFormErrorToContain('fix the schedule')
     await availabilityPage.goToAvailabilityTab()
     await availabilityPage.expectAvailabilitySummaryErrorVisible()
     await availabilityPage.expectDayErrorVisible('monday')
+    await availabilityPage.expectDayErrorToContain('monday', 'overlap')
   })
 
   test('valid non-overlapping slots save successfully from Profile', async ({ page }) => {
@@ -968,6 +996,85 @@ test.describe('Restaurant module', () => {
     await availabilityPage.clickSaveChanges()
     await availabilityPage.expectFormErrorHidden()
     await availabilityPage.expectSuccessToastWithMessage('Restaurant updated.')
+  })
+
+  test('owner sets operating hours on Availability tab and saves with Save button', async ({ page }) => {
+    await loginAsVerifiedUser(page)
+    mockRestaurantList(page, [MOCK_RESTAURANT])
+    mockRestaurantGet(page, MOCK_RESTAURANT)
+    mockRestaurantMenus(page)
+    mockRestaurantCategories(page, [])
+    mockRestaurantMenuItems(page, [])
+    mockRestaurantLanguagesAndTranslations(page)
+
+    const availabilityPage = new RestaurantManageAvailabilityPage(page)
+    await availabilityPage.goToManagePage(MOCK_RESTAURANT.uuid)
+    await availabilityPage.goToAvailabilityTab()
+    await availabilityPage.expectScheduleVisible()
+    await availabilityPage.setSlotTime('monday', 0, 'from', '10:00')
+    await availabilityPage.setSlotTime('monday', 0, 'to', '15:00')
+    await availabilityPage.clickSaveOnAvailabilityTab()
+    await availabilityPage.expectSuccessToastWithMessage('Operating hours saved.')
+  })
+
+  test('owner closes a day, sets slots, saves on Availability tab; reload confirms hours persist', async ({ page }) => {
+    await loginAsVerifiedUser(page)
+    mockRestaurantList(page, [MOCK_RESTAURANT])
+    mockRestaurantGet(page, MOCK_RESTAURANT)
+    mockRestaurantMenus(page)
+    mockRestaurantCategories(page, [])
+    mockRestaurantMenuItems(page, [])
+    mockRestaurantLanguagesAndTranslations(page)
+
+    const availabilityPage = new RestaurantManageAvailabilityPage(page)
+    await availabilityPage.goToManagePage(MOCK_RESTAURANT.uuid)
+    await availabilityPage.goToAvailabilityTab()
+    await availabilityPage.expectScheduleVisible()
+    await availabilityPage.setDayOpen('sunday', false)
+    await availabilityPage.setSlotTime('monday', 0, 'from', '09:00')
+    await availabilityPage.setSlotTime('monday', 0, 'to', '17:00')
+    await availabilityPage.clickSaveOnAvailabilityTab()
+    await availabilityPage.expectSuccessToastWithMessage('Operating hours saved.')
+    await page.reload()
+    await availabilityPage.goToManagePage(MOCK_RESTAURANT.uuid)
+    await availabilityPage.goToAvailabilityTab()
+    await availabilityPage.expectDayShowsClosed('sunday')
+  })
+
+  test('from-before-to validation blocks save on Availability tab and shows error', async ({ page }) => {
+    await loginAsVerifiedUser(page)
+    mockRestaurantList(page, [MOCK_RESTAURANT])
+    mockRestaurantGet(page, MOCK_RESTAURANT)
+    mockRestaurantMenus(page)
+    mockRestaurantCategories(page, [])
+    mockRestaurantMenuItems(page, [])
+    mockRestaurantLanguagesAndTranslations(page)
+
+    const availabilityPage = new RestaurantManageAvailabilityPage(page)
+    await availabilityPage.goToManagePage(MOCK_RESTAURANT.uuid)
+    await availabilityPage.goToAvailabilityTab()
+    await availabilityPage.expectScheduleVisible()
+    await availabilityPage.setSlotTime('monday', 0, 'from', '12:00')
+    await availabilityPage.setSlotTime('monday', 0, 'to', '10:00')
+    await availabilityPage.clickSaveOnAvailabilityTab()
+    await availabilityPage.expectAvailabilitySummaryErrorVisible()
+    await availabilityPage.expectAvailabilitySummaryErrorToContain('fix the schedule')
+    await availabilityPage.expectDayErrorToContain('monday', 'From must be before to')
+  })
+
+  test('public restaurant page shows Opening hours when operating_hours set', async ({ page }) => {
+    mockPublicRestaurant(page, 'test-pizza', {
+      name: 'Test Pizza',
+      slug: 'test-pizza',
+      operating_hours: {
+        monday: { open: true, slots: [{ from: '10:00', to: '15:00' }] },
+        tuesday: { open: false, slots: [] },
+      },
+    })
+
+    const publicPage = new PublicRestaurantPage(page)
+    await publicPage.goToPublicBySlug('test-pizza')
+    await publicPage.expectOpeningHoursSectionVisible()
   })
 
   test('restaurant Settings tab shows Currency, Languages, and description-by-language with dropdown and single textarea', async ({ page }) => {
