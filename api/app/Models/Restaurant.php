@@ -28,6 +28,7 @@ class Restaurant extends Model
         'social_links',
         'default_locale',
         'currency',
+        'operating_hours',
     ];
 
     /**
@@ -44,6 +45,7 @@ class Restaurant extends Model
      */
     protected $casts = [
         'social_links' => 'array',
+        'operating_hours' => 'array',
         'latitude' => 'decimal:8',
         'longitude' => 'decimal:8',
     ];

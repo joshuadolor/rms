@@ -1,5 +1,5 @@
 <template>
-  <nav v-if="trail.length" aria-label="Breadcrumb" class="mb-4 lg:mb-6">
+  <nav v-if="trail.length" aria-label="Breadcrumb">
     <ol class="flex flex-wrap items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400">
       <li v-for="(segment, i) in trail" :key="segment.name" class="flex items-center gap-1.5">
         <template v-if="i > 0">

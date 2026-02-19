@@ -46,6 +46,7 @@ final readonly class CreateRestaurant
             'website' => $input['website'] ?? null,
             'social_links' => $input['social_links'] ?? null,
             'default_locale' => $defaultLocale,
+            'operating_hours' => $input['operating_hours'] ?? null,
         ];
 
         $restaurant = $this->restaurantRepository->create($attributes);

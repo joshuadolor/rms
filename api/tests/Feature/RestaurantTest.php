@@ -158,6 +158,59 @@ class RestaurantTest extends TestCase
         $this->assertSame('New tagline', $restaurant->tagline);
     }
 
+    public function test_update_restaurant_with_operating_hours_persists_and_returns_in_payload(): void
+    {
+        $user = $this->createVerifiedUser();
+        $restaurant = $this->createRestaurantForUser($user);
+        $token = $user->createToken('auth')->plainTextToken;
+
+        $operatingHours = [
+            'monday' => ['open' => true, 'slots' => [['from' => '09:00', 'to' => '12:00'], ['from' => '14:00', 'to' => '21:00']]],
+            'tuesday' => ['open' => true, 'slots' => [['from' => '09:00', 'to' => '21:00']]],
+            'wednesday' => ['open' => false, 'slots' => []],
+        ];
+
+        $response = $this->patchJson('/api/restaurants/' . $restaurant->uuid, [
+            'operating_hours' => $operatingHours,
+        ], [
+            'Authorization' => 'Bearer ' . $token,
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('data.operating_hours.monday.open', true)
+            ->assertJsonPath('data.operating_hours.monday.slots.0.from', '09:00')
+            ->assertJsonPath('data.operating_hours.monday.slots.0.to', '12:00')
+            ->assertJsonPath('data.operating_hours.monday.slots.1.from', '14:00')
+            ->assertJsonPath('data.operating_hours.wednesday.open', false);
+
+        $restaurant->refresh();
+        $this->assertSame($operatingHours, $restaurant->operating_hours);
+    }
+
+    public function test_update_restaurant_operating_hours_rejects_overlapping_slots(): void
+    {
+        $user = $this->createVerifiedUser();
+        $restaurant = $this->createRestaurantForUser($user);
+        $token = $user->createToken('auth')->plainTextToken;
+
+        $response = $this->patchJson('/api/restaurants/' . $restaurant->uuid, [
+            'operating_hours' => [
+                'monday' => [
+                    'open' => true,
+                    'slots' => [
+                        ['from' => '09:00', 'to' => '12:00'],
+                        ['from' => '11:00', 'to' => '14:00'],
+                    ],
+                ],
+            ],
+        ], [
+            'Authorization' => 'Bearer ' . $token,
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['operating_hours']);
+    }
+
     public function test_update_restaurant_returns_403_for_other_users_restaurant(): void
     {
         $owner = $this->createVerifiedUser();

@@ -210,7 +210,7 @@ const standaloneItem = ref(null)
 const translatingLocale = ref(null)
 /** Currently selected locale in the translations dropdown. */
 const selectedLocale = ref('en')
-/** When editing a restaurant item that comes from catalog (source_menu_item_uuid). */
+/** When editing a restaurant item that comes from catalog (source_menu_item_uuid). Overrides only in restaurant context. */
 const catalogSourceUuid = ref(null)
 const baseTranslations = ref({})
 const basePrice = ref(null)
@@ -224,7 +224,8 @@ const form = reactive({
   translations: {},
 })
 
-const itemFromCatalog = computed(() => !!catalogSourceUuid.value)
+/** True only in restaurant context when this item is a catalog reference. Menu items (catalog) context never uses overrides. */
+const itemFromCatalog = computed(() => !!restaurant.value && !!catalogSourceUuid.value)
 
 function formatBasePrice(price) {
   const currency = restaurant.value?.currency ?? 'USD'
@@ -301,7 +302,8 @@ async function handleSubmit() {
   saving.value = true
   try {
     let payload = { sort_order: form.sort_order }
-    if (itemFromCatalog.value) {
+    // Menu items (catalog) context: only base translations and price; no overrides. Restaurant context with catalog reference: send overrides.
+    if (!isMenuItemsModule.value && itemFromCatalog.value) {
       payload.price_override = form.price_override === '' || form.price_override == null ? null : Number(form.price_override)
       payload.translation_overrides = buildTranslationOverrides()
     } else {
@@ -472,6 +474,10 @@ async function loadStandaloneMenuItem() {
     const item = res?.data != null ? MenuItem.fromApi(res) : null
     if (!item) return
     standaloneItem.value = item.toJSON()
+    catalogSourceUuid.value = null
+    baseTranslations.value = {}
+    basePrice.value = null
+    hasOverrides.value = false
     form.sort_order = item.sort_order ?? 0
     form.category_uuid = null
     form.price = item.price != null ? String(item.price) : ''

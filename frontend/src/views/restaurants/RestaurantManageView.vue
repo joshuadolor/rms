@@ -108,6 +108,9 @@
             :operating-hours="operatingHours"
             :default-description="defaultDescription"
             @update:default-description="defaultDescription = $event"
+            @availability-errors="availabilityDayErrors = $event"
+            @availability-summary-error="availabilitySummaryError = $event"
+            @saved="onProfileSaved($event)"
           >
             <template #actions-start>
               <AppButton ref="deleteButtonRef" data-testid="manage-delete-button" type="button" variant="secondary" class="min-h-[44px] w-full sm:w-auto text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20" :disabled="deleting || !restaurant.slug" @click="confirmDelete">
@@ -127,10 +130,29 @@
           <header class="mb-4 lg:mb-6">
             <div>
               <h2 class="text-xl font-bold text-charcoal dark:text-white lg:text-2xl">Availability</h2>
-              <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">When your restaurant is open. Schedule is saved when you save the profile.</p>
+              <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">When your restaurant is open. Change times below and tap Save to update.</p>
             </div>
           </header>
-          <RestaurantAvailabilitySchedule v-model="operatingHours" />
+          <RestaurantAvailabilitySchedule
+            v-model="operatingHours"
+            :day-errors="availabilityDayErrors"
+            :summary-error="availabilitySummaryError"
+          />
+          <div class="mt-6 flex justify-end">
+            <AppButton
+              type="button"
+              variant="primary"
+              class="min-h-[44px]"
+              :disabled="savingAvailability || !restaurant?.uuid"
+              data-testid="availability-save-button"
+              @click="saveAvailability"
+            >
+              <template v-if="savingAvailability" #icon>
+                <span class="material-icons animate-spin">sync</span>
+              </template>
+              {{ savingAvailability ? 'Saving…' : 'Save' }}
+            </AppButton>
+          </div>
         </div>
         <div v-show="activeTab === 'settings'" id="manage-panel-settings" role="tabpanel" aria-labelledby="manage-tab-settings" class="min-h-[200px]" data-testid="manage-panel-settings">
           <RestaurantContentView
@@ -229,7 +251,8 @@ import AppModal from '@/components/ui/AppModal.vue'
 import { useBreadcrumbStore } from '@/stores/breadcrumb'
 import { useToastStore } from '@/stores/toast'
 import Restaurant from '@/models/Restaurant.js'
-import { restaurantService, normalizeApiError } from '@/services'
+import { validateOperatingHours } from '@/utils/availability'
+import { restaurantService, getValidationErrors, normalizeApiError } from '@/services'
 import RestaurantFormView from './RestaurantFormView.vue'
 import RestaurantMenusView from './RestaurantMenusView.vue'
 import RestaurantContentView from './RestaurantContentView.vue'
@@ -243,6 +266,9 @@ const toastStore = useToastStore()
 const loading = ref(true)
 const restaurant = ref(null)
 const operatingHours = ref({})
+const availabilityDayErrors = ref({})
+const availabilitySummaryError = ref('')
+const savingAvailability = ref(false)
 const defaultDescription = ref('')
 const deleting = ref(false)
 const showDeleteConfirm = ref(false)
@@ -412,6 +438,45 @@ async function onModalBannerChange(ev) {
 function closeImageModal() {
   showImageModal.value = false
   imageUploadErrors.value = { logo: '', banner: '' }
+}
+
+function onProfileSaved(updated) {
+  if (updated && typeof updated === 'object') {
+    restaurant.value = updated
+    operatingHours.value = updated.operating_hours ?? {}
+  }
+}
+
+async function saveAvailability() {
+  if (savingAvailability.value || !restaurant.value?.uuid) return
+  const hours = operatingHours.value ?? {}
+  const result = validateOperatingHours(hours)
+  if (!result.valid) {
+    availabilityDayErrors.value = result.errors
+    const dayNames = Object.keys(result.errors).map((k) => k.charAt(0).toUpperCase() + k.slice(1))
+    availabilitySummaryError.value = `Time slots cannot overlap. Please fix overlapping slots for ${dayNames.join(', ')}.`
+    return
+  }
+  availabilityDayErrors.value = {}
+  availabilitySummaryError.value = ''
+  savingAvailability.value = true
+  try {
+    const res = await restaurantService.update(restaurant.value.uuid, { operating_hours: hours })
+    const updated = res?.data != null ? Restaurant.fromApi(res).toJSON() : null
+    if (updated) {
+      restaurant.value = updated
+      operatingHours.value = updated.operating_hours ?? {}
+    }
+    toastStore.success('Operating hours saved.')
+  } catch (e) {
+    const fieldErrors = getValidationErrors(e)
+    const message =
+      fieldErrors?.operating_hours ?? normalizeApiError(e).message ?? 'Failed to save. Please try again.'
+    availabilitySummaryError.value = message
+    toastStore.error(message)
+  } finally {
+    savingAvailability.value = false
+  }
 }
 
 async function fetchOne() {

@@ -140,7 +140,11 @@
               <span class="material-icons text-slate-500 dark:text-slate-400 text-lg">schedule</span>
               Availability
             </h4>
-            <RestaurantAvailabilitySchedule v-model="form.operatingHours" />
+            <RestaurantAvailabilitySchedule
+              v-model="form.operatingHours"
+              :day-errors="availabilityDayErrors"
+              :summary-error="availabilitySummaryError"
+            />
           </div>
         </div>
       </section>
@@ -180,6 +184,7 @@ import AppButton from '@/components/ui/AppButton.vue'
 import AppBackLink from '@/components/AppBackLink.vue'
 import RestaurantAvailabilitySchedule from '@/components/restaurant/RestaurantAvailabilitySchedule.vue'
 import Restaurant from '@/models/Restaurant.js'
+import { validateOperatingHours } from '@/utils/availability'
 import { restaurantService, getValidationErrors, normalizeApiError } from '@/services'
 import { useToastStore } from '@/stores/toast'
 import { useBreadcrumbStore } from '@/stores/breadcrumb'
@@ -195,7 +200,7 @@ const props = defineProps({
   defaultDescription: { type: String, default: '' },
 })
 
-const emit = defineEmits(['update:defaultDescription'])
+const emit = defineEmits(['update:defaultDescription', 'availability-errors', 'availability-summary-error', 'saved'])
 
 const uuid = computed(() => route.params.uuid)
 const isEdit = computed(() => props.embed || route.meta.mode === 'edit')
@@ -204,6 +209,8 @@ const loading = ref(false)
 const saving = ref(false)
 const error = ref('')
 const fieldErrors = ref({})
+const availabilityDayErrors = ref({})
+const availabilitySummaryError = ref('')
 const restaurant = ref(null)
 const moreDetailsOpen = ref(false)
 
@@ -277,17 +284,41 @@ function buildPayload() {
 async function handleSubmit() {
   error.value = ''
   fieldErrors.value = {}
+  availabilityDayErrors.value = {}
+  availabilitySummaryError.value = ''
+  const hours = props.embed && props.operatingHours != null ? props.operatingHours : form.operatingHours
+  if (hours && typeof hours === 'object' && Object.keys(hours).length > 0) {
+    const result = validateOperatingHours(hours)
+    if (!result.valid) {
+      availabilityDayErrors.value = result.errors
+      const dayNames = Object.keys(result.errors).map((k) => k.charAt(0).toUpperCase() + k.slice(1))
+      const summaryMsg = `Time slots cannot overlap. Please fix overlapping slots for ${dayNames.join(', ')}.`
+      error.value = summaryMsg
+      availabilitySummaryError.value = summaryMsg
+      if (props.embed) {
+        emit('availability-errors', result.errors)
+        emit('availability-summary-error', summaryMsg)
+      }
+      return
+    }
+  }
+  if (props.embed) {
+    emit('availability-errors', {})
+    emit('availability-summary-error', '')
+  }
   if (!validateForm()) return
   saving.value = true
   try {
     if (isEdit.value) {
       const res = await restaurantService.update(uuid.value, buildPayload())
-      restaurant.value = res != null ? Restaurant.fromApi(res).toJSON() : restaurant.value
+      const updated = res != null ? Restaurant.fromApi(res).toJSON() : restaurant.value
+      restaurant.value = updated
       const defaultLocale = restaurant.value?.default_locale
       if (defaultLocale != null && form.description !== undefined) {
         await restaurantService.putTranslation(uuid.value, defaultLocale, { description: form.description?.trim() || null })
       }
       toastStore.success(res.message ?? 'Restaurant updated.')
+      if (props.embed && updated) emit('saved', updated)
       if (!props.embed) router.push({ name: 'RestaurantDetail', params: { uuid: uuid.value } })
     } else {
       const res = await restaurantService.create(buildPayload())

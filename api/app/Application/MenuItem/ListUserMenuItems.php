@@ -9,20 +9,18 @@ use Illuminate\Support\Collection;
 final readonly class ListUserMenuItems
 {
     /**
-     * List all menu items the user can access: standalone (user_id = user) and those in restaurants they own.
+     * List only standalone (catalog) menu items for the user. Used by the "Menu items" catalog page.
+     * Restaurant menu items (references to catalog or restaurant-only items) are not included;
+     * they are listed per restaurant via the restaurant menu-items API.
      *
      * @return Collection<int, MenuItem>
      */
     public function handle(User $user): Collection
     {
         return MenuItem::query()
-            ->with(['translations', 'category', 'restaurant', 'sourceMenuItem.translations'])
-            ->where(function ($query) use ($user) {
-                $query->where('user_id', $user->id)
-                    ->whereNull('restaurant_id')
-                    ->orWhereHas('restaurant', fn ($q) => $q->where('user_id', $user->id));
-            })
-            ->orderByRaw('restaurant_id is null DESC')
+            ->with(['translations', 'category', 'sourceMenuItem.translations'])
+            ->where('user_id', $user->id)
+            ->whereNull('restaurant_id')
             ->orderByRaw('category_id is null')
             ->orderBy('sort_order')
             ->orderBy('id')

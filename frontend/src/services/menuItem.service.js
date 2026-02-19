@@ -18,7 +18,8 @@ export function invalidateUserMenuItemsListCache() {
 }
 
 /**
- * List all menu items the user can access (standalone + from their restaurants).
+ * List only standalone (catalog) menu items. Used by the "Menu items" catalog page.
+ * Restaurant menu items are listed per restaurant via restaurantService.listMenuItems.
  * Cached; next call returns cache until a menu item is created/updated/deleted.
  * @returns {Promise<{ data: Array<{ uuid: string, restaurant_uuid?: string | null, category_uuid: string | null, sort_order: number, translations: Record<string, { name: string, description: string | null }>, created_at: string, updated_at: string }> }>}
  */

@@ -101,8 +101,14 @@
           <span class="material-icons text-2xl">menu</span>
         </button>
       </header>
-      <main class="flex-1 p-4 pt-6 lg:p-8 lg:pt-8">
-        <AppBreadcrumbs />
+      <main class="flex-1 p-4 pt-14 lg:p-8 lg:pt-8">
+        <!-- Sticky breadcrumbs: below mobile header when sticky (top-14), at top on desktop; only on routes that have breadcrumbs -->
+        <div
+          v-if="route.name && BREADCRUMB_CONFIG[route.name]"
+          class="sticky z-10 -mx-4 -mt-14 px-4 pt-4 lg:-mx-8 lg:-mt-8 lg:px-8 lg:pt-8 max-lg:top-14 lg:top-0 py-3 bg-white dark:bg-zinc-900 border-b border-slate-200 dark:border-slate-800 mb-4 lg:mb-6"
+        >
+          <AppBreadcrumbs />
+        </div>
         <router-view />
       </main>
     </div>
@@ -111,12 +117,14 @@
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useAppStore } from '@/stores/app'
+import { BREADCRUMB_CONFIG } from '@/config/breadcrumbs'
 import AppBreadcrumbs from '@/components/AppBreadcrumbs.vue'
 
 const router = useRouter()
+const route = useRoute()
 const appStore = useAppStore()
 const { user } = storeToRefs(appStore)
 

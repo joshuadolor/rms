@@ -1,0 +1,17 @@
+---
+description: Fire macOS notification when a task is done and user input is needed
+alwaysApply: true
+---
+
+# Task complete — notify user
+
+When you **finish a task** and **need the user's input** (e.g. confirmation, next step, unblocking decision):
+
+1. End your reply with a clear line such as **"Task complete — need your input."**
+2. **Run this command** so the user gets a macOS notification and can switch back to Cursor:
+
+   ```bash
+   osascript -e 'display notification "Check Cursor — your input needed." with title "Cursor: Task complete"'
+   ```
+
+Do this after completing multi-step work (e.g. develop-module pipeline, bug fix, refactor) so the user can focus elsewhere and know when to intervene.

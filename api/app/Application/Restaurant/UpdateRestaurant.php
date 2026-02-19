@@ -67,6 +67,9 @@ final readonly class UpdateRestaurant
         if (array_key_exists('currency', $input)) {
             $data['currency'] = $input['currency'];
         }
+        if (array_key_exists('operating_hours', $input)) {
+            $data['operating_hours'] = $input['operating_hours'];
+        }
 
         return $this->restaurantRepository->update($restaurant, $data);
     }

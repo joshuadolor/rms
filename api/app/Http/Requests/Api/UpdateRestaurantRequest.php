@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api;
 
+use App\Rules\OperatingHoursRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -35,6 +36,7 @@ class UpdateRestaurantRequest extends FormRequest
             'social_links.twitter' => ['nullable', 'string', 'url', 'max:500'],
             'social_links.linkedin' => ['nullable', 'string', 'url', 'max:500'],
             'currency' => ['sometimes', 'string', 'max:10', Rule::in(['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'CHF', 'NGN', 'MXN', 'BRL'])],
+            'operating_hours' => ['sometimes', 'nullable', 'array', new OperatingHoursRule()],
         ];
     }
 }

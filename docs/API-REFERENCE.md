@@ -453,12 +453,22 @@ Returned by list, show, create, update, and after logo/banner upload:
   social_links: { facebook?: string; instagram?: string; twitter?: string; linkedin?: string };
   default_locale: string;
   currency: string;         // ISO 4217 code, e.g. USD, EUR; used for price display in restaurant context
+  operating_hours: OperatingHours | null;  // optional; when null, not set or cleared
   languages: string[];      // installed locales
   logo_url: string | null;   // e.g. https://api.example.com/api/restaurants/{uuid}/logo
   banner_url: string | null; // e.g. https://api.example.com/api/restaurants/{uuid}/banner
   created_at: string;       // ISO 8601
   updated_at: string;       // ISO 8601
 }
+```
+
+**Operating hours shape** (same structure is reused for menu item availability):
+
+```ts
+type OperatingHours = Record<Day, DayHours>;
+type Day = 'sunday' | 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday';
+type DayHours = { open: boolean; slots: Array<{ from: string; to: string }> };
+// Times are 24h strings, e.g. "09:00", "21:00" (HH:MM or HH:MM:SS). Per day, timeslots must not overlap.
 ```
 
 **Note:** Internal numeric `id` is never exposed; only `uuid` is used in URLs and responses.
@@ -526,7 +536,8 @@ Returns only restaurants owned by the authenticated user.
     "twitter": "string (optional, URL)",
     "linkedin": "string (optional, URL)"
   },
-  "default_locale": "string (optional, e.g. en, nl, ru; must be in supported locales)"
+  "default_locale": "string (optional, e.g. en, nl, ru; must be in supported locales)",
+  "operating_hours": "object (optional; see Restaurant payload operating_hours shape; timeslots must not overlap per day)"
 }
 ```
 
@@ -551,7 +562,7 @@ Returns only restaurants owned by the authenticated user.
 | PUT | `/api/restaurants/{uuid}` | Bearer + verified |
 | PATCH | `/api/restaurants/{uuid}` | Bearer + verified |
 
-**Body (JSON):** Same fields as create (except **slug**); all optional. Send only fields to change. **Slug cannot be changed** after create (subdomain stability); the API does not accept `slug` on update. **primary_color** may be set to a hex value (e.g. `#ff5500`) or `null` to clear.
+**Body (JSON):** Same fields as create (except **slug**); all optional. Send only fields to change. **Slug cannot be changed** after create (subdomain stability); the API does not accept `slug` on update. **primary_color** may be set to a hex value (e.g. `#ff5500`) or `null` to clear. **operating_hours**: optional; when present, same shape as in the restaurant payload; timeslots must not overlap per day; send `null` to clear.
 
 **Response (200):** `{ "message": "Restaurant updated.", "data": { restaurant payload } }`  
 **403:** Not owner. **404:** Not found. **422:** Validation.
@@ -830,21 +841,21 @@ Translations must use locales installed for the restaurant. **Response (201):** 
 
 ---
 
-## Menu items (user-level)
+## Menu items (user-level / catalog)
 
-List, create, and manage menu items from the standalone “Menu items” page. Items can be **standalone** (not tied to any restaurant) or belong to a restaurant the user owns. All endpoints **Bearer + verified**.
+List, create, and manage **catalog** menu items from the standalone “Menu items” page. Catalog items are standalone (not tied to any restaurant). They can be added to restaurant categories as references (via the restaurant menu-items API). All endpoints **Bearer + verified**.
 
 ### User-level menu item payload
 
-Same as menu item payload below, plus optional **restaurant_uuid** (present when the item belongs to a restaurant; `null` for standalone).
+Same as menu item payload below, plus optional **restaurant_uuid** (present when the item belongs to a restaurant; `null` for standalone). For GET `/api/menu-items` list, all returned items are standalone (`restaurant_uuid` null).
 
-### List all my menu items
+### List all my menu items (catalog only)
 
 | Method | Path | Auth |
 |--------|------|------|
 | GET | `/api/menu-items` | Bearer + verified |
 
-**Response (200):** `{ "data": [ { user-level menu item payload } ] }` (standalone first, then by category/sort_order).
+**Response (200):** `{ "data": [ { user-level menu item payload } ] }`. Returns **only standalone (catalog) items** owned by the user. Restaurant menu items (including references to catalog items) are not included; use GET `/api/restaurants/{restaurant}/menu-items` for per-restaurant lists. Order: by category then sort_order.
 
 ### Show one menu item
 
@@ -1025,6 +1036,8 @@ When the item is a **restaurant usage of a catalog item** (added from “Menu it
 
 ## Changelog
 
+- **2026-02-19**: User-level menu items: GET `/api/menu-items` now returns **only standalone (catalog) items**. Restaurant menu items are no longer included; use GET `/api/restaurants/{restaurant}/menu-items` for per-restaurant lists. Fixes duplicate items on the Menu items (catalog) page after adding a catalog item to a restaurant category.
+- **2026-02-19**: Restaurants: **operating_hours** (optional). Column added to restaurants table (JSON, nullable). Create/update accept `operating_hours`: object keyed by day (sunday–saturday), each day `{ "open": bool, "slots": [ { "from": "HH:MM", "to": "HH:MM" }, ... ] }`. Times 24h (HH:MM or HH:MM:SS). Per day, timeslots must not overlap; `from` must be before `to`. List/show/update and create response include `operating_hours` in payload. Same structure will be reused for menu item availability.
 - **2026-02-19**: Restaurants: **currency** (ISO 4217 code, default USD). Column added to restaurants table. Update accepts `currency`; list/show/update and public GET `/api/public/restaurants/{slug}` include `currency` in payload. Frontend uses it for all price display in restaurant context.
 - **2026-02-19**: **Remove language:** Removing a language from a restaurant only removes it from restaurant_languages. Restaurant, menu, and category translation rows are no longer deleted when a language is removed; they persist until the entity is deleted (cascade).
 - **2026-02-19**: **Menus:** Translatable name and description. New `menu_translations` table (menu_id, locale, name, description). Menu payload includes `translations` (locale → { name, description }) and `name` (resolved from default locale). Create/update accept `translations`; locales must be installed. Backward compat: `name` alone still supported and maps to default locale.
