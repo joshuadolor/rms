@@ -119,7 +119,7 @@
         </p>
         <button
           type="button"
-          class="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-sage hover:text-primary transition-colors"
+          class="mt-3 inline-flex items-center gap-1.5 min-h-[44px] px-3 py-2 text-sm font-medium text-sage hover:text-primary transition-colors rounded-lg"
           @click="copyRestaurantUrl"
         >
           <span class="material-icons text-lg transition-transform" :class="{ 'scale-110': copyDone }">{{ copyDone ? 'check' : 'content_copy' }}</span>
@@ -296,12 +296,12 @@
           :aria-invalid="deleteConfirmSlug !== restaurant.slug"
         />
         <div class="flex gap-3 mt-6">
-          <AppButton variant="secondary" class="flex-1" :disabled="deleting" @click="closeDeleteConfirm">
+          <AppButton variant="secondary" class="flex-1 min-h-[44px]" :disabled="deleting" @click="closeDeleteConfirm">
             Cancel
           </AppButton>
           <AppButton
             variant="primary"
-            class="flex-1 bg-red-600 hover:bg-red-700"
+            class="flex-1 min-h-[44px] bg-red-600 hover:bg-red-700"
             :disabled="deleting || deleteConfirmSlug !== restaurant.slug"
             @click="doDelete"
           >

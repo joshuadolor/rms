@@ -440,7 +440,10 @@ Returned by list, show, create, update, and after logo/banner upload:
 {
   uuid: string;
   name: string;
+  tagline: string | null;
+  primary_color: string | null;  // hex, e.g. #ff5500; for public site theming
   slug: string;
+  public_url: string;       // e.g. https://slug.yourapp.com
   address: string | null;
   latitude: number | null;
   longitude: number | null;
@@ -448,6 +451,8 @@ Returned by list, show, create, update, and after logo/banner upload:
   email: string | null;
   website: string | null;
   social_links: { facebook?: string; instagram?: string; twitter?: string; linkedin?: string };
+  default_locale: string;
+  languages: string[];      // installed locales
   logo_url: string | null;   // e.g. https://api.example.com/api/restaurants/{uuid}/logo
   banner_url: string | null; // e.g. https://api.example.com/api/restaurants/{uuid}/banner
   created_at: string;       // ISO 8601
@@ -505,6 +510,8 @@ Returns only restaurants owned by the authenticated user.
 ```json
 {
   "name": "string (required, max 255)",
+  "tagline": "string (optional, max 255)",
+  "primary_color": "string (optional; hex e.g. #f00, #ff5500, #ff5500cc)",
   "slug": "string (optional; default: slug from name, unique)",
   "address": "string (optional, max 1000)",
   "latitude": "number (optional, -90 to 90)",
@@ -517,7 +524,8 @@ Returns only restaurants owned by the authenticated user.
     "instagram": "string (optional, URL)",
     "twitter": "string (optional, URL)",
     "linkedin": "string (optional, URL)"
-  }
+  },
+  "default_locale": "string (optional, e.g. en, nl, ru; must be in supported locales)"
 }
 ```
 
@@ -542,10 +550,10 @@ Returns only restaurants owned by the authenticated user.
 | PUT | `/api/restaurants/{uuid}` | Bearer + verified |
 | PATCH | `/api/restaurants/{uuid}` | Bearer + verified |
 
-**Body (JSON):** Same fields as create; all optional. Send only fields to change. **Slug** must be unique across all restaurants; if the slug is already taken by another restaurant, the server returns **422** with `errors.slug` so the client can choose another.
+**Body (JSON):** Same fields as create (except **slug**); all optional. Send only fields to change. **Slug cannot be changed** after create (subdomain stability); the API does not accept `slug` on update. **primary_color** may be set to a hex value (e.g. `#ff5500`) or `null` to clear.
 
 **Response (200):** `{ "message": "Restaurant updated.", "data": { restaurant payload } }`  
-**403:** Not owner. **404:** Not found. **422:** Validation (e.g. slug already taken).
+**403:** Not owner. **404:** Not found. **422:** Validation.
 
 ---
 
@@ -615,6 +623,370 @@ Serves the restaurant banner image. **No authentication required.** Response has
 
 ---
 
+### Public restaurant by slug (no auth)
+
+Returns public restaurant data and menu items for subdomain or `/r/:slug` pages. **No authentication.** Menu items are included only if uncategorized or in a category with `is_active` true. **No internal `id` in any field.**
+
+| Method | Path | Auth |
+|--------|------|------|
+| GET | `/api/public/restaurants/{slug}` | No |
+
+**Query:** `locale` (optional). If provided and installed for the restaurant, description and menu item names/descriptions use that locale; otherwise the restaurant’s default locale is used.
+
+**Response (200):**
+```json
+{
+  "data": {
+    "name": "string",
+    "tagline": "string | null",
+    "primary_color": "string | null",
+    "slug": "string",
+    "logo_url": "string | null",
+    "banner_url": "string | null",
+    "default_locale": "string",
+    "languages": ["en", "nl", ...],
+    "locale": "string",
+    "description": "string | null",
+    "menu_items": [
+      {
+        "uuid": "string",
+        "name": "string",
+        "description": "string | null",
+        "price": "number | null",
+        "sort_order": "number"
+      }
+    ]
+  }
+}
+```
+
+**404:** Restaurant not found for the given slug.
+
+---
+
+## Menus
+
+Each restaurant can have **multiple** menus (e.g. "Lunch", "Dinner", "Drinks"). **Active** menus are shown on the public website. You can call `POST /api/restaurants/{restaurant}/menus` repeatedly to create additional menus. All endpoints use **Bearer + verified** and require restaurant ownership. Path parameters use `uuid` (never internal `id`).
+
+### Menu payload (common)
+
+```ts
+{
+  uuid: string;
+  name: string | null;
+  is_active: boolean;
+  sort_order: number;
+  created_at: string;  // ISO 8601
+  updated_at: string;
+}
+```
+
+### List menus
+
+| Method | Path | Auth |
+|--------|------|------|
+| GET | `/api/restaurants/{restaurant}/menus` | Bearer + verified |
+
+**Response (200):** `{ "data": [ { menu payload } ] }` (ordered by sort_order). **404:** Restaurant not found.
+
+### Show menu
+
+| Method | Path | Auth |
+|--------|------|------|
+| GET | `/api/restaurants/{restaurant}/menus/{menu}` | Bearer + verified |
+
+**Response (200):** `{ "data": { menu payload } }`. **404:** Restaurant or menu not found.
+
+### Create menu
+
+| Method | Path | Auth |
+|--------|------|------|
+| POST | `/api/restaurants/{restaurant}/menus` | Bearer + verified |
+
+**Body (JSON):**
+```json
+{
+  "name": "string (optional, max 255)",
+  "is_active": "boolean (optional, default true)",
+  "sort_order": "integer (optional, min 0)"
+}
+```
+
+**Response (201):** `{ "message": "Menu created.", "data": { menu payload } }`. **403:** Not owner. **404:** Restaurant not found. **422:** Validation.
+
+### Update menu
+
+| Method | Path | Auth |
+|--------|------|------|
+| PUT/PATCH | `/api/restaurants/{restaurant}/menus/{menu}` | Bearer + verified |
+
+**Body:** Same fields as create; all optional. **Response (200):** `{ "message": "Menu updated.", "data": { menu payload } }`. **403/404/422:** As above.
+
+### Delete menu
+
+| Method | Path | Auth |
+|--------|------|------|
+| DELETE | `/api/restaurants/{restaurant}/menus/{menu}` | Bearer + verified |
+
+**Response (204):** No content. **403/404:** As above.
+
+### Reorder menus
+
+| Method | Path | Auth |
+|--------|------|------|
+| POST | `/api/restaurants/{restaurant}/menus/reorder` | Bearer + verified |
+
+**Body (JSON):**
+```json
+{
+  "order": ["uuid1", "uuid2", "..."]
+}
+```
+
+**Response (200):** `{ "message": "Order updated." }`. **404:** Restaurant not found. **422:** Validation (order required, each element uuid).
+
+---
+
+## Categories
+
+Categories belong to a menu (e.g. Appetizers, Mains). Name is translated per restaurant locale. All endpoints **Bearer + verified**, ownership via restaurant. Reorderable via reorder endpoint.
+
+### Category payload (common)
+
+```ts
+{
+  uuid: string;
+  sort_order: number;
+  is_active: boolean;  // when false, category and its items are hidden on the public menu
+  translations: Record<string, { name: string }>;  // locale -> { name }
+  created_at: string;
+  updated_at: string;
+}
+```
+
+### List categories
+
+| Method | Path | Auth |
+|--------|------|------|
+| GET | `/api/restaurants/{restaurant}/menus/{menu}/categories` | Bearer + verified |
+
+**Response (200):** `{ "data": [ { category payload } ] }`. **404:** Restaurant or menu not found.
+
+### Show category
+
+| Method | Path | Auth |
+|--------|------|------|
+| GET | `/api/restaurants/{restaurant}/menus/{menu}/categories/{category}` | Bearer + verified |
+
+**Response (200):** `{ "data": { category payload } }`. **404:** Not found.
+
+### Create category
+
+| Method | Path | Auth |
+|--------|------|------|
+| POST | `/api/restaurants/{restaurant}/menus/{menu}/categories` | Bearer + verified |
+
+**Body (JSON):**
+```json
+{
+  "sort_order": "integer (optional, min 0)",
+  "translations": {
+    "locale": { "name": "string (required with translations, max 255)" }
+  }
+}
+```
+
+Translations must use locales installed for the restaurant. **Response (201):** `{ "message": "Category created.", "data": { category payload } }`. **422:** Uninstalled locale(s).
+
+### Update category
+
+| Method | Path | Auth |
+|--------|------|------|
+| PUT/PATCH | `/api/restaurants/{restaurant}/menus/{menu}/categories/{category}` | Bearer + verified |
+
+**Body:** sort_order, is_active (optional boolean), translations (optional). **Response (200):** `{ "message": "Category updated.", "data": { category payload } }`.
+
+### Delete category
+
+| Method | Path | Auth |
+|--------|------|------|
+| DELETE | `/api/restaurants/{restaurant}/menus/{menu}/categories/{category}` | Bearer + verified |
+
+**Response (204):** No content.
+
+### Reorder categories
+
+| Method | Path | Auth |
+|--------|------|------|
+| POST | `/api/restaurants/{restaurant}/menus/{menu}/categories/reorder` | Bearer + verified |
+
+**Body (JSON):** `{ "order": ["uuid1", "uuid2", ...] }`. **Response (200):** `{ "message": "Order updated." }`.
+
+---
+
+## Menu items (user-level)
+
+List, create, and manage menu items from the standalone “Menu items” page. Items can be **standalone** (not tied to any restaurant) or belong to a restaurant the user owns. All endpoints **Bearer + verified**.
+
+### User-level menu item payload
+
+Same as menu item payload below, plus optional **restaurant_uuid** (present when the item belongs to a restaurant; `null` for standalone).
+
+### List all my menu items
+
+| Method | Path | Auth |
+|--------|------|------|
+| GET | `/api/menu-items` | Bearer + verified |
+
+**Response (200):** `{ "data": [ { user-level menu item payload } ] }` (standalone first, then by category/sort_order).
+
+### Show one menu item
+
+| Method | Path | Auth |
+|--------|------|------|
+| GET | `/api/menu-items/{item}` | Bearer + verified |
+
+**Response (200):** `{ "data": { user-level menu item payload } }`. **404:** Not found or not owned.
+
+### Create standalone menu item
+
+| Method | Path | Auth |
+|--------|------|------|
+| POST | `/api/menu-items` | Bearer + verified |
+
+**Body (JSON):**
+```json
+{
+  "sort_order": "integer (optional, min 0)",
+  "price": "number (optional, min 0)",
+  "translations": {
+    "locale": { "name": "string (required)", "description": "string | null (optional)" }
+  }
+}
+```
+
+At least one translation with a non-empty **name** is required. **Response (201):** `{ "message": "Menu item created.", "data": { user-level menu item payload } }`. **422:** No name in any translation.
+
+### Update menu item
+
+| Method | Path | Auth |
+|--------|------|------|
+| PUT/PATCH | `/api/menu-items/{item}` | Bearer + verified |
+
+**Body:** sort_order, price (optional), translations (optional). **Response (200):** `{ "message": "Menu item updated.", "data": { user-level menu item payload } }`. **404:** Not found or not owned.
+
+### Delete menu item
+
+| Method | Path | Auth |
+|--------|------|------|
+| DELETE | `/api/menu-items/{item}` | Bearer + verified |
+
+**Response (204):** No content. **404:** Not found or not owned.
+
+---
+
+## Menu items (restaurant-scoped)
+
+CRUD and reorder for items (name + description per locale) within a restaurant. Locales must be installed for the restaurant. Optional **category_uuid** (category must belong to the restaurant). All endpoints **Bearer + verified**.
+
+### Menu item payload (common)
+
+All menu item payloads include:
+
+```ts
+{
+  uuid: string;
+  category_uuid: string | null;
+  sort_order: number;
+  price: number | null;   // effective price (base or override)
+  translations: Record<string, { name: string; description: string | null }>;  // effective per locale
+  created_at: string;
+  updated_at: string;
+}
+```
+
+When the item is a **restaurant usage of a catalog item** (added from “Menu items” into a restaurant category), the payload also includes:
+
+```ts
+{
+  source_menu_item_uuid: string;
+  price_override: number | null;      // null = use base price
+  translation_overrides: Record<string, { name?: string; description?: string | null }>;
+  base_price: number | null;          // catalog item base price
+  base_translations: Record<string, { name: string; description: string | null }>;
+  has_overrides: boolean;             // true if any override is set (for “Revert to base” UI)
+}
+```
+
+### List menu items
+
+| Method | Path | Auth |
+|--------|------|------|
+| GET | `/api/restaurants/{restaurant}/menu-items` | Bearer + verified |
+
+**Response (200):** `{ "data": [ { menu item payload } ] }` (ordered by category then sort_order).
+
+### Show menu item
+
+| Method | Path | Auth |
+|--------|------|------|
+| GET | `/api/restaurants/{restaurant}/menu-items/{item}` | Bearer + verified |
+
+**Response (200):** `{ "data": { menu item payload } }`. **404:** Not found.
+
+### Create menu item
+
+| Method | Path | Auth |
+|--------|------|------|
+| POST | `/api/restaurants/{restaurant}/menu-items` | Bearer + verified |
+
+**Body (JSON):** Either create from catalog or create a new item:
+
+- **Add from catalog:** `source_menu_item_uuid` (required), `category_uuid`, `sort_order`, optional `price_override`, `translation_overrides` (per-locale name/description). Catalog item must be a standalone menu item owned by the user. No `translations` needed; effective values come from base + overrides.
+- **Create new item:** `category_uuid`, `sort_order`, optional `price`, and `translations` (required; locales must be installed for the restaurant).
+
+```json
+{
+  "category_uuid": "string (optional)",
+  "sort_order": "integer (optional, min 0)",
+  "source_menu_item_uuid": "string (optional, uuid of catalog item; when set, adds catalog item to category)",
+  "price_override": "number (optional, min 0; only when source_menu_item_uuid set)",
+  "translation_overrides": { "locale": { "name": "string", "description": "string | null" } },
+  "price": "number (optional, min 0; only when creating new item)",
+  "translations": {
+    "locale": { "name": "string (required with translations)", "description": "string | null (optional)" }
+  }
+}
+```
+
+**Response (201):** `{ "message": "Menu item created.", "data": { menu item payload } }`. **422:** Uninstalled locale(s). **403:** Catalog item not found or not owned.
+
+### Update menu item
+
+| Method | Path | Auth |
+|--------|------|------|
+| PUT/PATCH | `/api/restaurants/{restaurant}/menu-items/{item}` | Bearer + verified |
+
+**Body:** category_uuid, sort_order, translations (for items without source), price (for items without source), price_override, translation_overrides (for items with source), **revert_to_base** (boolean; when true, clears price_override and translation_overrides so effective values revert to catalog base). **Response (200):** `{ "message": "Menu item updated.", "data": { menu item payload } }`.
+
+### Delete menu item
+
+| Method | Path | Auth |
+|--------|------|------|
+| DELETE | `/api/restaurants/{restaurant}/menu-items/{item}` | Bearer + verified |
+
+**Response (204):** No content.
+
+### Reorder menu items (within category)
+
+| Method | Path | Auth |
+|--------|------|------|
+| POST | `/api/restaurants/{restaurant}/categories/{category}/menu-items/reorder` | Bearer + verified |
+
+**Body (JSON):** `{ "order": ["itemUuid1", "itemUuid2", ...] }`. **Response (200):** `{ "message": "Order updated." }`. **404:** Restaurant or category not found.
+
+---
+
 ## Machine translation
 
 ### Translate text
@@ -647,6 +1019,13 @@ Serves the restaurant banner image. **No authentication required.** Response has
 
 ## Changelog
 
+- **2026-02-18**: Restaurants: **primary_color** (optional hex, e.g. #ff5500) for public site theming. Create/update accept primary_color; payload and public GET include primary_color.
+- **2026-02-19**: Restaurants: API reference aligned with implementation. Restaurant payload includes `tagline`, `public_url`, `default_locale`, `languages`. Create body documents `tagline`, `default_locale`. Update: slug cannot be changed after create (not accepted on PATCH/PUT). **Public restaurant by slug:** GET `/api/public/restaurants/{slug}` (no auth) documented; response includes name, tagline, slug, logo_url, banner_url, default_locale, languages, locale, description, menu_items (uuid, name, description, price, sort_order only; menu items filtered by active categories; no internal `id`).
+- **2026-02-19**: Categories: **is_active** (boolean, default true). Update category accepts `is_active`; when false, category and its items are excluded from the public restaurant menu. Delete category: existing endpoint; menu items in the category have their `category_id` set to null (nullOnDelete).
+- **2026-02-19**: Menu items: base **price** on catalog (user-level) and optional **overrides** in restaurant context. User-level payload and create/update include `price`. Restaurant create can use `source_menu_item_uuid` to add a catalog item to a category; optional `price_override` and `translation_overrides`. Restaurant update accepts `price_override`, `translation_overrides`, and **revert_to_base** (boolean) to clear overrides. Payload includes effective `price` and `translations`; when item is from catalog, also `source_menu_item_uuid`, `price_override`, `translation_overrides`, `base_price`, `base_translations`, `has_overrides`. Public restaurant menu items include `price` (effective).
+- **2026-02-18**: Menus: clarified that a restaurant can have multiple menus and that POST create can be called repeatedly.
+- **2026-02-18**: User-level menu items: GET/POST `/api/menu-items`, GET/PATCH/DELETE `/api/menu-items/{item}` for standalone list/create and for editing any owned item (standalone or restaurant). Payload may include `restaurant_uuid` (null for standalone).
+- **2026-02-18**: Menus: CRUD + reorder (GET/POST/PATCH/DELETE `/api/restaurants/{restaurant}/menus`, POST reorder). Categories: CRUD + reorder under menus; translations per locale (GET/POST/PATCH/DELETE `/api/restaurants/{restaurant}/menus/{menu}/categories`, POST reorder). Menu items: optional `category_uuid`, payload includes `category_uuid`; POST `/api/restaurants/{restaurant}/categories/{category}/menu-items/reorder` to reorder items within a category. All by `uuid`; no internal `id` in responses.
 - **2026-02-16**: Security: logo/banner uploads use server-derived file extension from MIME type (not client filename). POST `/api/translate` rate-limited (30/min per user). API reference: upload storage note, Machine translation section with rate limit.
 - **2026-02-14**: Restaurants: free-tier limit (one restaurant per user; 403 when exceeded). Update slug validated for uniqueness (422 if taken). Docs: free-tier error, public logo/banner with Content-Type, slug uniqueness, upload validation (2MB, image types, custom message).
 - **2026-02-14**: Restaurants API: CRUD (list, show, create, update, delete) and media (upload logo/banner, public serve URLs). All by `uuid`; no internal `id` in responses. Endpoints: GET/POST `/api/restaurants`, GET/PUT/PATCH/DELETE `/api/restaurants/{uuid}`, POST `/api/restaurants/{uuid}/logo`, POST `/api/restaurants/{uuid}/banner`, GET `/api/restaurants/{uuid}/logo`, GET `/api/restaurants/{uuid}/banner`.

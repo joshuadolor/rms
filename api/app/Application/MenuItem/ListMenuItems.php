@@ -23,6 +23,11 @@ final readonly class ListMenuItems
             return null;
         }
 
-        return $restaurant->menuItems()->with('translations')->orderBy('sort_order')->orderBy('id')->get();
+        return $restaurant->menuItems()
+            ->with(['translations', 'category', 'sourceMenuItem.translations'])
+            ->orderByRaw('category_id is null')
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get();
     }
 }

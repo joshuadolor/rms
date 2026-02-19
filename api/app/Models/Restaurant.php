@@ -17,6 +17,7 @@ class Restaurant extends Model
     protected $fillable = [
         'name',
         'tagline',
+        'primary_color',
         'slug',
         'address',
         'latitude',
@@ -74,6 +75,14 @@ class Restaurant extends Model
     public function translations(): HasMany
     {
         return $this->hasMany(RestaurantTranslation::class);
+    }
+
+    /**
+     * @return HasMany<Menu, $this>
+     */
+    public function menus(): HasMany
+    {
+        return $this->hasMany(Menu::class)->orderBy('sort_order')->orderBy('id');
     }
 
     /**

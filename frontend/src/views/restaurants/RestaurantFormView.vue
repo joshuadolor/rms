@@ -46,7 +46,6 @@
           placeholder="e.g. Mama Fina's Restaurant"
           described-by="form-error"
           :error="fieldErrors.name"
-          required
           data-testid="form-input-name"
         />
         <p class="text-xs text-slate-500 dark:text-slate-400">

@@ -299,15 +299,21 @@ async function addLanguage() {
   if (!languageToAdd.value) return
   addingLanguage.value = true
   error.value = ''
+  const localeBeingAdded = languageToAdd.value
   try {
-    const res = await restaurantService.addLanguage(uuid.value, { locale: languageToAdd.value })
+    const res = await restaurantService.addLanguage(uuid.value, { locale: localeBeingAdded })
     if (res.data) restaurant.value.languages = [...res.data]
-    const added = languageToAdd.value
     languageToAdd.value = ''
-    descriptions.value[added] = ''
-    toastStore.success(`${getLocaleDisplay(added)} added.`)
+    descriptions.value[localeBeingAdded] = ''
+    toastStore.success(`${getLocaleDisplay(localeBeingAdded)} added.`)
   } catch (e) {
-    error.value = normalizeApiError(e).message
+    const msg = normalizeApiError(e).message ?? ''
+    // Duplicate submit can return "already installed" after the first request succeeded; don't show as error.
+    if (msg.toLowerCase().includes('already installed') && (restaurant.value?.languages ?? []).includes(localeBeingAdded)) {
+      languageToAdd.value = ''
+    } else {
+      error.value = msg
+    }
   } finally {
     addingLanguage.value = false
   }

@@ -11,7 +11,7 @@
         <template v-else>
           <router-link
             :to="segment.to"
-            class="hover:text-primary transition-colors truncate max-w-[12rem] sm:max-w-none"
+            class="inline-flex items-center min-h-[44px] py-2 -my-2 hover:text-primary transition-colors truncate max-w-[12rem] sm:max-w-none"
           >
             {{ segment.label }}
           </router-link>
@@ -31,18 +31,25 @@ import { BREADCRUMB_CONFIG, getBreadcrumbTrail } from '@/config/breadcrumbs'
 const route = useRoute()
 const router = useRouter()
 const breadcrumbStore = useBreadcrumbStore()
-const { restaurantName, menuItemName } = storeToRefs(breadcrumbStore)
+const { restaurantName, menuName, categoryName, menuItemName } = storeToRefs(breadcrumbStore)
 
 const trail = computed(() => {
   const name = route.name
   if (!name || !BREADCRUMB_CONFIG[name]) return []
-  // Depend on store labels so trail updates when restaurant/menu item name loads
+  // Depend on store labels so trail updates when names load
   void restaurantName.value
+  void menuName.value
+  void categoryName.value
   void menuItemName.value
-  const raw = getBreadcrumbTrail(name, breadcrumbStore)
+  const raw = getBreadcrumbTrail(name, breadcrumbStore, route)
   return raw.map((seg, index) => {
     const isLast = index === raw.length - 1
-    const resolved = router.resolve({ name: seg.name, params: route.params })
+    let resolved
+    if (seg.name === '__category__' || seg.name === 'RestaurantMenuItems') {
+      resolved = router.resolve({ name: 'RestaurantDetail', params: route.params, query: { tab: 'menu' } })
+    } else {
+      resolved = router.resolve({ name: seg.name, params: route.params, query: route.query })
+    }
     return {
       name: seg.name,
       label: seg.label,
@@ -55,6 +62,7 @@ watch(
   () => route.name,
   (name) => {
     if (name === 'Restaurants') breadcrumbStore.clearRestaurant()
+    if (name === 'RestaurantDetail') breadcrumbStore.clearMenuAndCategory()
   },
   { immediate: true }
 )

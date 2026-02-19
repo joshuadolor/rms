@@ -20,6 +20,7 @@ class UpdateRestaurantRequest extends FormRequest
         return [
             'name' => ['sometimes', 'string', 'max:255'],
             'tagline' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'primary_color' => ['sometimes', 'nullable', 'string', 'max:9', 'regex:/^#[0-9A-Fa-f]{3}([0-9A-Fa-f]{3}([0-9A-Fa-f]{2})?)?$/'],
             'default_locale' => ['sometimes', 'string', 'max:10', Rule::in(config('locales.supported', ['en', 'nl', 'ru']))],
             // Slug is set once on create and cannot be changed (subdomain URL stability).
             'address' => ['sometimes', 'nullable', 'string', 'max:1000'],

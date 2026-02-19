@@ -80,6 +80,22 @@ const routes = [
         component: () => import('@/views/restaurants/RestaurantListView.vue'),
       },
       {
+        path: 'menu-items',
+        name: 'MenuItems',
+        component: () => import('@/views/menu-items/MenuItemsView.vue'),
+      },
+      {
+        path: 'menu-items/new',
+        name: 'MenuItemNew',
+        component: () => import('@/views/menu-items/StandaloneMenuItemCreateView.vue'),
+      },
+      {
+        path: 'menu-items/:itemUuid/edit',
+        name: 'MenuItemEdit',
+        component: () => import('@/views/restaurants/MenuItemFormView.vue'),
+        meta: { mode: 'edit', menuItemsModule: true },
+      },
+      {
         path: 'restaurants/new',
         name: 'RestaurantNew',
         component: () => import('@/views/restaurants/RestaurantFormView.vue'),
@@ -104,6 +120,11 @@ const routes = [
         path: 'restaurants/:uuid/menu-items',
         name: 'RestaurantMenuItems',
         redirect: (to) => ({ name: 'RestaurantDetail', params: to.params, query: { tab: 'menu' } }),
+      },
+      {
+        path: 'restaurants/:uuid/categories/:categoryUuid/items',
+        name: 'CategoryMenuItems',
+        component: () => import('@/views/restaurants/CategoryMenuItemsView.vue'),
       },
       {
         path: 'restaurants/:uuid/menu-items/new',

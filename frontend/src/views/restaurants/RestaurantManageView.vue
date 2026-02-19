@@ -67,7 +67,7 @@
             <span class="text-primary">{{ restaurant.slug }}</span><span class="text-slate-500 dark:text-slate-400">{{ publicDomainSuffix }}</span>
           </p>
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-2">Customers visit this address.</p>
-          <button type="button" data-testid="manage-copy-url" class="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-sage hover:text-primary transition-colors" @click="copyRestaurantUrl">
+          <button type="button" data-testid="manage-copy-url" class="mt-3 inline-flex items-center gap-1.5 min-h-[44px] px-3 py-2 text-sm font-medium text-sage hover:text-primary transition-colors rounded-lg" @click="copyRestaurantUrl">
             <span class="material-icons text-lg" :class="{ 'scale-110': copyDone }">{{ copyDone ? 'check' : 'content_copy' }}</span>
             {{ copyDone ? 'Copied!' : 'Copy address' }}
           </button>
@@ -79,7 +79,7 @@
         role="tablist"
         aria-label="Restaurant management sections"
         data-testid="manage-tabs"
-        class="flex p-2 gap-1 rounded-t-2xl bg-slate-100/95 dark:bg-zinc-800/95 backdrop-blur-sm overflow-x-auto z-40 border-t border-slate-200 dark:border-zinc-700 shadow-[0_-4px_12px_rgba(0,0,0,0.06)] dark:shadow-[0_-4px_12px_rgba(0,0,0,0.3)] lg:border-t-0 lg:rounded-lg lg:mb-6 lg:p-1 lg:gap-0 lg:shadow-none lg:bg-slate-100 lg:dark:bg-zinc-800 lg:backdrop-blur-none fixed bottom-0 left-0 right-0 pb-[max(0.5rem,env(safe-area-inset-bottom))] lg:static lg:pb-0"
+        class="flex min-h-[44px] items-center p-2 gap-1 rounded-t-2xl bg-slate-100/95 dark:bg-zinc-800/95 backdrop-blur-sm overflow-x-auto z-40 border-t border-slate-200 dark:border-zinc-700 shadow-[0_-4px_12px_rgba(0,0,0,0.06)] dark:shadow-[0_-4px_12px_rgba(0,0,0,0.3)] lg:border-t-0 lg:rounded-lg lg:mb-6 lg:p-1 lg:gap-0 lg:shadow-none lg:bg-slate-100 lg:dark:bg-zinc-800 lg:backdrop-blur-none fixed bottom-0 left-0 right-0 pb-[max(0.5rem,env(safe-area-inset-bottom))] lg:static lg:pb-0"
       >
         <button type="button" role="tab" id="manage-tab-profile" aria-controls="manage-panel-profile" data-testid="manage-tab-profile" class="flex-1 min-w-0 py-2 px-2 text-sm font-semibold rounded-lg transition-all whitespace-nowrap lg:rounded-md flex flex-col lg:flex-row items-center justify-center gap-0.5 lg:gap-1.5 lg:py-2.5" :class="activeTab === 'profile' ? 'bg-white dark:bg-primary text-primary dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'" :aria-selected="activeTab === 'profile'" @click="activeTab = 'profile'">
           <span class="material-icons text-xl lg:text-lg">person</span>
@@ -121,7 +121,7 @@
           </RestaurantFormView>
         </div>
         <div v-show="activeTab === 'menu'" id="manage-panel-menu" role="tabpanel" aria-labelledby="manage-tab-menu" class="min-h-[200px]" data-testid="manage-panel-menu">
-          <MenuItemsListView :key="'menu-' + restaurant.uuid" />
+          <RestaurantMenusView :key="'menu-' + restaurant.uuid" />
         </div>
         <div v-show="activeTab === 'availability'" id="manage-panel-availability" role="tabpanel" aria-labelledby="manage-tab-availability" class="min-h-[200px]" data-testid="manage-panel-availability">
           <header class="mb-4 lg:mb-6">
@@ -208,8 +208,8 @@
             :aria-invalid="deleteConfirmSlug !== restaurant.slug"
           />
           <div class="flex gap-3 mt-6">
-            <AppButton variant="secondary" class="flex-1" data-testid="manage-delete-modal-cancel" :disabled="deleting" @click="closeDeleteConfirm">Cancel</AppButton>
-            <AppButton variant="primary" class="flex-1 bg-red-600 hover:bg-red-700" data-testid="manage-delete-modal-confirm" :disabled="deleting || deleteConfirmSlug !== restaurant.slug" @click="doDelete">
+            <AppButton variant="secondary" class="flex-1 min-h-[44px]" data-testid="manage-delete-modal-cancel" :disabled="deleting" @click="closeDeleteConfirm">Cancel</AppButton>
+            <AppButton variant="primary" class="flex-1 min-h-[44px] bg-red-600 hover:bg-red-700" data-testid="manage-delete-modal-confirm" :disabled="deleting || deleteConfirmSlug !== restaurant.slug" @click="doDelete">
               <template v-if="deleting" #icon><span class="material-icons animate-spin text-lg">sync</span></template>
               Delete
             </AppButton>
@@ -231,7 +231,7 @@ import { useToastStore } from '@/stores/toast'
 import Restaurant from '@/models/Restaurant.js'
 import { restaurantService, normalizeApiError } from '@/services'
 import RestaurantFormView from './RestaurantFormView.vue'
-import MenuItemsListView from './MenuItemsListView.vue'
+import RestaurantMenusView from './RestaurantMenusView.vue'
 import RestaurantContentView from './RestaurantContentView.vue'
 import RestaurantAvailabilitySchedule from '@/components/restaurant/RestaurantAvailabilitySchedule.vue'
 

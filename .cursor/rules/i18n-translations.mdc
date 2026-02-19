@@ -1,0 +1,16 @@
+---
+description: Translation and i18n — always fall back to default when a locale is missing
+alwaysApply: true
+---
+
+# Translations and i18n
+
+## Fallback to default
+
+**When a translation for a specific language is not available, always use the default as backup.**
+
+- **Frontend (vue-i18n):** Keep `fallbackLocale` set to the default locale (e.g. `'en'`). Never show empty or missing keys; vue-i18n will use the fallback locale when a key is absent in the current locale. When adding new message keys, add them to the default locale first, then to other locales as needed.
+- **Backend (API and translatable entities):** When returning content in a requested locale (e.g. category name, menu item name, restaurant description), if no translation exists for that locale, return the **default locale’s** value (e.g. the restaurant’s `default_locale` or the entity’s default translation). Do not return null, empty string, or omit the field when a default translation exists.
+- **Public and guest-facing content:** Same rule: prefer default-locale text over missing or blank text so users always see something readable.
+
+This applies to app UI strings, restaurant/menu/category translations, and any other user-facing translatable content.

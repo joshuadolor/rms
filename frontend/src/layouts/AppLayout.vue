@@ -8,9 +8,9 @@
       @click="sidebarOpen = false"
     />
 
-    <!-- Sidebar: drawer on mobile (max-lg), always visible on desktop (lg+) -->
+    <!-- Sidebar: drawer on mobile (max-lg), always visible on desktop (lg+). inset-y-0 + min-h so it fills viewport height on mobile. -->
     <aside
-      class="w-64 bg-white dark:bg-zinc-900 border-r border-slate-200 dark:border-slate-800 flex flex-col fixed h-full z-50 max-lg:transition-transform max-lg:duration-200 max-lg:ease-out"
+      class="w-64 bg-white dark:bg-zinc-900 border-r border-slate-200 dark:border-slate-800 flex flex-col fixed inset-y-0 left-0 z-50 min-h-[100dvh] max-lg:transition-transform max-lg:duration-200 max-lg:ease-out"
       :class="sidebarOpen ? 'max-lg:translate-x-0' : 'max-lg:-translate-x-full'"
       aria-label="Main navigation"
     >
@@ -40,6 +40,15 @@
         >
           <span class="material-icons">storefront</span>
           <span>Restaurants</span>
+        </router-link>
+        <router-link
+          to="/app/menu-items"
+          class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-colors text-slate-600 dark:text-slate-400 hover:bg-sage/10 dark:hover:bg-sage/15 hover:text-sage min-h-[44px]"
+          active-class="nav-link-active"
+          @click="closeSidebar"
+        >
+          <span class="material-icons">restaurant_menu</span>
+          <span>Menu items</span>
         </router-link>
         <router-link
           to="/app/profile"

@@ -92,6 +92,7 @@
         <AppButton
           variant="secondary"
           size="sm"
+          class="min-h-[44px]"
           :disabled="meta.current_page <= 1"
           @click="goToPage(meta.current_page - 1)"
         >
@@ -103,6 +104,7 @@
         <AppButton
           variant="secondary"
           size="sm"
+          class="min-h-[44px]"
           :disabled="meta.current_page >= meta.last_page"
           @click="goToPage(meta.current_page + 1)"
         >

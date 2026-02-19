@@ -13,7 +13,7 @@ final readonly class UpdateMenuItem
     ) {}
 
     /**
-     * @param  array{sort_order?: int, translations?: array<string, array{name?: string, description?: string|null}>}  $input
+     * @param  array{sort_order?: int, category_uuid?: string|null, translations?: array<string, array{name?: string, description?: string|null}>, price?: float|null, price_override?: float|null, translation_overrides?: array<string, array{name?: string, description?: string|null}>|null, revert_to_base?: bool}  $input
      */
     public function handle(User $user, string $restaurantUuid, string $itemUuid, array $input): ?MenuItem
     {
@@ -30,24 +30,62 @@ final readonly class UpdateMenuItem
             return null;
         }
 
+        $update = [];
         if (array_key_exists('sort_order', $input)) {
-            $item->update(['sort_order' => (int) $input['sort_order']]);
+            $update['sort_order'] = (int) $input['sort_order'];
         }
-
-        $translations = $input['translations'] ?? [];
-        foreach ($translations as $locale => $data) {
-            if (! $restaurant->languages()->where('locale', $locale)->exists()) {
-                continue;
+        if (array_key_exists('category_uuid', $input)) {
+            $categoryId = null;
+            if ($input['category_uuid'] !== null && $input['category_uuid'] !== '') {
+                $category = \App\Models\Category::query()
+                    ->whereHas('menu', fn ($q) => $q->where('restaurant_id', $restaurant->id))
+                    ->where('uuid', $input['category_uuid'])
+                    ->first();
+                if ($category !== null) {
+                    $categoryId = $category->id;
+                }
             }
-            $existing = $item->translations()->where('locale', $locale)->first();
-            $name = array_key_exists('name', $data) ? (string) $data['name'] : ($existing?->name ?? '');
-            $description = array_key_exists('description', $data) ? $data['description'] : ($existing?->description ?? null);
-            $item->translations()->updateOrCreate(
-                ['locale' => $locale],
-                ['name' => $name, 'description' => $description]
-            );
+            $update['category_id'] = $categoryId;
         }
 
-        return $item->fresh(['translations']);
+        if ($item->source_menu_item_uuid !== null) {
+            if (! empty($input['revert_to_base'])) {
+                $update['price_override'] = null;
+                $update['translation_overrides'] = null;
+            } else {
+                if (array_key_exists('price_override', $input)) {
+                    $update['price_override'] = $input['price_override'] === null ? null : (float) $input['price_override'];
+                }
+                if (array_key_exists('translation_overrides', $input)) {
+                    $update['translation_overrides'] = $input['translation_overrides'];
+                }
+            }
+        } else {
+            if (array_key_exists('price', $input)) {
+                $update['price'] = $input['price'] === null ? null : (float) $input['price'];
+            }
+        }
+
+        if ($update !== []) {
+            $item->update($update);
+        }
+
+        if ($item->source_menu_item_uuid === null) {
+            $translations = $input['translations'] ?? [];
+            foreach ($translations as $locale => $data) {
+                if (! $restaurant->languages()->where('locale', $locale)->exists()) {
+                    continue;
+                }
+                $existing = $item->translations()->where('locale', $locale)->first();
+                $name = array_key_exists('name', $data) ? (string) $data['name'] : ($existing?->name ?? '');
+                $description = array_key_exists('description', $data) ? $data['description'] : ($existing?->description ?? null);
+                $item->translations()->updateOrCreate(
+                    ['locale' => $locale],
+                    ['name' => $name, 'description' => $description]
+                );
+            }
+        }
+
+        return $item->fresh(['translations', 'sourceMenuItem.translations']);
     }
 }

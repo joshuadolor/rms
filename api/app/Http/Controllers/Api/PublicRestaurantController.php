@@ -37,13 +37,21 @@ class PublicRestaurantController extends Controller
         $translation = $restaurant->translations()->where('locale', $locale)->first();
         $description = $translation?->description ?? null;
 
-        $menuItems = $restaurant->menuItems()->with('translations')->orderBy('sort_order')->orderBy('id')->get();
+        $menuItems = $restaurant->menuItems()
+            ->where(function ($q) {
+                $q->whereNull('category_id')
+                    ->orWhereHas('category', fn ($c) => $c->where('is_active', true));
+            })
+            ->with(['translations', 'sourceMenuItem.translations'])
+            ->orderBy('sort_order')->orderBy('id')->get();
         $menuPayload = $menuItems->map(function ($item) use ($locale) {
-            $t = $item->translations->firstWhere('locale', $locale) ?? $item->translations->first();
+            $effective = $item->getEffectiveTranslations();
+            $t = $effective[$locale] ?? reset($effective);
             return [
                 'uuid' => $item->uuid,
-                'name' => $t?->name ?? '',
-                'description' => $t?->description ?? null,
+                'name' => $t['name'] ?? '',
+                'description' => $t['description'] ?? null,
+                'price' => $item->getEffectivePrice(),
                 'sort_order' => $item->sort_order,
             ];
         })->all();
@@ -52,6 +60,7 @@ class PublicRestaurantController extends Controller
             'data' => [
                 'name' => $restaurant->name,
                 'tagline' => $restaurant->tagline,
+                'primary_color' => $restaurant->primary_color,
                 'slug' => $restaurant->slug,
                 'logo_url' => $restaurant->logo_path
                     ? $baseUrl . '/api/restaurants/' . $restaurant->uuid . '/logo'

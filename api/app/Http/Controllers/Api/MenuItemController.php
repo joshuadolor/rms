@@ -6,6 +6,7 @@ use App\Application\MenuItem\CreateMenuItem;
 use App\Application\MenuItem\DeleteMenuItem;
 use App\Application\MenuItem\GetMenuItem;
 use App\Application\MenuItem\ListMenuItems;
+use App\Application\MenuItem\ReorderMenuItems;
 use App\Application\MenuItem\UpdateMenuItem;
 use App\Application\Restaurant\GetRestaurant;
 use App\Http\Controllers\Controller;
@@ -22,7 +23,8 @@ class MenuItemController extends Controller
         private readonly GetMenuItem $getMenuItem,
         private readonly CreateMenuItem $createMenuItem,
         private readonly UpdateMenuItem $updateMenuItem,
-        private readonly DeleteMenuItem $deleteMenuItem
+        private readonly DeleteMenuItem $deleteMenuItem,
+        private readonly ReorderMenuItems $reorderMenuItems
     ) {}
 
     /**
@@ -73,26 +75,35 @@ class MenuItemController extends Controller
             return response()->json(['message' => __('Restaurant not found.')], 404);
         }
 
-        $request->validate([
+        $validated = $request->validate([
+            'category_uuid' => ['nullable', 'string', 'uuid'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
+            'source_menu_item_uuid' => ['nullable', 'string', 'uuid'],
+            'price_override' => ['nullable', 'numeric', 'min:0'],
+            'translation_overrides' => ['nullable', 'array'],
+            'translation_overrides.*.name' => ['nullable', 'string', 'max:255'],
+            'translation_overrides.*.description' => ['nullable', 'string', 'max:5000'],
+            'price' => ['nullable', 'numeric', 'min:0'],
             'translations' => ['nullable', 'array'],
             'translations.*.name' => ['required_with:translations', 'string', 'max:255'],
             'translations.*.description' => ['nullable', 'string', 'max:5000'],
         ]);
 
-        $translations = $request->input('translations', []);
-        $installedLocales = $restaurantModel->languages()->pluck('locale')->all();
-        $invalidLocales = array_keys($translations);
-        $invalidLocales = array_diff($invalidLocales, $installedLocales);
-        if ($invalidLocales !== []) {
-            return response()->json([
-                'message' => __('One or more translation locales are not installed for this restaurant. Add them under Restaurant → Languages first.'),
-                'errors' => ['translations' => [__('Uninstalled locale(s): :locales', ['locales' => implode(', ', array_values($invalidLocales))])]],
-            ], 422);
+        if (empty($validated['source_menu_item_uuid'])) {
+            $translations = $validated['translations'] ?? [];
+            $installedLocales = $restaurantModel->languages()->pluck('locale')->all();
+            $invalidLocales = array_keys($translations);
+            $invalidLocales = array_diff($invalidLocales, $installedLocales);
+            if ($invalidLocales !== []) {
+                return response()->json([
+                    'message' => __('One or more translation locales are not installed for this restaurant. Add them under Restaurant → Languages first.'),
+                    'errors' => ['translations' => [__('Uninstalled locale(s): :locales', ['locales' => implode(', ', array_values($invalidLocales))])]],
+                ], 422);
+            }
         }
 
         try {
-            $menuItem = $this->createMenuItem->handle($request->user(), $restaurant, $request->validated());
+            $menuItem = $this->createMenuItem->handle($request->user(), $restaurant, $validated);
         } catch (\App\Exceptions\ForbiddenException $e) {
             return response()->json(['message' => $e->getMessage()], 403);
         }
@@ -112,15 +123,22 @@ class MenuItemController extends Controller
      */
     public function update(Request $request, string $restaurant, string $item): JsonResponse|Response
     {
-        $request->validate([
+        $validated = $request->validate([
+            'category_uuid' => ['nullable', 'string', 'uuid'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
+            'price' => ['nullable', 'numeric', 'min:0'],
+            'price_override' => ['nullable', 'numeric', 'min:0'],
+            'translation_overrides' => ['nullable', 'array'],
+            'translation_overrides.*.name' => ['nullable', 'string', 'max:255'],
+            'translation_overrides.*.description' => ['nullable', 'string', 'max:5000'],
+            'revert_to_base' => ['nullable', 'boolean'],
             'translations' => ['nullable', 'array'],
             'translations.*.name' => ['nullable', 'string', 'max:255'],
             'translations.*.description' => ['nullable', 'string', 'max:5000'],
         ]);
 
         try {
-            $menuItem = $this->updateMenuItem->handle($request->user(), $restaurant, $item, $request->validated());
+            $menuItem = $this->updateMenuItem->handle($request->user(), $restaurant, $item, $validated);
         } catch (\App\Exceptions\ForbiddenException $e) {
             return response()->json(['message' => $e->getMessage()], 403);
         }
@@ -158,20 +176,55 @@ class MenuItemController extends Controller
      */
     private function menuItemPayload(MenuItem $item): array
     {
-        $translations = [];
-        foreach ($item->translations as $t) {
-            $translations[$t->locale] = [
-                'name' => $t->name,
-                'description' => $t->description,
-            ];
-        }
-
-        return [
+        $effectiveTranslations = $item->getEffectiveTranslations();
+        $payload = [
             'uuid' => $item->uuid,
+            'category_uuid' => $item->category?->uuid,
             'sort_order' => $item->sort_order,
-            'translations' => $translations,
+            'price' => $item->getEffectivePrice(),
+            'translations' => $effectiveTranslations,
             'created_at' => $item->created_at?->toIso8601String(),
             'updated_at' => $item->updated_at?->toIso8601String(),
         ];
+
+        if ($item->source_menu_item_uuid !== null) {
+            $payload['source_menu_item_uuid'] = $item->source_menu_item_uuid;
+            $payload['price_override'] = $item->price_override !== null ? (float) $item->price_override : null;
+            $payload['translation_overrides'] = $item->translation_overrides ?? [];
+            $payload['base_price'] = $item->sourceMenuItem ? (float) $item->sourceMenuItem->price : null;
+            $baseTranslations = [];
+            if ($item->relationLoaded('sourceMenuItem') && $item->sourceMenuItem) {
+                foreach ($item->sourceMenuItem->translations as $t) {
+                    $baseTranslations[$t->locale] = ['name' => $t->name ?? '', 'description' => $t->description];
+                }
+            }
+            $payload['base_translations'] = $baseTranslations;
+            $payload['has_overrides'] = $item->hasOverrides();
+        }
+
+        return $payload;
+    }
+
+    /**
+     * Reorder menu items within a category. Body: { "order": ["uuid1", "uuid2", ...] }
+     */
+    public function reorder(Request $request, string $restaurant, string $category): JsonResponse|Response
+    {
+        $restaurantModel = $this->getRestaurant->handle($request->user(), $restaurant);
+        if ($restaurantModel === null) {
+            return response()->json(['message' => __('Restaurant not found.')], 404);
+        }
+
+        $request->validate([
+            'order' => ['required', 'array'],
+            'order.*' => ['string', 'uuid'],
+        ]);
+
+        $ok = $this->reorderMenuItems->handle($request->user(), $restaurant, $category, $request->input('order'));
+        if (! $ok) {
+            return response()->json(['message' => __('Category not found.')], 404);
+        }
+
+        return response()->json(['message' => __('Order updated.')]);
     }
 }

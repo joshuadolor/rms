@@ -7,10 +7,20 @@ import { ref } from 'vue'
  */
 export const useBreadcrumbStore = defineStore('breadcrumb', () => {
   const restaurantName = ref(null)
+  const menuName = ref(null)
+  const categoryName = ref(null)
   const menuItemName = ref(null)
 
   function setRestaurantName(name) {
     restaurantName.value = name ?? null
+  }
+
+  function setMenuName(name) {
+    menuName.value = name ?? null
+  }
+
+  function setCategoryName(name) {
+    categoryName.value = name ?? null
   }
 
   function setMenuItemName(name) {
@@ -19,7 +29,14 @@ export const useBreadcrumbStore = defineStore('breadcrumb', () => {
 
   function clearRestaurant() {
     restaurantName.value = null
+    menuName.value = null
+    categoryName.value = null
     menuItemName.value = null
+  }
+
+  function clearMenuAndCategory() {
+    menuName.value = null
+    categoryName.value = null
   }
 
   function clearMenuItem() {
@@ -28,10 +45,15 @@ export const useBreadcrumbStore = defineStore('breadcrumb', () => {
 
   return {
     restaurantName,
+    menuName,
+    categoryName,
     menuItemName,
     setRestaurantName,
+    setMenuName,
+    setCategoryName,
     setMenuItemName,
     clearRestaurant,
+    clearMenuAndCategory,
     clearMenuItem,
   }
 })
