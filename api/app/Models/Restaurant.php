@@ -27,6 +27,7 @@ class Restaurant extends Model
         'website',
         'social_links',
         'default_locale',
+        'currency',
     ];
 
     /**

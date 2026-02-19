@@ -129,8 +129,7 @@ const routes = [
       {
         path: 'restaurants/:uuid/menu-items/new',
         name: 'RestaurantMenuItemNew',
-        component: () => import('@/views/restaurants/MenuItemFormView.vue'),
-        meta: { mode: 'create' },
+        redirect: () => ({ name: 'MenuItemNew' }),
       },
       {
         path: 'restaurants/:uuid/menu-items/:itemUuid/edit',

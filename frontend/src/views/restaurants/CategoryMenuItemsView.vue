@@ -1,20 +1,20 @@
 <template>
   <div>
     <div v-if="loading && !restaurant" class="space-y-4">
-      <div class="h-24 rounded-2xl bg-slate-200 dark:bg-slate-700 animate-pulse" />
-      <div class="h-32 rounded-2xl bg-slate-200 dark:bg-slate-700 animate-pulse" />
+      <div class="h-24 rounded-xl bg-slate-200 dark:bg-slate-700 animate-pulse" />
+      <div class="h-32 rounded-xl bg-slate-200 dark:bg-slate-700 animate-pulse" />
     </div>
 
     <div
       v-else-if="!restaurant"
-      class="rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-slate-800 p-8 text-center"
+      class="rounded-xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-slate-800 p-8 text-center"
     >
       <p class="text-slate-500 dark:text-slate-400 mb-4">Restaurant not found.</p>
       <AppBackLink :to="backLink" />
     </div>
 
     <template v-else>
-      <header class="mb-4 lg:mb-6">
+      <header class="mb-6 lg:mb-8">
         <AppBackLink :to="backLink" />
         <h2 class="text-xl font-bold text-charcoal dark:text-white lg:text-2xl mt-3">
           {{ categoryDisplayName }}
@@ -32,7 +32,44 @@
         {{ error }}
       </div>
 
-      <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-zinc-900 p-4 lg:p-6 space-y-4">
+      <!-- Empty state: no white card when no items -->
+      <div
+        v-if="!itemsLoading && !items.length"
+        class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-sage/15 via-cream/80 to-primary/5 dark:from-sage/20 dark:via-zinc-900 dark:to-primary/10 border border-sage/20 dark:border-sage/30 py-12 lg:py-16 px-6 text-center"
+      >
+        <div class="absolute inset-0 pointer-events-none" aria-hidden="true">
+          <div class="absolute top-1/4 left-1/4 w-32 h-32 rounded-full border-2 border-sage/20 dark:border-sage/30 -translate-x-1/2 -translate-y-1/2" />
+          <div class="absolute bottom-1/4 right-1/4 w-24 h-24 rounded-full border-2 border-primary/15 -translate-x-1/2 translate-y-1/2" />
+        </div>
+        <div class="relative">
+          <h3 class="text-xl font-bold text-charcoal dark:text-white lg:text-2xl mb-2">Add menu items to this category</h3>
+          <p class="text-slate-600 dark:text-slate-400 text-sm max-w-md mx-auto mb-8">
+            Add existing menu items from this restaurant to show them in this category. You can reorder them after adding.
+          </p>
+          <AppButton
+            v-if="restaurant"
+            variant="primary"
+            class="min-h-[48px] px-6 shadow-lg shadow-primary/20 transition-transform hover:scale-[1.02] active:scale-[0.98]"
+            @click="openAddItemModal"
+          >
+            <template #icon>
+              <span class="material-icons">restaurant_menu</span>
+            </template>
+            Add menu item
+          </AppButton>
+        </div>
+      </div>
+
+      <!-- Loading items (no white card when empty) -->
+      <div v-else-if="itemsLoading" class="space-y-2">
+        <div v-for="i in 3" :key="i" class="h-16 rounded-xl bg-slate-200 dark:bg-slate-700 animate-pulse" />
+      </div>
+
+      <!-- Has items: white card with count, Add button, draggable list -->
+      <div
+        v-else
+        class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-zinc-900 p-4 lg:p-6 space-y-4"
+      >
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <span class="text-sm font-medium text-slate-500 dark:text-slate-400">{{ items.length }} item(s)</span>
           <AppButton
@@ -41,28 +78,13 @@
             class="min-h-[44px] w-full sm:w-auto"
             @click="openAddItemModal"
           >
-            <span class="material-icons mr-1">add</span>
-            Add menu item
-          </AppButton>
-        </div>
-
-        <div v-if="itemsLoading" class="space-y-2">
-          <div v-for="i in 3" :key="i" class="h-16 rounded-xl bg-slate-200 dark:bg-slate-700 animate-pulse" />
-        </div>
-        <div v-else-if="!items.length" class="py-8 text-center">
-          <p class="text-slate-500 dark:text-slate-400 mb-4">No menu items in this category yet.</p>
-          <AppButton
-            v-if="restaurant"
-            variant="primary"
-            class="min-h-[44px]"
-            @click="openAddItemModal"
-          >
-            <span class="material-icons mr-1">add</span>
+            <template #icon>
+              <span class="material-icons">add</span>
+            </template>
             Add menu item
           </AppButton>
         </div>
         <draggable
-          v-else
           v-model="items"
           item-key="uuid"
           handle=".item-drag-handle"
@@ -95,49 +117,21 @@
         </draggable>
       </div>
 
-      <!-- Add menu item to category: modal (MVP: existing restaurant items only; catalog from GET /api/menu-items not wired here) -->
+      <!-- Add menu item to category: single list of addable items, each with Add button -->
       <AppModal
         :open="addItemModalOpen"
         title="Add menu item to category"
-        description="Choose a menu item to add to this category. Existing restaurant items can be moved here."
+        description="Add or remove items in this category. You can add from this restaurant or from your catalog. Search to filter."
         @close="closeAddItemModal"
       >
         <div class="space-y-4">
-          <div>
-            <label for="add-item-search" class="block text-sm font-medium text-charcoal dark:text-white mb-1">Search</label>
-            <input
-              id="add-item-search"
-              v-model="addItemSearchQuery"
-              type="search"
-              autocomplete="off"
-              placeholder="Filter by name…"
-              class="w-full min-h-[44px] rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-zinc-800 text-charcoal dark:text-white px-4 py-2 text-sm focus:ring-2 focus:ring-primary focus:outline-none"
-              aria-label="Filter menu items by name"
-            />
-          </div>
-          <div>
-            <span class="block text-sm font-medium text-charcoal dark:text-white mb-2">Show</span>
-            <div class="flex flex-col sm:flex-row rounded-xl border border-slate-200 dark:border-slate-700 p-1 gap-1" role="group" aria-label="Filter by added status">
-              <button
-                type="button"
-                class="flex-1 min-h-[44px] rounded-lg text-sm font-medium transition-colors w-full sm:w-auto"
-                :class="addItemFilterMode === 'not_added' ? 'bg-primary text-white' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-zinc-700'"
-                :aria-pressed="addItemFilterMode === 'not_added'"
-                @click="addItemFilterMode = 'not_added'"
-              >
-                Not in this category
-              </button>
-              <button
-                type="button"
-                class="flex-1 min-h-[44px] rounded-lg text-sm font-medium transition-colors w-full sm:w-auto"
-                :class="addItemFilterMode === 'added' ? 'bg-primary text-white' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-zinc-700'"
-                :aria-pressed="addItemFilterMode === 'added'"
-                @click="addItemFilterMode = 'added'"
-              >
-                In this category
-              </button>
-            </div>
-          </div>
+          <AppInput
+            v-model="addItemSearchQuery"
+            type="search"
+            label="Search"
+            placeholder="Filter by name…"
+            autocomplete="off"
+          />
           <p v-if="addItemModalError" role="alert" class="text-sm text-red-600 dark:text-red-400">
             {{ addItemModalError }}
           </p>
@@ -147,20 +141,36 @@
           <div v-else class="max-h-[50vh] overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-700 divide-y divide-slate-200 dark:divide-slate-700">
             <div
               v-for="menuItem in addItemFilteredList"
-              :key="menuItem.uuid"
+              :key="(menuItem._addSource ?? 'restaurant') + '-' + menuItem.uuid"
               class="flex items-center gap-3 p-3 min-h-[44px]"
             >
               <div class="min-w-0 flex-1">
                 <p class="font-medium text-charcoal dark:text-white truncate">{{ itemDisplayName(menuItem) }}</p>
                 <p v-if="itemPriceDisplay(menuItem)" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{{ itemPriceDisplay(menuItem) }}</p>
               </div>
+              <template v-if="isItemInCategory(menuItem)">
+                <AppButton
+                  variant="secondary"
+                  size="sm"
+                  class="min-h-[44px] shrink-0"
+                  :disabled="addItemRemovingUuid === menuItem.uuid"
+                  :aria-label="`Remove ${itemDisplayName(menuItem)} from category`"
+                  :data-testid="`remove-item-from-category-${menuItem.uuid}`"
+                  @click="removeItemFromCategory(menuItem)"
+                >
+                  <span v-if="addItemRemovingUuid === menuItem.uuid" class="material-icons animate-spin text-lg">sync</span>
+                  <span v-else class="material-icons text-lg">remove_circle_outline</span>
+                  <span class="ml-1">Remove from menu</span>
+                </AppButton>
+              </template>
               <AppButton
-                v-if="addItemFilterMode === 'not_added'"
+                v-else
                 variant="primary"
                 size="sm"
                 class="min-h-[44px] min-w-[44px] shrink-0"
                 :disabled="addItemAddingUuid === menuItem.uuid"
                 :aria-label="`Add ${itemDisplayName(menuItem)} to category`"
+                :data-testid="`add-item-to-category-${menuItem.uuid}`"
                 @click="addItemToCategory(menuItem)"
               >
                 <span v-if="addItemAddingUuid === menuItem.uuid" class="material-icons animate-spin text-lg">sync</span>
@@ -168,7 +178,7 @@
               </AppButton>
             </div>
             <p v-if="!addItemModalLoading && addItemFilteredList.length === 0" class="p-4 text-sm text-slate-500 dark:text-slate-400 text-center">
-              {{ addItemFilterMode === 'not_added' ? 'No other menu items to add, or none match the search.' : 'No items in this category match the search.' }}
+              No menu items, or none match the search.
             </p>
           </div>
         </div>
@@ -187,9 +197,11 @@ import draggable from 'vuedraggable'
 import AppBackLink from '@/components/AppBackLink.vue'
 import AppModal from '@/components/ui/AppModal.vue'
 import AppButton from '@/components/ui/AppButton.vue'
+import AppInput from '@/components/ui/AppInput.vue'
 import Restaurant from '@/models/Restaurant.js'
 import MenuItem from '@/models/MenuItem.js'
-import { restaurantService, normalizeApiError } from '@/services'
+import { formatCurrency } from '@/utils/format'
+import { restaurantService, menuItemService, normalizeApiError } from '@/services'
 import { useBreadcrumbStore } from '@/stores/breadcrumb'
 import { useToastStore } from '@/stores/toast'
 
@@ -224,26 +236,47 @@ const categoryDisplayName = computed(() => {
 // Add-item modal state
 const addItemModalOpen = ref(false)
 const addItemSearchQuery = ref('')
-const addItemFilterMode = ref('not_added') // 'not_added' | 'added'
 const addItemModalLoading = ref(false)
 const addItemModalError = ref('')
 const addItemAddingUuid = ref(null)
-const allMenuItemsForModal = ref([]) // raw MenuItem.toJSON() from listMenuItems
+const addItemRemovingUuid = ref(null)
+/** Items for modal: restaurant items + catalog (standalone) items not already in this restaurant. */
+const allMenuItemsForModal = ref([])
 
+/** Restaurant items already in this category (for sort_order when adding). */
 const addItemInCategory = computed(() => {
   const cat = categoryUuid.value
   if (!cat) return []
-  return allMenuItemsForModal.value.filter((i) => (i.category_uuid ?? null) === cat)
+  return allMenuItemsForModal.value.filter(
+    (i) => i._addSource === 'restaurant' && (i.category_uuid ?? null) === cat
+  )
 })
 
+/** Restaurant items not in this category (other categories or uncategorized). */
 const addItemNotInCategory = computed(() => {
   const cat = categoryUuid.value
   if (!cat) return []
-  return allMenuItemsForModal.value.filter((i) => (i.category_uuid ?? null) !== cat)
+  return allMenuItemsForModal.value.filter(
+    (i) => i._addSource === 'restaurant' && (i.category_uuid ?? null) !== cat
+  )
 })
 
+/** Catalog (standalone) items not yet in this restaurant (deduped by source_menu_item_uuid). */
+const addItemCatalogOnly = computed(() => {
+  return allMenuItemsForModal.value.filter((i) => i._addSource === 'catalog')
+})
+
+/** All items for modal: addable (restaurant not in category + catalog), then in-category (Remove from menu). */
+const addItemFullList = computed(() => {
+  const notIn = addItemNotInCategory.value
+  const catalog = addItemCatalogOnly.value
+  const inCat = addItemInCategory.value
+  return [...notIn, ...catalog, ...inCat]
+})
+
+/** Modal list filtered by search; each row shows Add or Remove from menu. */
 const addItemFilteredList = computed(() => {
-  const list = addItemFilterMode.value === 'added' ? addItemInCategory.value : addItemNotInCategory.value
+  const list = addItemFullList.value
   const q = (addItemSearchQuery.value ?? '').trim().toLowerCase()
   if (!q) return list
   return list.filter((item) => {
@@ -252,9 +285,12 @@ const addItemFilteredList = computed(() => {
   })
 })
 
+function isItemInCategory(menuItem) {
+  return menuItem?._addSource === 'restaurant' && (menuItem.category_uuid ?? null) === categoryUuid.value
+}
+
 function openAddItemModal() {
   addItemSearchQuery.value = ''
-  addItemFilterMode.value = 'not_added'
   addItemModalError.value = ''
   addItemAddingUuid.value = null
   addItemModalOpen.value = true
@@ -265,6 +301,7 @@ function closeAddItemModal() {
   addItemModalOpen.value = false
   addItemModalError.value = ''
   addItemAddingUuid.value = null
+  addItemRemovingUuid.value = null
 }
 
 async function fetchAllMenuItemsForModal() {
@@ -272,9 +309,28 @@ async function fetchAllMenuItemsForModal() {
   addItemModalLoading.value = true
   addItemModalError.value = ''
   try {
-    const res = await restaurantService.listMenuItems(uuid.value)
-    const list = Array.isArray(res?.data) ? res.data : []
-    allMenuItemsForModal.value = list.map((i) => MenuItem.fromApi({ data: i }).toJSON())
+    const [restaurantRes, userRes] = await Promise.all([
+      restaurantService.listMenuItems(uuid.value),
+      menuItemService.list(),
+    ])
+    const restaurantList = Array.isArray(restaurantRes?.data) ? restaurantRes.data : []
+    const userList = Array.isArray(userRes?.data) ? userRes.data : []
+    const restaurantItems = restaurantList.map((i) => {
+      const json = MenuItem.fromApi({ data: i }).toJSON()
+      json._addSource = 'restaurant'
+      return json
+    })
+    const sourceUuids = new Set(
+      restaurantItems.map((i) => i.source_menu_item_uuid).filter(Boolean)
+    )
+    const catalogItems = userList
+      .filter((i) => (i.restaurant_uuid ?? null) === null && !sourceUuids.has(i.uuid))
+      .map((i) => {
+        const json = MenuItem.fromApi({ data: i }).toJSON()
+        json._addSource = 'catalog'
+        return json
+      })
+    allMenuItemsForModal.value = [...restaurantItems, ...catalogItems]
   } catch (e) {
     addItemModalError.value = normalizeApiError(e).message
     allMenuItemsForModal.value = []
@@ -288,11 +344,20 @@ async function addItemToCategory(menuItem) {
   addItemAddingUuid.value = menuItem.uuid
   addItemModalError.value = ''
   const nextSortOrder = addItemInCategory.value.length
+  const isCatalog = menuItem._addSource === 'catalog'
   try {
-    await restaurantService.updateMenuItem(uuid.value, menuItem.uuid, {
-      category_uuid: categoryUuid.value,
-      sort_order: nextSortOrder,
-    })
+    if (isCatalog) {
+      await restaurantService.createMenuItem(uuid.value, {
+        source_menu_item_uuid: menuItem.uuid,
+        category_uuid: categoryUuid.value,
+        sort_order: nextSortOrder,
+      })
+    } else {
+      await restaurantService.updateMenuItem(uuid.value, menuItem.uuid, {
+        category_uuid: categoryUuid.value,
+        sort_order: nextSortOrder,
+      })
+    }
     restaurantService.invalidateMenuItemsCache(uuid.value)
     await loadItems()
     await fetchAllMenuItemsForModal()
@@ -301,6 +366,26 @@ async function addItemToCategory(menuItem) {
     addItemModalError.value = normalizeApiError(e).message
   } finally {
     addItemAddingUuid.value = null
+  }
+}
+
+async function removeItemFromCategory(menuItem) {
+  if (!uuid.value || !categoryUuid.value || !menuItem?.uuid || addItemRemovingUuid.value) return
+  addItemRemovingUuid.value = menuItem.uuid
+  addItemModalError.value = ''
+  try {
+    await restaurantService.updateMenuItem(uuid.value, menuItem.uuid, {
+      category_uuid: null,
+      sort_order: 0,
+    })
+    restaurantService.invalidateMenuItemsCache(uuid.value)
+    await loadItems()
+    await fetchAllMenuItemsForModal()
+    toastStore.success('Removed from category.')
+  } catch (e) {
+    addItemModalError.value = normalizeApiError(e).message
+  } finally {
+    addItemRemovingUuid.value = null
   }
 }
 
@@ -315,7 +400,8 @@ function itemPriceDisplay(item) {
   if (p == null || p === '') return ''
   const n = Number(p)
   if (Number.isNaN(n)) return ''
-  return new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(n)
+  const currency = restaurant.value?.currency ?? 'USD'
+  return formatCurrency(n, currency)
 }
 
 async function loadRestaurant() {

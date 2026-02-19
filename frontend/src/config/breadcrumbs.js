@@ -19,13 +19,15 @@ export const BREADCRUMB_CONFIG = {
     label: (_, store) => store.menuItemName ? `Edit ${store.menuItemName}` : 'Edit item',
     parent: 'MenuItems',
   },
+  __main_menu__: { label: 'Main menu', parent: 'RestaurantDetail' },
   RestaurantMenuItems: {
     label: (_, store) => store.menuName || 'Menu',
-    parent: 'RestaurantDetail',
+    parent: '__main_menu__',
   },
+  __category_label__: { label: 'Category', parent: 'RestaurantMenuItems' },
   __category__: {
     label: (_, store) => store.categoryName || 'Category',
-    parent: 'RestaurantMenuItems',
+    parent: '__category_label__',
   },
   CategoryMenuItems: { label: 'Menu items', parent: '__category__' },
   RestaurantMenuItemNew: { label: 'Add item', parent: 'RestaurantMenuItems' },

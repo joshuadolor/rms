@@ -198,65 +198,13 @@
         </template>
       </AppModal>
 
-      <!-- Add menu item modal -->
-      <AppModal
-        :open="itemModalOpen"
-        title="Add menu item"
-        description="Add a new item. Name is required for the default language."
-        @close="closeItemModal"
-      >
-        <form class="space-y-4" novalidate @submit.prevent="saveMenuItem">
-          <div
-            v-if="itemFormError"
-            role="alert"
-            class="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 text-sm"
-          >
-            {{ itemFormError }}
-          </div>
-          <div v-if="categories.length">
-            <label class="block text-sm font-semibold text-charcoal dark:text-white mb-1.5">Category</label>
-            <select
-              v-model="itemForm.category_uuid"
-              class="min-h-[44px] w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-zinc-800 text-charcoal dark:text-white px-4 py-2 text-sm focus:ring-2 focus:ring-primary focus:outline-none"
-              aria-label="Category"
-            >
-              <option value="">Uncategorized</option>
-              <option v-for="c in categories" :key="c.uuid" :value="c.uuid">{{ categoryName(c) }}</option>
-            </select>
-          </div>
-          <AppInput
-            v-model="itemForm.name"
-            :label="`Name (${getLocaleDisplay(defaultLocale)})`"
-            type="text"
-            placeholder="e.g. Margherita Pizza"
-            :error="itemFormFieldError"
-          />
-          <div>
-            <label class="block text-sm font-semibold text-charcoal dark:text-white mb-1.5">Description (optional)</label>
-            <textarea
-              v-model="itemForm.description"
-              rows="3"
-              placeholder="Short description"
-              class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-zinc-800 py-3 px-4 text-charcoal dark:text-white focus:ring-2 focus:ring-primary focus:outline-none resize-none min-h-[44px]"
-            />
-          </div>
-        </form>
-        <template #footer>
-          <AppButton variant="secondary" class="min-h-[44px]" @click="closeItemModal">Cancel</AppButton>
-          <AppButton variant="primary" class="min-h-[44px]" :disabled="savingItem" @click="saveMenuItem">
-            <template v-if="savingItem" #icon><span class="material-icons animate-spin text-lg">sync</span></template>
-            {{ savingItem ? 'Saving…' : 'Save' }}
-          </AppButton>
-        </template>
-      </AppModal>
-
-      <!-- FAB: only when we have a menu selected -->
+      <!-- FAB: Add category only (menu item creation is in Menu items page) -->
       <button
-        v-if="selectedMenuUuid"
+        v-if="selectedMenuUuid && activeTab === 'categories'"
         type="button"
         class="fixed right-6 w-14 h-14 bg-primary text-white rounded-full shadow-lg flex items-center justify-center transition-transform hover:scale-105 active:scale-95 z-20 min-h-[56px] min-w-[56px] bottom-[calc(5.5rem+env(safe-area-inset-bottom,0px))] lg:bottom-6"
-        :aria-label="activeTab === 'categories' ? 'Add category' : 'Add menu item'"
-        @click="onFabClick"
+        aria-label="Add category"
+        @click="openCategoryModal()"
       >
         <span class="material-icons text-3xl">add</span>
       </button>
@@ -279,7 +227,7 @@ import Restaurant from '@/models/Restaurant.js'
 import Menu from '@/models/Menu.js'
 import Category from '@/models/Category.js'
 import MenuItem from '@/models/MenuItem.js'
-import { restaurantService, normalizeApiError, getValidationErrors } from '@/services'
+import { restaurantService, normalizeApiError } from '@/services'
 import { useToastStore } from '@/stores/toast'
 
 const route = useRoute()
@@ -305,12 +253,6 @@ const editingCategory = ref(null)
 const categoryForm = ref({ name: '' })
 const categoryFormError = ref('')
 const savingCategory = ref(false)
-
-const itemModalOpen = ref(false)
-const itemForm = ref({ name: '', description: '', category_uuid: '' })
-const itemFormError = ref('')
-const itemFormFieldError = ref('')
-const savingItem = ref(false)
 
 const defaultLocale = computed(() => restaurant.value?.default_locale ?? 'en')
 
@@ -499,69 +441,6 @@ async function onReorderCategories() {
   } catch (e) {
     error.value = normalizeApiError(e).message
     await loadCategories()
-  }
-}
-
-function onFabClick() {
-  if (activeTab.value === 'categories') {
-    openCategoryModal()
-  } else {
-    openItemModal()
-  }
-}
-
-function openItemModal() {
-  itemForm.value = {
-    name: '',
-    description: '',
-    category_uuid: categories.value.length ? categories.value[0].uuid : '',
-  }
-  itemFormError.value = ''
-  itemFormFieldError.value = ''
-  itemModalOpen.value = true
-}
-
-function closeItemModal() {
-  itemModalOpen.value = false
-  itemForm.value = { name: '', description: '', category_uuid: '' }
-  itemFormError.value = ''
-  itemFormFieldError.value = ''
-}
-
-async function saveMenuItem() {
-  const name = (itemForm.value.name ?? '').trim()
-  itemFormError.value = ''
-  itemFormFieldError.value = ''
-  if (!name) {
-    itemFormFieldError.value = 'Name is required.'
-    return
-  }
-  const defLoc = defaultLocale.value
-  const langRes = await restaurantService.getLanguages(uuid.value).catch(() => ({ data: [defLoc] }))
-  const locs = Array.isArray(langRes?.data) ? langRes.data : [defLoc]
-  const translations = {}
-  for (const loc of locs) {
-    translations[loc] = {
-      name: loc === defLoc ? name : '',
-      description: loc === defLoc ? (itemForm.value.description?.trim() || null) : null,
-    }
-  }
-  const payload = {
-    translations,
-    category_uuid: itemForm.value.category_uuid || undefined,
-  }
-  savingItem.value = true
-  try {
-    await restaurantService.createMenuItem(uuid.value, payload)
-    toastStore.success('Menu item created.')
-    closeItemModal()
-    await loadMenuItems()
-  } catch (e) {
-    const errs = getValidationErrors(e)
-    itemFormError.value = e?.response?.data?.message ?? normalizeApiError(e).message
-    if (errs['translations.' + defLoc + '.name']) itemFormFieldError.value = errs['translations.' + defLoc + '.name']
-  } finally {
-    savingItem.value = false
   }
 }
 

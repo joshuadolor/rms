@@ -82,47 +82,68 @@
           </AppButton>
         </section>
 
+        <!-- Translations: dropdown to pick language, then one section for the selected locale -->
         <template v-if="restaurant || standaloneItem">
           <section
-            v-for="loc in formLocales"
-            :key="loc"
             class="bg-white dark:bg-zinc-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 lg:p-6 space-y-4"
-            :data-testid="`form-section-locale-${loc}`"
+            :data-testid="`form-section-locale-${selectedLocale}`"
           >
-            <div class="flex items-center justify-between gap-2">
-              <h3 class="font-semibold text-charcoal dark:text-white flex items-center gap-2">
-                <span class="material-icons text-slate-500 dark:text-slate-400">translate</span>
-                {{ getLocaleDisplay(loc) }}
-              </h3>
-            <AppButton
-              v-if="restaurant && loc !== restaurant.default_locale"
-                type="button"
-                variant="ghost"
-                size="sm"
-                class="min-h-[44px]"
-                :disabled="translatingLocale === loc"
-                @click="translateLocale(loc)"
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <label for="menu-item-locale-select" class="block text-sm font-semibold text-charcoal dark:text-white">
+                Language
+              </label>
+              <select
+                id="menu-item-locale-select"
+                v-model="selectedLocale"
+                class="min-h-[44px] w-full sm:w-auto min-w-[12rem] rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-zinc-800 text-charcoal dark:text-white px-4 py-2 text-sm font-medium focus:ring-2 focus:ring-primary focus:outline-none"
+                aria-label="Select language for name and description"
+                data-testid="menu-item-locale-select"
               >
-                {{ translatingLocale === loc ? 'Translating…' : 'Translate from default' }}
-              </AppButton>
+                <option
+                  v-for="loc in formLocales"
+                  :key="loc"
+                  :value="loc"
+                >
+                  {{ getLocaleDisplay(loc) }}
+                </option>
+              </select>
             </div>
-            <AppInput
-              v-model="form.translations[loc].name"
-              :label="`Name (${getLocaleDisplay(loc)})`"
-              type="text"
-              :placeholder="(restaurant?.default_locale ?? 'en') === loc ? 'e.g. Margherita Pizza' : ''"
-              :error="fieldErrors[`translations.${loc}.name`]"
-            />
-            <div>
-              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1" :for="`menu-item-desc-${loc}`">Description (optional)</label>
-              <textarea
-                :id="`menu-item-desc-${loc}`"
-                v-model="form.translations[loc].description"
-                rows="3"
-                class="w-full rounded-lg ring-1 ring-gray-200 dark:ring-zinc-700 focus:ring-2 focus:ring-primary transition-all bg-background-light dark:bg-zinc-800 border-0 py-3 px-4 text-charcoal dark:text-white resize-none"
-                :placeholder="`Description in ${getLocaleDisplay(loc)}`"
+            <template v-if="selectedLocale && form.translations[selectedLocale]">
+              <div class="flex flex-wrap items-center justify-between gap-2 pt-2">
+                <h3 class="font-semibold text-charcoal dark:text-white flex items-center gap-2">
+                  <span class="material-icons text-slate-500 dark:text-slate-400">translate</span>
+                  {{ getLocaleDisplay(selectedLocale) }}
+                </h3>
+                <AppButton
+                  v-if="restaurant && selectedLocale !== restaurant.default_locale"
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  class="min-h-[44px]"
+                  :disabled="translatingLocale === selectedLocale"
+                  @click="translateLocale(selectedLocale)"
+                >
+                  {{ translatingLocale === selectedLocale ? 'Translating…' : 'Translate from default' }}
+                </AppButton>
+              </div>
+              <AppInput
+                v-model="form.translations[selectedLocale].name"
+                :label="`Name (${getLocaleDisplay(selectedLocale)})`"
+                type="text"
+                :placeholder="(restaurant?.default_locale ?? 'en') === selectedLocale ? 'e.g. Margherita Pizza' : ''"
+                :error="fieldErrors[`translations.${selectedLocale}.name`]"
               />
-            </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1" :for="`menu-item-desc-${selectedLocale}`">Description (optional)</label>
+                <textarea
+                  :id="`menu-item-desc-${selectedLocale}`"
+                  v-model="form.translations[selectedLocale].description"
+                  rows="3"
+                  class="w-full rounded-lg ring-1 ring-gray-200 dark:ring-zinc-700 focus:ring-2 focus:ring-primary transition-all bg-background-light dark:bg-zinc-800 border-0 py-3 px-4 text-charcoal dark:text-white resize-none min-h-[44px]"
+                  :placeholder="`Description in ${getLocaleDisplay(selectedLocale)}`"
+                />
+              </div>
+            </template>
           </section>
         </template>
 
@@ -155,6 +176,7 @@ import AppInput from '@/components/ui/AppInput.vue'
 import AppButton from '@/components/ui/AppButton.vue'
 import AppBackLink from '@/components/AppBackLink.vue'
 import { getLocaleDisplay } from '@/config/locales'
+import { formatCurrency } from '@/utils/format'
 import { useBreadcrumbStore } from '@/stores/breadcrumb'
 import Restaurant from '@/models/Restaurant.js'
 import MenuItem from '@/models/MenuItem.js'
@@ -186,6 +208,8 @@ const fieldErrors = ref({})
 const restaurant = ref(null)
 const standaloneItem = ref(null)
 const translatingLocale = ref(null)
+/** Currently selected locale in the translations dropdown. */
+const selectedLocale = ref('en')
 /** When editing a restaurant item that comes from catalog (source_menu_item_uuid). */
 const catalogSourceUuid = ref(null)
 const baseTranslations = ref({})
@@ -203,8 +227,8 @@ const form = reactive({
 const itemFromCatalog = computed(() => !!catalogSourceUuid.value)
 
 function formatBasePrice(price) {
-  if (price == null || Number.isNaN(Number(price))) return '—'
-  return new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(Number(price))
+  const currency = restaurant.value?.currency ?? 'USD'
+  return formatCurrency(price, currency)
 }
 
 const installedLanguages = computed(() => restaurant.value?.languages ?? [])
@@ -389,13 +413,14 @@ async function loadRestaurant() {
 }
 
 function initFormFromRestaurant() {
-  const def = restaurant.value?.default_locale
+  const def = restaurant.value?.default_locale ?? 'en'
   form.sort_order = 0
   form.category_uuid = route.query.category_uuid ?? null
   form.price = ''
   form.price_override = ''
   form.translations = {}
   if (def) form.translations[def] = { name: '', description: null }
+  selectedLocale.value = def
 }
 
 async function loadMenuItem() {
@@ -431,7 +456,8 @@ async function loadMenuItem() {
       form.price_override = ''
       form.price = item.price != null ? String(item.price) : ''
     }
-    const defLoc = restaurant.value?.default_locale
+    const defLoc = restaurant.value?.default_locale ?? locs[0]
+    selectedLocale.value = locs.includes(selectedLocale.value) ? selectedLocale.value : (defLoc ?? locs[0] ?? 'en')
     const defaultName = defLoc ? (form.translations[defLoc]?.name ?? '') : ''
     breadcrumbStore.setMenuItemName(defaultName.trim() || null)
   } catch (e) {
@@ -459,7 +485,8 @@ async function loadStandaloneMenuItem() {
         description: t?.description ?? null,
       }
     }
-    const firstLoc = Object.keys(form.translations)[0]
+    const firstLoc = Object.keys(form.translations)[0] ?? 'en'
+    selectedLocale.value = Object.keys(form.translations).includes(selectedLocale.value) ? selectedLocale.value : firstLoc
     const defaultName = firstLoc ? (form.translations[firstLoc]?.name ?? '') : ''
     breadcrumbStore.setMenuItemName(defaultName.trim() || null)
   } catch (e) {
@@ -488,4 +515,11 @@ watch([uuid, itemUuid], async () => {
   if (isEdit.value && uuid.value && itemUuid.value && restaurant.value) await loadMenuItem()
   if (isMenuItemsModule.value && isEdit.value && !uuid.value && itemUuid.value) await loadStandaloneMenuItem()
 })
+
+watch(formLocales, (locs) => {
+  if (locs.length && !locs.includes(selectedLocale.value)) {
+    const def = restaurant.value?.default_locale ?? (standaloneItem.value ? null : 'en')
+    selectedLocale.value = (def && locs.includes(def)) ? def : locs[0]
+  }
+}, { immediate: true })
 </script>

@@ -64,6 +64,9 @@ final readonly class UpdateRestaurant
             }
             $data['default_locale'] = $locale;
         }
+        if (array_key_exists('currency', $input)) {
+            $data['currency'] = $input['currency'];
+        }
 
         return $this->restaurantRepository->update($restaurant, $data);
     }

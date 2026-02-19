@@ -452,6 +452,7 @@ Returned by list, show, create, update, and after logo/banner upload:
   website: string | null;
   social_links: { facebook?: string; instagram?: string; twitter?: string; linkedin?: string };
   default_locale: string;
+  currency: string;         // ISO 4217 code, e.g. USD, EUR; used for price display in restaurant context
   languages: string[];      // installed locales
   logo_url: string | null;   // e.g. https://api.example.com/api/restaurants/{uuid}/logo
   banner_url: string | null; // e.g. https://api.example.com/api/restaurants/{uuid}/banner
@@ -644,6 +645,7 @@ Returns public restaurant data and menu items for subdomain or `/r/:slug` pages.
     "logo_url": "string | null",
     "banner_url": "string | null",
     "default_locale": "string",
+    "currency": "string",
     "languages": ["en", "nl", ...],
     "locale": "string",
     "description": "string | null",
@@ -1023,6 +1025,7 @@ When the item is a **restaurant usage of a catalog item** (added from “Menu it
 
 ## Changelog
 
+- **2026-02-19**: Restaurants: **currency** (ISO 4217 code, default USD). Column added to restaurants table. Update accepts `currency`; list/show/update and public GET `/api/public/restaurants/{slug}` include `currency` in payload. Frontend uses it for all price display in restaurant context.
 - **2026-02-19**: **Remove language:** Removing a language from a restaurant only removes it from restaurant_languages. Restaurant, menu, and category translation rows are no longer deleted when a language is removed; they persist until the entity is deleted (cascade).
 - **2026-02-19**: **Menus:** Translatable name and description. New `menu_translations` table (menu_id, locale, name, description). Menu payload includes `translations` (locale → { name, description }) and `name` (resolved from default locale). Create/update accept `translations`; locales must be installed. Backward compat: `name` alone still supported and maps to default locale.
 - **2026-02-19**: **Categories:** Category translations include optional `description` per locale. Create/update accept `description` in each locale; payload extends to `Record<locale, { name, description? }>`.

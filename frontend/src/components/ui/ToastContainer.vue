@@ -1,6 +1,6 @@
 <template>
   <div
-    class="fixed bottom-0 left-0 right-0 w-full p-3 pb-[env(safe-area-inset-bottom,0.75rem)] mb-4 sm:mb-0 z-[100] flex flex-col gap-2 pointer-events-none sm:bottom-auto sm:top-4 sm:right-4 sm:left-auto sm:w-auto sm:max-w-sm sm:p-0 sm:pb-0"
+    class="fixed bottom-0 left-0 right-0 w-full p-3 pb-[env(safe-area-inset-bottom,0.75rem)] mb-4 sm:mb-0 z-[200] flex flex-col gap-2 pointer-events-none sm:bottom-auto sm:top-4 sm:right-4 sm:left-auto sm:w-auto sm:max-w-sm sm:p-0 sm:pb-0"
     aria-live="polite"
     role="region"
     aria-label="Notifications"

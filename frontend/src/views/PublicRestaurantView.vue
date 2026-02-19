@@ -161,6 +161,12 @@
                   >
                     {{ item.description }}
                   </p>
+                  <p
+                    v-if="item.price != null && !Number.isNaN(Number(item.price))"
+                    class="mt-1.5 text-sm font-medium text-charcoal dark:text-white"
+                  >
+                    {{ formatCurrency(Number(item.price), data.currency) }}
+                  </p>
                 </div>
               </div>
             </li>
@@ -196,6 +202,7 @@
 import { ref, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '@/services/api'
+import { formatCurrency } from '@/utils/format'
 
 const props = defineProps({
   slug: { type: String, default: '' },

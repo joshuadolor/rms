@@ -56,13 +56,49 @@
             <p v-if="itemDescription(item)" class="text-sm text-slate-500 dark:text-slate-400 truncate mt-0.5">{{ itemDescription(item) }}</p>
             <p v-if="itemPrice(item) != null" class="text-sm font-medium text-slate-600 dark:text-slate-300 mt-0.5">{{ formatPrice(itemPrice(item)) }}</p>
           </div>
-          <router-link :to="editLink(item)" class="shrink-0">
-            <AppButton variant="ghost" size="sm" class="min-h-[44px]">
-              <span class="material-icons">edit</span>
+          <div class="flex items-center gap-1 shrink-0">
+            <router-link :to="editLink(item)">
+              <AppButton variant="ghost" size="sm" class="min-h-[44px] min-w-[44px]" aria-label="Edit menu item">
+                <span class="material-icons">edit</span>
+              </AppButton>
+            </router-link>
+            <AppButton
+              variant="ghost"
+              size="sm"
+              class="min-h-[44px] min-w-[44px] text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+              aria-label="Delete menu item"
+              :disabled="deletingUuid === item.uuid"
+              :data-testid="`delete-menu-item-${item.uuid}`"
+              @click="confirmDeleteItem(item)"
+            >
+              <span v-if="deletingUuid === item.uuid" class="material-icons animate-spin">sync</span>
+              <span v-else class="material-icons">delete_outline</span>
             </AppButton>
-          </router-link>
+          </div>
         </li>
       </ul>
+
+      <!-- Delete confirmation modal -->
+      <AppModal
+        :open="deleteModalOpen"
+        title="Delete menu item"
+        description="This cannot be undone. The item will be removed from all restaurants that use it."
+        @close="closeDeleteModal"
+      >
+        <template #footer>
+          <AppButton variant="secondary" class="min-h-[44px]" @click="closeDeleteModal">Cancel</AppButton>
+          <AppButton
+            variant="primary"
+            class="min-h-[44px] bg-red-600 hover:bg-red-700"
+            :disabled="deletingUuid !== null"
+            data-testid="menu-items-delete-confirm"
+            @click="doDeleteItem"
+          >
+            <template v-if="deletingUuid" #icon><span class="material-icons animate-spin text-lg">sync</span></template>
+            {{ deletingUuid ? 'Deleting…' : 'Delete' }}
+          </AppButton>
+        </template>
+      </AppModal>
 
       <router-link
         v-if="!listLoading"
@@ -80,11 +116,17 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import AppButton from '@/components/ui/AppButton.vue'
+import AppModal from '@/components/ui/AppModal.vue'
 import { menuItemService, normalizeApiError } from '@/services'
+import { useToastStore } from '@/stores/toast'
 
+const toastStore = useToastStore()
 const listLoading = ref(true)
 const menuItems = ref([])
 const error = ref('')
+const deleteModalOpen = ref(false)
+const itemToDelete = ref(null)
+const deletingUuid = ref(null)
 
 function defaultLocale(item) {
   const locs = item?.translations ? Object.keys(item.translations) : []
@@ -129,6 +171,35 @@ async function loadMenuItems() {
     menuItems.value = []
   } finally {
     listLoading.value = false
+  }
+}
+
+function confirmDeleteItem(item) {
+  itemToDelete.value = item
+  deleteModalOpen.value = true
+}
+
+function closeDeleteModal() {
+  if (deletingUuid.value) return
+  deleteModalOpen.value = false
+  itemToDelete.value = null
+}
+
+async function doDeleteItem() {
+  const item = itemToDelete.value
+  if (!item?.uuid || deletingUuid.value) return
+  deletingUuid.value = item.uuid
+  error.value = ''
+  try {
+    await menuItemService.delete(item.uuid)
+    toastStore.success('Menu item deleted.')
+    deleteModalOpen.value = false
+    itemToDelete.value = null
+    await loadMenuItems()
+  } catch (e) {
+    error.value = normalizeApiError(e).message
+  } finally {
+    deletingUuid.value = null
   }
 }
 

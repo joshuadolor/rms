@@ -69,6 +69,7 @@ class PublicRestaurantController extends Controller
                     ? $baseUrl . '/api/restaurants/' . $restaurant->uuid . '/banner'
                     : null,
                 'default_locale' => $restaurant->default_locale ?? 'en',
+                'currency' => $restaurant->currency ?? 'USD',
                 'languages' => $installedLocales,
                 'locale' => $locale,
                 'description' => $description,

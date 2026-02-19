@@ -42,11 +42,14 @@ const trail = computed(() => {
   void categoryName.value
   void menuItemName.value
   const raw = getBreadcrumbTrail(name, breadcrumbStore, route)
+  const restaurantMenuQuery = { ...route.query, tab: 'menu' }
   return raw.map((seg, index) => {
     const isLast = index === raw.length - 1
     let resolved
-    if (seg.name === '__category__' || seg.name === 'RestaurantMenuItems') {
-      resolved = router.resolve({ name: 'RestaurantDetail', params: route.params, query: { tab: 'menu' } })
+    if (seg.name === '__main_menu__' || seg.name === 'RestaurantMenuItems' || seg.name === '__category_label__') {
+      resolved = router.resolve({ name: 'RestaurantDetail', params: { uuid: route.params.uuid }, query: restaurantMenuQuery })
+    } else if (seg.name === '__category__') {
+      resolved = router.resolve({ name: 'CategoryMenuItems', params: route.params, query: route.query })
     } else {
       resolved = router.resolve({ name: seg.name, params: route.params, query: route.query })
     }

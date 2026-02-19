@@ -257,6 +257,7 @@ class RestaurantController extends Controller
             'website' => $restaurant->website,
             'social_links' => $restaurant->social_links ?? (object) [],
             'default_locale' => $restaurant->default_locale ?? 'en',
+            'currency' => $restaurant->currency ?? 'USD',
             'languages' => $restaurant->languages->pluck('locale')->values()->all(),
             'logo_url' => $restaurant->logo_path
                 ? $baseUrl . '/api/restaurants/' . $restaurant->uuid . '/logo'

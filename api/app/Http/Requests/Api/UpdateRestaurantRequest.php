@@ -34,6 +34,7 @@ class UpdateRestaurantRequest extends FormRequest
             'social_links.instagram' => ['nullable', 'string', 'url', 'max:500'],
             'social_links.twitter' => ['nullable', 'string', 'url', 'max:500'],
             'social_links.linkedin' => ['nullable', 'string', 'url', 'max:500'],
+            'currency' => ['sometimes', 'string', 'max:10', Rule::in(['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'CHF', 'NGN', 'MXN', 'BRL'])],
         ];
     }
 }
