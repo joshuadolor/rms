@@ -673,10 +673,11 @@ Each restaurant can have **multiple** menus (e.g. "Lunch", "Dinner", "Drinks"). 
 ```ts
 {
   uuid: string;
-  name: string | null;
+  name: string | null;   // resolved from default locale for backward compatibility
   is_active: boolean;
   sort_order: number;
-  created_at: string;  // ISO 8601
+  translations: Record<string, { name: string; description: string | null }>;  // locale -> { name, description }
+  created_at: string;    // ISO 8601
   updated_at: string;
 }
 ```
@@ -706,13 +707,16 @@ Each restaurant can have **multiple** menus (e.g. "Lunch", "Dinner", "Drinks"). 
 **Body (JSON):**
 ```json
 {
-  "name": "string (optional, max 255)",
+  "name": "string (optional, max 255; backward compat, maps to default locale)",
   "is_active": "boolean (optional, default true)",
-  "sort_order": "integer (optional, min 0)"
+  "sort_order": "integer (optional, min 0)",
+  "translations": {
+    "locale": { "name": "string (required when locale present, max 255)", "description": "string (optional, nullable)" }
+  }
 }
 ```
 
-**Response (201):** `{ "message": "Menu created.", "data": { menu payload } }`. **403:** Not owner. **404:** Restaurant not found. **422:** Validation.
+Locales in `translations` must be installed for the restaurant. **Response (201):** `{ "message": "Menu created.", "data": { menu payload } }`. **403:** Not owner. **404:** Restaurant not found. **422:** Validation or uninstalled locale(s).
 
 ### Update menu
 
@@ -720,7 +724,7 @@ Each restaurant can have **multiple** menus (e.g. "Lunch", "Dinner", "Drinks"). 
 |--------|------|------|
 | PUT/PATCH | `/api/restaurants/{restaurant}/menus/{menu}` | Bearer + verified |
 
-**Body:** Same fields as create; all optional. **Response (200):** `{ "message": "Menu updated.", "data": { menu payload } }`. **403/404/422:** As above.
+**Body:** Same fields as create; all optional. `translations`: locale → `{ name?, description? }`; locales must be installed. **Response (200):** `{ "message": "Menu updated.", "data": { menu payload } }`. **403/404/422:** As above.
 
 ### Delete menu
 
@@ -758,7 +762,7 @@ Categories belong to a menu (e.g. Appetizers, Mains). Name is translated per res
   uuid: string;
   sort_order: number;
   is_active: boolean;  // when false, category and its items are hidden on the public menu
-  translations: Record<string, { name: string }>;  // locale -> { name }
+  translations: Record<string, { name: string; description: string | null }>;  // locale -> { name, description? }
   created_at: string;
   updated_at: string;
 }
@@ -791,7 +795,7 @@ Categories belong to a menu (e.g. Appetizers, Mains). Name is translated per res
 {
   "sort_order": "integer (optional, min 0)",
   "translations": {
-    "locale": { "name": "string (required with translations, max 255)" }
+    "locale": { "name": "string (required with translations, max 255)", "description": "string (optional, nullable)" }
   }
 }
 ```
@@ -804,7 +808,7 @@ Translations must use locales installed for the restaurant. **Response (201):** 
 |--------|------|------|
 | PUT/PATCH | `/api/restaurants/{restaurant}/menus/{menu}/categories/{category}` | Bearer + verified |
 
-**Body:** sort_order, is_active (optional boolean), translations (optional). **Response (200):** `{ "message": "Category updated.", "data": { category payload } }`.
+**Body:** sort_order, is_active (optional boolean), translations (optional; each locale: name, description optional). **Response (200):** `{ "message": "Category updated.", "data": { category payload } }`.
 
 ### Delete category
 
@@ -1019,6 +1023,9 @@ When the item is a **restaurant usage of a catalog item** (added from “Menu it
 
 ## Changelog
 
+- **2026-02-19**: **Remove language:** Removing a language from a restaurant only removes it from restaurant_languages. Restaurant, menu, and category translation rows are no longer deleted when a language is removed; they persist until the entity is deleted (cascade).
+- **2026-02-19**: **Menus:** Translatable name and description. New `menu_translations` table (menu_id, locale, name, description). Menu payload includes `translations` (locale → { name, description }) and `name` (resolved from default locale). Create/update accept `translations`; locales must be installed. Backward compat: `name` alone still supported and maps to default locale.
+- **2026-02-19**: **Categories:** Category translations include optional `description` per locale. Create/update accept `description` in each locale; payload extends to `Record<locale, { name, description? }>`.
 - **2026-02-18**: Restaurants: **primary_color** (optional hex, e.g. #ff5500) for public site theming. Create/update accept primary_color; payload and public GET include primary_color.
 - **2026-02-19**: Restaurants: API reference aligned with implementation. Restaurant payload includes `tagline`, `public_url`, `default_locale`, `languages`. Create body documents `tagline`, `default_locale`. Update: slug cannot be changed after create (not accepted on PATCH/PUT). **Public restaurant by slug:** GET `/api/public/restaurants/{slug}` (no auth) documented; response includes name, tagline, slug, logo_url, banner_url, default_locale, languages, locale, description, menu_items (uuid, name, description, price, sort_order only; menu items filtered by active categories; no internal `id`).
 - **2026-02-19**: Categories: **is_active** (boolean, default true). Update category accepts `is_active`; when false, category and its items are excluded from the public restaurant menu. Delete category: existing endpoint; menu items in the category have their `category_id` set to null (nullOnDelete).

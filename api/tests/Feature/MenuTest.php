@@ -59,7 +59,7 @@ class MenuTest extends TestCase
             ->assertJsonPath('message', 'Menu created.')
             ->assertJsonPath('data.name', 'Lunch Menu')
             ->assertJsonPath('data.is_active', true)
-            ->assertJsonStructure(['data' => ['uuid', 'name', 'is_active', 'sort_order', 'created_at', 'updated_at']]);
+            ->assertJsonStructure(['data' => ['uuid', 'name', 'is_active', 'sort_order', 'translations', 'created_at', 'updated_at']]);
 
         $menuUuid = $response->json('data.uuid');
         $list = $this->getJson('/api/restaurants/' . $restaurant->uuid . '/menus', [
@@ -85,7 +85,7 @@ class MenuTest extends TestCase
             ->assertJsonPath('data.uuid', $menu->uuid)
             ->assertJsonPath('data.name', 'Lunch')
             ->assertJsonPath('data.is_active', true)
-            ->assertJsonStructure(['data' => ['uuid', 'name', 'is_active', 'sort_order', 'created_at', 'updated_at']])
+            ->assertJsonStructure(['data' => ['uuid', 'name', 'is_active', 'sort_order', 'translations', 'created_at', 'updated_at']])
             ->assertJsonMissingPath('data.id');
     }
 

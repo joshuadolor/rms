@@ -39,14 +39,16 @@ final readonly class CreateCategory
         $translations = $input['translations'] ?? [];
         $installedLocales = $restaurant->languages()->pluck('locale')->all();
         $defaultLocale = $restaurant->default_locale ?? 'en';
-        $defaultData = $translations[$defaultLocale] ?? ['name' => ''];
+        $defaultData = $translations[$defaultLocale] ?? ['name' => '', 'description' => null];
 
         foreach ($installedLocales as $locale) {
             $data = $translations[$locale] ?? $defaultData;
             $name = isset($data['name']) ? (string) $data['name'] : '';
+            $description = array_key_exists('description', $data) ? $data['description'] : null;
             $category->translations()->create([
                 'locale' => $locale,
                 'name' => $name,
+                'description' => $description !== null ? (string) $description : null,
             ]);
         }
 

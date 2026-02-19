@@ -7,6 +7,7 @@ const { test, expect } = require('@playwright/test')
 const { RestaurantMenuTabPage } = require('./pages/RestaurantMenuTabPage.cjs')
 const { CategoryMenuItemsPage } = require('./pages/CategoryMenuItemsPage.cjs')
 const { MenuItemFormPage } = require('./pages/MenuItemFormPage.cjs')
+const { RestaurantSettingsPage } = require('./pages/RestaurantSettingsPage.cjs')
 
 const MOCK_VERIFIED_USER = {
   id: 1,
@@ -124,8 +125,23 @@ function mockRestaurantGet(page, restaurant = MOCK_RESTAURANT) {
   })
 }
 
-function mockRestaurantMenus(page, menus = [{ uuid: 'menu-1', name: 'Main menu', is_active: true, sort_order: 0 }]) {
-  const menusList = Array.isArray(menus) ? [...menus] : menus
+/** Normalize menu to API shape: name (from default locale), translations */
+function normalizeMenu(menu, defaultLocale = 'en') {
+  const translations = menu.translations ?? { [defaultLocale]: { name: menu.name ?? 'Unnamed menu', description: null } }
+  const name = translations[defaultLocale]?.name ?? menu.name ?? 'Unnamed menu'
+  return {
+    uuid: menu.uuid,
+    name,
+    translations,
+    is_active: menu.is_active !== false,
+    sort_order: typeof menu.sort_order === 'number' ? menu.sort_order : 0,
+    created_at: menu.created_at ?? new Date().toISOString(),
+    updated_at: menu.updated_at ?? new Date().toISOString(),
+  }
+}
+
+function mockRestaurantMenus(page, menus = [{ uuid: 'menu-1', name: 'Main menu', is_active: true, sort_order: 0 }], defaultLocale = 'en') {
+  const menusList = (Array.isArray(menus) ? menus : [menus]).map((m) => normalizeMenu(m, defaultLocale))
   page.route(/^.*\/api\/restaurants\/[^/]+\/menus\/reorder$/, (route) => {
     if (route.request().method() === 'POST') {
       return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ message: 'Order updated.' }) })
@@ -139,20 +155,22 @@ function mockRestaurantMenus(page, menus = [{ uuid: 'menu-1', name: 'Main menu',
       return route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ data: menusList }),
+        body: JSON.stringify({ data: menusList.map((m) => normalizeMenu(m, defaultLocale)) }),
       })
     }
     if (method === 'POST' && url.endsWith('/menus') && !url.includes('/reorder')) {
       const body = JSON.parse(route.request().postData() || '{}')
-      const name = body.name != null && body.name !== '' ? body.name : null
-      const newMenu = {
+      const translations = body.translations ?? (body.name != null ? { [defaultLocale]: { name: body.name, description: body.description ?? null } } : { [defaultLocale]: { name: 'Unnamed menu', description: null } })
+      const name = translations[defaultLocale]?.name ?? body.name ?? 'Unnamed menu'
+      const newMenu = normalizeMenu({
         uuid: 'menu-new-' + Date.now(),
         name,
+        translations,
         is_active: body.is_active !== false,
         sort_order: typeof body.sort_order === 'number' ? body.sort_order : menusList.length,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-      }
+      }, defaultLocale)
       menusList.push(newMenu)
       return route.fulfill({
         status: 201,
@@ -165,12 +183,19 @@ function mockRestaurantMenus(page, menus = [{ uuid: 'menu-1', name: 'Main menu',
       const body = JSON.parse(route.request().postData() || '{}')
       const idx = menusList.findIndex((m) => m.uuid === menuUuid)
       const current = idx >= 0 ? menusList[idx] : menusList[0]
-      const updated = {
-        ...current,
-        ...(body.name !== undefined && { name: body.name }),
-        ...(body.is_active !== undefined && { is_active: body.is_active }),
-        updated_at: new Date().toISOString(),
+      const nextTranslations = body.translations
+        ? { ...(current.translations ?? {}), ...body.translations }
+        : (current.translations ?? { [defaultLocale]: { name: current.name, description: null } })
+      if (body.name !== undefined && nextTranslations[defaultLocale]) {
+        nextTranslations[defaultLocale] = { ...nextTranslations[defaultLocale], name: body.name }
       }
+      const updated = normalizeMenu({
+        ...current,
+        translations: nextTranslations,
+        name: nextTranslations[defaultLocale]?.name ?? current.name,
+        is_active: body.is_active !== undefined ? body.is_active : current.is_active,
+        updated_at: new Date().toISOString(),
+      }, defaultLocale)
       if (idx >= 0) menusList[idx] = updated
       return route.fulfill({
         status: 200,
@@ -196,12 +221,16 @@ function mockRestaurantCategories(page, categories = []) {
     }
     if (method === 'POST' && !url.endsWith('/reorder')) {
       const body = JSON.parse(route.request().postData() || '{}')
-      const name = body.translations?.en?.name ?? 'New category'
+      const translations = body.translations ?? { en: { name: 'New category', description: null } }
+      const firstLoc = Object.keys(translations)[0] ?? 'en'
+      const defaultName = translations[firstLoc]?.name ?? 'New category'
       const newCat = {
         uuid: 'cat-' + Date.now(),
         sort_order: state.length,
         is_active: true,
-        translations: { en: { name } },
+        translations: Object.fromEntries(
+          Object.entries(translations).map(([loc, t]) => [loc, { name: t?.name ?? defaultName, description: t?.description ?? null }])
+        ),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       }
@@ -217,9 +246,17 @@ function mockRestaurantCategories(page, categories = []) {
       const catUuid = match?.[1]
       const body = JSON.parse(route.request().postData() || '{}')
       const idx = state.findIndex((c) => c.uuid === catUuid)
-      if (idx >= 0 && body.translations) {
-        state[idx] = { ...state[idx], ...body, updated_at: new Date().toISOString() }
-        if (body.translations.en) state[idx].translations = { ...state[idx].translations, ...body.translations }
+      if (idx >= 0) {
+        const next = { ...state[idx], updated_at: new Date().toISOString() }
+        if (body.translations) {
+          next.translations = { ...(next.translations ?? {}), ...body.translations }
+          Object.keys(next.translations).forEach((loc) => {
+            const t = next.translations[loc]
+            if (t && typeof t === 'object') next.translations[loc] = { name: t.name ?? next.translations[loc]?.name, description: t.description !== undefined ? t.description : next.translations[loc]?.description ?? null }
+          })
+        }
+        if (body.is_active !== undefined) next.is_active = body.is_active
+        state[idx] = next
       }
       return route.fulfill({
         status: 200,
@@ -328,23 +365,53 @@ function mockUserMenuItems(page, items = []) {
   })
 }
 
-function mockRestaurantLanguagesAndTranslations(page) {
-  page.route(/^.*\/api\/restaurants\/[^/]+\/languages.*$/, (route) => {
+/**
+ * Mock languages list (GET) and per-locale translations (GET/PUT).
+ * Vue uses restaurant.languages from GET restaurant; GET /languages is also called in some flows.
+ * GET /restaurants/:id/translations/:locale returns { data: { description: string | null } }.
+ * @param {import('@playwright/test').Page} page
+ * @param {{ languages?: string[], descriptionByLocale?: Record<string, string | null> }} [options] - languages for GET /languages; descriptionByLocale for initial GET translation state
+ */
+function mockRestaurantLanguagesAndTranslations(page, options = {}) {
+  const languages = options.languages ?? ['en']
+  const descriptionState = { ...(options.descriptionByLocale ?? {}) }
+
+  page.route(/^.*\/api\/restaurants\/[^/]+\/languages(\?.*)?$/, (route) => {
     if (route.request().method() === 'GET') {
       return route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ data: ['en'] }),
+        body: JSON.stringify({ data: languages }),
       })
     }
     return route.continue()
   })
-  page.route(/^.*\/api\/restaurants\/[^/]+\/translations.*$/, (route) => {
+  page.route(/^.*\/api\/restaurants\/[^/]+\/languages\/[^/]+$/, (route) => {
+    if (route.request().method() === 'DELETE') {
+      return route.fulfill({ status: 204, body: '' })
+    }
+    return route.continue()
+  })
+  // GET /restaurants/:id/translations/:locale or PUT same
+  page.route(/^.*\/api\/restaurants\/[^/]+\/translations\/([^/]+)$/, (route) => {
+    const url = route.request().url()
+    const localeMatch = url.match(/\/translations\/([^/]+)$/)
+    const locale = localeMatch ? decodeURIComponent(localeMatch[1]) : 'en'
     if (route.request().method() === 'GET') {
+      const description = descriptionState[locale] ?? null
       return route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ data: { en: { description: null } } }),
+        body: JSON.stringify({ data: { description } }),
+      })
+    }
+    if (route.request().method() === 'PUT') {
+      const body = JSON.parse(route.request().postData() || '{}')
+      descriptionState[locale] = body.description ?? null
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ message: 'Translation updated.', data: { description: descriptionState[locale] } }),
       })
     }
     return route.continue()
@@ -515,7 +582,7 @@ test.describe('Restaurant module', () => {
     await menuTab.expectMenuInSelector('Lunch menu')
   })
 
-  test('Add second menu without name via modal succeeds and Unnamed menu appears', async ({ page }) => {
+  test('Add second menu with name Unnamed menu via modal succeeds', async ({ page }) => {
     await loginAsVerifiedUser(page)
     mockRestaurantList(page, [MOCK_RESTAURANT])
     mockRestaurantGet(page, MOCK_RESTAURANT)
@@ -529,6 +596,7 @@ test.describe('Restaurant module', () => {
     await menuTab.expectAddMenuButtonVisible()
     await menuTab.openAddMenuModal()
     await menuTab.expectAddMenuModalOpen()
+    await menuTab.setMenuName('Unnamed menu')
     await menuTab.submitCreateMenu()
     await menuTab.expectAddMenuModalClosed()
     await menuTab.expectMenuInSelector('Unnamed menu')
@@ -643,7 +711,7 @@ test.describe('Restaurant module', () => {
     await menuTab.expectCategoryModalClosed()
   })
 
-  test('owner can rename menu via Rename menu modal and see name update in selector', async ({ page }) => {
+  test('owner can rename menu via Edit menu modal and see name update in selector', async ({ page }) => {
     const menus = [{ uuid: 'menu-rename-1', name: 'Dinner', is_active: true, sort_order: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() }]
     await loginAsVerifiedUser(page)
     mockRestaurantList(page, [MOCK_RESTAURANT])
@@ -657,11 +725,159 @@ test.describe('Restaurant module', () => {
     await menuTab.goToMenuTab(MOCK_RESTAURANT.uuid)
     await menuTab.expectMenuInSelector('Dinner')
     await menuTab.clickRenameMenu()
-    await menuTab.expectRenameMenuModalOpen()
-    await menuTab.setRenameMenuName('Evening menu')
-    await menuTab.submitRenameMenu()
-    await menuTab.expectRenameMenuModalClosed()
+    await menuTab.expectEditMenuModalOpen()
+    await menuTab.setEditMenuName('Evening menu')
+    await menuTab.submitEditMenu()
+    await menuTab.expectEditMenuModalClosed()
     await menuTab.expectMenuInSelector('Evening menu')
+  })
+
+  test('Add menu modal with one language has no Edit in dropdown', async ({ page }) => {
+    await loginAsVerifiedUser(page)
+    mockRestaurantList(page, [MOCK_RESTAURANT])
+    mockRestaurantGet(page, MOCK_RESTAURANT)
+    mockRestaurantMenus(page)
+    mockRestaurantCategories(page, [])
+    mockRestaurantMenuItems(page, [])
+    mockRestaurantLanguagesAndTranslations(page)
+
+    const menuTab = new RestaurantMenuTabPage(page)
+    await menuTab.goToMenuTab(MOCK_RESTAURANT.uuid)
+    await menuTab.openAddMenuModal()
+    await menuTab.expectAddMenuModalOpen()
+    await menuTab.expectAddMenuEditInDropdownHidden()
+    await menuTab.cancelAddMenuModal()
+  })
+
+  test('Create menu with name and description for default locale', async ({ page }) => {
+    await loginAsVerifiedUser(page)
+    mockRestaurantList(page, [MOCK_RESTAURANT])
+    mockRestaurantGet(page, MOCK_RESTAURANT)
+    mockRestaurantMenus(page)
+    mockRestaurantCategories(page, [])
+    mockRestaurantMenuItems(page, [])
+    mockRestaurantLanguagesAndTranslations(page)
+
+    const menuTab = new RestaurantMenuTabPage(page)
+    await menuTab.goToMenuTab(MOCK_RESTAURANT.uuid)
+    await menuTab.openAddMenuModal()
+    await menuTab.expectAddMenuModalOpen()
+    await menuTab.setMenuName('Lunch & Drinks')
+    await menuTab.setAddMenuDescription('Our lunch and drink selection.')
+    await menuTab.submitCreateMenu()
+    await menuTab.expectAddMenuModalClosed()
+    await menuTab.expectMenuInSelector('Lunch & Drinks')
+  })
+
+  test('Edit menu and add description', async ({ page }) => {
+    const menus = [{ uuid: 'menu-edit-desc', name: 'Dinner', is_active: true, sort_order: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() }]
+    await loginAsVerifiedUser(page)
+    mockRestaurantList(page, [MOCK_RESTAURANT])
+    mockRestaurantGet(page, MOCK_RESTAURANT)
+    mockRestaurantMenus(page, menus)
+    mockRestaurantCategories(page, [])
+    mockRestaurantMenuItems(page, [])
+    mockRestaurantLanguagesAndTranslations(page)
+
+    const menuTab = new RestaurantMenuTabPage(page)
+    await menuTab.goToMenuTab(MOCK_RESTAURANT.uuid)
+    await menuTab.expectMenuInSelector('Dinner')
+    await menuTab.clickRenameMenu()
+    await menuTab.expectEditMenuModalOpen()
+    await menuTab.expectEditMenuEditInDropdownHidden()
+    await menuTab.setEditMenuDescription('Evening meals and desserts.')
+    await menuTab.submitEditMenu()
+    await menuTab.expectEditMenuModalClosed()
+    await menuTab.expectMenuInSelector('Dinner')
+  })
+
+  test('Add category modal with one language has no Edit in dropdown', async ({ page }) => {
+    await loginAsVerifiedUser(page)
+    mockRestaurantList(page, [MOCK_RESTAURANT])
+    mockRestaurantGet(page, MOCK_RESTAURANT)
+    mockRestaurantMenus(page)
+    mockRestaurantCategories(page, [])
+    mockRestaurantMenuItems(page, [])
+    mockRestaurantLanguagesAndTranslations(page)
+
+    const menuTab = new RestaurantMenuTabPage(page)
+    await menuTab.goToMenuTab(MOCK_RESTAURANT.uuid)
+    await menuTab.openAddCategoryModal()
+    await menuTab.expectAddCategoryModalOpen()
+    await menuTab.expectCategoryEditInDropdownHidden()
+    await menuTab.cancelCategoryModal()
+    await menuTab.expectCategoryModalClosed()
+  })
+
+  test('Create category with name and description; edit and add description', async ({ page }) => {
+    await loginAsVerifiedUser(page)
+    mockRestaurantList(page, [MOCK_RESTAURANT])
+    mockRestaurantGet(page, MOCK_RESTAURANT)
+    mockRestaurantMenus(page)
+    mockRestaurantCategories(page, [])
+    mockRestaurantMenuItems(page, [])
+    mockRestaurantLanguagesAndTranslations(page)
+
+    const menuTab = new RestaurantMenuTabPage(page)
+    await menuTab.goToMenuTab(MOCK_RESTAURANT.uuid)
+    await menuTab.openAddCategoryModal()
+    await menuTab.expectAddCategoryModalOpen()
+    await menuTab.setCategoryName('Starters')
+    await menuTab.setCategoryDescription('Light bites to begin.')
+    await menuTab.submitSaveCategory()
+    await menuTab.expectCategoryModalClosed()
+    await menuTab.expectCategoryVisible('Starters')
+    await menuTab.openEditCategoryModal('Starters')
+    await menuTab.expectEditCategoryModalOpen()
+    await menuTab.setCategoryDescription('Light bites and small plates to begin.')
+    await menuTab.submitSaveCategory()
+    await menuTab.expectCategoryModalClosed()
+    await menuTab.expectCategoryVisible('Starters')
+  })
+
+  test('Category modal with multiple languages shows Edit in dropdown and (Default) option', async ({ page }) => {
+    const restaurantWithTwoLanguages = { ...MOCK_RESTAURANT, languages: ['en', 'fr'], default_locale: 'en' }
+    await loginAsVerifiedUser(page)
+    mockRestaurantList(page, [restaurantWithTwoLanguages])
+    mockRestaurantGet(page, restaurantWithTwoLanguages)
+    mockRestaurantMenus(page)
+    mockRestaurantCategories(page, [])
+    mockRestaurantMenuItems(page, [])
+    mockRestaurantLanguagesAndTranslations(page, { languages: ['en', 'fr'] })
+
+    const menuTab = new RestaurantMenuTabPage(page)
+    await menuTab.goToMenuTab(MOCK_RESTAURANT.uuid)
+    await menuTab.openAddCategoryModal()
+    await menuTab.expectAddCategoryModalOpen()
+    await menuTab.expectCategoryEditInDropdownVisible()
+    await menuTab.expectCategoryEditInDropdownShowsDefaultOption()
+    await menuTab.setCategoryName('Desserts')
+    await menuTab.submitSaveCategory()
+    await menuTab.expectCategoryModalClosed()
+    await menuTab.expectCategoryVisible('Desserts')
+  })
+
+  test('Remove language flow completes without error', async ({ page }) => {
+    const restaurantWithTwoLanguages = { ...MOCK_RESTAURANT, languages: ['en', 'fr'], default_locale: 'en' }
+    await loginAsVerifiedUser(page)
+    mockRestaurantList(page, [restaurantWithTwoLanguages])
+    mockRestaurantGet(page, restaurantWithTwoLanguages)
+    mockRestaurantMenus(page)
+    mockRestaurantCategories(page, [])
+    mockRestaurantMenuItems(page, [])
+    mockRestaurantLanguagesAndTranslations(page, { languages: ['en', 'fr'] })
+
+    const settingsPage = new RestaurantSettingsPage(page)
+    await settingsPage.goToSettingsTab(MOCK_RESTAURANT.uuid)
+    await settingsPage.expectLanguagesHeadingVisible()
+    await settingsPage.expectLanguageRowVisible('English')
+    await settingsPage.expectLanguageRowVisible('French')
+    await settingsPage.clickRemoveLanguage('French')
+    await settingsPage.expectRemoveLanguageModalOpen()
+    await settingsPage.confirmRemoveLanguageModal()
+    await settingsPage.expectRemoveLanguageModalClosed()
+    await settingsPage.expectLanguageRowNotVisible('French')
+    await settingsPage.expectLanguageRowVisible('English')
   })
 
   test('restaurant Availability tab shows heading and schedule', async ({ page }) => {
@@ -679,7 +895,7 @@ test.describe('Restaurant module', () => {
     await expect(page.getByRole('heading', { name: 'Availability' })).toBeVisible()
   })
 
-  test('restaurant Settings tab shows Currency and Languages', async ({ page }) => {
+  test('restaurant Settings tab shows Currency, Languages, and description-by-language with dropdown and single textarea', async ({ page }) => {
     await loginAsVerifiedUser(page)
     mockRestaurantList(page, [MOCK_RESTAURANT])
     mockRestaurantGet(page, MOCK_RESTAURANT)
@@ -688,12 +904,58 @@ test.describe('Restaurant module', () => {
     mockRestaurantMenuItems(page, [])
     mockRestaurantLanguagesAndTranslations(page)
 
-    await page.goto(`/app/restaurants/${MOCK_RESTAURANT.uuid}`)
-    await page.getByRole('tab', { name: 'Settings' }).click()
+    const settingsPage = new RestaurantSettingsPage(page)
+    await settingsPage.goToSettingsTab(MOCK_RESTAURANT.uuid)
+    await settingsPage.expectSettingsHeadingVisible()
+    await settingsPage.expectCurrencySelectVisible()
+    await settingsPage.expectLanguagesHeadingVisible()
+    await settingsPage.expectDescriptionSectionVisible()
+    await settingsPage.expectDescriptionTextareaVisibleForLocale('en')
+  })
 
-    await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible()
-    await expect(page.getByRole('combobox', { name: /currency/i })).toBeVisible()
-    await expect(page.getByRole('heading', { name: 'Languages' })).toBeVisible()
+  test('owner can change description for selected locale and save', async ({ page }) => {
+    await loginAsVerifiedUser(page)
+    mockRestaurantList(page, [MOCK_RESTAURANT])
+    mockRestaurantGet(page, MOCK_RESTAURANT)
+    mockRestaurantMenus(page)
+    mockRestaurantCategories(page, [])
+    mockRestaurantMenuItems(page, [])
+    mockRestaurantLanguagesAndTranslations(page)
+
+    const settingsPage = new RestaurantSettingsPage(page)
+    await settingsPage.goToSettingsTab(MOCK_RESTAURANT.uuid)
+    await settingsPage.expectDescriptionSectionVisible()
+    await settingsPage.selectDescriptionLocale('en')
+    await settingsPage.fillDescriptionForLocale('en', 'Our pizza is the best.')
+    await settingsPage.clickSaveDescription()
+    await settingsPage.expectDescriptionValueForLocale('en', 'Our pizza is the best.')
+    await expect(page.getByTestId('settings-error')).toHaveAttribute('class', expect.stringContaining('sr-only'))
+  })
+
+  test('Settings when more than 5 languages shows Show all languages and Show less', async ({ page }) => {
+    const sixLanguages = ['en', 'fr', 'de', 'es', 'fil', 'zh']
+    const restaurantWithSixLanguages = { ...MOCK_RESTAURANT, languages: sixLanguages, default_locale: 'en' }
+    await loginAsVerifiedUser(page)
+    mockRestaurantList(page, [restaurantWithSixLanguages])
+    mockRestaurantGet(page, restaurantWithSixLanguages)
+    mockRestaurantMenus(page)
+    mockRestaurantCategories(page, [])
+    mockRestaurantMenuItems(page, [])
+    mockRestaurantLanguagesAndTranslations(page, { languages: sixLanguages })
+
+    const settingsPage = new RestaurantSettingsPage(page)
+    await settingsPage.goToSettingsTab(MOCK_RESTAURANT.uuid)
+    await settingsPage.expectLanguagesHeadingVisible()
+    await settingsPage.expectShowAllLanguagesVisible()
+    await settingsPage.expectShowAllLanguagesCount(6)
+    await settingsPage.clickShowAllLanguages()
+    await settingsPage.expectShowLessLanguagesVisible()
+    await settingsPage.expectLanguageRowVisible('English')
+    await settingsPage.expectLanguageRowVisible('French')
+    await settingsPage.expectLanguageRowVisible('German')
+    await settingsPage.clickShowLessLanguages()
+    await settingsPage.expectShowAllLanguagesVisible()
+    await settingsPage.expectShowAllLanguagesCount(6)
   })
 
   test('add menu item page shows name field and Create item', async ({ page }) => {

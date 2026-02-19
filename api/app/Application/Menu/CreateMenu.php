@@ -13,7 +13,7 @@ final readonly class CreateMenu
     ) {}
 
     /**
-     * @param  array{name?: string|null, is_active?: bool, sort_order?: int}  $input
+     * @param  array{name?: string|null, is_active?: bool, sort_order?: int, translations?: array<string, array{name: string, description?: string|null}>}  $input
      */
     public function handle(User $user, string $restaurantUuid, array $input): ?Menu
     {
@@ -29,12 +29,43 @@ final readonly class CreateMenu
             ? (int) $input['sort_order']
             : (int) $restaurant->menus()->max('sort_order') + 1;
 
+        $defaultLocale = $restaurant->default_locale ?? 'en';
+        $translationsInput = $input['translations'] ?? [];
+        $legacyName = $input['name'] ?? null;
+
+        if ($translationsInput === [] && $legacyName !== null) {
+            $translationsInput = [$defaultLocale => ['name' => (string) $legacyName, 'description' => null]];
+        }
+
+        $resolvedName = null;
+        if ($translationsInput !== []) {
+            $first = $translationsInput[$defaultLocale] ?? reset($translationsInput);
+            $resolvedName = isset($first['name']) ? (string) $first['name'] : null;
+        }
+        if ($resolvedName === null && $legacyName !== null) {
+            $resolvedName = (string) $legacyName;
+        }
+
         $menu = $restaurant->menus()->create([
-            'name' => $input['name'] ?? null,
+            'name' => $resolvedName,
             'is_active' => $input['is_active'] ?? true,
             'sort_order' => $sortOrder,
         ]);
 
-        return $menu;
+        $installedLocales = $restaurant->languages()->pluck('locale')->all();
+        foreach ($translationsInput as $locale => $data) {
+            if (! in_array($locale, $installedLocales, true)) {
+                continue;
+            }
+            $name = isset($data['name']) ? (string) $data['name'] : ($resolvedName ?? '');
+            $description = array_key_exists('description', $data) ? $data['description'] : null;
+            $menu->translations()->create([
+                'locale' => $locale,
+                'name' => $name,
+                'description' => $description !== null ? (string) $description : null,
+            ]);
+        }
+
+        return $menu->load('translations');
     }
 }

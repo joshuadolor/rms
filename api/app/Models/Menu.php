@@ -46,6 +46,14 @@ class Menu extends Model
     }
 
     /**
+     * @return HasMany<MenuTranslation, $this>
+     */
+    public function translations(): HasMany
+    {
+        return $this->hasMany(MenuTranslation::class);
+    }
+
+    /**
      * @return HasMany<Category, $this>
      */
     public function categories(): HasMany

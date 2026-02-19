@@ -121,7 +121,7 @@
           </RestaurantFormView>
         </div>
         <div v-show="activeTab === 'menu'" id="manage-panel-menu" role="tabpanel" aria-labelledby="manage-tab-menu" class="min-h-[200px]" data-testid="manage-panel-menu">
-          <RestaurantMenusView :key="'menu-' + restaurant.uuid" />
+          <RestaurantMenusView :key="'menu-' + restaurant.uuid" :tab-active="activeTab === 'menu'" />
         </div>
         <div v-show="activeTab === 'availability'" id="manage-panel-availability" role="tabpanel" aria-labelledby="manage-tab-availability" class="min-h-[200px]" data-testid="manage-panel-availability">
           <header class="mb-4 lg:mb-6">

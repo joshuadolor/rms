@@ -23,6 +23,6 @@ final readonly class ListMenus
             return null;
         }
 
-        return $restaurant->menus()->orderBy('sort_order')->orderBy('id')->get();
+        return $restaurant->menus()->with('translations')->orderBy('sort_order')->orderBy('id')->get();
     }
 }

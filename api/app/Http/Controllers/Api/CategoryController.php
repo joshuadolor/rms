@@ -79,6 +79,7 @@ class CategoryController extends Controller
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'translations' => ['nullable', 'array'],
             'translations.*.name' => ['required_with:translations', 'string', 'max:255'],
+            'translations.*.description' => ['nullable', 'string', 'max:65535'],
         ]);
 
         $translations = $validated['translations'] ?? [];
@@ -117,6 +118,7 @@ class CategoryController extends Controller
             'is_active' => ['nullable', 'boolean'],
             'translations' => ['nullable', 'array'],
             'translations.*.name' => ['nullable', 'string', 'max:255'],
+            'translations.*.description' => ['nullable', 'string', 'max:65535'],
         ]);
 
         try {
@@ -183,7 +185,10 @@ class CategoryController extends Controller
     {
         $translations = [];
         foreach ($category->translations as $t) {
-            $translations[$t->locale] = ['name' => $t->name];
+            $translations[$t->locale] = [
+                'name' => $t->name,
+                'description' => $t->description,
+            ];
         }
 
         return [

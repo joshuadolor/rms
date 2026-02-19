@@ -56,9 +56,13 @@ final readonly class UpdateCategory
                 continue;
             }
             $name = array_key_exists('name', $data) ? (string) $data['name'] : '';
+            $description = array_key_exists('description', $data) ? $data['description'] : null;
             $category->translations()->updateOrCreate(
                 ['locale' => $locale],
-                ['name' => $name]
+                [
+                    'name' => $name,
+                    'description' => $description !== null ? (string) $description : null,
+                ]
             );
         }
 

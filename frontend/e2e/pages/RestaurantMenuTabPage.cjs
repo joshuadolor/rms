@@ -40,6 +40,25 @@ class RestaurantMenuTabPage {
     await this.page.getByLabel('Menu name').fill(name)
   }
 
+  /** Fill the optional Menu description in the Add menu modal (default locale when multiple languages) */
+  async setAddMenuDescription(description) {
+    await this._addMenuDialog().getByPlaceholder('Short description for this menu').fill(description)
+  }
+
+  /** Assert the "Edit in" dropdown is visible in the Add menu modal (multiple languages) */
+  async expectAddMenuEditInDropdownVisible() {
+    await expect(this._addMenuDialog().getByRole('combobox', { name: 'Select language to edit' })).toBeVisible()
+  }
+
+  /** Assert the "Edit in" dropdown is not present in the Add menu modal (single language) */
+  async expectAddMenuEditInDropdownHidden() {
+    await expect(this._addMenuDialog().getByRole('combobox', { name: 'Select language to edit' })).toHaveCount(0)
+  }
+
+  _addMenuDialog() {
+    return this.page.getByRole('dialog').filter({ has: this.page.getByRole('heading', { name: 'Add menu' }) })
+  }
+
   /** Submit the Add menu form (Create menu button in modal) */
   async submitCreateMenu() {
     await this.page.getByRole('dialog').getByRole('button', { name: 'Create menu' }).click()
@@ -135,14 +154,19 @@ class RestaurantMenuTabPage {
     await expect(this.page.getByRole('heading', { name: 'Edit category' })).toBeVisible()
   }
 
-  /** Fill the Category name field in the category modal */
+  /** Fill the Category name field in the category modal (works for single or multiple languages; label varies to "Name (English)" when multiple) */
   async setCategoryName(name) {
-    await this.page.getByLabel('Category name').fill(name)
+    await this._categoryDialog().getByPlaceholder('e.g. Starters, Main courses').fill(name)
   }
 
   /** Submit Save in the category modal (Add or Edit) */
   async submitSaveCategory() {
     await this.page.getByRole('dialog').getByRole('button', { name: 'Save' }).click()
+  }
+
+  /** Cancel the category modal (Add or Edit) */
+  async cancelCategoryModal() {
+    await this._categoryDialog().getByRole('button', { name: 'Cancel' }).click()
   }
 
   /** Assert the category modal is closed */
@@ -228,6 +252,69 @@ class RestaurantMenuTabPage {
   /** Submit Save in the Rename menu modal */
   async submitRenameMenu() {
     await this.page.getByRole('dialog', { name: 'Rename menu' }).getByRole('button', { name: 'Save' }).click()
+  }
+
+  /** Assert the Edit menu modal is open (opened by Rename menu button; title is "Edit menu") */
+  async expectEditMenuModalOpen() {
+    await expect(this.page.getByRole('heading', { name: 'Edit menu' })).toBeVisible()
+  }
+
+  /** Assert the Edit menu modal is closed */
+  async expectEditMenuModalClosed() {
+    await expect(this.page.getByRole('heading', { name: 'Edit menu' })).not.toBeVisible()
+  }
+
+  /** Assert the "Edit in" dropdown is visible in the Edit menu modal (multiple languages) */
+  async expectEditMenuEditInDropdownVisible() {
+    await expect(this._editMenuDialog().getByRole('combobox', { name: 'Select language to edit' })).toBeVisible()
+  }
+
+  /** Assert the "Edit in" dropdown is not present in the Edit menu modal (single language) */
+  async expectEditMenuEditInDropdownHidden() {
+    await expect(this._editMenuDialog().getByRole('combobox', { name: 'Select language to edit' })).toHaveCount(0)
+  }
+
+  /** Set the Menu name in the Edit menu modal */
+  async setEditMenuName(name) {
+    await this._editMenuDialog().getByLabel('Menu name').fill(name)
+  }
+
+  /** Set the Menu description in the Edit menu modal */
+  async setEditMenuDescription(description) {
+    await this._editMenuDialog().getByPlaceholder('Short description for this menu').fill(description)
+  }
+
+  /** Submit Save in the Edit menu modal */
+  async submitEditMenu() {
+    await this._editMenuDialog().getByRole('button', { name: 'Save' }).click()
+  }
+
+  _editMenuDialog() {
+    return this.page.getByRole('dialog').filter({ has: this.page.getByRole('heading', { name: 'Edit menu' }) })
+  }
+
+  /** Assert the "Edit in" dropdown is visible in the category modal (Add or Edit) when multiple languages */
+  async expectCategoryEditInDropdownVisible() {
+    await expect(this._categoryDialog().getByRole('combobox', { name: 'Select language to edit' })).toBeVisible()
+  }
+
+  /** Assert the "Edit in" dropdown is not present in the category modal (single language) */
+  async expectCategoryEditInDropdownHidden() {
+    await expect(this._categoryDialog().getByRole('combobox', { name: 'Select language to edit' })).toHaveCount(0)
+  }
+
+  /** Assert the category locale dropdown has an option containing "(Default)" (e.g. "English (Default)") */
+  async expectCategoryEditInDropdownShowsDefaultOption() {
+    await expect(this._categoryDialog().getByRole('combobox', { name: 'Select language to edit' }).locator('option').filter({ hasText: '(Default)' })).toHaveCount(1)
+  }
+
+  /** Fill the optional Category description in the category modal */
+  async setCategoryDescription(description) {
+    await this._categoryDialog().getByPlaceholder('Short description for this category').fill(description)
+  }
+
+  _categoryDialog() {
+    return this.page.getByRole('dialog').filter({ has: this.page.getByRole('heading', { name: /Add category|Edit category/ }) })
   }
 }
 

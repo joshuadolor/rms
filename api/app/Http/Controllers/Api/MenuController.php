@@ -42,8 +42,9 @@ class MenuController extends Controller
             return response()->json(['message' => __('Restaurant not found.')], 404);
         }
 
+        $defaultLocale = $restaurantModel->default_locale ?? 'en';
         return response()->json([
-            'data' => $menus->map(fn (Menu $m) => $this->menuPayload($m)),
+            'data' => $menus->map(fn (Menu $m) => $this->menuPayload($m, $defaultLocale)),
         ]);
     }
 
@@ -62,7 +63,8 @@ class MenuController extends Controller
             return response()->json(['message' => __('Menu not found.')], 404);
         }
 
-        return response()->json(['data' => $this->menuPayload($menuModel)]);
+        $defaultLocale = $restaurantModel->default_locale ?? 'en';
+        return response()->json(['data' => $this->menuPayload($menuModel, $defaultLocale)]);
     }
 
     /**
@@ -79,7 +81,21 @@ class MenuController extends Controller
             'name' => ['nullable', 'string', 'max:255'],
             'is_active' => ['nullable', 'boolean'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
+            'translations' => ['nullable', 'array'],
+            'translations.*.name' => ['required_with:translations', 'string', 'max:255'],
+            'translations.*.description' => ['nullable', 'string', 'max:65535'],
         ]);
+        $translations = $validated['translations'] ?? [];
+        if ($translations !== []) {
+            $installedLocales = $restaurantModel->languages()->pluck('locale')->all();
+            $invalidLocales = array_diff(array_keys($translations), $installedLocales);
+            if ($invalidLocales !== []) {
+                return response()->json([
+                    'message' => __('One or more translation locales are not installed for this restaurant.'),
+                    'errors' => ['translations' => [__('Uninstalled locale(s): :locales', ['locales' => implode(', ', array_values($invalidLocales))])]],
+                ], 422);
+            }
+        }
 
         try {
             $menu = $this->createMenu->handle($request->user(), $restaurant, $validated);
@@ -91,9 +107,10 @@ class MenuController extends Controller
             return response()->json(['message' => __('Restaurant not found.')], 404);
         }
 
+        $defaultLocale = $restaurantModel->default_locale ?? 'en';
         return response()->json([
             'message' => __('Menu created.'),
-            'data' => $this->menuPayload($menu),
+            'data' => $this->menuPayload($menu, $defaultLocale),
         ], 201);
     }
 
@@ -102,11 +119,30 @@ class MenuController extends Controller
      */
     public function update(Request $request, string $restaurant, string $menu): JsonResponse|Response
     {
+        $restaurantModel = $this->getRestaurant->handle($request->user(), $restaurant);
+        if ($restaurantModel === null) {
+            return response()->json(['message' => __('Restaurant not found.')], 404);
+        }
+
         $validated = $request->validate([
             'name' => ['nullable', 'string', 'max:255'],
             'is_active' => ['nullable', 'boolean'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
+            'translations' => ['nullable', 'array'],
+            'translations.*.name' => ['nullable', 'string', 'max:255'],
+            'translations.*.description' => ['nullable', 'string', 'max:65535'],
         ]);
+        $translations = $validated['translations'] ?? [];
+        if ($translations !== []) {
+            $installedLocales = $restaurantModel->languages()->pluck('locale')->all();
+            $invalidLocales = array_diff(array_keys($translations), $installedLocales);
+            if ($invalidLocales !== []) {
+                return response()->json([
+                    'message' => __('One or more translation locales are not installed for this restaurant.'),
+                    'errors' => ['translations' => [__('Uninstalled locale(s): :locales', ['locales' => implode(', ', array_values($invalidLocales))])]],
+                ], 422);
+            }
+        }
 
         try {
             $menuModel = $this->updateMenu->handle($request->user(), $restaurant, $menu, $validated);
@@ -118,9 +154,10 @@ class MenuController extends Controller
             return response()->json(['message' => __('Menu not found.')], 404);
         }
 
+        $defaultLocale = $restaurantModel->default_locale ?? 'en';
         return response()->json([
             'message' => __('Menu updated.'),
-            'data' => $this->menuPayload($menuModel),
+            'data' => $this->menuPayload($menuModel, $defaultLocale),
         ]);
     }
 
@@ -168,13 +205,28 @@ class MenuController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function menuPayload(Menu $menu): array
+    private function menuPayload(Menu $menu, ?string $defaultLocale = null): array
     {
+        $translations = [];
+        if ($menu->relationLoaded('translations')) {
+            foreach ($menu->translations as $t) {
+                $translations[$t->locale] = [
+                    'name' => $t->name,
+                    'description' => $t->description,
+                ];
+            }
+        }
+        $resolvedName = $menu->name;
+        if ($defaultLocale !== null && isset($translations[$defaultLocale]['name'])) {
+            $resolvedName = $translations[$defaultLocale]['name'];
+        }
+
         return [
             'uuid' => $menu->uuid,
-            'name' => $menu->name,
+            'name' => $resolvedName,
             'is_active' => $menu->is_active,
             'sort_order' => $menu->sort_order,
+            'translations' => $translations,
             'created_at' => $menu->created_at?->toIso8601String(),
             'updated_at' => $menu->updated_at?->toIso8601String(),
         ];

@@ -42,7 +42,7 @@
             id="restaurant-currency"
             v-model="currency"
             data-testid="settings-currency-select"
-            class="max-w-[280px] rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 py-2.5 px-4 text-charcoal dark:text-white focus:ring-2 focus:ring-primary focus:outline-none"
+            class="max-w-[280px] min-h-[44px] rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 py-2.5 px-4 text-charcoal dark:text-white focus:ring-2 focus:ring-primary focus:outline-none"
             :disabled="savingCurrency"
             @change="saveCurrency"
           >
@@ -58,9 +58,9 @@
         <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">Add or remove languages. The default language is used when no language is selected on the public site.</p>
         <ul class="space-y-2 mb-4">
           <li
-            v-for="loc in installedLanguages"
+            v-for="loc in visibleLanguageRows"
             :key="loc"
-            class="flex items-center justify-between gap-3 py-3 px-4 rounded-xl bg-slate-50 dark:bg-zinc-800/50 border border-slate-100 dark:border-zinc-700/50"
+            class="flex items-center justify-between gap-2 py-2 px-4 rounded-xl bg-slate-50 dark:bg-zinc-800/50 border border-slate-100 dark:border-zinc-700/50"
           >
             <span class="font-medium text-charcoal dark:text-white">{{ getLocaleDisplay(loc) }}</span>
             <span v-if="loc === restaurant.default_locale" class="text-xs text-slate-500 dark:text-slate-400">Default</span>
@@ -69,7 +69,7 @@
                 type="button"
                 variant="ghost"
                 size="sm"
-                class="min-h-[36px]"
+                class="min-h-[44px]"
                 :disabled="savingDefault === loc"
                 data-testid="settings-set-default-button"
                 @click="setDefaultLocale(loc)"
@@ -80,7 +80,7 @@
                 type="button"
                 variant="ghost"
                 size="sm"
-                class="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 min-h-[36px]"
+                class="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 min-h-[44px]"
                 :disabled="removingLocale === loc"
                 @click="confirmRemoveLanguage(loc)"
               >
@@ -89,11 +89,35 @@
             </div>
           </li>
         </ul>
+        <div v-if="installedLanguages.length > 5" class="mb-4">
+          <AppButton
+            v-if="!languagesExpanded"
+            type="button"
+            variant="ghost"
+            size="sm"
+            class="min-h-[44px]"
+            data-testid="settings-show-all-languages"
+            @click="languagesExpanded = true"
+          >
+            Show all languages ({{ installedLanguages.length }} total)
+          </AppButton>
+          <AppButton
+            v-else
+            type="button"
+            variant="ghost"
+            size="sm"
+            class="min-h-[44px]"
+            data-testid="settings-show-less-languages"
+            @click="languagesExpanded = false"
+          >
+            Show less
+          </AppButton>
+        </div>
         <div class="flex flex-wrap items-center gap-3">
           <select
             v-model="languageToAdd"
             data-testid="settings-add-language-select"
-            class="max-w-[280px] rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 py-2.5 px-4 text-charcoal dark:text-white focus:ring-2 focus:ring-primary focus:outline-none"
+            class="w-full md:max-w-[280px] min-h-[44px] rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 py-2.5 px-4 text-charcoal dark:text-white focus:ring-2 focus:ring-primary focus:outline-none"
             :disabled="addingLanguage"
           >
             <option value="">Add language…</option>
@@ -110,27 +134,60 @@
         <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-4">Description by language</h3>
         <p class="text-sm text-slate-600 dark:text-slate-400 mb-6">Optional description shown per language on the public site.</p>
         <p v-if="!installedLanguages.length" class="text-sm text-slate-500 dark:text-slate-400">Add at least one language above to manage descriptions.</p>
-        <div v-for="loc in installedLanguages" :key="loc" class="mb-8 last:mb-0">
-          <div class="flex items-center justify-between gap-2 mb-2">
-            <h4 class="font-medium text-charcoal dark:text-white">{{ getLocaleDisplay(loc) }}</h4>
-            <div class="flex gap-2">
-              <AppButton v-if="loc !== restaurant.default_locale" type="button" variant="ghost" size="sm" class="min-h-[36px]" @click="translateDescription(loc)">
-                Translate from default
-              </AppButton>
-              <AppButton type="button" variant="primary" size="sm" class="min-h-[36px]" :disabled="savingLocale === loc" @click="saveDescription(loc)">
-                {{ savingLocale === loc ? 'Saving…' : 'Save' }}
-              </AppButton>
-            </div>
+        <template v-else>
+          <div class="mb-4">
+            <label for="settings-description-locale" class="block text-sm font-medium text-charcoal dark:text-white mb-2">Edit description for:</label>
+            <select
+              id="settings-description-locale"
+              v-model="selectedDescriptionLocale"
+              aria-label="Edit description for language"
+              data-testid="settings-description-locale-select"
+              class="w-full min-h-[44px] rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 py-2.5 px-4 text-charcoal dark:text-white focus:ring-2 focus:ring-primary focus:outline-none"
+              @change="onDescriptionLocaleChange"
+            >
+              <option
+                v-for="loc in installedLanguages"
+                :key="loc"
+                :value="loc"
+              >
+                {{ getLocaleDisplay(loc) }}{{ loc === defaultLocale ? ' (Default)' : '' }}
+              </option>
+            </select>
+          </div>
+          <div class="flex flex-wrap items-center gap-2 mb-2">
+            <AppButton
+              v-if="selectedDescriptionLocale !== defaultLocale"
+              type="button"
+              variant="ghost"
+              size="sm"
+              class="min-h-[44px]"
+              data-testid="settings-translate-from-default"
+              @click="translateDescription(selectedDescriptionLocale)"
+            >
+              Translate from default
+            </AppButton>
+            <AppButton
+              type="button"
+              variant="primary"
+              size="sm"
+              class="min-h-[44px]"
+              :disabled="savingLocale === selectedDescriptionLocale"
+              data-testid="settings-description-save"
+              @click="saveDescription(selectedDescriptionLocale)"
+            >
+              {{ savingLocale === selectedDescriptionLocale ? 'Saving…' : 'Save' }}
+            </AppButton>
           </div>
           <textarea
-            :value="embed && loc === restaurant.default_locale ? defaultDescription : descriptions[loc]"
+            ref="descriptionTextareaRef"
+            :value="currentDescriptionValue"
             rows="4"
-            :data-testid="`settings-description-${loc}`"
+            :data-testid="`settings-description-${selectedDescriptionLocale}`"
             class="w-full rounded-lg ring-1 ring-slate-200 dark:ring-zinc-700 focus:ring-2 focus:ring-primary bg-white dark:bg-zinc-800 border-0 py-3 px-4 text-charcoal dark:text-white resize-y"
-            :placeholder="`Description (${getLocaleDisplay(loc)})`"
-            @input="(e) => { const v = e.target.value; descriptions[loc] = v; if (embed && loc === restaurant.default_locale) emit('update:defaultDescription', v) }"
+            :placeholder="`Description (${getLocaleDisplay(selectedDescriptionLocale)})`"
+            @input="onDescriptionInput"
           />
-        </div>
+        </template>
       </section>
 
       <!-- Confirm remove language modal -->
@@ -160,7 +217,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import AppButton from '@/components/ui/AppButton.vue'
 import AppBackLink from '@/components/AppBackLink.vue'
@@ -208,8 +265,24 @@ const localeToRemove = ref(null)
 const savingLocale = ref(null)
 const descriptions = ref({})
 const languageToAdd = ref('')
+const selectedDescriptionLocale = ref('')
+const descriptionTextareaRef = ref(null)
+const languagesExpanded = ref(false)
 
 const defaultLocale = computed(() => restaurant.value?.default_locale ?? '')
+
+const visibleLanguageRows = computed(() => {
+  const list = installedLanguages.value
+  if (list.length <= 5 || languagesExpanded.value) return list
+  return list.slice(0, 5)
+})
+
+const currentDescriptionValue = computed(() => {
+  const loc = selectedDescriptionLocale.value
+  if (!loc) return ''
+  if (props.embed && loc === defaultLocale.value) return props.defaultDescription
+  return descriptions.value[loc] ?? ''
+})
 
 const installedLanguages = computed(() => {
   const lang = restaurant.value?.languages ?? []
@@ -257,6 +330,10 @@ async function loadAllDescriptions() {
   descriptions.value = next
   if (props.embed && restaurant.value?.default_locale != null) {
     emit('update:defaultDescription', next[restaurant.value.default_locale] ?? '')
+  }
+  const def = restaurant.value?.default_locale
+  if (locs.length && (!selectedDescriptionLocale.value || !locs.includes(selectedDescriptionLocale.value))) {
+    selectedDescriptionLocale.value = def ?? locs[0]
   }
 }
 
@@ -324,12 +401,16 @@ function confirmRemoveLanguage(loc) {
 }
 
 async function doRemoveLanguage() {
-  if (!localeToRemove.value) return
+  if (!localeToRemove.value || removingLocale.value) return
   removingLocale.value = localeToRemove.value
   try {
     await restaurantService.removeLanguage(uuid.value, localeToRemove.value)
     restaurant.value.languages = (restaurant.value.languages ?? []).filter((l) => l !== localeToRemove.value)
     delete descriptions.value[localeToRemove.value]
+    if (selectedDescriptionLocale.value === localeToRemove.value) {
+      const remaining = restaurant.value.languages ?? []
+      selectedDescriptionLocale.value = restaurant.value.default_locale ?? remaining[0] ?? ''
+    }
     toastStore.success('Language removed.')
     localeToRemove.value = null
   } catch (e) {
@@ -356,11 +437,28 @@ async function saveDescription(loc) {
 function translateDescription(loc) {
   const def = restaurant.value?.default_locale
   if (!def || def === loc) return
-  const defDesc = descriptions.value[def] ?? ''
+  const defDesc = (props.embed ? props.defaultDescription : null) ?? descriptions.value[def] ?? ''
   if (defDesc) {
-    descriptions.value[loc] = defDesc
-    // No API call and no toast here; one Save action = one toast
+    const next = { ...descriptions.value }
+    next[loc] = defDesc
+    descriptions.value = next
   }
+}
+
+function onDescriptionInput(e) {
+  const v = e.target.value
+  const loc = selectedDescriptionLocale.value
+  if (!loc) return
+  const next = { ...descriptions.value }
+  next[loc] = v
+  descriptions.value = next
+  if (props.embed && loc === defaultLocale.value) emit('update:defaultDescription', v)
+}
+
+function onDescriptionLocaleChange() {
+  nextTick(() => {
+    descriptionTextareaRef.value?.focus()
+  })
 }
 
 // When embed, keep default locale description in sync with Profile tab

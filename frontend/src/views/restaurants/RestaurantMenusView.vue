@@ -134,13 +134,13 @@
                 >
                   <span class="material-icons text-xl">{{ cat.is_active !== false ? 'visibility' : 'visibility_off' }}</span>
                 </button>
-                <AppButton variant="ghost" size="sm" class="min-h-[44px] shrink-0" @click="openCategoryModal(cat)">
+                <AppButton variant="ghost" size="sm" class="min-h-[44px] min-w-[44px] shrink-0" @click="openCategoryModal(cat)">
                   <span class="material-icons">edit</span>
                 </AppButton>
                 <AppButton
                   variant="ghost"
                   size="sm"
-                  class="min-h-[44px] shrink-0 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                  class="min-h-[44px] min-w-[44px] shrink-0 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
                   aria-label="Remove category"
                   @click="openDeleteCategoryModal(cat)"
                 >
@@ -179,17 +179,42 @@
       <AppModal
         :open="categoryModalOpen"
         :title="editingCategory ? 'Edit category' : 'Add category'"
-        :description="editingCategory ? 'Update category name.' : 'Create a new menu category (e.g. Starters, Mains).'"
+        :description="editingCategory ? 'Update category name and description.' : 'Create a new menu category (e.g. Starters, Mains).'"
         @close="closeCategoryModal"
       >
         <form class="space-y-4" novalidate @submit.prevent="saveCategory">
+          <div v-if="hasMultipleLanguages" class="flex flex-col gap-2">
+            <label for="category-locale-select" class="block text-sm font-semibold text-charcoal dark:text-white">Edit in</label>
+            <select
+              id="category-locale-select"
+              v-model="selectedCategoryLocale"
+              class="min-h-[44px] w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-zinc-800 text-charcoal dark:text-white px-4 py-2 text-sm font-medium focus:ring-2 focus:ring-primary focus:outline-none"
+              aria-label="Select language to edit"
+            >
+              <option v-for="loc in localesForForm" :key="loc" :value="loc">
+                {{ getLocaleDisplay(loc) }}{{ loc === defaultLocale ? ' (Default)' : '' }}
+              </option>
+            </select>
+          </div>
           <AppInput
-            v-model="categoryForm.name"
-            label="Category name"
+            v-model="categoryForm.translations[selectedCategoryLocale].name"
+            :label="hasMultipleLanguages ? `Name (${getLocaleDisplay(selectedCategoryLocale)})` : 'Category name'"
             type="text"
             placeholder="e.g. Starters, Main courses"
             :error="categoryFormError"
           />
+          <div>
+            <label :for="'category-desc-' + selectedCategoryLocale" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+              {{ hasMultipleLanguages ? `Description (${getLocaleDisplay(selectedCategoryLocale)}) — optional` : 'Description (optional)' }}
+            </label>
+            <textarea
+              :id="'category-desc-' + selectedCategoryLocale"
+              v-model="categoryForm.translations[selectedCategoryLocale].description"
+              rows="3"
+              placeholder="Short description for this category"
+              class="w-full min-h-[44px] rounded-lg ring-1 ring-gray-200 dark:ring-zinc-700 focus:ring-2 focus:ring-primary transition-all bg-background-light dark:bg-zinc-800 border-0 py-3 px-4 text-charcoal dark:text-white resize-none"
+            />
+          </div>
         </form>
         <template #footer>
           <AppButton variant="secondary" class="min-h-[44px]" type="button" @click="closeCategoryModal">Cancel</AppButton>
@@ -202,17 +227,42 @@
       <AppModal
         :open="addMenuModalOpen"
         title="Add menu"
-        description="Create another menu for this restaurant (e.g. Lunch, Drinks). Name is optional."
+        description="Create another menu for this restaurant (e.g. Lunch, Drinks). Add name and optional description per language."
         @close="closeAddMenuModal"
       >
         <form class="space-y-4" novalidate @submit.prevent="submitAddMenu">
+          <div v-if="hasMultipleLanguages" class="flex flex-col gap-2">
+            <label for="add-menu-locale-select" class="block text-sm font-semibold text-charcoal dark:text-white">Edit in</label>
+            <select
+              id="add-menu-locale-select"
+              v-model="selectedAddMenuLocale"
+              class="min-h-[44px] w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-zinc-800 text-charcoal dark:text-white px-4 py-2 text-sm font-medium focus:ring-2 focus:ring-primary focus:outline-none"
+              aria-label="Select language to edit"
+            >
+              <option v-for="loc in localesForForm" :key="loc" :value="loc">
+                {{ getLocaleDisplay(loc) }}{{ loc === defaultLocale ? ' (Default)' : '' }}
+              </option>
+            </select>
+          </div>
           <AppInput
-            v-model="addMenuForm.name"
-            label="Menu name"
+            v-model="addMenuForm.translations[selectedAddMenuLocale].name"
+            :label="hasMultipleLanguages ? `Name (${getLocaleDisplay(selectedAddMenuLocale)})` : 'Menu name'"
             type="text"
             placeholder="e.g. Lunch menu, Drinks"
             :error="addMenuFormError"
           />
+          <div>
+            <label :for="'add-menu-desc-' + selectedAddMenuLocale" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+              {{ hasMultipleLanguages ? `Description (${getLocaleDisplay(selectedAddMenuLocale)}) — optional` : 'Description (optional)' }}
+            </label>
+            <textarea
+              :id="'add-menu-desc-' + selectedAddMenuLocale"
+              v-model="addMenuForm.translations[selectedAddMenuLocale].description"
+              rows="3"
+              placeholder="Short description for this menu"
+              class="w-full min-h-[44px] rounded-lg ring-1 ring-gray-200 dark:ring-zinc-700 focus:ring-2 focus:ring-primary transition-all bg-background-light dark:bg-zinc-800 border-0 py-3 px-4 text-charcoal dark:text-white resize-none"
+            />
+          </div>
         </form>
         <template #footer>
           <AppButton variant="secondary" class="min-h-[44px]" type="button" @click="closeAddMenuModal">Cancel</AppButton>
@@ -244,18 +294,43 @@
 
       <AppModal
         :open="editMenuModalOpen"
-        title="Rename menu"
-        description="Change the name of this menu."
+        title="Edit menu"
+        description="Change the name and description of this menu per language."
         @close="closeEditMenuModal"
       >
         <form class="space-y-4" novalidate @submit.prevent="submitEditMenu">
+          <div v-if="hasMultipleLanguages" class="flex flex-col gap-2">
+            <label for="edit-menu-locale-select" class="block text-sm font-semibold text-charcoal dark:text-white">Edit in</label>
+            <select
+              id="edit-menu-locale-select"
+              v-model="selectedEditMenuLocale"
+              class="min-h-[44px] w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-zinc-800 text-charcoal dark:text-white px-4 py-2 text-sm font-medium focus:ring-2 focus:ring-primary focus:outline-none"
+              aria-label="Select language to edit"
+            >
+              <option v-for="loc in localesForForm" :key="loc" :value="loc">
+                {{ getLocaleDisplay(loc) }}{{ loc === defaultLocale ? ' (Default)' : '' }}
+              </option>
+            </select>
+          </div>
           <AppInput
-            v-model="editMenuForm.name"
-            label="Menu name"
+            v-model="editMenuForm.translations[selectedEditMenuLocale].name"
+            :label="hasMultipleLanguages ? `Name (${getLocaleDisplay(selectedEditMenuLocale)})` : 'Menu name'"
             type="text"
             placeholder="e.g. Lunch menu, Drinks"
             :error="editMenuFormError"
           />
+          <div>
+            <label :for="'edit-menu-desc-' + selectedEditMenuLocale" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+              {{ hasMultipleLanguages ? `Description (${getLocaleDisplay(selectedEditMenuLocale)}) — optional` : 'Description (optional)' }}
+            </label>
+            <textarea
+              :id="'edit-menu-desc-' + selectedEditMenuLocale"
+              v-model="editMenuForm.translations[selectedEditMenuLocale].description"
+              rows="3"
+              placeholder="Short description for this menu"
+              class="w-full min-h-[44px] rounded-lg ring-1 ring-gray-200 dark:ring-zinc-700 focus:ring-2 focus:ring-primary transition-all bg-background-light dark:bg-zinc-800 border-0 py-3 px-4 text-charcoal dark:text-white resize-none"
+            />
+          </div>
         </form>
         <template #footer>
           <AppButton variant="secondary" class="min-h-[44px]" type="button" @click="closeEditMenuModal">Cancel</AppButton>
@@ -338,6 +413,12 @@ import Menu from '@/models/Menu.js'
 import Category from '@/models/Category.js'
 import { restaurantService, normalizeApiError } from '@/services'
 import { useToastStore } from '@/stores/toast'
+import { getLocaleDisplay } from '@/config/locales'
+
+const props = defineProps({
+  /** When true (e.g. Menu tab is active), refetch restaurant so languages/translations are up to date after Settings changes. */
+  tabActive: { type: Boolean, default: true },
+})
 
 const route = useRoute()
 const breadcrumbStore = useBreadcrumbStore()
@@ -355,23 +436,38 @@ const error = ref('')
 const creatingMenu = ref(false)
 const categoryModalOpen = ref(false)
 const editingCategory = ref(null)
-const categoryForm = ref({ name: '' })
+const categoryForm = ref({ translations: {} })
 const categoryFormError = ref('')
 const savingCategory = ref(false)
+const selectedCategoryLocale = ref('en')
 const addMenuModalOpen = ref(false)
-const addMenuForm = ref({ name: '' })
+const addMenuForm = ref({ translations: {} })
 const addMenuFormError = ref('')
 const addingMenu = ref(false)
+const selectedAddMenuLocale = ref('en')
 const deleteCategoryModalOpen = ref(false)
 const categoryToDelete = ref(null)
 const deletingCategory = ref(false)
 const fabOpen = ref(false)
 const editMenuModalOpen = ref(false)
-const editMenuForm = ref({ name: '' })
+const editMenuForm = ref({ translations: {} })
 const editMenuFormError = ref('')
 const savingEditMenu = ref(false)
+const selectedEditMenuLocale = ref('en')
 
 const defaultLocale = computed(() => restaurant.value?.default_locale ?? 'en')
+
+/** Installed language codes for this restaurant (default first). */
+const localesForForm = computed(() => {
+  const def = defaultLocale.value
+  const list = Array.isArray(restaurant.value?.languages) && restaurant.value.languages.length > 0
+    ? restaurant.value.languages
+    : def ? [def] : ['en']
+  const rest = list.filter((l) => l !== def)
+  return [def, ...rest].filter(Boolean)
+})
+
+const hasMultipleLanguages = computed(() => localesForForm.value.length > 1)
 
 /** Currently selected menu (for the dropdown); used for the single visibility toggle. */
 const selectedMenu = computed(() =>
@@ -382,6 +478,55 @@ function categoryName(cat) {
   if (!cat) return '—'
   const t = cat.translations?.[defaultLocale.value]
   return t?.name ?? '—'
+}
+
+/** Build empty translations object for each locale. */
+function emptyTranslations(locales) {
+  return Object.fromEntries(locales.map((l) => [l, { name: '', description: '' }]))
+}
+
+/** Build translations from entity (menu/category) for given locales. */
+function fromEntityTranslations(locales, entityTranslations) {
+  if (!entityTranslations || typeof entityTranslations !== 'object') {
+    return emptyTranslations(locales)
+  }
+  return Object.fromEntries(
+    locales.map((l) => [
+      l,
+      {
+        name: (entityTranslations[l]?.name ?? '').trim(),
+        description: (entityTranslations[l]?.description ?? '') ?? '',
+      },
+    ])
+  )
+}
+
+/** Validate translations: at least one non-empty name; names max 255. Returns error message or ''. */
+function validateTranslations(translations) {
+  const entries = Object.entries(translations ?? {})
+  const hasName = entries.some(([, t]) => (t?.name ?? '').trim().length > 0)
+  if (!hasName) return 'At least one name is required.'
+  for (const [locale, t] of entries) {
+    const name = (t?.name ?? '').trim()
+    if (name.length > 255) return `Name (${getLocaleDisplay(locale)}) must be at most 255 characters.`
+  }
+  return ''
+}
+
+/**
+ * Build API translations payload from form.
+ * @param {Record<string, { name?: string, description?: string }>} formTranslations
+ * @param {boolean} onlyWithName - When true (create), only include locales with non-empty name (API required_with).
+ */
+function buildTranslationsPayload(formTranslations, onlyWithName = false) {
+  const out = {}
+  for (const [locale, t] of Object.entries(formTranslations ?? {})) {
+    const name = (t?.name ?? '').trim()
+    const description = (t?.description ?? '').trim() || null
+    if (onlyWithName && !name) continue
+    out[locale] = { name, description }
+  }
+  return out
 }
 
 const deleteCategoryMessage = computed(() => {
@@ -480,8 +625,10 @@ async function createFirstMenu() {
 
 function openAddMenuModal() {
   fabOpen.value = false
-  addMenuForm.value = { name: '' }
+  const locales = localesForForm.value
+  addMenuForm.value = { translations: emptyTranslations(locales) }
   addMenuFormError.value = ''
+  selectedAddMenuLocale.value = defaultLocale.value
   addMenuModalOpen.value = true
 }
 
@@ -497,22 +644,23 @@ function onFabAddCategory() {
 
 function closeAddMenuModal() {
   addMenuModalOpen.value = false
-  addMenuForm.value = { name: '' }
+  addMenuForm.value = { translations: {} }
   addMenuFormError.value = ''
 }
 
 async function submitAddMenu() {
   if (!uuid.value || addingMenu.value) return
-  const name = addMenuForm.value.name?.trim() ?? ''
-  if (name.length > 255) {
-    addMenuFormError.value = 'Menu name must be at most 255 characters.'
+  const translations = buildTranslationsPayload(addMenuForm.value.translations, true)
+  const errMsg = validateTranslations(addMenuForm.value.translations)
+  if (errMsg) {
+    addMenuFormError.value = errMsg
     return
   }
   addMenuFormError.value = ''
   addingMenu.value = true
   try {
     const res = await restaurantService.createMenu(uuid.value, {
-      name: name || undefined,
+      translations,
       is_active: true,
       sort_order: menus.value.length,
     })
@@ -523,7 +671,7 @@ async function submitAddMenu() {
     toastStore.success('Menu created.')
   } catch (e) {
     const err = e?.response?.data
-    const msg = err?.errors?.name?.[0] ?? err?.message ?? normalizeApiError(e).message
+    const msg = err?.errors?.translations?.[0] ?? err?.errors?.name?.[0] ?? err?.message ?? normalizeApiError(e).message
     addMenuFormError.value = msg
   } finally {
     addingMenu.value = false
@@ -545,39 +693,43 @@ async function toggleMenuActive(m) {
 function openEditMenuModal() {
   const menu = selectedMenu.value
   if (!menu) return
-  editMenuForm.value = { name: menu.name ?? '' }
+  const locales = localesForForm.value
+  let translations = fromEntityTranslations(locales, menu.translations)
+  const def = defaultLocale.value
+  if (locales.length && (!menu.translations || Object.keys(menu.translations).length === 0) && (menu.name ?? '').trim()) {
+    translations = { ...translations, [def]: { name: (menu.name ?? '').trim(), description: translations[def]?.description ?? '' } }
+  }
+  editMenuForm.value = { translations }
   editMenuFormError.value = ''
+  selectedEditMenuLocale.value = def
   editMenuModalOpen.value = true
 }
 
 function closeEditMenuModal() {
   editMenuModalOpen.value = false
-  editMenuForm.value = { name: '' }
+  editMenuForm.value = { translations: {} }
   editMenuFormError.value = ''
 }
 
 async function submitEditMenu() {
   if (!uuid.value || !selectedMenu.value?.uuid || savingEditMenu.value) return
-  const name = editMenuForm.value.name?.trim() ?? ''
-  if (!name) {
-    editMenuFormError.value = 'Menu name is required.'
-    return
-  }
-  if (name.length > 255) {
-    editMenuFormError.value = 'Menu name must be at most 255 characters.'
+  const errMsg = validateTranslations(editMenuForm.value.translations)
+  if (errMsg) {
+    editMenuFormError.value = errMsg
     return
   }
   editMenuFormError.value = ''
   savingEditMenu.value = true
   try {
-    const res = await restaurantService.updateMenu(uuid.value, selectedMenu.value.uuid, { name })
+    const translations = buildTranslationsPayload(editMenuForm.value.translations)
+    const res = await restaurantService.updateMenu(uuid.value, selectedMenu.value.uuid, { translations })
     const updated = Menu.fromApi(res).toJSON()
     menus.value = menus.value.map((m) => (m.uuid === updated.uuid ? updated : m))
     closeEditMenuModal()
-    toastStore.success('Menu renamed.')
+    toastStore.success('Menu updated.')
   } catch (e) {
     const err = e?.response?.data
-    editMenuFormError.value = err?.errors?.name?.[0] ?? err?.message ?? normalizeApiError(e).message
+    editMenuFormError.value = err?.errors?.translations?.[0] ?? err?.errors?.name?.[0] ?? err?.message ?? normalizeApiError(e).message
   } finally {
     savingEditMenu.value = false
   }
@@ -585,16 +737,19 @@ async function submitEditMenu() {
 
 function openCategoryModal(category = null) {
   editingCategory.value = category ?? null
-  const name = category?.translations?.[defaultLocale.value]?.name ?? ''
-  categoryForm.value = { name }
+  const locales = localesForForm.value
+  categoryForm.value = {
+    translations: fromEntityTranslations(locales, category?.translations),
+  }
   categoryFormError.value = ''
+  selectedCategoryLocale.value = defaultLocale.value
   categoryModalOpen.value = true
 }
 
 function closeCategoryModal() {
   categoryModalOpen.value = false
   editingCategory.value = null
-  categoryForm.value = { name: '' }
+  categoryForm.value = { translations: {} }
   categoryFormError.value = ''
 }
 
@@ -643,14 +798,17 @@ async function toggleCategoryActive(cat) {
 
 async function saveCategory() {
   if (savingCategory.value) return
-  const name = categoryForm.value.name?.trim()
-  if (!name) {
-    categoryFormError.value = 'Category name is required.'
+  const errMsg = validateTranslations(categoryForm.value.translations)
+  if (errMsg) {
+    categoryFormError.value = errMsg
     return
   }
   categoryFormError.value = ''
   savingCategory.value = true
-  const translations = { [defaultLocale.value]: { name } }
+  const translations = buildTranslationsPayload(
+    categoryForm.value.translations,
+    !editingCategory.value
+  )
   try {
     if (editingCategory.value) {
       await restaurantService.updateCategory(uuid.value, selectedMenuUuid.value, editingCategory.value.uuid, { translations })
@@ -703,5 +861,18 @@ watch(uuid, () => {
 
 watch(selectedMenuUuid, (val) => {
   if (val) loadCategories()
+})
+
+/** When Menu tab becomes active, refetch restaurant so we have the latest languages (e.g. after adding one in Settings). */
+watch(() => props.tabActive, (isActive) => {
+  if (isActive && uuid.value) {
+    loadRestaurant().then(() => {
+      if (restaurant.value) {
+        loadMenus().then(() => {
+          if (selectedMenuUuid.value) loadCategories()
+        })
+      }
+    })
+  }
 })
 </script>

@@ -1,6 +1,6 @@
 /**
  * Category model — from API (categories list/show/create/update).
- * translations: { locale: { name } }.
+ * translations: { locale: { name, description? } }.
  */
 
 export default class Category {
@@ -24,6 +24,12 @@ export default class Category {
   name(locale) {
     const t = this._translations[locale]
     return t?.name ?? ''
+  }
+
+  /** Description in a given locale */
+  description(locale) {
+    const t = this._translations[locale]
+    return t?.description ?? ''
   }
 
   static fromApi(apiResponse) {

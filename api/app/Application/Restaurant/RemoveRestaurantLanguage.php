@@ -30,7 +30,8 @@ final readonly class RemoveRestaurantLanguage
         }
 
         $restaurant->languages()->where('locale', $locale)->delete();
-        $restaurant->translations()->where('locale', $locale)->delete();
+        // Do not delete restaurant_translations (or any menu/category translation rows).
+        // Translation data persists; only entity deletion (cascade) removes translations.
 
         return true;
     }

@@ -22,6 +22,7 @@ final readonly class GetMenu
         return Menu::query()
             ->where('uuid', $menuUuid)
             ->where('restaurant_id', $restaurant->id)
+            ->with('translations')
             ->first();
     }
 }
