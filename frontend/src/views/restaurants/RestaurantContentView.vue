@@ -32,25 +32,79 @@
         {{ error }}
       </div>
 
-      <!-- Currency -->
-      <section class="mb-8 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-slate-800 p-4 lg:p-6" data-testid="settings-section-currency">
-        <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-4">Currency</h3>
-        <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">Currency used for prices on your menu and public site.</p>
-        <div class="flex flex-wrap items-center gap-3">
-          <label for="restaurant-currency" class="text-sm font-medium text-charcoal dark:text-white shrink-0">Currency</label>
-          <select
-            id="restaurant-currency"
-            v-model="currency"
-            data-testid="settings-currency-select"
-            class="max-w-[280px] min-h-[44px] rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 py-2.5 px-4 text-charcoal dark:text-white focus:ring-2 focus:ring-primary focus:outline-none"
-            :disabled="savingCurrency"
-            @change="saveCurrency"
-          >
-            <option v-for="c in CURRENCIES" :key="c.code" :value="c.code">{{ c.symbol }} {{ c.name }}</option>
-          </select>
-          <span v-if="savingCurrency" class="text-sm text-slate-500">Saving…</span>
-        </div>
-      </section>
+      <!-- Currency + Primary color: stacked on mobile, side by side from md -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <section class="min-w-0 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-slate-800 p-4 lg:p-6" data-testid="settings-section-currency">
+          <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-4">Currency</h3>
+          <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">Currency used for prices on your menu and public site.</p>
+          <div class="flex flex-wrap items-center gap-3">
+            <label for="restaurant-currency" class="text-sm font-medium text-charcoal dark:text-white shrink-0">Currency</label>
+            <select
+              id="restaurant-currency"
+              v-model="currency"
+              data-testid="settings-currency-select"
+              class="max-w-[280px] min-h-[44px] rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 py-2.5 px-4 text-charcoal dark:text-white focus:ring-2 focus:ring-primary focus:outline-none"
+              :disabled="savingCurrency"
+              @change="saveCurrency"
+            >
+              <option v-for="c in CURRENCIES" :key="c.code" :value="c.code">{{ c.symbol }} {{ c.name }}</option>
+            </select>
+            <span v-if="savingCurrency" class="text-sm text-slate-500">Saving…</span>
+          </div>
+        </section>
+
+        <section class="min-w-0 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-slate-800 p-4 lg:p-6" data-testid="settings-section-primary-color">
+          <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-4">Primary color</h3>
+          <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">Accent color used on your public restaurant page (buttons, links, highlights). Leave empty to use the default.</p>
+          <div class="flex flex-wrap items-center gap-3">
+            <input
+              v-model="primaryColorHex"
+              type="color"
+              class="w-14 h-14 min-w-[56px] min-h-[56px] rounded-xl border-2 border-slate-200 dark:border-zinc-600 cursor-pointer bg-white dark:bg-zinc-800"
+              aria-label="Pick primary color"
+              data-testid="settings-primary-color-picker"
+              @input="onPrimaryColorInput"
+            />
+            <div class="flex flex-col sm:flex-row sm:items-center gap-2 min-w-0">
+              <label for="restaurant-primary-color-hex" class="text-sm font-medium text-charcoal dark:text-white shrink-0">Hex</label>
+              <input
+                id="restaurant-primary-color-hex"
+                v-model="primaryColorHex"
+                type="text"
+                maxlength="9"
+                placeholder="#ee4b2b"
+                class="w-full sm:w-32 min-h-[44px] rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 py-2.5 px-4 text-charcoal dark:text-white text-sm font-mono focus:ring-2 focus:ring-primary focus:outline-none"
+                data-testid="settings-primary-color-hex"
+                @input="onPrimaryColorHexInput"
+              />
+            </div>
+            <AppButton
+              type="button"
+              variant="secondary"
+              size="sm"
+              class="min-h-[44px]"
+              :disabled="savingPrimaryColor || !restaurant?.primary_color"
+              data-testid="settings-primary-color-clear"
+              @click="clearPrimaryColor"
+            >
+              {{ savingPrimaryColor ? 'Saving…' : 'Clear' }}
+            </AppButton>
+            <AppButton
+              v-if="primaryColorHex && primaryColorHex !== (restaurant?.primary_color || '')"
+              type="button"
+              variant="primary"
+              size="sm"
+              class="min-h-[44px]"
+              :disabled="savingPrimaryColor || !isValidPrimaryColor(primaryColorHex)"
+              data-testid="settings-primary-color-save"
+              @click="savePrimaryColor"
+            >
+              {{ savingPrimaryColor ? 'Saving…' : 'Save' }}
+            </AppButton>
+          </div>
+          <p v-if="primaryColorError" class="mt-2 text-sm text-red-600 dark:text-red-400" role="alert">{{ primaryColorError }}</p>
+        </section>
+      </div>
 
       <!-- Languages -->
       <section class="mb-8 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-slate-800 p-4 lg:p-6" data-testid="settings-section-languages">
@@ -154,7 +208,16 @@
               </option>
             </select>
           </div>
-          <div class="flex flex-wrap items-center gap-2 mb-2">
+          <textarea
+            ref="descriptionTextareaRef"
+            :value="currentDescriptionValue"
+            rows="4"
+            :data-testid="`settings-description-${selectedDescriptionLocale}`"
+            class="w-full rounded-lg ring-1 ring-slate-200 dark:ring-zinc-700 focus:ring-2 focus:ring-primary bg-white dark:bg-zinc-800 border-0 py-3 px-4 text-charcoal dark:text-white resize-y mb-4"
+            :placeholder="`Description (${getLocaleDisplay(selectedDescriptionLocale)})`"
+            @input="onDescriptionInput"
+          />
+          <div class="flex flex-wrap items-center justify-end gap-2">
             <AppButton
               v-if="selectedDescriptionLocale !== defaultLocale"
               type="button"
@@ -178,15 +241,6 @@
               {{ savingLocale === selectedDescriptionLocale ? 'Saving…' : 'Save' }}
             </AppButton>
           </div>
-          <textarea
-            ref="descriptionTextareaRef"
-            :value="currentDescriptionValue"
-            rows="4"
-            :data-testid="`settings-description-${selectedDescriptionLocale}`"
-            class="w-full rounded-lg ring-1 ring-slate-200 dark:ring-zinc-700 focus:ring-2 focus:ring-primary bg-white dark:bg-zinc-800 border-0 py-3 px-4 text-charcoal dark:text-white resize-y"
-            :placeholder="`Description (${getLocaleDisplay(selectedDescriptionLocale)})`"
-            @input="onDescriptionInput"
-          />
         </template>
       </section>
 
@@ -258,6 +312,9 @@ const restaurant = ref(null)
 const error = ref('')
 const currency = ref('USD')
 const savingCurrency = ref(false)
+const primaryColorHex = ref('')
+const primaryColorError = ref('')
+const savingPrimaryColor = ref(false)
 const savingDefault = ref(null)
 const addingLanguage = ref(false)
 const removingLocale = ref(null)
@@ -306,6 +363,7 @@ async function loadRestaurant() {
     breadcrumbStore.setRestaurantName(restaurant.value?.name ?? null)
     if (restaurant.value) {
       currency.value = restaurant.value.currency ?? 'USD'
+      primaryColorHex.value = restaurant.value.primary_color ?? ''
       await loadAllDescriptions()
     }
   } catch (e) {
@@ -338,6 +396,7 @@ async function loadAllDescriptions() {
 }
 
 async function saveCurrency() {
+  if (savingCurrency.value) return
   if (!restaurant.value?.uuid) return
   savingCurrency.value = true
   error.value = ''
@@ -350,6 +409,68 @@ async function saveCurrency() {
     error.value = Object.keys(errs).length ? Object.values(errs).join(' ') : normalizeApiError(e).message
   } finally {
     savingCurrency.value = false
+  }
+}
+
+const PRIMARY_COLOR_REGEX = /^#[0-9A-Fa-f]{3}([0-9A-Fa-f]{3}([0-9A-Fa-f]{2})?)?$/
+
+function isValidPrimaryColor(hex) {
+  if (!hex || typeof hex !== 'string') return false
+  const trimmed = hex.trim()
+  return trimmed === '' || PRIMARY_COLOR_REGEX.test(trimmed)
+}
+
+function onPrimaryColorInput(e) {
+  const v = e.target?.value ?? ''
+  primaryColorHex.value = v
+  primaryColorError.value = ''
+}
+
+function onPrimaryColorHexInput(e) {
+  const v = (e.target?.value ?? '').trim()
+  primaryColorHex.value = v
+  if (v && !PRIMARY_COLOR_REGEX.test(v)) {
+    primaryColorError.value = 'Enter a valid hex color (e.g. #ee4b2b or #fff).'
+  } else {
+    primaryColorError.value = ''
+  }
+}
+
+async function savePrimaryColor() {
+  if (savingPrimaryColor.value) return
+  if (!restaurant.value?.uuid || !isValidPrimaryColor(primaryColorHex.value)) return
+  const hex = primaryColorHex.value.trim()
+  savingPrimaryColor.value = true
+  primaryColorError.value = ''
+  error.value = ''
+  try {
+    await restaurantService.update(uuid.value, { primary_color: hex || null })
+    if (restaurant.value) restaurant.value.primary_color = hex || null
+    toastStore.success('Primary color updated.')
+  } catch (e) {
+    const errs = getValidationErrors(e)
+    primaryColorError.value = Object.keys(errs).length ? Object.values(errs).join(' ') : normalizeApiError(e).message
+  } finally {
+    savingPrimaryColor.value = false
+  }
+}
+
+async function clearPrimaryColor() {
+  if (savingPrimaryColor.value) return
+  if (!restaurant.value?.uuid) return
+  savingPrimaryColor.value = true
+  primaryColorError.value = ''
+  error.value = ''
+  try {
+    await restaurantService.update(uuid.value, { primary_color: null })
+    if (restaurant.value) restaurant.value.primary_color = null
+    primaryColorHex.value = ''
+    toastStore.success('Primary color cleared.')
+  } catch (e) {
+    const errs = getValidationErrors(e)
+    error.value = Object.keys(errs).length ? Object.values(errs).join(' ') : normalizeApiError(e).message
+  } finally {
+    savingPrimaryColor.value = false
   }
 }
 

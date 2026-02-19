@@ -1,0 +1,19 @@
+---
+description: One success toast per save; prevent double submission and duplicate toasts
+globs: frontend/src/**/*.{vue,js}
+alwaysApply: false
+---
+
+# Frontend: Success toasts and double submission
+
+When working on **save/update flows** that show a success toast:
+
+1. **One success toast per user action.** The component that performs the save is the only place that should show the success toast for that action. Do not show a second toast from a global interceptor, a parent, or by using the API response `message` in addition to a component-specific message.
+
+2. **Guard against double submission.** At the **start** of every async save/update handler (e.g. `savePrimaryColor`, `saveCurrency`, `handleSubmit`), guard with the handler’s “saving” flag so the handler returns immediately if it is already running:
+   - Example: `if (savingPrimaryColor.value) return` before any other checks.
+   - This prevents duplicate API calls and duplicate toasts from double-clicks, double-fires, or slow networks.
+
+3. **Set the saving flag at the start, clear it in finally.** Use `try { ... } finally { savingX.value = false }` so the guard is reliable and the UI stays consistent.
+
+This applies to all views and components that call APIs and show success toasts (e.g. settings, profile, restaurant form, menu/category updates).

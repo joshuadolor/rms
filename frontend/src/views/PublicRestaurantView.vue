@@ -1,9 +1,12 @@
 <template>
-  <div class="min-h-screen font-display bg-background-light dark:bg-background-dark text-charcoal dark:text-gray-100">
+  <div
+    class="min-h-screen font-display bg-background-light dark:bg-background-dark text-charcoal dark:text-gray-100 public-restaurant-page"
+    :style="publicAccentStyle"
+  >
     <!-- Loading -->
     <div v-if="loading" class="flex min-h-screen items-center justify-center">
       <div class="text-center">
-        <span class="material-icons text-4xl text-primary animate-spin">sync</span>
+        <span class="material-icons text-4xl animate-spin" style="color: var(--public-accent)">sync</span>
         <p class="mt-3 text-slate-500 dark:text-slate-400">Loading…</p>
       </div>
     </div>
@@ -16,7 +19,8 @@
         <p class="mt-2 text-slate-500 dark:text-slate-400">{{ error }}</p>
         <router-link
           :to="{ name: 'Landing' }"
-          class="mt-6 inline-flex items-center gap-2 text-primary font-semibold hover:underline"
+          class="mt-6 inline-flex items-center gap-2 font-semibold hover:underline"
+          style="color: var(--public-accent)"
         >
           <span class="material-icons text-lg">arrow_back</span>
           Back to home
@@ -37,7 +41,8 @@
             </div>
             <div
               v-else
-              class="w-9 h-9 bg-primary rounded-lg flex items-center justify-center shrink-0"
+              class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+              style="background-color: var(--public-accent)"
             >
               <span class="material-icons text-white text-lg">restaurant</span>
             </div>
@@ -47,9 +52,9 @@
           </a>
           <div class="flex items-center gap-4">
             <div class="hidden sm:flex items-center gap-6">
-              <a href="#" class="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">Home</a>
-              <a href="#menu" class="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">Menu</a>
-              <a href="#about" class="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">About</a>
+              <a href="#" class="text-sm font-medium text-slate-600 dark:text-slate-400 transition-colors hover:opacity-80" style="color: var(--public-accent)">Home</a>
+              <a href="#menu" class="text-sm font-medium text-slate-600 dark:text-slate-400 transition-colors hover:opacity-80" style="color: var(--public-accent)">Menu</a>
+              <a href="#about" class="text-sm font-medium text-slate-600 dark:text-slate-400 transition-colors hover:opacity-80" style="color: var(--public-accent)">About</a>
             </div>
             <div v-if="data.languages?.length > 1" class="flex flex-wrap gap-1.5">
               <button
@@ -58,8 +63,9 @@
                 type="button"
                 class="px-2.5 py-1 rounded-lg text-xs font-medium transition-colors"
                 :class="locale === loc
-                  ? 'bg-primary text-white'
+                  ? 'text-white'
                   : 'bg-slate-100 dark:bg-zinc-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-zinc-600'"
+                :style="locale === loc ? { backgroundColor: 'var(--public-accent)' } : undefined"
                 @click="setLocale(loc)"
               >
                 {{ loc.toUpperCase() }}
@@ -81,10 +87,11 @@
         </template>
         <div
           v-else
-          class="absolute inset-0 bg-gradient-to-r from-primary/90 to-primary/70 dark:from-primary/80 dark:to-primary/60"
+          class="absolute inset-0 opacity-95"
+          style="background: linear-gradient(135deg, var(--public-accent) 0%, var(--public-accent) 50%, rgba(0,0,0,0.3) 100%);"
         />
         <div class="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 pb-12 sm:pb-16 pt-24">
-          <span class="text-primary font-semibold tracking-[0.2em] uppercase text-xs sm:text-sm block mb-2">
+          <span class="font-semibold tracking-[0.2em] uppercase text-xs sm:text-sm block mb-2 text-white/90" style="color: var(--public-accent)">
             {{ data.name }}
           </span>
           <h1 class="text-4xl sm:text-5xl md:text-6xl font-bold text-white tracking-tight drop-shadow-lg">
@@ -95,7 +102,8 @@
           </p>
           <a
             href="#menu"
-            class="mt-6 inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-white font-semibold py-3 px-6 rounded-lg shadow-lg shadow-primary/25 transition-all"
+            class="mt-6 inline-flex items-center gap-2 text-white font-semibold py-3 px-6 rounded-lg shadow-lg transition-all hover:opacity-90"
+            style="background-color: var(--public-accent); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2);"
           >
             Explore Menu
             <span class="material-icons text-xl">arrow_forward</span>
@@ -110,7 +118,7 @@
       <section id="about" class="py-16 sm:py-24 bg-cream/50 dark:bg-zinc-900/50 border-y border-slate-100 dark:border-slate-800">
         <div class="max-w-6xl mx-auto px-4 sm:px-6">
           <h2 class="text-2xl sm:text-3xl font-bold text-charcoal dark:text-white flex items-center gap-2 mb-6">
-            <span class="w-2 h-8 bg-primary rounded-full shrink-0" aria-hidden="true"></span>
+            <span class="w-2 h-8 rounded-full shrink-0" style="background-color: var(--public-accent)" aria-hidden="true"></span>
             About
           </h2>
           <div class="max-w-3xl">
@@ -130,12 +138,13 @@
         <div class="max-w-6xl mx-auto px-4 sm:px-6">
           <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10">
             <h2 class="text-2xl sm:text-3xl font-bold text-charcoal dark:text-white flex items-center gap-2">
-              <span class="w-2 h-8 bg-primary rounded-full shrink-0" aria-hidden="true"></span>
-              Our Menu
+            <span class="w-2 h-8 rounded-full shrink-0" style="background-color: var(--public-accent)" aria-hidden="true"></span>
+            Our Menu
             </h2>
             <span
               v-if="data.menu_items?.length"
-              class="text-sm font-medium px-3 py-1 bg-primary/10 text-primary rounded-full"
+              class="text-sm font-medium px-3 py-1 rounded-full"
+              style="background-color: color-mix(in srgb, var(--public-accent) 10%, transparent); color: var(--public-accent)"
             >
               {{ data.menu_items.length }} {{ data.menu_items.length === 1 ? 'item' : 'items' }}
             </span>
@@ -149,10 +158,10 @@
             >
               <div class="flex gap-4">
                 <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-lg bg-slate-100 dark:bg-zinc-800 flex items-center justify-center shrink-0">
-                  <span class="material-icons text-2xl sm:text-3xl text-primary/70">restaurant</span>
+                  <span class="material-icons text-2xl sm:text-3xl opacity-70" style="color: var(--public-accent)">restaurant</span>
                 </div>
                 <div class="min-w-0 flex-1">
-                  <h3 class="font-bold text-lg text-charcoal dark:text-white group-hover:text-primary transition-colors">
+                  <h3 class="font-bold text-lg text-charcoal dark:text-white transition-colors group-hover:[color:var(--public-accent)]">
                     {{ item.name || 'Untitled' }}
                   </h3>
                   <p
@@ -186,7 +195,7 @@
       <footer class="py-8 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-zinc-900/50">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div class="flex items-center gap-2">
-            <div class="w-7 h-7 bg-primary rounded flex items-center justify-center">
+            <div class="w-7 h-7 rounded flex items-center justify-center" style="background-color: var(--public-accent)">
               <span class="material-icons text-white text-sm">restaurant</span>
             </div>
             <span class="text-sm font-semibold text-charcoal dark:text-white">{{ data.name }}</span>
@@ -214,6 +223,12 @@ const locale = ref(route.query.locale ?? '')
 const loading = ref(true)
 const error = ref(null)
 const data = ref(null)
+
+const DEFAULT_ACCENT = '#ee4b2b'
+
+const publicAccentStyle = computed(() => ({
+  '--public-accent': data.value?.primary_color || DEFAULT_ACCENT,
+}))
 
 function truncateDescription(text, maxLen) {
   const t = (text || '').trim().replace(/\s+/g, ' ')

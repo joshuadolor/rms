@@ -23,6 +23,7 @@ export default class Restaurant {
     this._publicUrl = data.public_url ?? data.publicUrl ?? ''
     this._address = data.address ?? ''
     this._tagline = data.tagline ?? ''
+    this._primaryColor = data.primary_color ?? data.primaryColor ?? null
     this._latitude = data.latitude ?? null
     this._longitude = data.longitude ?? null
     this._phone = data.phone ?? ''
@@ -68,6 +69,10 @@ export default class Restaurant {
 
   get tagline() {
     return this._tagline
+  }
+
+  get primary_color() {
+    return this._primaryColor
   }
 
   get latitude() {
@@ -148,6 +153,7 @@ export default class Restaurant {
       public_url: this._publicUrl,
       address: this._address,
       tagline: this._tagline,
+      primary_color: this._primaryColor,
       latitude: this._latitude,
       longitude: this._longitude,
       phone: this._phone,
