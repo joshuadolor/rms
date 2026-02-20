@@ -1320,6 +1320,28 @@ test.describe('Restaurant module', () => {
     await categoryItemsPage.expectEmptyState()
   })
 
+  test('category items page: floating Help button opens legend modal with icon meanings', async ({ page }) => {
+    const cat = { uuid: 'cat-help', sort_order: 0, is_active: true, translations: { en: { name: 'Sides' } }, created_at: new Date().toISOString(), updated_at: new Date().toISOString() }
+    await loginAsVerifiedUser(page)
+    mockRestaurantList(page, [MOCK_RESTAURANT])
+    mockRestaurantGet(page, MOCK_RESTAURANT)
+    mockRestaurantMenus(page)
+    mockRestaurantCategories(page, [cat])
+    mockRestaurantMenuItems(page, [])
+    mockRestaurantLanguagesAndTranslations(page)
+
+    const categoryItemsPage = new CategoryMenuItemsPage(page)
+    await categoryItemsPage.goTo(MOCK_RESTAURANT.uuid, cat.uuid, { name: 'Sides' })
+    await categoryItemsPage.expectCategoryHeading('Sides')
+    await categoryItemsPage.openHelpLegend()
+    await categoryItemsPage.expectHelpModalVisible()
+    await categoryItemsPage.expectHelpLegendContains('Drag handle')
+    await categoryItemsPage.expectHelpLegendContains('Schedule')
+    await categoryItemsPage.expectHelpLegendContains('Assign tags')
+    await categoryItemsPage.closeHelpModal()
+    await expect(page.getByRole('dialog', { name: 'Help' })).not.toBeVisible()
+  })
+
   test('category items page shows visibility toggle; toggling sends PATCH with is_active and updates label', async ({ page }) => {
     const cat = { uuid: 'cat-visibility', sort_order: 0, is_active: true, translations: { en: { name: 'Mains' } }, created_at: new Date().toISOString(), updated_at: new Date().toISOString() }
     const item = {

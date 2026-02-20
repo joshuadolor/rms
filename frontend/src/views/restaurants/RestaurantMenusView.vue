@@ -428,7 +428,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import draggable from 'vuedraggable'
 import AppBackLink from '@/components/AppBackLink.vue'
@@ -436,6 +436,7 @@ import AppModal from '@/components/ui/AppModal.vue'
 import AvailabilityModal from '@/components/availability/AvailabilityModal.vue'
 import AppInput from '@/components/ui/AppInput.vue'
 import { useBreadcrumbStore } from '@/stores/breadcrumb'
+import { usePageFabStore } from '@/stores/pageFab'
 import AppButton from '@/components/ui/AppButton.vue'
 import Restaurant from '@/models/Restaurant.js'
 import Menu from '@/models/Menu.js'
@@ -452,6 +453,7 @@ const props = defineProps({
 const route = useRoute()
 const breadcrumbStore = useBreadcrumbStore()
 const toastStore = useToastStore()
+const pageFabStore = usePageFabStore()
 const uuid = computed(() => route.params.uuid)
 
 const loading = ref(true)
@@ -900,6 +902,10 @@ async function onReorderCategories() {
   }
 }
 
+function updatePageFab() {
+  pageFabStore.setPageFab(props.tabActive && !!selectedMenuUuid.value)
+}
+
 onMounted(() => {
   loadRestaurant().then(() => {
     if (restaurant.value) {
@@ -907,7 +913,12 @@ onMounted(() => {
         if (selectedMenuUuid.value) loadCategories()
       })
     }
+    updatePageFab()
   })
+})
+
+onBeforeUnmount(() => {
+  pageFabStore.setPageFab(false)
 })
 
 watch(uuid, () => {
@@ -924,10 +935,12 @@ watch(uuid, () => {
 
 watch(selectedMenuUuid, (val) => {
   if (val) loadCategories()
+  updatePageFab()
 })
 
 /** When Menu tab becomes active, refetch restaurant so we have the latest languages (e.g. after adding one in Settings). */
 watch(() => props.tabActive, (isActive) => {
+  updatePageFab()
   if (isActive && uuid.value) {
     loadRestaurant().then(() => {
       if (restaurant.value) {
@@ -935,7 +948,9 @@ watch(() => props.tabActive, (isActive) => {
           if (selectedMenuUuid.value) loadCategories()
         })
       }
+      updatePageFab()
     })
   }
 })
+
 </script>

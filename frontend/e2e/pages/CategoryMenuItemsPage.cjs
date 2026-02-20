@@ -163,6 +163,28 @@ class CategoryMenuItemsPage {
     const dialog = this.page.getByRole('dialog')
     await expect(dialog.getByText(baseNameOnly, { exact: true })).not.toBeVisible()
   }
+
+  /** Click the floating Help button (opens legend modal) */
+  async openHelpLegend() {
+    await this.page.getByTestId('help-legend-button').click()
+  }
+
+  /** Assert the Help legend modal is open (dialog with heading "Help") */
+  async expectHelpModalVisible() {
+    const dialog = this.page.getByRole('dialog', { name: 'Help' })
+    await expect(dialog).toBeVisible({ timeout: 5000 })
+  }
+
+  /** Assert the Help modal body contains the given text (uses first match to avoid strict mode when icon + label share text) */
+  async expectHelpLegendContains(text) {
+    const dialog = this.page.getByRole('dialog', { name: 'Help' })
+    await expect(dialog.getByText(text).first()).toBeVisible()
+  }
+
+  /** Close the Help modal (uses header close control to avoid multiple "Close" buttons) */
+  async closeHelpModal() {
+    await this.page.getByRole('dialog', { name: 'Help' }).getByTestId('app-modal-close').click()
+  }
 }
 
 module.exports = { CategoryMenuItemsPage }

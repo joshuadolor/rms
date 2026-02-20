@@ -109,7 +109,7 @@
                     <span
                       v-for="tag in item.tags"
                       :key="tag.uuid"
-                      class="tag-tooltip-host relative inline-flex items-center justify-center min-w-[44px] min-h-[44px] rounded-md shrink-0 cursor-pointer motion-reduce:transition-none transition-opacity duration-150"
+                      class="tag-tooltip-host relative inline-flex items-center justify-center min-w-[36px] min-h-[36px] rounded-md shrink-0 cursor-pointer motion-reduce:transition-none transition-opacity duration-150"
                       :style="{ backgroundColor: tag.color ? `${tag.color}20` : undefined, color: tag.color || '#6b7280' }"
                       :aria-label="(tag.text || 'Tag') + ' (assigned)'"
                       tabindex="0"
@@ -118,7 +118,7 @@
                       @focus="tagHoveredUuid = tag.uuid"
                       @blur="tagHoveredUuid = null"
                     >
-                      <span v-if="tag.icon" class="material-icons text-sm">{{ tag.icon }}</span>
+                      <span v-if="tag.icon" class="material-icons text-xxl">{{ tag.icon }}</span>
                       <span v-else class="material-icons text-sm">label</span>
                       <span
                         class="tag-tooltip absolute left-1/2 -translate-x-1/2 bottom-full mb-1.5 px-2 py-1 text-xs font-medium rounded-md bg-slate-800 text-white whitespace-nowrap pointer-events-none z-[100] shadow-lg motion-reduce:transition-none transition-opacity duration-150"
@@ -324,6 +324,7 @@
           </AppButton>
         </template>
       </AppModal>
+
     </template>
   </div>
 </template>

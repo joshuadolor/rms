@@ -168,6 +168,7 @@
         <router-view />
       </main>
     </div>
+    <HelpLegendFab />
   </div>
 </template>
 
@@ -178,6 +179,7 @@ import { storeToRefs } from 'pinia'
 import { useAppStore } from '@/stores/app'
 import { BREADCRUMB_CONFIG } from '@/config/breadcrumbs'
 import AppBreadcrumbs from '@/components/AppBreadcrumbs.vue'
+import HelpLegendFab from '@/components/HelpLegendFab.vue'
 
 const router = useRouter()
 const route = useRoute()
