@@ -3,6 +3,7 @@
 namespace App\Application\Auth;
 
 use App\Domain\Auth\Contracts\UserRepositoryInterface;
+use App\Exceptions\DeactivatedUserException;
 use App\Exceptions\UnverifiedEmailException;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
@@ -19,6 +20,7 @@ final readonly class LoginUser
      * @return array{user: User, token: string}
      *
      * @throws ValidationException
+     * @throws DeactivatedUserException
      * @throws UnverifiedEmailException
      */
     public function handle(array $input): array
@@ -29,6 +31,10 @@ final readonly class LoginUser
             throw ValidationException::withMessages([
                 'email' => [__('The provided credentials are incorrect.')],
             ]);
+        }
+
+        if (! ($user->is_active ?? true)) {
+            throw new DeactivatedUserException();
         }
 
         if (! $user->hasVerifiedEmail()) {

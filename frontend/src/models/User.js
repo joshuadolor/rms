@@ -14,6 +14,8 @@ export default class User {
     this._emailVerifiedAt = data.email_verified_at ?? data.emailVerifiedAt ?? null
     this._pendingEmail = data.pending_email ?? data.pendingEmail ?? null
     this._isPaid = data.is_paid === true
+    this._isSuperadmin = data.is_superadmin === true
+    this._isActive = data.is_active !== false // default true when missing
     // Optional if backend adds later (e.g. profile, OAuth)
     this._firstName = data.first_name ?? data.firstName ?? ''
     this._lastName = data.last_name ?? data.lastName ?? ''
@@ -48,6 +50,16 @@ export default class User {
   /** True if user can create custom menu item tags and use other paid features. */
   get isPaid() {
     return this._isPaid
+  }
+
+  /** True only for the superadmin user (access to superadmin endpoints). */
+  get isSuperadmin() {
+    return this._isSuperadmin
+  }
+
+  /** False when account has been deactivated by superadmin; default true. */
+  get isActive() {
+    return this._isActive
   }
 
   get firstName() {
@@ -88,6 +100,8 @@ export default class User {
       isEmailVerified: this.isEmailVerified,
       pendingEmail: this._pendingEmail,
       isPaid: this._isPaid,
+      isSuperadmin: this._isSuperadmin,
+      isActive: this._isActive,
       fullName: this.fullName,
       firstName: this._firstName,
       lastName: this._lastName,

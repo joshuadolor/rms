@@ -7,6 +7,8 @@ function getStoredUser() {
   if (!localStorage.getItem('rms-auth')) return null
   const verified = localStorage.getItem('rms-user-verified') === '1'
   const isPaid = localStorage.getItem('rms-user-is-paid') === '1'
+  const isSuperadmin = localStorage.getItem('rms-user-is-superadmin') === '1'
+  const isActive = localStorage.getItem('rms-user-is-active') !== '0'
   return User.fromApi({
     uuid: localStorage.getItem('rms-user-id') || null,
     name: localStorage.getItem('rms-user-name') || 'Restaurant Owner',
@@ -14,6 +16,8 @@ function getStoredUser() {
     email_verified_at: verified ? new Date().toISOString() : null,
     pending_email: localStorage.getItem('rms-user-pending-email') || null,
     is_paid: isPaid,
+    is_superadmin: isSuperadmin,
+    is_active: isActive,
   })
 }
 
@@ -33,6 +37,8 @@ export const useAppStore = defineStore('app', () => {
       email: payload.email ?? user.value?.email ?? 'owner@example.com',
       email_verified_at: payload.email_verified_at ?? (payload.emailVerifiedAt !== undefined ? payload.emailVerifiedAt : user.value?.emailVerifiedAt ?? null),
       is_paid: payload.is_paid,
+      is_superadmin: payload.is_superadmin,
+      is_active: payload.is_active,
     }
     user.value = User.fromApi(data)
     localStorage.setItem('rms-auth', '1')
@@ -43,6 +49,10 @@ export const useAppStore = defineStore('app', () => {
     localStorage.setItem('rms-user-verified', user.value.isEmailVerified ? '1' : '')
     if (data.is_paid === true) localStorage.setItem('rms-user-is-paid', '1')
     else localStorage.removeItem('rms-user-is-paid')
+    if (user.value?.isSuperadmin === true) localStorage.setItem('rms-user-is-superadmin', '1')
+    else localStorage.removeItem('rms-user-is-superadmin')
+    if (user.value?.isActive === true) localStorage.setItem('rms-user-is-active', '1')
+    else localStorage.setItem('rms-user-is-active', '0')
   }
 
   async function logout() {
@@ -64,6 +74,8 @@ export const useAppStore = defineStore('app', () => {
     localStorage.removeItem('rms-user-verified')
     localStorage.removeItem('rms-user-pending-email')
     localStorage.removeItem('rms-user-is-paid')
+    localStorage.removeItem('rms-user-is-superadmin')
+    localStorage.removeItem('rms-user-is-active')
   }
 
   /** Set user from API response (e.g. after auth fetch). Persists verification status for route guards. */
@@ -79,6 +91,10 @@ export const useAppStore = defineStore('app', () => {
     else localStorage.removeItem('rms-user-pending-email')
     if (u?.isPaid === true) localStorage.setItem('rms-user-is-paid', '1')
     else localStorage.removeItem('rms-user-is-paid')
+    if (u?.isSuperadmin === true) localStorage.setItem('rms-user-is-superadmin', '1')
+    else localStorage.removeItem('rms-user-is-superadmin')
+    if (u?.isActive === true) localStorage.setItem('rms-user-is-active', '1')
+    else localStorage.setItem('rms-user-is-active', '0')
   }
 
   return { user, isAuthenticated, login, logout, clearAuthState, setUserFromApi }

@@ -4,6 +4,7 @@ namespace Tests\Unit\Auth;
 
 use App\Application\Auth\LoginUser;
 use App\Domain\Auth\Contracts\UserRepositoryInterface;
+use App\Exceptions\DeactivatedUserException;
 use App\Exceptions\UnverifiedEmailException;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
@@ -45,11 +46,35 @@ class LoginUserTest extends TestCase
         $this->assertSame('login-token-456', $result['token']);
     }
 
+    public function test_handle_throws_deactivated_exception_when_user_not_active(): void
+    {
+        $user = Mockery::mock(User::class)->makePartial();
+        $user->email = 'deactivated@example.com';
+        $user->password = Hash::make('password123');
+        $user->is_active = false;
+        $user->shouldNotReceive('hasVerifiedEmail');
+        $user->shouldNotReceive('createToken');
+
+        $repo = Mockery::mock(UserRepositoryInterface::class);
+        $repo->shouldReceive('findByEmail')->once()->with('deactivated@example.com')->andReturn($user);
+
+        $useCase = new LoginUser($repo);
+
+        $this->expectException(DeactivatedUserException::class);
+        $this->expectExceptionMessage('Your account has been deactivated.');
+
+        $useCase->handle([
+            'email' => 'deactivated@example.com',
+            'password' => 'password123',
+        ]);
+    }
+
     public function test_handle_throws_unverified_email_exception_when_email_not_verified(): void
     {
         $user = Mockery::mock(User::class)->makePartial();
         $user->email = 'unverified@example.com';
         $user->password = Hash::make('password123');
+        $user->is_active = true;
         $user->shouldReceive('hasVerifiedEmail')->once()->andReturn(false);
         $user->shouldNotReceive('createToken');
 

@@ -24,6 +24,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'email',
         'password',
         'is_paid', // reserved for future paid features (e.g. multiple restaurants)
+        'is_superadmin',
+        'is_active',
     ];
 
     /**
@@ -65,6 +67,8 @@ class User extends Authenticatable implements MustVerifyEmail
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_paid' => 'boolean',
+            'is_superadmin' => 'boolean',
+            'is_active' => 'boolean',
         ];
     }
 

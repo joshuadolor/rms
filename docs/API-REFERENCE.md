@@ -20,7 +20,9 @@ Used wherever the API returns a user object:
   email: string;
   email_verified_at: string | null;  // ISO 8601 datetime
   pending_email?: string | null;     // when an email change is pending (e.g. GET /user, PATCH /user)
-  is_paid?: boolean;                 // reserved for future paid features (e.g. multiple restaurants)
+  is_paid?: boolean;                  // reserved for future paid features (e.g. multiple restaurants)
+  is_superadmin?: boolean;           // true only for the superadmin user
+  is_active?: boolean;               // false when account has been deactivated by superadmin
 }
 ```
 
@@ -87,19 +89,20 @@ Used wherever the API returns a user object:
 }
 ```
 
-**Response (200):** Only if email is verified.
+**Response (200):** Only if email is verified and account is active.
 ```json
 {
   "message": "Logged in successfully.",
-  "user": { "uuid", "name", "email", "email_verified_at" },
+  "user": { "uuid", "name", "email", "email_verified_at", "pending_email", "is_paid", "is_superadmin", "is_active" },
   "token": "string",
   "token_type": "Bearer"
 }
 ```
 
-**Errors:** Use **403** for unverified email; use **422** only for wrong credentials or validation.
+**Errors:** Use **403** for unverified email or deactivated account; use **422** only for wrong credentials or validation.
 - **422** – Invalid credentials or validation: `errors.email` = "The provided credentials are incorrect." (and/or other validation `errors`).
 - **403** – Email not verified: `{ "message": "Your email address is not verified." }`. Never 404 or 422 for this case.
+- **403** – Account deactivated: `{ "message": "Your account has been deactivated." }`.
 
 ---
 
@@ -326,7 +329,7 @@ All require `Authorization: Bearer <token>` and **verified email**.
 **Response (200):**
 ```json
 {
-  "user": { "uuid", "name", "email", "email_verified_at", "pending_email", "is_paid" }
+  "user": { "uuid", "name", "email", "email_verified_at", "pending_email", "is_paid", "is_superadmin", "is_active" }
 }
 ```
 
@@ -424,6 +427,246 @@ All require `Authorization: Bearer <token>` and **verified email**.
   "message": "Logged out from all devices successfully."
 }
 ```
+
+---
+
+## Superadmin
+
+Endpoints for the **superadmin** user only. All require **Bearer + verified + superadmin**. If the authenticated user is not a superadmin, the API returns **403** with `{ "message": "Forbidden." }`. No internal `id` in any response.
+
+Superadmin is identified by a user record with `is_superadmin = true`, seeded from `SUPERADMIN_EMAIL` and `SUPERADMIN_PASSWORD` in `.env` (see SuperadminSeeder). They log in via normal POST `/api/login`.
+
+### Dashboard stats
+
+| Method | Path | Auth |
+|--------|------|------|
+| GET | `/api/superadmin/stats` | Bearer + verified + superadmin |
+
+**Response (200):**
+```json
+{
+  "data": {
+    "restaurants_count": 0,
+    "users_count": 1,
+    "paid_users_count": 0
+  }
+}
+```
+
+**403** – Not a superadmin.
+
+---
+
+### List all users
+
+| Method | Path | Auth |
+|--------|------|------|
+| GET | `/api/superadmin/users` | Bearer + verified + superadmin |
+
+**Response (200):**
+```json
+{
+  "data": [
+    {
+      "uuid": "string",
+      "name": "string",
+      "email": "string",
+      "email_verified_at": "string | null",
+      "pending_email": "string | null",
+      "is_paid": false,
+      "is_active": true,
+      "is_superadmin": false
+    }
+  ]
+}
+```
+
+User payload for admin list: uuid, name, email, email_verified_at, pending_email, is_paid, is_active, is_superadmin. No internal `id`.
+
+**403** – Not a superadmin.
+
+---
+
+### Update user (deactivate or make paid)
+
+| Method | Path | Auth |
+|--------|------|------|
+| PATCH | `/api/superadmin/users/{user}` | Bearer + verified + superadmin |
+
+**Path:** `{user}` is the user's **uuid**.
+
+**Body (JSON):** Send only the fields to change.
+```json
+{
+  "is_paid": "boolean (optional)",
+  "is_active": "boolean (optional)"
+}
+```
+
+- **is_paid:** Set to true/false for paid tier (e.g. multiple restaurants).
+- **is_active:** Set to false to deactivate the user (they cannot log in); true to reactivate. The superadmin **cannot change their own** `is_active` (request body with `is_active` for self returns 422).
+
+**Response (200):**
+```json
+{
+  "message": "User updated.",
+  "data": { "uuid", "name", "email", "email_verified_at", "pending_email", "is_paid", "is_active", "is_superadmin" }
+}
+```
+
+**403** – Not a superadmin. **404** – User not found for uuid. **422** – Validation (e.g. is_active sent for self).
+
+---
+
+### List all restaurants
+
+| Method | Path | Auth |
+|--------|------|------|
+| GET | `/api/superadmin/restaurants` | Bearer + verified + superadmin |
+
+Read-only list of all restaurants (same payload shape as owner GET `/api/restaurants` list item).
+
+**Response (200):**
+```json
+{
+  "data": [ { restaurant payload } ]
+}
+```
+
+Restaurant payload: uuid, name, tagline, primary_color, slug, public_url, address, latitude, longitude, phone, email, website, social_links, default_locale, currency, operating_hours, languages, logo_url, banner_url, created_at, updated_at. No internal `id`.
+
+**403** – Not a superadmin.
+
+---
+
+## Owner feedback (feature requests)
+
+Restaurant owners can submit feedback or feature requests (e.g. "I need X feature") for the superadmin to view and implement. All owner endpoints require **Bearer + verified**. No internal `id` in any response; use `uuid` only.
+
+### Owner: Submit feedback
+
+| Method | Path | Auth |
+|--------|------|------|
+| POST | `/api/owner-feedback` | Bearer + verified |
+
+**Body:**
+```json
+{
+  "message": "string (required, max 65535)",
+  "title": "string (optional, max 255)",
+  "restaurant": "string (optional, uuid of a restaurant the user owns — for context)"
+}
+```
+
+**Response (201):**
+```json
+{
+  "message": "Feedback submitted.",
+  "data": {
+    "uuid": "string",
+    "title": "string | null",
+    "message": "string",
+    "status": "pending",
+    "created_at": "string (ISO 8601)",
+    "submitter": { "uuid": "string", "name": "string" },
+    "restaurant": { "uuid": "string", "name": "string" } | null
+  }
+}
+```
+
+**422** – Validation (e.g. missing message, invalid uuid). **403** – Restaurant uuid sent but not owned by the current user.
+
+---
+
+### Owner: List my feedbacks
+
+| Method | Path | Auth |
+|--------|------|------|
+| GET | `/api/owner-feedback` | Bearer + verified |
+
+List the current user's own submissions (newest first).
+
+**Response (200):**
+```json
+{
+  "data": [
+    {
+      "uuid": "string",
+      "title": "string | null",
+      "message": "string",
+      "status": "string (e.g. pending | reviewed)",
+      "created_at": "string (ISO 8601)",
+      "restaurant": { "uuid": "string", "name": "string" } | null
+    }
+  ]
+}
+```
+
+---
+
+### Superadmin: List all owner feedbacks
+
+| Method | Path | Auth |
+|--------|------|------|
+| GET | `/api/superadmin/owner-feedbacks` | Bearer + verified + superadmin |
+
+List **all** owner feedbacks (from all users), newest first.
+
+**Response (200):**
+```json
+{
+  "data": [
+    {
+      "uuid": "string",
+      "title": "string | null",
+      "message": "string",
+      "status": "string",
+      "created_at": "string (ISO 8601)",
+      "submitter": { "uuid": "string", "name": "string", "email": "string" },
+      "restaurant": { "uuid": "string", "name": "string" } | null
+    }
+  ]
+}
+```
+
+**403** – Not a superadmin.
+
+---
+
+### Superadmin: Update feedback status
+
+| Method | Path | Auth |
+|--------|------|------|
+| PATCH | `/api/superadmin/owner-feedbacks/{feedback}` | Bearer + verified + superadmin |
+
+**Path:** `{feedback}` is the feedback **uuid**.
+
+**Body (optional):**
+```json
+{
+  "status": "string (optional: pending | reviewed)"
+}
+```
+
+Allows superadmin to mark feedback as reviewed when implemented.
+
+**Response (200):**
+```json
+{
+  "message": "Feedback updated.",
+  "data": {
+    "uuid": "string",
+    "title": "string | null",
+    "message": "string",
+    "status": "string",
+    "created_at": "string (ISO 8601)",
+    "submitter": { "uuid": "string", "name": "string", "email": "string" },
+    "restaurant": { "uuid": "string", "name": "string" } | null
+  }
+}
+```
+
+**403** – Not a superadmin. **404** – Feedback not found for uuid. **422** – Validation (e.g. invalid status).
 
 ---
 
@@ -1244,6 +1487,8 @@ When **source_variant_uuid** is present, **name** in `translations` is the catal
 
 ## Changelog
 
+- **2026-02-20**: **Owner feedback (feature requests).** New entity: owner feedback (uuid, user_id, restaurant_id nullable, title nullable, message, status default pending). Owner (Bearer + verified): POST `/api/owner-feedback` (message required, title and restaurant optional; 403 if restaurant uuid sent but not owned), GET `/api/owner-feedback` (list own submissions, newest first). Superadmin: GET `/api/superadmin/owner-feedbacks` (list all with submitter and restaurant), PATCH `/api/superadmin/owner-feedbacks/{uuid}` (optional status: pending | reviewed). No internal `id` in any response.
+- **2026-02-20**: **Superadmin module.** Superadmin identity via `is_superadmin` on users table; seeded from `SUPERADMIN_EMAIL` and `SUPERADMIN_PASSWORD` (env). User payload: added **is_superadmin**, **is_active** (GET /api/user, login). **is_active** (boolean, default true) added to users; deactivated users cannot log in (403 "Your account has been deactivated."). Superadmin-only endpoints (Bearer + verified + superadmin; 403 if not): GET `/api/superadmin/stats` (restaurants_count, users_count, paid_users_count), GET `/api/superadmin/users` (list all users), PATCH `/api/superadmin/users/{uuid}` (optional is_paid, is_active; cannot change own is_active), GET `/api/superadmin/restaurants` (read-only list). No internal `id` in any response.
 - **2026-02-20**: **Feedbacks.** New entity: feedback per restaurant (uuid, rating 1-5, text, name, is_approved). Public: POST `/api/public/restaurants/{slug}/feedback` (no auth, rate-limited 10/min). Owner: GET `/api/restaurants/{restaurant}/feedbacks`, PATCH `/api/restaurants/{restaurant}/feedbacks/{feedback}` (is_approved), DELETE. GET `/api/public/restaurants/{slug}` response includes **feedbacks** array (approved only: uuid, rating, text, name, created_at). No internal `id` in any response.
 - **2026-02-20**: **Menu item tags: default only.** Custom tag creation/update/delete removed. GET `/api/menu-item-tags` now returns **default tags only** (user_id null). POST `/api/menu-item-tags`, PATCH/PUT `/api/menu-item-tags/{tag}`, and DELETE `/api/menu-item-tags/{tag}` always return **403** with message: "Custom menu item tags are not available. Use the default tags." Menu items still have many-to-many with tags; owner and public payloads include tags; PATCH menu item still accepts **tag_uuids** (only default tag UUIDs allowed). User payload **is_paid** retained for future paid features (e.g. multiple restaurants).
 - **2026-02-20**: **Menu item tags:** Tag payload includes **is_default** (boolean): true for system tags (read-only in UI), false for user's custom tags.

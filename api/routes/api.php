@@ -10,14 +10,16 @@ use App\Http\Controllers\Api\FeedbackController;
 use App\Http\Controllers\Api\MenuController;
 use App\Http\Controllers\Api\MenuItemController;
 use App\Http\Controllers\Api\MenuItemTagController;
-use App\Http\Controllers\Api\UserMenuItemController;
+use App\Http\Controllers\Api\OwnerFeedbackController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\RestaurantController;
 use App\Http\Controllers\Api\RestaurantLanguageController;
 use App\Http\Controllers\Api\RestaurantTranslationController;
 use App\Http\Controllers\Api\ResetPasswordController;
 use App\Http\Controllers\Api\SocialAuthController;
+use App\Http\Controllers\Api\SuperadminController;
 use App\Http\Controllers\Api\TranslateController;
+use App\Http\Controllers\Api\UserMenuItemController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/health', function () {
@@ -166,4 +168,18 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
 
     // Machine translation (LibreTranslate when configured); rate-limited
     Route::post('/translate', TranslateController::class)->middleware('throttle:translate');
+
+    // Owner feedback (feature requests): submit and list own
+    Route::post('/owner-feedback', [OwnerFeedbackController::class, 'store']);
+    Route::get('/owner-feedback', [OwnerFeedbackController::class, 'index']);
+
+    // Superadmin only (Bearer + verified + superadmin; 403 if not superadmin)
+    Route::middleware('superadmin')->prefix('superadmin')->group(function () {
+        Route::get('/stats', [SuperadminController::class, 'stats']);
+        Route::get('/users', [SuperadminController::class, 'users']);
+        Route::patch('/users/{user}', [SuperadminController::class, 'updateUser'])->name('superadmin.users.update');
+        Route::get('/restaurants', [SuperadminController::class, 'restaurants']);
+        Route::get('/owner-feedbacks', [SuperadminController::class, 'ownerFeedbacks']);
+        Route::patch('/owner-feedbacks/{feedback}', [SuperadminController::class, 'updateOwnerFeedback']);
+    });
 });

@@ -106,6 +106,11 @@ const routes = [
         component: () => import('@/views/feedbacks/FeedbacksLandingView.vue'),
       },
       {
+        path: 'owner-feedback',
+        name: 'OwnerFeedback',
+        component: () => import('@/views/OwnerFeedbackView.vue'),
+      },
+      {
         path: 'feedbacks/restaurants/:restaurantUuid',
         name: 'FeedbacksList',
         component: () => import('@/views/feedbacks/FeedbacksListView.vue'),
@@ -157,6 +162,25 @@ const routes = [
         name: 'Profile',
         component: () => import('@/views/ProfileView.vue'),
       },
+      // Superadmin-only routes (guard checks is_superadmin)
+      {
+        path: 'superadmin/users',
+        name: 'SuperadminUsers',
+        component: () => import('@/views/superadmin/SuperadminUsersView.vue'),
+        meta: { requiresSuperadmin: true },
+      },
+      {
+        path: 'superadmin/owner-feedbacks',
+        name: 'SuperadminOwnerFeedbacks',
+        component: () => import('@/views/superadmin/SuperadminOwnerFeedbacksView.vue'),
+        meta: { requiresSuperadmin: true },
+      },
+      {
+        path: 'superadmin/restaurants',
+        name: 'SuperadminRestaurants',
+        component: () => import('@/views/superadmin/SuperadminRestaurantsView.vue'),
+        meta: { requiresSuperadmin: true },
+      },
     ],
   },
 ]
@@ -183,6 +207,11 @@ router.beforeEach((to, _from, next) => {
 
   if (to.meta.requiresVerified && isAuthenticated && !isVerified) {
     next({ name: 'VerifyEmail' })
+    return
+  }
+
+  if (to.meta.requiresSuperadmin && isAuthenticated && !appStore.user?.isSuperadmin) {
+    next({ name: 'App' })
     return
   }
 

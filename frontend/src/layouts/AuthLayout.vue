@@ -9,6 +9,24 @@
         alt=""
         role="presentation"
         class="absolute inset-0 w-full h-full object-cover"
+        style="
+          mask-image:
+            linear-gradient(
+              to bottom,
+              transparent 0%,
+              black 40%,
+              black 40%,
+              transparent 100%
+            );
+          -webkit-mask-image:
+            linear-gradient(
+              to bottom,
+              transparent 0%,
+              black 40%,
+              black 40%,
+              transparent 100%
+            );
+        "
       />
       <div class="relative z-20 flex flex-col justify-between h-full p-12 text-white">
         <div class="flex items-center gap-2">

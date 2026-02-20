@@ -20,7 +20,11 @@ final readonly class FeatureAvailability
      */
     public function canCreateRestaurant(User $user): bool
     {
-        return $this->restaurantRepository->countForUser($user) < $this->maxRestaurantsForUser($user);
+        $max = $this->maxRestaurantsForUser($user);
+        if ($max === null) {
+            return true; // paid: unlimited
+        }
+        return $this->restaurantRepository->countForUser($user) < $max;
     }
 
     /**
@@ -28,8 +32,10 @@ final readonly class FeatureAvailability
      */
     public function maxRestaurantsForUser(User $user): ?int
     {
-        // Future: read from plan/subscription (e.g. $user->plan === 'paid' => null, 'free' => 1).
-        return 1;
+        if ($user->is_paid ?? false) {
+            return null; // paid: unlimited
+        }
+        return 1; // free tier: one restaurant only
     }
 
     /**

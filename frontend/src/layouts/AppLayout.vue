@@ -23,6 +23,7 @@
         </router-link>
       </div>
       <nav class="flex-1 px-4 space-y-1">
+        <!-- Dashboard: for everyone -->
         <router-link
           to="/app"
           class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-colors text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 min-h-[44px]"
@@ -32,32 +33,76 @@
           <span class="material-icons">dashboard</span>
           <span>Dashboard</span>
         </router-link>
+        <!-- Superadmin-only: Users -->
         <router-link
-          to="/app/restaurants"
+          v-if="user?.isSuperadmin"
+          to="/app/superadmin/users"
           class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-colors text-slate-600 dark:text-slate-400 hover:bg-sage/10 dark:hover:bg-sage/15 hover:text-sage min-h-[44px]"
-          :class="{ 'nav-link-active': isNavActive('/app/restaurants') }"
+          :class="{ 'nav-link-active': isNavActive('/app/superadmin/users') }"
+          @click="closeSidebar"
+        >
+          <span class="material-icons">people</span>
+          <span>Users</span>
+        </router-link>
+        <router-link
+          v-if="user?.isSuperadmin"
+          to="/app/superadmin/owner-feedbacks"
+          class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-colors text-slate-600 dark:text-slate-400 hover:bg-sage/10 dark:hover:bg-sage/15 hover:text-sage min-h-[44px]"
+          :class="{ 'nav-link-active': isNavActive('/app/superadmin/owner-feedbacks') }"
+          @click="closeSidebar"
+        >
+          <span class="material-icons">feedback</span>
+          <span>Owner feedbacks</span>
+        </router-link>
+        <!-- Owner-only: Restaurants, Menu items, Feedbacks -->
+        <template v-if="!user?.isSuperadmin">
+          <router-link
+            to="/app/restaurants"
+            class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-colors text-slate-600 dark:text-slate-400 hover:bg-sage/10 dark:hover:bg-sage/15 hover:text-sage min-h-[44px]"
+            :class="{ 'nav-link-active': isNavActive('/app/restaurants') }"
+            @click="closeSidebar"
+          >
+            <span class="material-icons">storefront</span>
+            <span>Restaurants</span>
+          </router-link>
+          <router-link
+            to="/app/menu-items"
+            class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-colors text-slate-600 dark:text-slate-400 hover:bg-sage/10 dark:hover:bg-sage/15 hover:text-sage min-h-[44px]"
+            :class="{ 'nav-link-active': isNavActive('/app/menu-items') }"
+            @click="closeSidebar"
+          >
+            <span class="material-icons">restaurant_menu</span>
+            <span>Menu items</span>
+          </router-link>
+          <router-link
+            to="/app/feedbacks"
+            class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-colors text-slate-600 dark:text-slate-400 hover:bg-sage/10 dark:hover:bg-sage/15 hover:text-sage min-h-[44px]"
+            :class="{ 'nav-link-active': isNavActive('/app/feedbacks') }"
+            @click="closeSidebar"
+          >
+            <span class="material-icons">rate_review</span>
+            <span>Feedbacks</span>
+          </router-link>
+          <router-link
+            to="/app/owner-feedback"
+            class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-colors text-slate-600 dark:text-slate-400 hover:bg-sage/10 dark:hover:bg-sage/15 hover:text-sage min-h-[44px]"
+            :class="{ 'nav-link-active': isNavActive('/app/owner-feedback') }"
+            @click="closeSidebar"
+          >
+            <span class="material-icons">feedback</span>
+            <span>Feature request</span>
+          </router-link>
+        </template>
+        <!-- Superadmin: Restaurants (view-only list) -->
+        <router-link
+          v-if="user?.isSuperadmin"
+          to="/app/superadmin/restaurants"
+          class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-colors text-slate-600 dark:text-slate-400 hover:bg-sage/10 dark:hover:bg-sage/15 hover:text-sage min-h-[44px]"
+          :class="{ 'nav-link-active': isNavActive('/app/superadmin/restaurants') }"
           @click="closeSidebar"
         >
           <span class="material-icons">storefront</span>
           <span>Restaurants</span>
-        </router-link>
-        <router-link
-          to="/app/menu-items"
-          class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-colors text-slate-600 dark:text-slate-400 hover:bg-sage/10 dark:hover:bg-sage/15 hover:text-sage min-h-[44px]"
-          :class="{ 'nav-link-active': isNavActive('/app/menu-items') }"
-          @click="closeSidebar"
-        >
-          <span class="material-icons">restaurant_menu</span>
-          <span>Menu items</span>
-        </router-link>
-        <router-link
-          to="/app/feedbacks"
-          class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-colors text-slate-600 dark:text-slate-400 hover:bg-sage/10 dark:hover:bg-sage/15 hover:text-sage min-h-[44px]"
-          :class="{ 'nav-link-active': isNavActive('/app/feedbacks') }"
-          @click="closeSidebar"
-        >
-          <span class="material-icons">rate_review</span>
-          <span>Feedbacks</span>
         </router-link>
         <router-link
           to="/app/profile"

@@ -21,6 +21,7 @@ export const BREADCRUMB_CONFIG = {
   },
   MenuItemTags: { label: 'Menu item tags', parent: 'MenuItems' },
   Feedbacks: { label: 'Feedbacks', parent: null },
+  OwnerFeedback: { label: 'Feature request', parent: null },
   FeedbacksList: {
     label: (_, store) => store.restaurantName || 'Reviews',
     parent: 'Feedbacks',
@@ -42,6 +43,9 @@ export const BREADCRUMB_CONFIG = {
     parent: 'RestaurantMenuItems',
   },
   Profile: { label: 'Profile & Settings', parent: null },
+  SuperadminUsers: { label: 'Users', parent: null },
+  SuperadminOwnerFeedbacks: { label: 'Owner feedbacks', parent: null },
+  SuperadminRestaurants: { label: 'Restaurants', parent: null },
 }
 
 /** Resolve parent for add/edit item routes: CategoryMenuItems when return=category-items and category_uuid present. */
