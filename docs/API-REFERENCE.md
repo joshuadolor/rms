@@ -672,14 +672,107 @@ Returns public restaurant data and menu items for subdomain or `/r/:slug` pages.
         "is_available": "boolean",
         "tags": [{ "uuid": "string", "color": "string", "icon": "string", "text": "string" }, ...]
       }
+    ],
+    "feedbacks": [
+      { "uuid": "string", "rating": "number (1-5)", "text": "string", "name": "string", "created_at": "string (ISO 8601)" }
     ]
   }
 }
 ```
 
-`operating_hours` has the same shape as in the restaurant payload (see **Operating hours shape** above); `null` when not set.
+`operating_hours` has the same shape as in the restaurant payload (see **Operating hours shape** above); `null` when not set. **feedbacks** contains only **approved** feedbacks (owner approves via PATCH); no internal `id` in any field.
 
 **404:** Restaurant not found for the given slug.
+
+---
+
+## Feedbacks
+
+Customers (guests, no auth) can submit feedback for a restaurant. Owners (Bearer + verified) list, approve/reject, or delete feedbacks. Only **approved** feedbacks appear on the public restaurant page and in GET `/api/public/restaurants/{slug}`.
+
+**No internal `id` in any response;** only `uuid` is used.
+
+### Feedback payload (owner list/update)
+
+Returned by owner list, update, and by public submit (create) response:
+
+```ts
+{
+  uuid: string;
+  rating: number;        // 1-5
+  text: string;
+  name: string;
+  is_approved: boolean;
+  created_at: string;   // ISO 8601
+  updated_at: string;   // ISO 8601 (owner payloads only; public submit may omit)
+}
+```
+
+### Submit feedback (public, no auth)
+
+| Method | Path | Auth | Rate limit |
+|--------|------|------|------------|
+| POST | `/api/public/restaurants/{slug}/feedback` | No | 10/min (per IP); 60/min in local) |
+
+**Body (JSON):**
+```json
+{
+  "rating": "integer (required, 1-5)",
+  "text": "string (required, max 65535)",
+  "name": "string (required, max 255)"
+}
+```
+
+**Response (201):**
+```json
+{
+  "message": "Thank you for your feedback.",
+  "data": { "uuid", "rating", "text", "name", "is_approved", "created_at" }
+}
+```
+
+**Errors:** **404** – Restaurant not found for slug. **422** – Validation (rating 1-5, text and name required). **429** – Too many requests.
+
+---
+
+### List feedbacks (owner)
+
+| Method | Path | Auth |
+|--------|------|------|
+| GET | `/api/restaurants/{restaurant}/feedbacks` | Bearer + verified |
+
+**Response (200):** `{ "data": [ { feedback payload } ] }` (all feedbacks for the restaurant, newest first).  
+**404:** Restaurant not found or not owned by user.
+
+---
+
+### Update feedback (approve/reject) (owner)
+
+| Method | Path | Auth |
+|--------|------|------|
+| PATCH | `/api/restaurants/{restaurant}/feedbacks/{feedback}` | Bearer + verified |
+| PUT | `/api/restaurants/{restaurant}/feedbacks/{feedback}` | Bearer + verified |
+
+**Body (JSON):**
+```json
+{
+  "is_approved": "boolean (required)"
+}
+```
+
+**Response (200):** `{ "message": "Feedback updated.", "data": { feedback payload } }`  
+**404:** Restaurant or feedback not found, or not owned.
+
+---
+
+### Delete feedback (owner)
+
+| Method | Path | Auth |
+|--------|------|------|
+| DELETE | `/api/restaurants/{restaurant}/feedbacks/{feedback}` | Bearer + verified |
+
+**Response (204):** No content.  
+**404:** Restaurant or feedback not found, or not owned.
 
 ---
 
@@ -1151,6 +1244,7 @@ When **source_variant_uuid** is present, **name** in `translations` is the catal
 
 ## Changelog
 
+- **2026-02-20**: **Feedbacks.** New entity: feedback per restaurant (uuid, rating 1-5, text, name, is_approved). Public: POST `/api/public/restaurants/{slug}/feedback` (no auth, rate-limited 10/min). Owner: GET `/api/restaurants/{restaurant}/feedbacks`, PATCH `/api/restaurants/{restaurant}/feedbacks/{feedback}` (is_approved), DELETE. GET `/api/public/restaurants/{slug}` response includes **feedbacks** array (approved only: uuid, rating, text, name, created_at). No internal `id` in any response.
 - **2026-02-20**: **Menu item tags: default only.** Custom tag creation/update/delete removed. GET `/api/menu-item-tags` now returns **default tags only** (user_id null). POST `/api/menu-item-tags`, PATCH/PUT `/api/menu-item-tags/{tag}`, and DELETE `/api/menu-item-tags/{tag}` always return **403** with message: "Custom menu item tags are not available. Use the default tags." Menu items still have many-to-many with tags; owner and public payloads include tags; PATCH menu item still accepts **tag_uuids** (only default tag UUIDs allowed). User payload **is_paid** retained for future paid features (e.g. multiple restaurants).
 - **2026-02-20**: **Menu item tags:** Tag payload includes **is_default** (boolean): true for system tags (read-only in UI), false for user's custom tags.
 - **2026-02-20**: **Menu item tags.** New entity: menu item tag (uuid, color, icon, text). **Default (system) tags** (user_id null) seeded for all users; many-to-many with menu items via pivot `menu_item_menu_item_tag`. Restaurant menu item payload (list/show/create/update) and public GET `/api/public/restaurants/{slug}` menu_items include **tags**: `[{ uuid, color, icon, text }]`. POST/PATCH restaurant menu items accept optional **tag_uuids** (array); validated against default tags only. No internal `id` in any tag or menu item response.

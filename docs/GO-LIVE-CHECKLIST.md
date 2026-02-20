@@ -6,7 +6,7 @@ Use this list before taking RMS to production. Tick items as you complete them.
 
 ## Security
 
-- [ ] **reCAPTCHA** on public forms (login, register, forgot password). Add and verify server-side before launch. See [reCAPTCHA](https://www.google.com/recaptcha/admin) (v2 or v3).
+- [ ] **reCAPTCHA** on public forms (login, register, forgot password, **public restaurant feedback form**). Add and verify server-side before launch. See [reCAPTCHA](https://www.google.com/recaptcha/admin) (v2 or v3).
 - [ ] **HTTPS** everywhere. No mixed content; API and frontend served over TLS.
 - [ ] **Secrets** not in repo: `APP_KEY`, DB credentials, OAuth client secrets, reCAPTCHA secret key, and any API keys in env only (and `.env` in `.gitignore`).
 - [ ] **APP_DEBUG=false** and **APP_ENV=production** in production.

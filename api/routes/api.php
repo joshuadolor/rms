@@ -2,9 +2,11 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\EmailVerificationController;
+use App\Http\Controllers\Api\PublicFeedbackController;
 use App\Http\Controllers\Api\PublicRestaurantController;
 use App\Http\Controllers\Api\ForgotPasswordController;
 use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\FeedbackController;
 use App\Http\Controllers\Api\MenuController;
 use App\Http\Controllers\Api\MenuItemController;
 use App\Http\Controllers\Api\MenuItemTagController;
@@ -93,6 +95,10 @@ Route::get('/restaurants/{uuid}/banner', [RestaurantController::class, 'serveBan
 // Public restaurant page by slug (no auth). For [slug].domain.com and /r/:slug.
 Route::get('/public/restaurants/{slug}', [PublicRestaurantController::class, 'show']);
 
+// Public feedback submission (no auth); rate-limited.
+Route::post('/public/restaurants/{slug}/feedback', [PublicFeedbackController::class, 'store'])
+    ->middleware('throttle:feedback');
+
 // Auth (protected) — require verified email
 Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -105,6 +111,11 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::apiResource('restaurants', RestaurantController::class)->parameters(['restaurant' => 'uuid']);
     Route::post('/restaurants/{uuid}/logo', [RestaurantController::class, 'uploadLogo'])->name('restaurants.upload-logo');
     Route::post('/restaurants/{uuid}/banner', [RestaurantController::class, 'uploadBanner'])->name('restaurants.upload-banner');
+
+    // Feedbacks (owner: list, approve/reject, delete)
+    Route::get('/restaurants/{restaurant}/feedbacks', [FeedbackController::class, 'index']);
+    Route::match(['put', 'patch'], '/restaurants/{restaurant}/feedbacks/{feedback}', [FeedbackController::class, 'update']);
+    Route::delete('/restaurants/{restaurant}/feedbacks/{feedback}', [FeedbackController::class, 'destroy']);
 
     // Restaurant languages (install / uninstall locales per restaurant)
     Route::get('/restaurants/{restaurant}/languages', [RestaurantLanguageController::class, 'index']);

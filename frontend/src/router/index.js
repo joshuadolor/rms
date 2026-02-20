@@ -101,6 +101,16 @@ const routes = [
         component: () => import('@/views/MenuItemTagsView.vue'),
       },
       {
+        path: 'feedbacks',
+        name: 'Feedbacks',
+        component: () => import('@/views/feedbacks/FeedbacksLandingView.vue'),
+      },
+      {
+        path: 'feedbacks/restaurants/:restaurantUuid',
+        name: 'FeedbacksList',
+        component: () => import('@/views/feedbacks/FeedbacksListView.vue'),
+      },
+      {
         path: 'restaurants/new',
         name: 'RestaurantNew',
         component: () => import('@/views/restaurants/RestaurantFormView.vue'),

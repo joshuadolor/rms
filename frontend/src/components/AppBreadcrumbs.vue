@@ -66,6 +66,7 @@ watch(
   (name) => {
     if (name === 'Restaurants') breadcrumbStore.clearRestaurant()
     if (name === 'RestaurantDetail') breadcrumbStore.clearMenuAndCategory()
+    if (name === 'Feedbacks') breadcrumbStore.clearRestaurant()
   },
   { immediate: true }
 )

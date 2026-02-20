@@ -48,6 +48,74 @@ class PublicRestaurantPage {
   async expectMenuItemNameVisible(itemName) {
     await expect(this.page.getByRole('heading', { name: itemName, level: 3 })).toBeVisible()
   }
+
+  // --- Reviews (approved feedbacks) and submit feedback form ---
+
+  /** Assert the Reviews section heading "What people say" is visible. */
+  async expectReviewsSectionVisible() {
+    await expect(this.page.getByRole('heading', { name: 'What people say' })).toBeVisible()
+  }
+
+  /** Assert the empty reviews message is visible. */
+  async expectNoReviewsYet() {
+    await expect(
+      this.page.getByText('No reviews yet. Be the first to leave feedback below.')
+    ).toBeVisible()
+  }
+
+  /** Assert a review (approved feedback) with the given author name or text snippet is visible. */
+  async expectReviewVisible(nameOrText) {
+    await expect(this.page.getByText(nameOrText)).toBeVisible()
+  }
+
+  /** Assert the "Leave your feedback" form heading is visible. */
+  async expectFeedbackFormVisible() {
+    await expect(this.page.getByRole('heading', { name: 'Leave your feedback' })).toBeVisible()
+    await expect(this.page.getByRole('button', { name: 'Send feedback' })).toBeVisible()
+  }
+
+  /** Set rating by clicking the nth star (1–5). */
+  async setFeedbackRating(stars) {
+    await this.page.getByRole('button', { name: `${stars} star${stars > 1 ? 's' : ''}` }).click()
+  }
+
+  /** Fill the "Your name" field in the feedback form. */
+  async setFeedbackName(name) {
+    await this.page.getByLabel(/your name/i).fill(name)
+  }
+
+  /** Fill the "Your message" textarea in the feedback form. */
+  async setFeedbackMessage(message) {
+    await this.page.getByLabel(/your message/i).fill(message)
+  }
+
+  /** Submit the feedback form. */
+  async submitFeedbackForm() {
+    await this.page.getByRole('button', { name: 'Send feedback' }).click()
+  }
+
+  /** Assert the success message (role="status") after submitting feedback is visible. */
+  async expectFeedbackSuccessMessage(messageOrPattern) {
+    const pattern =
+      typeof messageOrPattern === 'string' ? new RegExp(messageOrPattern, 'i') : messageOrPattern
+    await expect(this.page.getByRole('status').filter({ hasText: pattern })).toBeVisible({
+      timeout: 5000,
+    })
+  }
+
+  /** Assert an error message (role="alert") in the feedback form is visible. */
+  async expectFeedbackErrorMessage(messageOrPattern) {
+    const pattern =
+      typeof messageOrPattern === 'string' ? new RegExp(messageOrPattern, 'i') : messageOrPattern
+    await expect(this.page.getByRole('alert').filter({ hasText: pattern })).toBeVisible()
+  }
+
+  /** Assert validation error for a specific field (e.g. "Please choose a rating"). */
+  async expectFeedbackFieldError(messageOrPattern) {
+    const pattern =
+      typeof messageOrPattern === 'string' ? new RegExp(messageOrPattern, 'i') : messageOrPattern
+    await expect(this.page.getByText(pattern)).toBeVisible()
+  }
 }
 
 module.exports = { PublicRestaurantPage }

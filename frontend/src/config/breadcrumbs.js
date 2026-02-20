@@ -20,6 +20,11 @@ export const BREADCRUMB_CONFIG = {
     parent: 'MenuItems',
   },
   MenuItemTags: { label: 'Menu item tags', parent: 'MenuItems' },
+  Feedbacks: { label: 'Feedbacks', parent: null },
+  FeedbacksList: {
+    label: (_, store) => store.restaurantName || 'Reviews',
+    parent: 'Feedbacks',
+  },
   __main_menu__: { label: 'Main menu', parent: 'RestaurantDetail' },
   RestaurantMenuItems: {
     label: (_, store) => store.menuName || 'Menu',

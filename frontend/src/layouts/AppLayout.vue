@@ -51,6 +51,15 @@
           <span>Menu items</span>
         </router-link>
         <router-link
+          to="/app/feedbacks"
+          class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-colors text-slate-600 dark:text-slate-400 hover:bg-sage/10 dark:hover:bg-sage/15 hover:text-sage min-h-[44px]"
+          :class="{ 'nav-link-active': isNavActive('/app/feedbacks') }"
+          @click="closeSidebar"
+        >
+          <span class="material-icons">rate_review</span>
+          <span>Feedbacks</span>
+        </router-link>
+        <router-link
           to="/app/profile"
           class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-colors text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 min-h-[44px]"
           :class="{ 'nav-link-active': isNavActive('/app/profile') }"

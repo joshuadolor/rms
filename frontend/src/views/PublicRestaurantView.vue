@@ -66,6 +66,7 @@
               >Home</a>
               <a href="#menu" class="text-sm font-medium text-slate-600 dark:text-slate-400 transition-colors hover:opacity-80" style="color: var(--public-accent)">Menu</a>
               <a href="#about" class="text-sm font-medium text-slate-600 dark:text-slate-400 transition-colors hover:opacity-80" style="color: var(--public-accent)">About</a>
+              <a href="#reviews" class="text-sm font-medium text-slate-600 dark:text-slate-400 transition-colors hover:opacity-80" style="color: var(--public-accent)">Reviews</a>
             </div>
             <div v-if="data.languages?.length > 1" class="flex flex-wrap gap-1.5">
               <button
@@ -248,6 +249,119 @@
         </div>
       </section>
 
+      <!-- Reviews (approved feedbacks) -->
+      <section id="reviews" class="py-16 sm:py-24 bg-cream/50 dark:bg-zinc-900/50 border-y border-slate-100 dark:border-slate-800">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6">
+          <h2 class="text-2xl sm:text-3xl font-bold text-charcoal dark:text-white flex items-center gap-2 mb-6">
+            <span class="w-2 h-8 rounded-full shrink-0" style="background-color: var(--public-accent)" aria-hidden="true"></span>
+            What people say
+          </h2>
+
+          <ul v-if="data.feedbacks?.length" class="space-y-6">
+            <li
+              v-for="fb in data.feedbacks"
+              :key="fb.uuid"
+              class="rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-6"
+            >
+              <div class="flex items-center gap-0.5 mb-2" :aria-label="`Rating: ${fb.rating} out of 5`">
+                <span
+                  v-for="star in 5"
+                  :key="star"
+                  class="material-icons text-xl"
+                  :class="star <= (fb.rating || 0) ? 'text-amber-500' : 'text-slate-200 dark:text-slate-600'"
+                >
+                  {{ star <= (fb.rating || 0) ? 'star' : 'star_border' }}
+                </span>
+              </div>
+              <p class="text-charcoal dark:text-white whitespace-pre-wrap">{{ fb.text || '—' }}</p>
+              <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                — {{ fb.name || 'Anonymous' }}
+                <span v-if="fb.created_at" class="ml-1">· {{ formatDate(fb.created_at) }}</span>
+              </p>
+            </li>
+          </ul>
+
+          <div
+            v-else
+            class="rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-slate-800 p-8 text-center"
+          >
+            <span class="material-icons text-5xl text-slate-300 dark:text-slate-600">rate_review</span>
+            <p class="mt-4 text-slate-500 dark:text-slate-400">No reviews yet. Be the first to leave feedback below.</p>
+          </div>
+
+          <!-- Submit feedback form -->
+          <div id="feedback" class="mt-10 sm:mt-12">
+            <h3 class="text-xl font-bold text-charcoal dark:text-white mb-4">Leave your feedback</h3>
+            <form
+              novalidate
+              class="max-w-xl space-y-4 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-6"
+              @submit.prevent="submitFeedback"
+            >
+              <p v-if="feedbackError" class="text-sm text-red-600 dark:text-red-400" role="alert">{{ feedbackError }}</p>
+              <p v-if="feedbackSuccess" class="text-sm text-green-600 dark:text-green-400" role="status">{{ feedbackSuccess }}</p>
+
+              <div>
+                <label for="feedback-rating" class="block text-sm font-medium text-charcoal dark:text-white mb-1.5">Rating (1–5) <span class="text-red-500">*</span></label>
+                <div class="flex items-center gap-1 min-h-[44px]">
+                  <button
+                    v-for="r in 5"
+                    :key="r"
+                    type="button"
+                    class="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-primary"
+                    :class="feedbackRating === r ? 'opacity-100' : 'opacity-50 hover:opacity-80'"
+                    :style="feedbackRating === r ? { color: 'var(--public-accent)' } : undefined"
+                    :aria-label="`${r} star${r > 1 ? 's' : ''}`"
+                    :aria-pressed="feedbackRating === r"
+                    @click="feedbackRating = r"
+                  >
+                    <span class="material-icons text-4xl">star</span>
+                  </button>
+                </div>
+                <p v-if="fieldErrors.rating" class="mt-1 text-sm text-red-600 dark:text-red-400">{{ fieldErrors.rating }}</p>
+              </div>
+
+              <div>
+                <label for="feedback-name" class="block text-sm font-medium text-charcoal dark:text-white mb-1.5">Your name <span class="text-red-500">*</span></label>
+                <input
+                  id="feedback-name"
+                  v-model="feedbackName"
+                  type="text"
+                  autocomplete="name"
+                  maxlength="255"
+                  class="w-full min-h-[44px] px-3 py-2 rounded-lg border bg-white dark:bg-zinc-800 text-charcoal dark:text-white border-slate-300 dark:border-slate-600 focus:ring-2 focus:ring-offset-1 focus:ring-primary focus:border-primary"
+                  :aria-invalid="!!fieldErrors.name"
+                  :aria-describedby="fieldErrors.name ? 'feedback-name-error' : undefined"
+                />
+                <p id="feedback-name-error" v-if="fieldErrors.name" class="mt-1 text-sm text-red-600 dark:text-red-400">{{ fieldErrors.name }}</p>
+              </div>
+
+              <div>
+                <label for="feedback-text" class="block text-sm font-medium text-charcoal dark:text-white mb-1.5">Your message <span class="text-red-500">*</span></label>
+                <textarea
+                  id="feedback-text"
+                  v-model="feedbackText"
+                  rows="4"
+                  maxlength="65535"
+                  class="w-full min-h-[44px] px-3 py-2 rounded-lg border bg-white dark:bg-zinc-800 text-charcoal dark:text-white border-slate-300 dark:border-slate-600 focus:ring-2 focus:ring-offset-1 focus:ring-primary focus:border-primary resize-y"
+                  :aria-invalid="!!fieldErrors.text"
+                  :aria-describedby="fieldErrors.text ? 'feedback-text-error' : undefined"
+                />
+                <p id="feedback-text-error" v-if="fieldErrors.text" class="mt-1 text-sm text-red-600 dark:text-red-400">{{ fieldErrors.text }}</p>
+              </div>
+
+              <button
+                type="submit"
+                class="min-h-[44px] px-6 py-2.5 font-semibold rounded-lg text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+                style="background-color: var(--public-accent)"
+                :disabled="feedbackSubmitting"
+              >
+                {{ feedbackSubmitting ? 'Sending…' : 'Send feedback' }}
+              </button>
+            </form>
+          </div>
+        </div>
+      </section>
+
       <!-- Footer -->
       <footer class="py-8 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-zinc-900/50">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -267,10 +381,10 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { restaurantService, normalizeApiError } from '@/services'
+import { restaurantService, feedbackService, normalizeApiError } from '@/services'
 import PublicRestaurant from '@/models/PublicRestaurant.js'
 import { formatOperatingHoursForDisplay } from '@/utils/availability'
-import { formatCurrency } from '@/utils/format'
+import { formatCurrency, formatDate } from '@/utils/format'
 
 const props = defineProps({
   slug: { type: String, default: '' },
@@ -282,6 +396,15 @@ const locale = ref(route.query.locale ?? '')
 const loading = ref(true)
 const error = ref(null)
 const data = ref(null)
+
+// Feedback form (public submit)
+const feedbackRating = ref(0)
+const feedbackName = ref('')
+const feedbackText = ref('')
+const fieldErrors = ref({})
+const feedbackError = ref('')
+const feedbackSuccess = ref('')
+const feedbackSubmitting = ref(false)
 
 const displayHours = computed(() => formatOperatingHoursForDisplay(data.value?.operating_hours ?? null))
 
@@ -332,6 +455,58 @@ function setLocale(loc) {
 
 function scrollToTop() {
   window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+function validateFeedbackForm() {
+  const err = {}
+  const r = feedbackRating.value
+  if (r == null || Number(r) < 1 || Number(r) > 5) {
+    err.rating = 'Please choose a rating from 1 to 5.'
+  }
+  const name = (feedbackName.value ?? '').trim()
+  if (!name) err.name = 'Your name is required.'
+  else if (name.length > 255) err.name = 'Name must be at most 255 characters.'
+  const text = (feedbackText.value ?? '').trim()
+  if (!text) err.text = 'Your message is required.'
+  else if (text.length > 65535) err.text = 'Message is too long.'
+  fieldErrors.value = err
+  return Object.keys(err).length === 0
+}
+
+async function submitFeedback() {
+  feedbackError.value = ''
+  feedbackSuccess.value = ''
+  fieldErrors.value = {}
+  if (!validateFeedbackForm()) return
+  feedbackSubmitting.value = true
+  try {
+    const res = await feedbackService.submitFeedback(slug.value, {
+      rating: Number(feedbackRating.value),
+      text: (feedbackText.value ?? '').trim(),
+      name: (feedbackName.value ?? '').trim(),
+    })
+    feedbackSuccess.value = res?.message ?? 'Thank you for your feedback.'
+    feedbackRating.value = 0
+    feedbackName.value = ''
+    feedbackText.value = ''
+  } catch (e) {
+    const normalized = normalizeApiError(e)
+    if (e?.response?.status === 429) {
+      feedbackError.value = 'Too many submissions. Please try again in a minute.'
+    } else if (e?.response?.status === 422 && e?.response?.data?.errors) {
+      const errors = e.response.data.errors
+      const err = {}
+      if (errors.rating?.[0]) err.rating = errors.rating[0]
+      if (errors.name?.[0]) err.name = errors.name[0]
+      if (errors.text?.[0]) err.text = errors.text[0]
+      fieldErrors.value = err
+      feedbackError.value = normalized.message
+    } else {
+      feedbackError.value = normalized.message ?? 'Something went wrong. Please try again.'
+    }
+  } finally {
+    feedbackSubmitting.value = false
+  }
 }
 
 watch(slug, () => {

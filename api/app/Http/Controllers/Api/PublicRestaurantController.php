@@ -60,6 +60,20 @@ class PublicRestaurantController extends Controller
             ];
         })->all();
 
+        $approvedFeedbacks = $restaurant->feedbacks()
+            ->approved()
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(fn ($f) => [
+                'uuid' => $f->uuid,
+                'rating' => $f->rating,
+                'text' => $f->text,
+                'name' => $f->name,
+                'created_at' => $f->created_at?->toIso8601String(),
+            ])
+            ->values()
+            ->all();
+
         return response()->json([
             'data' => [
                 'name' => $restaurant->name,
@@ -79,6 +93,7 @@ class PublicRestaurantController extends Controller
                 'locale' => $locale,
                 'description' => $description,
                 'menu_items' => $menuPayload,
+                'feedbacks' => $approvedFeedbacks,
             ],
         ]);
     }

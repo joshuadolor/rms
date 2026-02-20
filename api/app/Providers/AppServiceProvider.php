@@ -73,5 +73,10 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('translate', function (Request $request) {
             return Limit::perMinute(30)->by($request->user()?->id ?: $request->ip());
         });
+
+        RateLimiter::for('feedback', function (Request $request) {
+            $limit = app()->environment('local') ? 60 : 10;
+            return Limit::perMinute($limit)->by($request->ip());
+        });
     }
 }

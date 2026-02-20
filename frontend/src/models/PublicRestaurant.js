@@ -19,6 +19,7 @@ export default class PublicRestaurant {
     this._locale = data.locale ?? this._defaultLocale
     this._description = data.description ?? null
     this._menuItems = Array.isArray(data.menu_items) ? data.menu_items.map((i) => ({ ...i })) : []
+    this._feedbacks = Array.isArray(data.feedbacks) ? data.feedbacks.map((f) => ({ ...f })) : []
   }
 
   get name() {
@@ -73,6 +74,10 @@ export default class PublicRestaurant {
     return this._menuItems
   }
 
+  get feedbacks() {
+    return this._feedbacks
+  }
+
   /** Build from API response (e.g. { data } from getPublicRestaurant). */
   static fromApi(apiResponse) {
     const data = apiResponse?.data ?? apiResponse
@@ -95,6 +100,7 @@ export default class PublicRestaurant {
       locale: this._locale,
       description: this._description,
       menu_items: this._menuItems.map((i) => ({ ...i })),
+      feedbacks: this._feedbacks.map((f) => ({ ...f })),
     }
   }
 }

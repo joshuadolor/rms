@@ -97,6 +97,14 @@ class Restaurant extends Model
     }
 
     /**
+     * @return HasMany<Feedback, $this>
+     */
+    public function feedbacks(): HasMany
+    {
+        return $this->hasMany(Feedback::class)->orderByDesc('created_at')->orderByDesc('id');
+    }
+
+    /**
      * Whether this restaurant is owned by the given user (by id or User model).
      */
     public function isOwnedBy(int|User $user): bool
