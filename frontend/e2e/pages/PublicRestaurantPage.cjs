@@ -28,6 +28,26 @@ class PublicRestaurantPage {
   async expectOpeningHoursSectionNotVisible() {
     await expect(this.page.getByRole('heading', { name: 'Opening hours' })).not.toBeVisible()
   }
+
+  /** Assert the "Not Available" pill/badge is visible on the public menu (for items with is_available: false). */
+  async expectNotAvailablePillVisible() {
+    await expect(this.page.getByText('Not Available')).toBeVisible()
+  }
+
+  /** Assert the "Not Available" pill is not visible on the page. */
+  async expectNotAvailablePillNotVisible() {
+    await expect(this.page.getByText('Not Available')).not.toBeVisible()
+  }
+
+  /** Assert a tag icon with the given tooltip text (title) is visible on the public menu. */
+  async expectTagIconWithTitleVisible(tagText) {
+    await expect(this.page.getByTitle(tagText)).toBeVisible()
+  }
+
+  /** Assert a menu item with the given name is visible (in the menu list). */
+  async expectMenuItemNameVisible(itemName) {
+    await expect(this.page.getByRole('heading', { name: itemName, level: 3 })).toBeVisible()
+  }
 }
 
 module.exports = { PublicRestaurantPage }

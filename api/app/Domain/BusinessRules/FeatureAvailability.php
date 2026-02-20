@@ -43,4 +43,21 @@ final readonly class FeatureAvailability
             ? __('Free tier allows one restaurant. Upgrade to add more.')
             : __('Restaurant limit reached. Upgrade to add more.');
     }
+
+    /**
+     * Whether the user can create/update/delete custom menu item tags.
+     * Product decision: custom tags are disabled; only default tags exist.
+     */
+    public function canManageCustomMenuItemTags(User $user): bool
+    {
+        return false;
+    }
+
+    /**
+     * Human-readable reason when create/update/delete tag is disabled (403).
+     */
+    public function cannotManageCustomMenuItemTagsReason(User $user): string
+    {
+        return __('Custom menu item tags are not available. Use the default tags.');
+    }
 }

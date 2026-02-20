@@ -32,8 +32,17 @@ export default class MenuItem {
       ? data.variant_skus.map((s) => (s instanceof VariantSku ? s : VariantSku.fromApi(s)))
       : []
 
+    // Restaurant menu item visibility on public menu (default true when missing)
+    this.is_active = data.is_active === undefined ? true : !!data.is_active
+    // When false, item is shown on public menu but marked "Not Available" (default true when missing)
+    this.is_available = data.is_available === undefined ? true : !!data.is_available
+
+    // Tags attached to this item (payload: [{ uuid, color, icon, text }])
+    this.tags = Array.isArray(data.tags) ? data.tags.map((t) => ({ ...t })) : []
+
     // When item is a restaurant usage of a catalog item
     this.source_menu_item_uuid = data.source_menu_item_uuid ?? null
+    this.source_variant_uuid = data.source_variant_uuid ?? null
     this.price_override = data.price_override != null ? Number(data.price_override) : null
     this.translation_overrides = data.translation_overrides ?? {}
     this.base_price = data.base_price != null ? Number(data.base_price) : null
@@ -97,12 +106,16 @@ export default class MenuItem {
       created_at: this.created_at,
       updated_at: this.updated_at,
       restaurant_uuid: this.restaurant_uuid,
+      is_active: this.is_active,
       source_menu_item_uuid: this.source_menu_item_uuid,
+      source_variant_uuid: this.source_variant_uuid,
       price_override: this.price_override,
       translation_overrides: this.translation_overrides,
       base_price: this.base_price,
       base_translations: this.base_translations,
       has_overrides: this.has_overrides,
+      is_available: this.is_available,
+      tags: this.tags.map((t) => ({ ...t })),
     }
     if (this.type === 'combo') {
       out.combo_price = this.combo_price

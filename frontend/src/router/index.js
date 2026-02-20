@@ -96,6 +96,11 @@ const routes = [
         meta: { mode: 'edit', menuItemsModule: true },
       },
       {
+        path: 'menu-item-tags',
+        name: 'MenuItemTags',
+        component: () => import('@/views/MenuItemTagsView.vue'),
+      },
+      {
         path: 'restaurants/new',
         name: 'RestaurantNew',
         component: () => import('@/views/restaurants/RestaurantFormView.vue'),

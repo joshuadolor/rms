@@ -4,7 +4,9 @@ namespace App\Application\MenuItem;
 
 use App\Domain\Restaurant\Contracts\RestaurantRepositoryInterface;
 use App\Models\MenuItem;
+use App\Models\MenuItemTag;
 use App\Models\User;
+use Illuminate\Validation\ValidationException;
 
 final readonly class CreateMenuItem
 {
@@ -13,7 +15,7 @@ final readonly class CreateMenuItem
     ) {}
 
     /**
-     * @param  array{category_uuid?: string|null, sort_order?: int, source_menu_item_uuid?: string|null, price_override?: float|null, translation_overrides?: array<string, array{name?: string, description?: string|null}>|null, translations?: array<string, array{name: string, description?: string|null}>}  $input
+     * @param  array{category_uuid?: string|null, sort_order?: int, source_menu_item_uuid?: string|null, source_variant_uuid?: string|null, price_override?: float|null, translation_overrides?: array<string, array{name?: string, description?: string|null}>|null, translations?: array<string, array{name: string, description?: string|null}>}  $input
      */
     public function handle(User $user, string $restaurantUuid, array $input): ?MenuItem
     {
@@ -37,14 +39,38 @@ final readonly class CreateMenuItem
         }
 
         $sourceMenuItemUuid = $input['source_menu_item_uuid'] ?? null;
+        $sourceVariantUuid = isset($input['source_variant_uuid']) && $input['source_variant_uuid'] !== '' ? (string) $input['source_variant_uuid'] : null;
+
+        $source = null;
         if ($sourceMenuItemUuid !== null && $sourceMenuItemUuid !== '') {
             $source = MenuItem::query()
+                ->with('variantSkus')
                 ->where('uuid', $sourceMenuItemUuid)
                 ->whereNull('restaurant_id')
                 ->where('user_id', $user->id)
                 ->first();
             if ($source === null) {
                 throw new \App\Exceptions\ForbiddenException(__('Catalog menu item not found or you do not own it.'));
+            }
+
+            if ($source->type === MenuItem::TYPE_WITH_VARIANTS) {
+                if ($sourceVariantUuid === null) {
+                    throw ValidationException::withMessages([
+                        'source_variant_uuid' => [__('When adding a catalog item with variants, you must specify which variant (source_variant_uuid) to add.')],
+                    ]);
+                }
+                $validVariantUuids = $source->variantSkus->pluck('uuid')->all();
+                if (! in_array($sourceVariantUuid, $validVariantUuids, true)) {
+                    throw ValidationException::withMessages([
+                        'source_variant_uuid' => [__('The selected variant does not belong to this catalog item.')],
+                    ]);
+                }
+            } else {
+                if ($sourceVariantUuid !== null) {
+                    throw ValidationException::withMessages([
+                        'source_variant_uuid' => [__('source_variant_uuid may only be set when the catalog item has type with_variants.')],
+                    ]);
+                }
             }
         }
 
@@ -57,16 +83,22 @@ final readonly class CreateMenuItem
             $item = $restaurant->menuItems()->create([
                 'category_id' => $categoryId,
                 'sort_order' => $sortOrder,
+                'is_active' => true,
+                'is_available' => true,
                 'source_menu_item_uuid' => $sourceMenuItemUuid,
+                'source_variant_uuid' => $sourceVariantUuid,
                 'price_override' => isset($input['price_override']) ? (float) $input['price_override'] : null,
                 'translation_overrides' => $input['translation_overrides'] ?? null,
             ]);
-            return $item->load(['sourceMenuItem.translations']);
+            $this->syncTagsIfPresent($user, $item, $input);
+            return $item->load(['sourceMenuItem.translations', 'sourceVariantSku', 'menuItemTags']);
         }
 
         $item = $restaurant->menuItems()->create([
             'category_id' => $categoryId,
             'sort_order' => $sortOrder,
+            'is_active' => true,
+            'is_available' => true,
             'price' => isset($input['price']) ? (float) $input['price'] : null,
         ]);
 
@@ -86,6 +118,22 @@ final readonly class CreateMenuItem
             ]);
         }
 
-        return $item->load('translations');
+        $this->syncTagsIfPresent($user, $item, $input);
+
+        return $item->load(['translations', 'menuItemTags']);
+    }
+
+    /**
+     * @param  array<string, mixed>  $input
+     */
+    private function syncTagsIfPresent(User $user, MenuItem $item, array $input): void
+    {
+        $tagUuids = $input['tag_uuids'] ?? null;
+        if (! is_array($tagUuids)) {
+            return;
+        }
+        $tagUuids = array_values(array_filter(array_map('strval', $tagUuids)));
+        $tagIds = MenuItemTag::validateAndResolveIdsForUser($user, $tagUuids);
+        $item->menuItemTags()->sync($tagIds);
     }
 }

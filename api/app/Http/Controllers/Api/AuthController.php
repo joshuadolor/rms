@@ -79,6 +79,7 @@ class AuthController extends Controller
             'email' => $user->email,
             'email_verified_at' => $user->email_verified_at,
             'pending_email' => $user->pending_email ?? null,
+            'is_paid' => (bool) ($user->is_paid ?? false),
         ];
     }
 }

@@ -184,16 +184,43 @@
             <li
               v-for="item in data.menu_items"
               :key="item.uuid"
-              class="group bg-white dark:bg-zinc-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 sm:p-6 shadow-sm hover:shadow-md transition-shadow"
+              class="group relative bg-white dark:bg-zinc-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 sm:p-6 shadow-sm hover:shadow-md transition-shadow"
             >
+              <!-- Not Available overlay: visible but clearly marked -->
+              <div
+                v-if="item.is_available === false"
+                class="absolute inset-0 rounded-xl bg-slate-900/40 dark:bg-slate-950/50 flex items-center justify-center z-10 min-h-[44px]"
+                aria-live="polite"
+              >
+                <span
+                  class="inline-flex items-center gap-2 min-h-[44px] min-w-[44px] px-4 py-2 rounded-lg bg-amber-500 text-white font-semibold text-sm shadow-lg"
+                  style="touch-action: manipulation; -webkit-tap-highlight-color: transparent;"
+                >
+                  <span class="material-icons text-lg" aria-hidden="true">info</span>
+                  Not Available
+                </span>
+              </div>
               <div class="flex gap-4">
                 <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-lg bg-slate-100 dark:bg-zinc-800 flex items-center justify-center shrink-0">
                   <span class="material-icons text-2xl sm:text-3xl opacity-70" style="color: var(--public-accent)">restaurant</span>
                 </div>
                 <div class="min-w-0 flex-1">
-                  <h3 class="font-bold text-lg text-charcoal dark:text-white transition-colors group-hover:[color:var(--public-accent)]">
-                    {{ item.name || 'Untitled' }}
-                  </h3>
+                  <div class="flex flex-wrap items-center gap-2 gap-y-1">
+                    <h3 class="font-bold text-lg text-charcoal dark:text-white transition-colors group-hover:[color:var(--public-accent)]">
+                      {{ item.name || 'Untitled' }}
+                    </h3>
+                    <span
+                      v-for="tag in (item.tags || [])"
+                      :key="tag.uuid"
+                      class="inline-flex items-center justify-center w-8 h-8 rounded-full shrink-0 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-primary"
+                      :style="tag.color ? { backgroundColor: `${tag.color}20`, color: tag.color } : undefined"
+                      :title="tag.text"
+                      :aria-label="tag.text ? `${tag.text} tag` : 'Tag'"
+                    >
+                      <span v-if="tag.icon" class="material-icons text-lg">{{ tag.icon }}</span>
+                      <span v-else class="material-icons text-lg">label</span>
+                    </span>
+                  </div>
                   <p
                     v-if="item.description"
                     class="mt-1 text-sm text-slate-500 dark:text-slate-400 leading-relaxed"

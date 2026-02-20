@@ -118,8 +118,11 @@
                   <select
                     :id="`combo-item-${idx}`"
                     v-model="entry.menu_item_uuid"
-                    class="w-full min-h-[44px] rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-zinc-800 text-charcoal dark:text-white px-4 py-2"
+                    class="w-full min-h-[44px] rounded-lg border px-4 py-2 bg-white dark:bg-zinc-800 text-charcoal dark:text-white transition-colors"
+                    :class="fieldErrors[`combo_entries.${idx}.menu_item_uuid`] ? 'border-red-500 dark:border-red-400 ring-2 ring-red-500/20' : 'border-slate-200 dark:border-slate-700'"
                     aria-label="Select menu item"
+                    :aria-invalid="!!fieldErrors[`combo_entries.${idx}.menu_item_uuid`]"
+                    :aria-describedby="fieldErrors[`combo_entries.${idx}.menu_item_uuid`] ? `combo-item-${idx}-error` : undefined"
                   >
                     <option value="">— Select item —</option>
                     <option
@@ -130,14 +133,25 @@
                       {{ catalogItemName(catItem) }}
                     </option>
                   </select>
+                  <p
+                    v-if="fieldErrors[`combo_entries.${idx}.menu_item_uuid`]"
+                    :id="`combo-item-${idx}-error`"
+                    class="text-sm text-red-600 dark:text-red-400 mt-1"
+                    role="alert"
+                  >
+                    {{ fieldErrors[`combo_entries.${idx}.menu_item_uuid`] }}
+                  </p>
                 </div>
                 <div v-if="selectedCatalogItemHasVariants(entry.menu_item_uuid)">
                   <label :for="`combo-variant-${idx}`" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Variant</label>
                   <select
                     :id="`combo-variant-${idx}`"
                     v-model="entry.variant_uuid"
-                    class="w-full min-h-[44px] rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-zinc-800 text-charcoal dark:text-white px-4 py-2"
+                    class="w-full min-h-[44px] rounded-lg border px-4 py-2 bg-white dark:bg-zinc-800 text-charcoal dark:text-white transition-colors"
+                    :class="fieldErrors[`combo_entries.${idx}.variant_uuid`] ? 'border-red-500 dark:border-red-400 ring-2 ring-red-500/20' : 'border-slate-200 dark:border-slate-700'"
                     aria-label="Select variant"
+                    :aria-invalid="!!fieldErrors[`combo_entries.${idx}.variant_uuid`]"
+                    :aria-describedby="fieldErrors[`combo_entries.${idx}.variant_uuid`] ? `combo-variant-${idx}-error` : undefined"
                   >
                     <option :value="null">— Select variant —</option>
                     <option
@@ -148,6 +162,14 @@
                       {{ sku.displayLabel ? sku.displayLabel() : optionValuesLabel(sku.option_values) }}
                     </option>
                   </select>
+                  <p
+                    v-if="fieldErrors[`combo_entries.${idx}.variant_uuid`]"
+                    :id="`combo-variant-${idx}-error`"
+                    class="text-sm text-red-600 dark:text-red-400 mt-1"
+                    role="alert"
+                  >
+                    {{ fieldErrors[`combo_entries.${idx}.variant_uuid`] }}
+                  </p>
                 </div>
               </div>
               <div class="grid gap-3 sm:grid-cols-2">

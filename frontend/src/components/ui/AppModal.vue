@@ -29,6 +29,7 @@
           <button
             type="button"
             class="p-2 rounded-full text-slate-500 hover:text-charcoal dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+            title="Close"
             aria-label="Close"
             data-testid="app-modal-close"
             @click="onClose"

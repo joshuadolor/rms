@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
@@ -18,15 +19,20 @@ class MenuItem extends Model
         'restaurant_id',
         'category_id',
         'sort_order',
+        'is_active',
+        'is_available',
         'price',
         'type',
         'combo_price',
         'source_menu_item_uuid',
+        'source_variant_uuid',
         'price_override',
         'translation_overrides',
     ];
 
     protected $casts = [
+        'is_active' => 'boolean',
+        'is_available' => 'boolean',
         'translation_overrides' => 'array',
     ];
 
@@ -62,13 +68,22 @@ class MenuItem extends Model
         return $this->belongsTo(MenuItem::class, 'source_menu_item_uuid', 'uuid');
     }
 
-    /** Effective price: override if set, else base from source or this item. Combo: combo_price if set. With_variants: no single price. */
+    /** When this item is tied to a specific variant of the source catalog item (type with_variants). */
+    public function sourceVariantSku(): BelongsTo
+    {
+        return $this->belongsTo(MenuItemVariantSku::class, 'source_variant_uuid', 'uuid');
+    }
+
+    /** Effective price: override if set, else base from source or this item. When source_variant_uuid is set, base is variant price. Combo: combo_price if set. With_variants: no single price. */
     public function getEffectivePrice(): ?float
     {
         if ($this->source_menu_item_uuid !== null) {
             $override = $this->price_override;
             if ($override !== null) {
                 return (float) $override;
+            }
+            if ($this->source_variant_uuid !== null && $this->relationLoaded('sourceVariantSku') && $this->sourceVariantSku) {
+                return (float) $this->sourceVariantSku->price;
             }
             $source = $this->sourceMenuItem;
             return $source ? $source->getEffectivePrice() : null;
@@ -82,13 +97,31 @@ class MenuItem extends Model
         return $this->price !== null ? (float) $this->price : null;
     }
 
-    /** Effective translations: merge base (from source or this) with translation_overrides. */
+    /** Human-readable label from variant option_values (e.g. "Hawaiian, Small"). Returns null if no variant. */
+    public function getVariantLabel(): ?string
+    {
+        if ($this->source_variant_uuid === null || ! $this->relationLoaded('sourceVariantSku') || ! $this->sourceVariantSku) {
+            return null;
+        }
+        $values = $this->sourceVariantSku->option_values;
+        if (! is_array($values)) {
+            return null;
+        }
+        return implode(', ', array_values($values));
+    }
+
+    /** Effective translations: merge base (from source or this) with translation_overrides. When source_variant_uuid is set, name is base name + variant label. */
     public function getEffectiveTranslations(): array
     {
         $base = [];
         if ($this->source_menu_item_uuid !== null && $this->relationLoaded('sourceMenuItem') && $this->sourceMenuItem) {
+            $variantLabel = $this->getVariantLabel();
             foreach ($this->sourceMenuItem->translations as $t) {
-                $base[$t->locale] = ['name' => $t->name ?? '', 'description' => $t->description];
+                $name = $t->name ?? '';
+                if ($variantLabel !== null && $variantLabel !== '') {
+                    $name = $name . ' - ' . $variantLabel;
+                }
+                $base[$t->locale] = ['name' => $name, 'description' => $t->description];
             }
         } else {
             foreach ($this->translations as $t) {
@@ -141,6 +174,13 @@ class MenuItem extends Model
     public function comboEntries(): HasMany
     {
         return $this->hasMany(ComboEntry::class, 'combo_menu_item_id')->orderBy('sort_order');
+    }
+
+    /** @return BelongsToMany<MenuItemTag, $this> */
+    public function menuItemTags(): BelongsToMany
+    {
+        return $this->belongsToMany(MenuItemTag::class, 'menu_item_menu_item_tag')
+            ->withTimestamps();
     }
 
     public function isSimple(): bool

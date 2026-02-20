@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\MenuItemTag;
 use App\Models\Restaurant;
 use App\Models\User;
 use PHPUnit\Framework\Attributes\Group;
@@ -367,6 +368,69 @@ class RestaurantTest extends TestCase
 
         $response->assertStatus(404)
             ->assertJsonPath('message', 'Restaurant not found.');
+    }
+
+    public function test_public_restaurant_by_slug_excludes_inactive_menu_items(): void
+    {
+        $user = $this->createVerifiedUser();
+        $restaurant = $this->createRestaurantForUser($user, ['slug' => 'public-inactive-items']);
+        $activeItem = $restaurant->menuItems()->create(['sort_order' => 0, 'is_active' => true, 'is_available' => true]);
+        $activeItem->translations()->create(['locale' => 'en', 'name' => 'Visible Item', 'description' => null]);
+        $unavailableItem = $restaurant->menuItems()->create(['sort_order' => 1, 'is_active' => true, 'is_available' => false]);
+        $unavailableItem->translations()->create(['locale' => 'en', 'name' => 'Unavailable Item', 'description' => null]);
+        $inactiveItem = $restaurant->menuItems()->create(['sort_order' => 2, 'is_active' => false]);
+        $inactiveItem->translations()->create(['locale' => 'en', 'name' => 'Hidden Item', 'description' => null]);
+
+        $response = $this->getJson('/api/public/restaurants/public-inactive-items');
+
+        $response->assertOk()
+            ->assertJsonPath('data.slug', 'public-inactive-items');
+        $menuItems = $response->json('data.menu_items');
+        $this->assertCount(2, $menuItems);
+        foreach ($menuItems as $menuItem) {
+            $this->assertArrayHasKey('is_available', $menuItem);
+        }
+        $visible = collect($menuItems)->firstWhere('name', 'Visible Item');
+        $this->assertNotNull($visible);
+        $this->assertTrue($visible['is_available']);
+        $unavailable = collect($menuItems)->firstWhere('name', 'Unavailable Item');
+        $this->assertNotNull($unavailable);
+        $this->assertFalse($unavailable['is_available']);
+        $uuids = array_column($menuItems, 'uuid');
+        $this->assertContains($activeItem->uuid, $uuids);
+        $this->assertContains($unavailableItem->uuid, $uuids);
+        $this->assertNotContains($inactiveItem->uuid, $uuids);
+    }
+
+    public function test_public_restaurant_menu_items_include_tags_with_uuid_color_icon_text(): void
+    {
+        $tag = MenuItemTag::create([
+            'uuid' => \Illuminate\Support\Str::uuid(),
+            'text' => 'Spicy',
+            'color' => '#dc2626',
+            'icon' => 'local_fire_department',
+            'user_id' => null,
+        ]);
+        $user = $this->createVerifiedUser();
+        $restaurant = $this->createRestaurantForUser($user, ['slug' => 'tags-bistro']);
+        $item = $restaurant->menuItems()->create(['sort_order' => 0, 'is_active' => true, 'is_available' => true]);
+        $item->translations()->create(['locale' => 'en', 'name' => 'Hot Wings', 'description' => null]);
+        $item->menuItemTags()->attach($tag->id);
+
+        $response = $this->getJson('/api/public/restaurants/tags-bistro');
+
+        $response->assertOk()
+            ->assertJsonPath('data.slug', 'tags-bistro');
+        $menuItems = $response->json('data.menu_items');
+        $this->assertCount(1, $menuItems);
+        $this->assertArrayHasKey('tags', $menuItems[0]);
+        $tags = $menuItems[0]['tags'];
+        $this->assertIsArray($tags);
+        $this->assertCount(1, $tags);
+        $this->assertSame($tag->uuid, $tags[0]['uuid']);
+        $this->assertSame($tag->color, $tags[0]['color']);
+        $this->assertSame($tag->icon, $tags[0]['icon']);
+        $this->assertSame($tag->text, $tags[0]['text']);
     }
 
     public function test_restaurant_endpoints_require_authentication(): void

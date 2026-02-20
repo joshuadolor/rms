@@ -20,6 +20,7 @@ Used wherever the API returns a user object:
   email: string;
   email_verified_at: string | null;  // ISO 8601 datetime
   pending_email?: string | null;     // when an email change is pending (e.g. GET /user, PATCH /user)
+  is_paid?: boolean;                 // reserved for future paid features (e.g. multiple restaurants)
 }
 ```
 
@@ -325,7 +326,7 @@ All require `Authorization: Bearer <token>` and **verified email**.
 **Response (200):**
 ```json
 {
-  "user": { "uuid", "name", "email", "email_verified_at", "pending_email" }
+  "user": { "uuid", "name", "email", "email_verified_at", "pending_email", "is_paid" }
 }
 ```
 
@@ -637,7 +638,7 @@ Serves the restaurant banner image. **No authentication required.** Response has
 
 ### Public restaurant by slug (no auth)
 
-Returns public restaurant data and menu items for subdomain or `/r/:slug` pages. **No authentication.** Menu items are included only if uncategorized or in a category with `is_active` true. **No internal `id` in any field.**
+Returns public restaurant data and menu items for subdomain or `/r/:slug` pages. **No authentication.** Menu items are included only if **is_active** is true and (uncategorized or in a category with `is_active` true). Hidden items (is_active false) do not appear. Items with **is_available** false are still included; the frontend should show a "Not Available" indicator for them. **No internal `id` in any field.**
 
 | Method | Path | Auth |
 |--------|------|------|
@@ -667,7 +668,9 @@ Returns public restaurant data and menu items for subdomain or `/r/:slug` pages.
         "name": "string",
         "description": "string | null",
         "price": "number | null",
-        "sort_order": "number"
+        "sort_order": "number",
+        "is_available": "boolean",
+        "tags": [{ "uuid": "string", "color": "string", "icon": "string", "text": "string" }, ...]
       }
     ]
   }
@@ -844,6 +847,70 @@ Translations must use locales installed for the restaurant. **Response (201):** 
 
 ---
 
+## Menu item tags
+
+Tags (e.g. "Spicy", "Vegan") can be attached to restaurant menu items. Only **default (system) tags** exist; custom tag create/update/delete are disabled (POST/PATCH/DELETE return 403). All tag endpoints use **Bearer + verified**. **No internal `id` in any response;** only `uuid` is used.
+
+### Tag payload (common)
+
+```ts
+{
+  uuid: string;
+  color: string;   // e.g. hex #dc2626 or color name
+  icon: string;   // e.g. Material icon name
+  text: string;   // label, e.g. "Spicy", "Vegan"
+  is_default?: boolean;  // true for system tags (read-only); false for user's custom tags
+}
+```
+
+### List tags
+
+| Method | Path | Auth |
+|--------|------|------|
+| GET | `/api/menu-item-tags` | Bearer + verified |
+
+Returns **default (system) tags only**. Custom tag creation is disabled; only default tags exist.
+
+**Response (200):**
+```json
+{
+  "data": [ { "uuid": "string", "color": "string", "icon": "string", "text": "string", "is_default": true }, ... ]
+}
+```
+
+---
+
+### Create tag (disabled)
+
+| Method | Path | Auth |
+|--------|------|------|
+| POST | `/api/menu-item-tags` | Bearer + verified |
+
+**Response (403):** Custom tag creation is not available. Body: `{ "message": "Custom menu item tags are not available. Use the default tags." }`.
+
+---
+
+### Update tag (disabled)
+
+| Method | Path | Auth |
+|--------|------|------|
+| PATCH | `/api/menu-item-tags/{tag}` | Bearer + verified |
+| PUT | `/api/menu-item-tags/{tag}` | Bearer + verified |
+
+**Response (403):** Tag updates are not available. Body: `{ "message": "Custom menu item tags are not available. Use the default tags." }`.
+
+---
+
+### Delete tag (disabled)
+
+| Method | Path | Auth |
+|--------|------|------|
+| DELETE | `/api/menu-item-tags/{tag}` | Bearer + verified |
+
+**Response (403):** Tag deletion is not available. Body: `{ "message": "Custom menu item tags are not available. Use the default tags." }`.
+
+---
+
 ## Menu items (user-level / catalog)
 
 List, create, and manage **catalog** menu items from the standalone “Menu items” page. Catalog items are standalone (not tied to any restaurant). They can be added to restaurant categories as references (via the restaurant menu-items API). All endpoints **Bearer + verified**. **No internal `id` in any response;** only `uuid` (and variant_skus[].uuid) are used.
@@ -951,8 +1018,11 @@ All menu item payloads include:
   uuid: string;
   category_uuid: string | null;
   sort_order: number;
+  is_active: boolean;     // when false, item is hidden on the public menu
+  is_available: boolean;  // when false, item is shown but marked "Not Available" on the public menu
   price: number | null;   // effective price (base or override)
   translations: Record<string, { name: string; description: string | null }>;  // effective per locale
+  tags: Array<{ uuid: string; color: string; icon: string; text: string }>;  // menu item tags attached to this item
   created_at: string;
   updated_at: string;
 }
@@ -963,13 +1033,16 @@ When the item is a **restaurant usage of a catalog item** (added from “Menu it
 ```ts
 {
   source_menu_item_uuid: string;
-  price_override: number | null;      // null = use base price
+  source_variant_uuid?: string | null; // when added from a with_variants catalog item: uuid of the variant_sku (ending variant)
+  price_override: number | null;      // null = use base price (or variant price when source_variant_uuid set)
   translation_overrides: Record<string, { name?: string; description?: string | null }>;
-  base_price: number | null;          // catalog item base price
+  base_price: number | null;          // catalog base price, or variant price when source_variant_uuid set
   base_translations: Record<string, { name: string; description: string | null }>;
   has_overrides: boolean;             // true if any override is set (for “Revert to base” UI)
 }
 ```
+
+When **source_variant_uuid** is present, **name** in `translations` is the catalog base name plus the variant's option_values label (e.g. "Burger - Hawaiian, Small"), and **price** / **base_price** come from that variant. No internal `id` is exposed anywhere.
 
 ### List menu items
 
@@ -995,24 +1068,30 @@ When the item is a **restaurant usage of a catalog item** (added from “Menu it
 
 **Body (JSON):** Either create from catalog or create a new item:
 
-- **Add from catalog:** `source_menu_item_uuid` (required), `category_uuid`, `sort_order`, optional `price_override`, `translation_overrides` (per-locale name/description). Catalog item must be a standalone menu item owned by the user. No `translations` needed; effective values come from base + overrides.
+- **Add from catalog:** `source_menu_item_uuid` (required), optional **source_variant_uuid** (see validation below), `category_uuid`, `sort_order`, optional `price_override`, `translation_overrides` (per-locale name/description). Catalog item must be a standalone menu item owned by the user. No `translations` needed; effective values come from base + overrides (and from the chosen variant when **source_variant_uuid** is set).
 - **Create new item:** `category_uuid`, `sort_order`, optional `price`, and `translations` (required; locales must be installed for the restaurant).
+
+**Validation when adding from catalog:**
+- If the catalog item has **type** `with_variants`: **source_variant_uuid** is **required** and must be the `uuid` of one of that item’s **variant_skus** (only “ending” variants are addable; the base item is not).
+- If the catalog item is **simple** or **combo**: **source_variant_uuid** must be null or absent (422 if sent).
 
 ```json
 {
   "category_uuid": "string (optional)",
   "sort_order": "integer (optional, min 0)",
   "source_menu_item_uuid": "string (optional, uuid of catalog item; when set, adds catalog item to category)",
+  "source_variant_uuid": "string (optional, uuid of catalog item's variant_sku; required when catalog type is with_variants; must be absent when simple/combo)",
   "price_override": "number (optional, min 0; only when source_menu_item_uuid set)",
   "translation_overrides": { "locale": { "name": "string", "description": "string | null" } },
   "price": "number (optional, min 0; only when creating new item)",
   "translations": {
     "locale": { "name": "string (required with translations)", "description": "string | null (optional)" }
-  }
+  },
+  "tag_uuids": "array (optional): UUIDs of default tags to attach; only default tag UUIDs allowed; 422 if invalid"
 }
 ```
 
-**Response (201):** `{ "message": "Menu item created.", "data": { menu item payload } }`. **422:** Uninstalled locale(s). **403:** Catalog item not found or not owned.
+**Response (201):** `{ "message": "Menu item created.", "data": { menu item payload } }`. **422:** Uninstalled locale(s), source_variant_uuid validation, or invalid tag_uuids. **403:** Catalog item not found or not owned.
 
 ### Update menu item
 
@@ -1020,7 +1099,7 @@ When the item is a **restaurant usage of a catalog item** (added from “Menu it
 |--------|------|------|
 | PUT/PATCH | `/api/restaurants/{restaurant}/menu-items/{item}` | Bearer + verified |
 
-**Body:** category_uuid, sort_order, translations (for items without source), price (for items without source), price_override, translation_overrides (for items with source), **revert_to_base** (boolean; when true, clears price_override and translation_overrides so effective values revert to catalog base). **Response (200):** `{ "message": "Menu item updated.", "data": { menu item payload } }`.
+**Body:** category_uuid, sort_order, **is_active** (optional boolean; when false, item is hidden on the public menu), **is_available** (optional boolean; when false, item is shown on the public menu but marked "Not Available"), translations (for items without source), price (for items without source), price_override, translation_overrides (for items with source), **revert_to_base** (boolean; when true, clears price_override and translation_overrides so effective values revert to catalog base), **tag_uuids** (optional array of UUIDs; replaces item's tags; only default tag UUIDs allowed; 422 if invalid). **Response (200):** `{ "message": "Menu item updated.", "data": { menu item payload } }`.
 
 ### Delete menu item
 
@@ -1072,6 +1151,12 @@ When the item is a **restaurant usage of a catalog item** (added from “Menu it
 
 ## Changelog
 
+- **2026-02-20**: **Menu item tags: default only.** Custom tag creation/update/delete removed. GET `/api/menu-item-tags` now returns **default tags only** (user_id null). POST `/api/menu-item-tags`, PATCH/PUT `/api/menu-item-tags/{tag}`, and DELETE `/api/menu-item-tags/{tag}` always return **403** with message: "Custom menu item tags are not available. Use the default tags." Menu items still have many-to-many with tags; owner and public payloads include tags; PATCH menu item still accepts **tag_uuids** (only default tag UUIDs allowed). User payload **is_paid** retained for future paid features (e.g. multiple restaurants).
+- **2026-02-20**: **Menu item tags:** Tag payload includes **is_default** (boolean): true for system tags (read-only in UI), false for user's custom tags.
+- **2026-02-20**: **Menu item tags.** New entity: menu item tag (uuid, color, icon, text). **Default (system) tags** (user_id null) seeded for all users; many-to-many with menu items via pivot `menu_item_menu_item_tag`. Restaurant menu item payload (list/show/create/update) and public GET `/api/public/restaurants/{slug}` menu_items include **tags**: `[{ uuid, color, icon, text }]`. POST/PATCH restaurant menu items accept optional **tag_uuids** (array); validated against default tags only. No internal `id` in any tag or menu item response.
+- **2026-02-20**: **Restaurant menu items: "Not Available" (is_available).** Column **is_available** (boolean, default true) added to menu_items. List, show, create, and update responses include **is_available**. PATCH `/api/restaurants/{restaurant}/menu-items/{item}` accepts optional **is_available** (boolean). When false, the item remains on the public menu but the frontend should show a "Not Available" indicator (unlike is_active which hides the item). GET `/api/public/restaurants/{slug}` includes **is_available** for each menu_item. Create defaults is_available to true. No internal `id` in responses.
+- **2026-02-20**: **Restaurant menu items: per-item visibility (is_active).** Column **is_active** (boolean, default true) added to menu_items. List, show, create, and update responses include **is_active**. PATCH `/api/restaurants/{restaurant}/menu-items/{item}` accepts optional **is_active** (boolean) to show or hide the item on the public menu. GET `/api/public/restaurants/{slug}` excludes menu items where is_active is false (in addition to filtering by category is_active). No internal `id` in responses.
+- **2026-02-20**: **Restaurant menu items: add ending variants only for catalog items with variants.** POST `/api/restaurants/{restaurant}/menu-items` accepts optional **source_variant_uuid** when **source_menu_item_uuid** is set. If the catalog item has type `with_variants`, **source_variant_uuid** is **required** and must be the uuid of one of that item’s variant_skus; only each end variant is addable, not the base item. If the catalog item is simple or combo, **source_variant_uuid** must be null/absent (422 otherwise). Restaurant menu item payload (list/show/create/update) includes **source_variant_uuid** when the item was added with a variant; effective name and price are derived from that variant (base name + variant option_values label; price from variant). No internal `id` in responses.
 - **2026-02-19**: **Catalog menu items: combos and variants.** User-level menu items support **type**: `simple` (default), `combo`, or `with_variants`. **Combo:** optional `combo_price`; `combo_entries` array (menu_item_uuid, variant_uuid when referenced item has variants, quantity, modifier_label). Referenced items must be owned by the user. **With variants:** `variant_option_groups` (name + ordered values) and `variant_skus` (uuid, option_values, price, image_url optional); variant_skus must cover exactly the Cartesian product. GET/POST/PATCH `/api/menu-items` and GET `/api/menu-items/{item}` payloads include type and, when applicable, combo_entries or variant_option_groups + variant_skus. No internal `id` in any response; variant_skus use public `uuid`. Restaurant context “add ending variant only” and variant image upload are follow-ups.
 - **2026-02-19**: Public restaurant by slug: response now includes **operating_hours** (same shape as owner restaurant payload; null when not set) for display of opening hours on public pages.
 - **2026-02-19**: User-level menu items: GET `/api/menu-items` now returns **only standalone (catalog) items**. Restaurant menu items are no longer included; use GET `/api/restaurants/{restaurant}/menu-items` for per-restaurant lists. Fixes duplicate items on the Menu items (catalog) page after adding a catalog item to a restaurant category.

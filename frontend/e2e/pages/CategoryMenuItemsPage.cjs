@@ -97,6 +97,66 @@ class CategoryMenuItemsPage {
   async expectItemVisible(itemName) {
     await expect(this.page.getByText(itemName).first()).toBeVisible()
   }
+
+  /** Assert the visibility toggle (Show/Hide on public menu) is visible */
+  async expectVisibilityToggleVisible() {
+    const toggle = this.page.getByRole('button', { name: /^(Hide|Show) on public menu$/ })
+    await expect(toggle.first()).toBeVisible()
+  }
+
+  /** Click the first visibility toggle (Hide/Show on public menu) */
+  async clickFirstVisibilityToggle() {
+    await this.page.getByRole('button', { name: /^(Hide|Show) on public menu$/ }).first().click()
+  }
+
+  /** Assert the visibility toggle shows "Hide on public menu" (item is visible on menu) */
+  async expectVisibilityToggleLabelHide() {
+    await expect(this.page.getByRole('button', { name: 'Hide on public menu' }).first()).toBeVisible()
+  }
+
+  /** Assert the visibility toggle shows "Show on public menu" (item is hidden from menu) */
+  async expectVisibilityToggleLabelShow() {
+    await expect(this.page.getByRole('button', { name: 'Show on public menu' }).first()).toBeVisible()
+  }
+
+  /** Assert the availability toggle (Available / Not available) is visible */
+  async expectAvailabilityToggleVisible() {
+    const toggle = this.page.getByRole('button', { name: /Mark (not )?available on public menu$/ })
+    await expect(toggle.first()).toBeVisible()
+  }
+
+  /** Click the first availability toggle (Mark not available / Mark available on public menu) */
+  async clickFirstAvailabilityToggle() {
+    await this.page.getByRole('button', { name: /Mark (not )?available on public menu$/ }).first().click()
+  }
+
+  /** Assert the availability toggle shows "Mark not available on public menu" (item is currently available) */
+  async expectAvailabilityShowsAvailable() {
+    await expect(this.page.getByRole('button', { name: 'Mark not available on public menu' }).first()).toBeVisible()
+  }
+
+  /** Assert the availability toggle shows "Mark available on public menu" (item is currently not available) */
+  async expectAvailabilityShowsNotAvailable() {
+    await expect(this.page.getByRole('button', { name: 'Mark available on public menu' }).first()).toBeVisible()
+  }
+
+  /**
+   * In the Add item modal, assert a variant row with this exact display name is visible
+   * (e.g. "Pizza – Hawaiian, Small"). Use after modal is open and list has loaded.
+   */
+  async expectAddModalVariantRowVisible(variantDisplayName) {
+    const dialog = this.page.getByRole('dialog')
+    await expect(dialog.getByText(variantDisplayName)).toBeVisible({ timeout: 10000 })
+  }
+
+  /**
+   * In the Add item modal, assert the base item name is NOT shown as a single addable row.
+   * (e.g. "Pizza" alone should not appear; only variant rows like "Pizza – Hawaiian, Small").
+   */
+  async expectAddModalBaseItemNotVisible(baseNameOnly) {
+    const dialog = this.page.getByRole('dialog')
+    await expect(dialog.getByText(baseNameOnly, { exact: true })).not.toBeVisible()
+  }
 }
 
 module.exports = { CategoryMenuItemsPage }

@@ -26,4 +26,5 @@ export {
 } from './auth.service'
 export { restaurantService } from './restaurant.service'
 export { menuItemService } from './menuItem.service'
+export { menuItemTagService } from './menuItemTag.service'
 export { localeService } from './locale.service'

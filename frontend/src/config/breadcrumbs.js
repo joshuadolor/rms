@@ -19,6 +19,7 @@ export const BREADCRUMB_CONFIG = {
     label: (_, store) => store.menuItemName ? `Edit ${store.menuItemName}` : 'Edit item',
     parent: 'MenuItems',
   },
+  MenuItemTags: { label: 'Menu item tags', parent: 'MenuItems' },
   __main_menu__: { label: 'Main menu', parent: 'RestaurantDetail' },
   RestaurantMenuItems: {
     label: (_, store) => store.menuName || 'Menu',

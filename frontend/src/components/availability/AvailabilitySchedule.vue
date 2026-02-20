@@ -89,6 +89,7 @@
             <button
               type="button"
               class="p-2 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 min-h-[44px] min-w-[44px] flex items-center justify-center shrink-0 focus:outline-none focus:ring-2 focus:ring-primary/50"
+              title="Remove time slot"
               aria-label="Remove time slot"
               @click="removeSlot(dayKey, slotIndex)"
             >

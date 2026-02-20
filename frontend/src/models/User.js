@@ -3,7 +3,7 @@
  * Use User.fromApi(apiResponse) when consuming auth/user endpoints.
  *
  * Backend response (AuthController::userPayload, ProfileController::userPayload):
- * { uuid, name, email, email_verified_at, pending_email? } — uuid is the public identifier (internal id not exposed).
+ * { uuid, name, email, email_verified_at, pending_email?, is_paid? } — uuid is the public identifier (internal id not exposed).
  */
 
 export default class User {
@@ -13,6 +13,7 @@ export default class User {
     this._email = data.email ?? ''
     this._emailVerifiedAt = data.email_verified_at ?? data.emailVerifiedAt ?? null
     this._pendingEmail = data.pending_email ?? data.pendingEmail ?? null
+    this._isPaid = data.is_paid === true
     // Optional if backend adds later (e.g. profile, OAuth)
     this._firstName = data.first_name ?? data.firstName ?? ''
     this._lastName = data.last_name ?? data.lastName ?? ''
@@ -44,6 +45,11 @@ export default class User {
     return this._pendingEmail
   }
 
+  /** True if user can create custom menu item tags and use other paid features. */
+  get isPaid() {
+    return this._isPaid
+  }
+
   get firstName() {
     return this._firstName
   }
@@ -68,6 +74,7 @@ export default class User {
 
   /** Build from API response. Use this when consuming user/auth APIs. */
   static fromApi(data) {
+    if (data instanceof User) return data
     return new User(data)
   }
 
@@ -80,6 +87,7 @@ export default class User {
       emailVerifiedAt: this._emailVerifiedAt,
       isEmailVerified: this.isEmailVerified,
       pendingEmail: this._pendingEmail,
+      isPaid: this._isPaid,
       fullName: this.fullName,
       firstName: this._firstName,
       lastName: this._lastName,

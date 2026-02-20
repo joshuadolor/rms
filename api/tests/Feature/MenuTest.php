@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\MenuItem;
+use App\Models\MenuItemTag;
 use App\Models\Restaurant;
 use App\Models\User;
 use PHPUnit\Framework\Attributes\Group;
@@ -355,7 +356,8 @@ class MenuTest extends TestCase
         $response->assertStatus(201)
             ->assertJsonPath('data.price', 12.99)
             ->assertJsonPath('data.translations.en.name', 'Burger')
-            ->assertJsonStructure(['data' => ['uuid', 'category_uuid', 'sort_order', 'price', 'translations', 'created_at', 'updated_at']])
+            ->assertJsonPath('data.is_active', true)
+            ->assertJsonStructure(['data' => ['uuid', 'category_uuid', 'sort_order', 'is_active', 'is_available', 'price', 'translations', 'created_at', 'updated_at']])
             ->assertJsonMissingPath('data.id');
     }
 
@@ -378,6 +380,8 @@ class MenuTest extends TestCase
             ->assertJsonPath('data.uuid', $item->uuid)
             ->assertJsonPath('data.price', 9.99)
             ->assertJsonPath('data.translations.en.name', 'Salad')
+            ->assertJsonPath('data.is_active', true)
+            ->assertJsonStructure(['data' => ['uuid', 'category_uuid', 'sort_order', 'is_active', 'is_available', 'price', 'translations', 'created_at', 'updated_at']])
             ->assertJsonMissingPath('data.id');
     }
 
@@ -404,6 +408,199 @@ class MenuTest extends TestCase
             ->assertJsonPath('data.translations.en.description', 'New desc');
         $item->refresh();
         $this->assertSame(11.50, (float) $item->price);
+    }
+
+    public function test_update_menu_item_toggles_is_active(): void
+    {
+        $user = $this->createVerifiedUser();
+        $restaurant = $this->createRestaurantForUser($user);
+        $category = $restaurant->menus()->create(['name' => 'Main', 'sort_order' => 0])
+            ->categories()->create(['sort_order' => 0]);
+        $category->translations()->create(['locale' => 'en', 'name' => 'Mains']);
+        $item = $restaurant->menuItems()->create(['category_id' => $category->id, 'sort_order' => 0, 'price' => 10, 'is_active' => true]);
+        $item->translations()->create(['locale' => 'en', 'name' => 'Burger']);
+        $token = $user->createToken('auth')->plainTextToken;
+
+        $response = $this->patchJson('/api/restaurants/' . $restaurant->uuid . '/menu-items/' . $item->uuid, [
+            'is_active' => false,
+        ], ['Authorization' => 'Bearer ' . $token]);
+
+        $response->assertOk()
+            ->assertJsonPath('message', 'Menu item updated.')
+            ->assertJsonPath('data.is_active', false);
+        $this->assertFalse($item->fresh()->is_active);
+    }
+
+    public function test_update_menu_item_toggles_is_available(): void
+    {
+        $user = $this->createVerifiedUser();
+        $restaurant = $this->createRestaurantForUser($user);
+        $category = $restaurant->menus()->create(['name' => 'Main', 'sort_order' => 0])
+            ->categories()->create(['sort_order' => 0]);
+        $category->translations()->create(['locale' => 'en', 'name' => 'Mains']);
+        $item = $restaurant->menuItems()->create(['category_id' => $category->id, 'sort_order' => 0, 'price' => 10, 'is_available' => true]);
+        $item->translations()->create(['locale' => 'en', 'name' => 'Burger']);
+        $token = $user->createToken('auth')->plainTextToken;
+
+        $response = $this->patchJson('/api/restaurants/' . $restaurant->uuid . '/menu-items/' . $item->uuid, [
+            'is_available' => false,
+        ], ['Authorization' => 'Bearer ' . $token]);
+
+        $response->assertOk()
+            ->assertJsonPath('message', 'Menu item updated.')
+            ->assertJsonPath('data.is_available', false);
+        $this->assertFalse($item->fresh()->is_available);
+
+        $response2 = $this->patchJson('/api/restaurants/' . $restaurant->uuid . '/menu-items/' . $item->uuid, [
+            'is_available' => true,
+        ], ['Authorization' => 'Bearer ' . $token]);
+
+        $response2->assertOk()
+            ->assertJsonPath('data.is_available', true);
+        $this->assertTrue($item->fresh()->is_available);
+    }
+
+    public function test_menu_item_create_with_tag_uuids_creates_item_with_tags_and_response_includes_tags(): void
+    {
+        $defaultTag = MenuItemTag::create([
+            'uuid' => \Illuminate\Support\Str::uuid(),
+            'text' => 'Spicy',
+            'color' => '#dc2626',
+            'icon' => 'local_fire_department',
+            'user_id' => null,
+        ]);
+        $user = $this->createVerifiedUser();
+        $restaurant = $this->createRestaurantForUser($user);
+        $menu = $restaurant->menus()->create(['name' => 'Main', 'sort_order' => 0]);
+        $category = $menu->categories()->create(['sort_order' => 0]);
+        $category->translations()->create(['locale' => 'en', 'name' => 'Mains']);
+        $token = $user->createToken('auth')->plainTextToken;
+
+        $response = $this->postJson('/api/restaurants/' . $restaurant->uuid . '/menu-items', [
+            'category_uuid' => $category->uuid,
+            'translations' => ['en' => ['name' => 'Hot Wings', 'description' => 'Spicy']],
+            'tag_uuids' => [$defaultTag->uuid],
+        ], ['Authorization' => 'Bearer ' . $token]);
+
+        $response->assertStatus(201)
+            ->assertJsonPath('data.translations.en.name', 'Hot Wings')
+            ->assertJsonStructure(['data' => ['tags']])
+            ->assertJsonPath('data.tags.0.uuid', $defaultTag->uuid)
+            ->assertJsonPath('data.tags.0.color', $defaultTag->color)
+            ->assertJsonPath('data.tags.0.icon', $defaultTag->icon)
+            ->assertJsonPath('data.tags.0.text', $defaultTag->text);
+        $item = MenuItem::query()->where('uuid', $response->json('data.uuid'))->first();
+        $this->assertNotNull($item);
+        $this->assertSame(1, $item->menuItemTags()->count());
+        $this->assertTrue($item->menuItemTags()->where('uuid', $defaultTag->uuid)->exists());
+    }
+
+    public function test_menu_item_update_with_tag_uuids_replaces_tags_and_response_includes_tags(): void
+    {
+        $tag1 = MenuItemTag::create([
+            'uuid' => \Illuminate\Support\Str::uuid(),
+            'text' => 'Spicy',
+            'color' => '#dc2626',
+            'icon' => 'fire',
+            'user_id' => null,
+        ]);
+        $tag2 = MenuItemTag::create([
+            'uuid' => \Illuminate\Support\Str::uuid(),
+            'text' => 'Vegan',
+            'color' => '#16a34a',
+            'icon' => 'eco',
+            'user_id' => null,
+        ]);
+        $user = $this->createVerifiedUser();
+        $restaurant = $this->createRestaurantForUser($user);
+        $category = $restaurant->menus()->create(['name' => 'Main', 'sort_order' => 0])
+            ->categories()->create(['sort_order' => 0]);
+        $category->translations()->create(['locale' => 'en', 'name' => 'Mains']);
+        $item = $restaurant->menuItems()->create(['category_id' => $category->id, 'sort_order' => 0]);
+        $item->translations()->create(['locale' => 'en', 'name' => 'Burger']);
+        $item->menuItemTags()->attach($tag1->id);
+        $token = $user->createToken('auth')->plainTextToken;
+
+        $response = $this->patchJson('/api/restaurants/' . $restaurant->uuid . '/menu-items/' . $item->uuid, [
+            'tag_uuids' => [$tag2->uuid],
+        ], ['Authorization' => 'Bearer ' . $token]);
+
+        $response->assertOk()
+            ->assertJsonPath('message', 'Menu item updated.')
+            ->assertJsonCount(1, 'data.tags')
+            ->assertJsonPath('data.tags.0.uuid', $tag2->uuid)
+            ->assertJsonPath('data.tags.0.text', $tag2->text);
+        $item->refresh();
+        $this->assertSame(1, $item->menuItemTags()->count());
+        $this->assertTrue($item->menuItemTags()->where('uuid', $tag2->uuid)->exists());
+        $this->assertFalse($item->menuItemTags()->where('uuid', $tag1->uuid)->exists());
+    }
+
+    public function test_menu_item_create_with_invalid_tag_uuids_returns_422(): void
+    {
+        $user = $this->createVerifiedUser();
+        $restaurant = $this->createRestaurantForUser($user);
+        $menu = $restaurant->menus()->create(['name' => 'Main', 'sort_order' => 0]);
+        $category = $menu->categories()->create(['sort_order' => 0]);
+        $category->translations()->create(['locale' => 'en', 'name' => 'Mains']);
+        $token = $user->createToken('auth')->plainTextToken;
+        $nonexistentUuid = '00000000-0000-0000-0000-000000000001';
+
+        $response = $this->postJson('/api/restaurants/' . $restaurant->uuid . '/menu-items', [
+            'category_uuid' => $category->uuid,
+            'translations' => ['en' => ['name' => 'Item', 'description' => null]],
+            'tag_uuids' => [$nonexistentUuid],
+        ], ['Authorization' => 'Bearer ' . $token]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['tag_uuids']);
+    }
+
+    public function test_menu_item_create_with_forbidden_tag_uuids_returns_422(): void
+    {
+        $otherUser = $this->createVerifiedUser();
+        $forbiddenTag = MenuItemTag::create([
+            'uuid' => \Illuminate\Support\Str::uuid(),
+            'text' => 'Other User Tag',
+            'color' => '#000',
+            'icon' => 'star',
+            'user_id' => $otherUser->id,
+        ]);
+        $user = $this->createVerifiedUser();
+        $restaurant = $this->createRestaurantForUser($user);
+        $menu = $restaurant->menus()->create(['name' => 'Main', 'sort_order' => 0]);
+        $category = $menu->categories()->create(['sort_order' => 0]);
+        $category->translations()->create(['locale' => 'en', 'name' => 'Mains']);
+        $token = $user->createToken('auth')->plainTextToken;
+
+        $response = $this->postJson('/api/restaurants/' . $restaurant->uuid . '/menu-items', [
+            'category_uuid' => $category->uuid,
+            'translations' => ['en' => ['name' => 'Item', 'description' => null]],
+            'tag_uuids' => [$forbiddenTag->uuid],
+        ], ['Authorization' => 'Bearer ' . $token]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['tag_uuids']);
+    }
+
+    public function test_menu_item_update_with_invalid_tag_uuids_returns_422(): void
+    {
+        $user = $this->createVerifiedUser();
+        $restaurant = $this->createRestaurantForUser($user);
+        $category = $restaurant->menus()->create(['name' => 'Main', 'sort_order' => 0])
+            ->categories()->create(['sort_order' => 0]);
+        $category->translations()->create(['locale' => 'en', 'name' => 'Mains']);
+        $item = $restaurant->menuItems()->create(['category_id' => $category->id, 'sort_order' => 0]);
+        $item->translations()->create(['locale' => 'en', 'name' => 'Burger']);
+        $token = $user->createToken('auth')->plainTextToken;
+        $nonexistentUuid = '00000000-0000-0000-0000-000000000002';
+
+        $response = $this->patchJson('/api/restaurants/' . $restaurant->uuid . '/menu-items/' . $item->uuid, [
+            'tag_uuids' => [$nonexistentUuid],
+        ], ['Authorization' => 'Bearer ' . $token]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['tag_uuids']);
     }
 
     public function test_delete_menu_item_succeeds(): void
@@ -452,8 +649,10 @@ class MenuTest extends TestCase
             'Authorization' => 'Bearer ' . $token,
         ]);
         $list->assertOk()
-            ->assertJsonCount(2, 'data');
-        $list->assertJsonPath('data.0.category_uuid', $category->uuid);
+            ->assertJsonCount(2, 'data')
+            ->assertJsonPath('data.0.category_uuid', $category->uuid)
+            ->assertJsonPath('data.0.is_active', true)
+            ->assertJsonPath('data.1.is_active', true);
 
         $reorder = $this->postJson('/api/restaurants/' . $restaurant->uuid . '/categories/' . $category->uuid . '/menu-items/reorder', [
             'order' => [$item2Uuid, $item1Uuid],
@@ -489,6 +688,106 @@ class MenuTest extends TestCase
             ->assertJsonPath('data.category_uuid', $category->uuid)
             ->assertJsonPath('data.translations.en.name', 'Catalog Burger')
             ->assertJsonPath('data.price', 8.50);
+    }
+
+    public function test_create_restaurant_menu_item_from_catalog_with_variants_requires_source_variant_uuid(): void
+    {
+        $user = $this->createVerifiedUser();
+        $restaurant = $this->createRestaurantForUser($user);
+        $restaurant->languages()->firstOrCreate(['locale' => 'en']);
+        $menu = $restaurant->menus()->create(['name' => 'Main', 'sort_order' => 0]);
+        $category = $menu->categories()->create(['sort_order' => 0]);
+        $category->translations()->create(['locale' => 'en', 'name' => 'Mains']);
+        $token = $user->createToken('auth')->plainTextToken;
+
+        $catalog = $this->postJson('/api/menu-items', [
+            'type' => 'with_variants',
+            'translations' => ['en' => ['name' => 'Pizza', 'description' => null]],
+            'variant_option_groups' => [['name' => 'Size', 'values' => ['S', 'M']]],
+            'variant_skus' => [
+                ['option_values' => ['Size' => 'S'], 'price' => 8.00],
+                ['option_values' => ['Size' => 'M'], 'price' => 12.00],
+            ],
+        ], ['Authorization' => 'Bearer ' . $token]);
+        $catalog->assertStatus(201);
+        $catalogUuid = $catalog->json('data.uuid');
+
+        $response = $this->postJson('/api/restaurants/' . $restaurant->uuid . '/menu-items', [
+            'source_menu_item_uuid' => $catalogUuid,
+            'category_uuid' => $category->uuid,
+        ], ['Authorization' => 'Bearer ' . $token]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['source_variant_uuid']);
+    }
+
+    public function test_create_restaurant_menu_item_from_catalog_with_variants_accepts_source_variant_uuid(): void
+    {
+        $user = $this->createVerifiedUser();
+        $restaurant = $this->createRestaurantForUser($user);
+        $restaurant->languages()->firstOrCreate(['locale' => 'en']);
+        $menu = $restaurant->menus()->create(['name' => 'Main', 'sort_order' => 0]);
+        $category = $menu->categories()->create(['sort_order' => 0]);
+        $category->translations()->create(['locale' => 'en', 'name' => 'Mains']);
+        $token = $user->createToken('auth')->plainTextToken;
+
+        $catalog = $this->postJson('/api/menu-items', [
+            'type' => 'with_variants',
+            'translations' => ['en' => ['name' => 'Pizza', 'description' => null]],
+            'variant_option_groups' => [['name' => 'Type', 'values' => ['Hawaiian', 'Pepperoni']], ['name' => 'Size', 'values' => ['Small', 'Family']]],
+            'variant_skus' => [
+                ['option_values' => ['Type' => 'Hawaiian', 'Size' => 'Small'], 'price' => 8.00],
+                ['option_values' => ['Type' => 'Hawaiian', 'Size' => 'Family'], 'price' => 14.00],
+                ['option_values' => ['Type' => 'Pepperoni', 'Size' => 'Small'], 'price' => 9.00],
+                ['option_values' => ['Type' => 'Pepperoni', 'Size' => 'Family'], 'price' => 16.00],
+            ],
+        ], ['Authorization' => 'Bearer ' . $token]);
+        $catalog->assertStatus(201);
+        $catalogUuid = $catalog->json('data.uuid');
+        $variantUuids = array_column($catalog->json('data.variant_skus'), 'uuid');
+        $hawaiianSmallUuid = $catalog->json('data.variant_skus.0.uuid');
+
+        $response = $this->postJson('/api/restaurants/' . $restaurant->uuid . '/menu-items', [
+            'source_menu_item_uuid' => $catalogUuid,
+            'source_variant_uuid' => $hawaiianSmallUuid,
+            'category_uuid' => $category->uuid,
+        ], ['Authorization' => 'Bearer ' . $token]);
+
+        $response->assertStatus(201)
+            ->assertJsonPath('data.source_menu_item_uuid', $catalogUuid)
+            ->assertJsonPath('data.source_variant_uuid', $hawaiianSmallUuid)
+            ->assertJsonPath('data.category_uuid', $category->uuid)
+            ->assertJsonPath('data.translations.en.name', 'Pizza - Hawaiian, Small');
+        $this->assertSame(8.0, (float) $response->json('data.price'));
+        $this->assertSame(8.0, (float) $response->json('data.base_price'));
+        $this->assertContains($response->json('data.source_variant_uuid'), $variantUuids);
+    }
+
+    public function test_create_restaurant_menu_item_from_catalog_simple_rejects_source_variant_uuid(): void
+    {
+        $user = $this->createVerifiedUser();
+        $restaurant = $this->createRestaurantForUser($user);
+        $restaurant->languages()->firstOrCreate(['locale' => 'en']);
+        $menu = $restaurant->menus()->create(['name' => 'Main', 'sort_order' => 0]);
+        $category = $menu->categories()->create(['sort_order' => 0]);
+        $category->translations()->create(['locale' => 'en', 'name' => 'Mains']);
+        $token = $user->createToken('auth')->plainTextToken;
+
+        $catalog = $this->postJson('/api/menu-items', [
+            'price' => 6.00,
+            'translations' => ['en' => ['name' => 'Burger', 'description' => null]],
+        ], ['Authorization' => 'Bearer ' . $token]);
+        $catalog->assertStatus(201);
+        $catalogUuid = $catalog->json('data.uuid');
+
+        $response = $this->postJson('/api/restaurants/' . $restaurant->uuid . '/menu-items', [
+            'source_menu_item_uuid' => $catalogUuid,
+            'source_variant_uuid' => '00000000-0000-0000-0000-000000000001',
+            'category_uuid' => $category->uuid,
+        ], ['Authorization' => 'Bearer ' . $token]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['source_variant_uuid']);
     }
 
     public function test_update_menu_item_category_uuid_moves_to_another_category(): void

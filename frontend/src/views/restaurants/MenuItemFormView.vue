@@ -263,26 +263,48 @@
                   <select
                     :id="`edit-combo-item-${idx}`"
                     v-model="entry.menu_item_uuid"
-                    class="w-full min-h-[44px] rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-zinc-800 text-charcoal dark:text-white px-4 py-2"
+                    class="w-full min-h-[44px] rounded-lg border px-4 py-2 bg-white dark:bg-zinc-800 text-charcoal dark:text-white transition-colors"
+                    :class="fieldErrors[`combo_entries.${idx}.menu_item_uuid`] ? 'border-red-500 dark:border-red-400 ring-2 ring-red-500/20' : 'border-slate-200 dark:border-slate-700'"
+                    :aria-invalid="!!fieldErrors[`combo_entries.${idx}.menu_item_uuid`]"
+                    :aria-describedby="fieldErrors[`combo_entries.${idx}.menu_item_uuid`] ? `edit-combo-item-${idx}-error` : undefined"
                   >
                     <option value="">— Select item —</option>
                     <option v-for="catItem in catalogItemsForSummary" :key="catItem.uuid" :value="catItem.uuid">
                       {{ catalogEditComboItemName(catItem) }}
                     </option>
                   </select>
+                  <p
+                    v-if="fieldErrors[`combo_entries.${idx}.menu_item_uuid`]"
+                    :id="`edit-combo-item-${idx}-error`"
+                    class="text-sm text-red-600 dark:text-red-400 mt-1"
+                    role="alert"
+                  >
+                    {{ fieldErrors[`combo_entries.${idx}.menu_item_uuid`] }}
+                  </p>
                 </div>
                 <div v-if="catalogEditItemHasVariants(entry.menu_item_uuid)">
                   <label :for="`edit-combo-variant-${idx}`" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Variant</label>
                   <select
                     :id="`edit-combo-variant-${idx}`"
                     v-model="entry.variant_uuid"
-                    class="w-full min-h-[44px] rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-zinc-800 text-charcoal dark:text-white px-4 py-2"
+                    class="w-full min-h-[44px] rounded-lg border px-4 py-2 bg-white dark:bg-zinc-800 text-charcoal dark:text-white transition-colors"
+                    :class="fieldErrors[`combo_entries.${idx}.variant_uuid`] ? 'border-red-500 dark:border-red-400 ring-2 ring-red-500/20' : 'border-slate-200 dark:border-slate-700'"
+                    :aria-invalid="!!fieldErrors[`combo_entries.${idx}.variant_uuid`]"
+                    :aria-describedby="fieldErrors[`combo_entries.${idx}.variant_uuid`] ? `edit-combo-variant-${idx}-error` : undefined"
                   >
                     <option :value="null">— Select variant —</option>
                     <option v-for="sku in catalogEditVariantSkus(entry.menu_item_uuid)" :key="sku.uuid" :value="sku.uuid">
                       {{ sku.displayLabel ? sku.displayLabel() : Object.values(sku.option_values || {}).join(', ') }}
                     </option>
                   </select>
+                  <p
+                    v-if="fieldErrors[`combo_entries.${idx}.variant_uuid`]"
+                    :id="`edit-combo-variant-${idx}-error`"
+                    class="text-sm text-red-600 dark:text-red-400 mt-1"
+                    role="alert"
+                  >
+                    {{ fieldErrors[`combo_entries.${idx}.variant_uuid`] }}
+                  </p>
                 </div>
               </div>
               <div class="grid gap-3 sm:grid-cols-2">
@@ -419,7 +441,7 @@ import { formatCurrency } from '@/utils/format'
 import { useBreadcrumbStore } from '@/stores/breadcrumb'
 import Restaurant from '@/models/Restaurant.js'
 import MenuItem from '@/models/MenuItem.js'
-import { restaurantService, menuItemService, localeService, getValidationErrors, normalizeApiError } from '@/services'
+import { restaurantService, menuItemService, menuItemTagService, localeService, getValidationErrors, normalizeApiError } from '@/services'
 import { useToastStore } from '@/stores/toast'
 
 const route = useRoute()
@@ -472,7 +494,20 @@ const form = reactive({
   combo_entries: [],
   variant_option_groups: [],
   variant_skus: [],
+  tag_uuids: [],
 })
+
+/** Available tags for restaurant menu items (from GET /api/menu-item-tags). */
+const availableTags = ref([])
+const selectedTagUuids = computed(() => Array.isArray(form.tag_uuids) ? [...form.tag_uuids] : [])
+
+function toggleTag(uuid) {
+  const list = Array.isArray(form.tag_uuids) ? [...form.tag_uuids] : []
+  const idx = list.indexOf(uuid)
+  if (idx === -1) list.push(uuid)
+  else list.splice(idx, 1)
+  form.tag_uuids = list
+}
 
 /** True only in restaurant context when this item is a catalog reference. Menu items (catalog) context never uses overrides. */
 const itemFromCatalog = computed(() => !!restaurant.value && !!catalogSourceUuid.value)
@@ -770,6 +805,7 @@ async function doActualSubmit() {
       if (payload.price !== null && Number.isNaN(payload.price)) delete payload.price
     }
     if (form.category_uuid != null && form.category_uuid !== '' && restaurant.value) payload.category_uuid = form.category_uuid
+    if (!restaurant.value && Array.isArray(form.tag_uuids)) payload.tag_uuids = form.tag_uuids
     if (isEdit.value) {
       if (standaloneItem.value) {
         await menuItemService.update(itemUuid.value, payload)
@@ -851,6 +887,17 @@ async function translateLocale(targetLoc) {
   }
 }
 
+async function loadAvailableTags() {
+  if (!uuid.value) return
+  try {
+    const res = await menuItemTagService.list()
+    const list = Array.isArray(res?.data) ? res.data : []
+    availableTags.value = list.map((t) => ({ uuid: t.uuid, color: t.color, icon: t.icon, text: t.text }))
+  } catch {
+    availableTags.value = []
+  }
+}
+
 async function loadRestaurant() {
   if (!uuid.value) {
     loading.value = false
@@ -879,6 +926,7 @@ function initFormFromRestaurant() {
   form.price = ''
   form.price_override = ''
   form.translations = {}
+  form.tag_uuids = []
   if (def) form.translations[def] = { name: '', description: null }
   selectedLocale.value = def
 }
@@ -916,6 +964,7 @@ async function loadMenuItem() {
       form.price_override = ''
       form.price = item.price != null ? String(item.price) : ''
     }
+    form.tag_uuids = Array.isArray(item.tags) ? item.tags.map((t) => t.uuid).filter(Boolean) : []
     const defLoc = restaurant.value?.default_locale ?? locs[0]
     selectedLocale.value = locs.includes(selectedLocale.value) ? selectedLocale.value : (defLoc ?? locs[0] ?? 'en')
     const defaultName = defLoc ? (form.translations[defLoc]?.name ?? '') : ''

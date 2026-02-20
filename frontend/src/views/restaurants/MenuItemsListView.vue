@@ -47,6 +47,7 @@
                 type="button"
                 class="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl border transition-colors"
                 :class="selectedMenu.is_active ? 'bg-primary text-white border-primary' : 'bg-white dark:bg-zinc-800 border-slate-200 dark:border-slate-700 text-slate-500'"
+                :title="selectedMenu.is_active ? 'Hide menu on public site' : 'Show menu on public site'"
                 :aria-label="(selectedMenu.is_active ? 'Hide' : 'Show') + ' ' + (selectedMenu.name || 'menu') + ' on public site'"
                 @click="toggleMenuActive(selectedMenu)"
               >
@@ -110,6 +111,7 @@
               <button
                 type="button"
                 class="drag-handle p-2 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                title="Drag to reorder"
                 aria-label="Drag to reorder"
               >
                 <span class="material-icons">drag_indicator</span>
@@ -117,7 +119,7 @@
               <div class="min-w-0 flex-1">
                 <p class="font-semibold text-charcoal dark:text-white">{{ categoryName(cat) }}</p>
               </div>
-              <AppButton variant="ghost" size="sm" class="min-h-[44px]" @click="openCategoryModal(cat)">
+              <AppButton variant="ghost" size="sm" class="min-h-[44px]" title="Edit category" aria-label="Edit category" @click="openCategoryModal(cat)">
                 <span class="material-icons">edit</span>
               </AppButton>
             </li>
@@ -154,6 +156,7 @@
                   <button
                     type="button"
                     class="drag-handle p-2 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                    title="Drag to reorder"
                     aria-label="Drag to reorder"
                   >
                     <span class="material-icons">drag_indicator</span>
@@ -162,7 +165,7 @@
                     <p class="font-medium text-charcoal dark:text-white truncate">{{ itemName(item) }}</p>
                     <p v-if="itemDescription(item)" class="text-sm text-slate-500 dark:text-slate-400 truncate mt-0.5">{{ itemDescription(item) }}</p>
                   </div>
-                  <router-link :to="{ name: 'RestaurantMenuItemEdit', params: { uuid, itemUuid: item.uuid } }" class="shrink-0">
+                  <router-link :to="{ name: 'RestaurantMenuItemEdit', params: { uuid, itemUuid: item.uuid } }" class="shrink-0" title="Edit menu item" aria-label="Edit menu item">
                     <AppButton variant="ghost" size="sm" class="min-h-[44px]">
                       <span class="material-icons">edit</span>
                     </AppButton>
@@ -203,6 +206,7 @@
         v-if="selectedMenuUuid && activeTab === 'categories'"
         type="button"
         class="fixed right-6 w-14 h-14 bg-primary text-white rounded-full shadow-lg flex items-center justify-center transition-transform hover:scale-105 active:scale-95 z-20 min-h-[56px] min-w-[56px] bottom-[calc(5.5rem+env(safe-area-inset-bottom,0px))] lg:bottom-6"
+        title="Add category"
         aria-label="Add category"
         @click="openCategoryModal()"
       >

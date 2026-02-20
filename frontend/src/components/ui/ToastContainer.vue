@@ -18,6 +18,7 @@
         <button
           type="button"
           class="shrink-0 p-1 rounded opacity-70 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-offset-1"
+          title="Dismiss"
           aria-label="Dismiss"
           @click="toastStore.remove(toast.id)"
         >

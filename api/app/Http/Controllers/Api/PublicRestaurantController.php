@@ -38,21 +38,25 @@ class PublicRestaurantController extends Controller
         $description = $translation?->description ?? null;
 
         $menuItems = $restaurant->menuItems()
+            ->where('is_active', true)
             ->where(function ($q) {
                 $q->whereNull('category_id')
                     ->orWhereHas('category', fn ($c) => $c->where('is_active', true));
             })
-            ->with(['translations', 'sourceMenuItem.translations'])
+            ->with(['translations', 'sourceMenuItem.translations', 'menuItemTags'])
             ->orderBy('sort_order')->orderBy('id')->get();
         $menuPayload = $menuItems->map(function ($item) use ($locale) {
             $effective = $item->getEffectiveTranslations();
             $t = $effective[$locale] ?? reset($effective);
+            $tags = $item->menuItemTags->map(fn ($tag) => $tag->toTagPayload())->values()->all();
             return [
                 'uuid' => $item->uuid,
                 'name' => $t['name'] ?? '',
                 'description' => $t['description'] ?? null,
                 'price' => $item->getEffectivePrice(),
                 'sort_order' => $item->sort_order,
+                'is_available' => (bool) ($item->is_available ?? true),
+                'tags' => $tags,
             ];
         })->all();
 

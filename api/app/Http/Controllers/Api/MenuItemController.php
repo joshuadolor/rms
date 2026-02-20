@@ -79,6 +79,7 @@ class MenuItemController extends Controller
             'category_uuid' => ['nullable', 'string', 'uuid'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'source_menu_item_uuid' => ['nullable', 'string', 'uuid'],
+            'source_variant_uuid' => ['nullable', 'string', 'uuid'],
             'price_override' => ['nullable', 'numeric', 'min:0'],
             'translation_overrides' => ['nullable', 'array'],
             'translation_overrides.*.name' => ['nullable', 'string', 'max:255'],
@@ -87,6 +88,8 @@ class MenuItemController extends Controller
             'translations' => ['nullable', 'array'],
             'translations.*.name' => ['required_with:translations', 'string', 'max:255'],
             'translations.*.description' => ['nullable', 'string', 'max:5000'],
+            'tag_uuids' => ['nullable', 'array'],
+            'tag_uuids.*' => ['string', 'uuid'],
         ]);
 
         if (empty($validated['source_menu_item_uuid'])) {
@@ -126,6 +129,8 @@ class MenuItemController extends Controller
         $validated = $request->validate([
             'category_uuid' => ['nullable', 'string', 'uuid'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
+            'is_active' => ['nullable', 'boolean'],
+            'is_available' => ['nullable', 'boolean'],
             'price' => ['nullable', 'numeric', 'min:0'],
             'price_override' => ['nullable', 'numeric', 'min:0'],
             'translation_overrides' => ['nullable', 'array'],
@@ -135,6 +140,8 @@ class MenuItemController extends Controller
             'translations' => ['nullable', 'array'],
             'translations.*.name' => ['nullable', 'string', 'max:255'],
             'translations.*.description' => ['nullable', 'string', 'max:5000'],
+            'tag_uuids' => ['nullable', 'array'],
+            'tag_uuids.*' => ['string', 'uuid'],
         ]);
 
         try {
@@ -177,21 +184,34 @@ class MenuItemController extends Controller
     private function menuItemPayload(MenuItem $item): array
     {
         $effectiveTranslations = $item->getEffectiveTranslations();
+        $tags = $item->relationLoaded('menuItemTags')
+            ? $item->menuItemTags->map(fn ($t) => $t->toTagPayload())->values()->all()
+            : [];
         $payload = [
             'uuid' => $item->uuid,
             'category_uuid' => $item->category?->uuid,
             'sort_order' => $item->sort_order,
+            'is_active' => (bool) $item->is_active,
+            'is_available' => (bool) ($item->is_available ?? true),
             'price' => $item->getEffectivePrice(),
             'translations' => $effectiveTranslations,
+            'tags' => $tags,
             'created_at' => $item->created_at?->toIso8601String(),
             'updated_at' => $item->updated_at?->toIso8601String(),
         ];
 
         if ($item->source_menu_item_uuid !== null) {
             $payload['source_menu_item_uuid'] = $item->source_menu_item_uuid;
+            if ($item->source_variant_uuid !== null) {
+                $payload['source_variant_uuid'] = $item->source_variant_uuid;
+            }
             $payload['price_override'] = $item->price_override !== null ? (float) $item->price_override : null;
             $payload['translation_overrides'] = $item->translation_overrides ?? [];
-            $payload['base_price'] = $item->sourceMenuItem ? (float) $item->sourceMenuItem->price : null;
+            if ($item->source_variant_uuid !== null && $item->relationLoaded('sourceVariantSku') && $item->sourceVariantSku) {
+                $payload['base_price'] = (float) $item->sourceVariantSku->price;
+            } else {
+                $payload['base_price'] = $item->sourceMenuItem ? (float) $item->sourceMenuItem->price : null;
+            }
             $baseTranslations = [];
             if ($item->relationLoaded('sourceMenuItem') && $item->sourceMenuItem) {
                 foreach ($item->sourceMenuItem->translations as $t) {

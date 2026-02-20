@@ -4,6 +4,7 @@ namespace App\Application\MenuItem;
 
 use App\Domain\Restaurant\Contracts\RestaurantRepositoryInterface;
 use App\Models\MenuItem;
+use App\Models\MenuItemTag;
 use App\Models\User;
 
 final readonly class UpdateMenuItem
@@ -13,7 +14,7 @@ final readonly class UpdateMenuItem
     ) {}
 
     /**
-     * @param  array{sort_order?: int, category_uuid?: string|null, translations?: array<string, array{name?: string, description?: string|null}>, price?: float|null, price_override?: float|null, translation_overrides?: array<string, array{name?: string, description?: string|null}>|null, revert_to_base?: bool}  $input
+     * @param  array{sort_order?: int, category_uuid?: string|null, is_active?: bool, is_available?: bool, translations?: array<string, array{name?: string, description?: string|null}>, price?: float|null, price_override?: float|null, translation_overrides?: array<string, array{name?: string, description?: string|null}>|null, revert_to_base?: bool}  $input
      */
     public function handle(User $user, string $restaurantUuid, string $itemUuid, array $input): ?MenuItem
     {
@@ -33,6 +34,12 @@ final readonly class UpdateMenuItem
         $update = [];
         if (array_key_exists('sort_order', $input)) {
             $update['sort_order'] = (int) $input['sort_order'];
+        }
+        if (array_key_exists('is_active', $input)) {
+            $update['is_active'] = (bool) $input['is_active'];
+        }
+        if (array_key_exists('is_available', $input)) {
+            $update['is_available'] = (bool) $input['is_available'];
         }
         if (array_key_exists('category_uuid', $input)) {
             $categoryId = null;
@@ -86,6 +93,12 @@ final readonly class UpdateMenuItem
             }
         }
 
-        return $item->fresh(['translations', 'sourceMenuItem.translations']);
+        if (array_key_exists('tag_uuids', $input)) {
+            $tagUuids = is_array($input['tag_uuids']) ? array_values(array_filter(array_map('strval', $input['tag_uuids']))) : [];
+            $tagIds = MenuItemTag::validateAndResolveIdsForUser($user, $tagUuids);
+            $item->menuItemTags()->sync($tagIds);
+        }
+
+        return $item->fresh(['translations', 'sourceMenuItem.translations', 'sourceVariantSku', 'menuItemTags']);
     }
 }

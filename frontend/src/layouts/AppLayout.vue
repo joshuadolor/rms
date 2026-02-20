@@ -72,6 +72,7 @@
           <button
             type="button"
             class="text-slate-400 hover:text-primary p-2 rounded min-h-[44px] min-w-[44px] flex items-center justify-center -m-1"
+            title="Sign out"
             aria-label="Sign out"
             @click="handleLogout"
           >
@@ -94,6 +95,7 @@
         <button
           type="button"
           class="min-h-[44px] min-w-[44px] flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
+          title="Open menu"
           aria-label="Open menu"
           aria-expanded="sidebarOpen"
           @click="sidebarOpen = true"

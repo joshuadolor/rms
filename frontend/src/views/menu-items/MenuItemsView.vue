@@ -66,7 +66,7 @@
             <p v-if="itemPrice(item) != null" class="text-sm font-medium text-slate-600 dark:text-slate-300 mt-0.5">{{ formatPrice(itemPrice(item)) }}</p>
           </div>
           <div class="flex items-center gap-1 shrink-0">
-            <router-link :to="editLink(item)">
+            <router-link :to="editLink(item)" title="Edit menu item" aria-label="Edit menu item">
               <AppButton variant="ghost" size="sm" class="min-h-[44px] min-w-[44px]" aria-label="Edit menu item">
                 <span class="material-icons">edit</span>
               </AppButton>
@@ -75,6 +75,7 @@
               variant="ghost"
               size="sm"
               class="min-h-[44px] min-w-[44px] text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+              title="Delete menu item"
               aria-label="Delete menu item"
               :disabled="deletingUuid === item.uuid"
               :data-testid="`delete-menu-item-${item.uuid}`"
@@ -113,6 +114,7 @@
         v-if="!listLoading"
         :to="{ name: 'MenuItemNew' }"
         class="fixed right-6 bottom-6 w-14 h-14 bg-primary text-white rounded-full shadow-lg flex items-center justify-center min-h-[56px] min-w-[56px] z-20"
+        title="Add menu item"
         aria-label="Add menu item"
       >
         <span class="material-icons text-3xl">add</span>

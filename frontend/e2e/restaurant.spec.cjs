@@ -329,15 +329,22 @@ function mockRestaurantMenuItems(page, items = []) {
     }
     if (method === 'POST' && !url.match(/\/menu-items\/[^/]+$/)) {
       const body = JSON.parse(route.request().postData() || '{}')
-      const name = body.translations?.en?.name ?? 'New Item'
+      const fromCatalog = body.source_menu_item_uuid != null
+      const name = body.translations?.en?.name ?? (fromCatalog ? 'From catalog' : 'New Item')
       const newItem = {
         uuid: 'item-' + Date.now(),
         category_uuid: body.category_uuid ?? null,
         sort_order: body.sort_order ?? state.length,
         price: body.price ?? null,
+        is_active: body.is_active !== false,
+        is_available: body.is_available !== false,
         translations: body.translations ?? { en: { name, description: null } },
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
+      }
+      if (fromCatalog) {
+        newItem.source_menu_item_uuid = body.source_menu_item_uuid
+        newItem.source_variant_uuid = body.source_variant_uuid ?? null
       }
       state.push(newItem)
       return route.fulfill({
@@ -356,6 +363,8 @@ function mockRestaurantMenuItems(page, items = []) {
         if (body.price !== undefined) state[idx].price = body.price
         if (body.category_uuid !== undefined) state[idx].category_uuid = body.category_uuid
         if (body.sort_order !== undefined) state[idx].sort_order = body.sort_order
+        if (body.is_active !== undefined) state[idx].is_active = body.is_active
+        if (body.is_available !== undefined) state[idx].is_available = body.is_available
         state[idx].updated_at = new Date().toISOString()
       }
       return route.fulfill({
@@ -1077,6 +1086,21 @@ test.describe('Restaurant module', () => {
     await publicPage.expectOpeningHoursSectionVisible()
   })
 
+  test('public menu shows Not Available pill when menu item has is_available false', async ({ page }) => {
+    mockPublicRestaurant(page, 'test-pizza', {
+      name: 'Test Pizza',
+      slug: 'test-pizza',
+      menu_items: [
+        { uuid: 'item-1', name: 'Margherita', description: null, price: 10, is_available: true },
+        { uuid: 'item-2', name: 'Sold Out Pie', description: null, price: 12, is_available: false },
+      ],
+    })
+
+    const publicPage = new PublicRestaurantPage(page)
+    await publicPage.goToPublicBySlug('test-pizza')
+    await publicPage.expectNotAvailablePillVisible()
+  })
+
   test('restaurant Settings tab shows Currency, Languages, and description-by-language with dropdown and single textarea', async ({ page }) => {
     await loginAsVerifiedUser(page)
     mockRestaurantList(page, [MOCK_RESTAURANT])
@@ -1293,6 +1317,101 @@ test.describe('Restaurant module', () => {
     await categoryItemsPage.expectEmptyState()
   })
 
+  test('category items page shows visibility toggle; toggling sends PATCH with is_active and updates label', async ({ page }) => {
+    const cat = { uuid: 'cat-visibility', sort_order: 0, is_active: true, translations: { en: { name: 'Mains' } }, created_at: new Date().toISOString(), updated_at: new Date().toISOString() }
+    const item = {
+      uuid: 'item-vis-1',
+      category_uuid: cat.uuid,
+      sort_order: 0,
+      price: '10.00',
+      is_active: true,
+      translations: { en: { name: 'Burger', description: null } },
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }
+    await loginAsVerifiedUser(page)
+    mockRestaurantList(page, [MOCK_RESTAURANT])
+    mockRestaurantGet(page, MOCK_RESTAURANT)
+    mockRestaurantMenus(page)
+    mockRestaurantCategories(page, [cat])
+    mockRestaurantMenuItems(page, [item])
+    mockRestaurantLanguagesAndTranslations(page)
+
+    const categoryItemsPage = new CategoryMenuItemsPage(page)
+    await categoryItemsPage.goTo(MOCK_RESTAURANT.uuid, cat.uuid, { name: 'Mains' })
+    await categoryItemsPage.expectCategoryHeading('Mains')
+    await categoryItemsPage.expectItemVisible('Burger')
+    await categoryItemsPage.expectVisibilityToggleVisible()
+    await categoryItemsPage.expectVisibilityToggleLabelHide()
+
+    const patchPromise = page.waitForRequest(
+      (req) =>
+        req.method() === 'PATCH' &&
+        req.url().includes('/api/restaurants/') &&
+        req.url().includes('/menu-items/')
+    )
+    await categoryItemsPage.clickFirstVisibilityToggle()
+    const patchRequest = await patchPromise
+    const body = JSON.parse(await patchRequest.postData() || '{}')
+    expect(body).toMatchObject({ is_active: false })
+
+    await categoryItemsPage.expectVisibilityToggleLabelShow()
+  })
+
+  test('owner can toggle Not Available on category menu items page and see UI update', async ({ page }) => {
+    const cat = { uuid: 'cat-avail', sort_order: 0, is_active: true, translations: { en: { name: 'Mains' } }, created_at: new Date().toISOString(), updated_at: new Date().toISOString() }
+    const item = {
+      uuid: 'item-avail-1',
+      category_uuid: cat.uuid,
+      sort_order: 0,
+      price: '12.00',
+      is_active: true,
+      is_available: true,
+      translations: { en: { name: 'Caesar Salad', description: null } },
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }
+    await loginAsVerifiedUser(page)
+    mockRestaurantList(page, [MOCK_RESTAURANT])
+    mockRestaurantGet(page, MOCK_RESTAURANT)
+    mockRestaurantMenus(page)
+    mockRestaurantCategories(page, [cat])
+    mockRestaurantMenuItems(page, [item])
+    mockRestaurantLanguagesAndTranslations(page)
+
+    const categoryItemsPage = new CategoryMenuItemsPage(page)
+    await categoryItemsPage.goTo(MOCK_RESTAURANT.uuid, cat.uuid, { name: 'Mains' })
+    await categoryItemsPage.expectCategoryHeading('Mains')
+    await categoryItemsPage.expectItemVisible('Caesar Salad')
+    await categoryItemsPage.expectAvailabilityToggleVisible()
+    await categoryItemsPage.expectAvailabilityShowsAvailable()
+
+    const patchPromise = page.waitForRequest(
+      (req) =>
+        req.method() === 'PATCH' &&
+        req.url().includes('/api/restaurants/') &&
+        req.url().includes('/menu-items/')
+    )
+    await categoryItemsPage.clickFirstAvailabilityToggle()
+    const patchRequest = await patchPromise
+    const body = JSON.parse(await patchRequest.postData() || '{}')
+    expect(body).toMatchObject({ is_available: false })
+
+    await categoryItemsPage.expectAvailabilityShowsNotAvailable()
+
+    const patchPromise2 = page.waitForRequest(
+      (req) =>
+        req.method() === 'PATCH' &&
+        req.url().includes('/api/restaurants/') &&
+        req.url().includes('/menu-items/')
+    )
+    await categoryItemsPage.clickFirstAvailabilityToggle()
+    const patchRequest2 = await patchPromise2
+    const body2 = JSON.parse(await patchRequest2.postData() || '{}')
+    expect(body2).toMatchObject({ is_available: true })
+    await categoryItemsPage.expectAvailabilityShowsAvailable()
+  })
+
   test('owner can open category items page, click Add menu item, and see modal with search and toggle', async ({ page }) => {
     const cat = { uuid: 'cat-add-item', sort_order: 0, is_active: true, translations: { en: { name: 'Starters' } }, created_at: new Date().toISOString(), updated_at: new Date().toISOString() }
     await loginAsVerifiedUser(page)
@@ -1313,6 +1432,56 @@ test.describe('Restaurant module', () => {
     await categoryItemsPage.expectAddItemModalContentVisible()
     await categoryItemsPage.closeAddItemModal()
     await categoryItemsPage.expectAddItemModalClosed()
+  })
+
+  test('add-item modal shows variant rows for catalog item with_variants and not base item; adding variant sends source_variant_uuid', async ({ page }) => {
+    const cat = { uuid: 'cat-variants', sort_order: 0, is_active: true, translations: { en: { name: 'Mains' } }, created_at: new Date().toISOString(), updated_at: new Date().toISOString() }
+    const catalogPizzaUuid = 'cat-pizza-uuid'
+    const variantSkuUuid = 'var-hawaiian-small'
+    const catalogPizzaWithVariants = {
+      uuid: catalogPizzaUuid,
+      restaurant_uuid: null,
+      type: 'with_variants',
+      translations: { en: { name: 'Pizza', description: null } },
+      variant_option_groups: [{ name: 'Type' }, { name: 'Size' }],
+      variant_skus: [
+        { uuid: variantSkuUuid, option_values: { Type: 'Hawaiian', Size: 'Small' }, price: 12 },
+      ],
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }
+    await loginAsVerifiedUser(page)
+    mockRestaurantList(page, [MOCK_RESTAURANT])
+    mockRestaurantGet(page, MOCK_RESTAURANT)
+    mockRestaurantMenus(page)
+    mockRestaurantCategories(page, [cat])
+    mockRestaurantMenuItems(page, [])
+    mockUserMenuItems(page, [catalogPizzaWithVariants])
+    mockRestaurantLanguagesAndTranslations(page)
+
+    const categoryItemsPage = new CategoryMenuItemsPage(page)
+    await categoryItemsPage.goTo(MOCK_RESTAURANT.uuid, cat.uuid, { name: 'Mains' })
+    await categoryItemsPage.expectCategoryHeading('Mains')
+    await categoryItemsPage.clickAddMenuItemButton()
+    await categoryItemsPage.expectAddItemModalOpen()
+    await categoryItemsPage.expectAddModalVariantRowVisible('Pizza – Hawaiian, Small')
+    await categoryItemsPage.expectAddModalBaseItemNotVisible('Pizza')
+
+    const variantRowUuid = `catalog-${catalogPizzaUuid}-${variantSkuUuid}`
+    const postRequestPromise = page.waitForRequest(
+      (req) =>
+        req.url().includes('/api/restaurants/') &&
+        req.url().includes('/menu-items') &&
+        req.method() === 'POST'
+    )
+    await categoryItemsPage.addItemToCategoryInModal('Pizza – Hawaiian, Small', variantRowUuid)
+    const postRequest = await postRequestPromise
+    const body = JSON.parse(await postRequest.postData() || '{}')
+    expect(body).toMatchObject({
+      source_menu_item_uuid: catalogPizzaUuid,
+      source_variant_uuid: variantSkuUuid,
+      category_uuid: cat.uuid,
+    })
   })
 
   test.skip('owner can add menu item to category via modal and see list update', async ({ page }) => {
@@ -1382,6 +1551,12 @@ test.describe('Restaurant module', () => {
     mockRestaurantCategories(page, [cat])
     mockRestaurantMenuItems(page, [existingItem])
     mockRestaurantLanguagesAndTranslations(page)
+    page.route('**/api/menu-item-tags**', (route) => {
+      if (route.request().method() === 'GET' && !route.request().url().match(/\/api\/menu-item-tags\/[^/]+$/)) {
+        return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ data: [] }) })
+      }
+      return route.continue()
+    })
 
     const formPage = new MenuItemFormPage(page)
     await formPage.goToEdit(MOCK_RESTAURANT.uuid, existingItem.uuid)

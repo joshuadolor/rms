@@ -47,6 +47,7 @@
                   type="button"
                   class="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl border transition-colors"
                   :class="selectedMenu.is_active ? 'bg-primary text-white border-primary' : 'bg-white dark:bg-zinc-800 border-slate-200 dark:border-slate-700 text-slate-500'"
+                  :title="selectedMenu.is_active ? 'Hide menu on public site' : 'Show menu on public site'"
                   :aria-label="(selectedMenu.is_active ? 'Hide' : 'Show') + ' ' + (selectedMenu.name || 'menu') + ' on public site'"
                   @click="toggleMenuActive(selectedMenu)"
                 >
@@ -57,6 +58,7 @@
                   variant="ghost"
                   size="sm"
                   class="min-h-[44px] min-w-[44px] shrink-0 p-0"
+                  title="Rename menu"
                   aria-label="Rename menu"
                   @click="openEditMenuModal"
                 >
@@ -107,6 +109,7 @@
               <button
                 type="button"
                 class="drag-handle p-2 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 min-h-[44px] min-w-[44px] flex items-center justify-center touch-none shrink-0"
+                title="Drag to reorder"
                 aria-label="Drag to reorder"
               >
                 <span class="material-icons">drag_indicator</span>
@@ -129,18 +132,20 @@
                   type="button"
                   class="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl border transition-colors shrink-0"
                   :class="cat.is_active !== false ? 'bg-primary text-white border-primary' : 'bg-white dark:bg-zinc-800 border-slate-200 dark:border-slate-700 text-slate-500'"
+                  :title="(cat.is_active !== false) ? 'Hide category on public menu' : 'Show category on public menu'"
                   :aria-label="(cat.is_active !== false ? 'Hide' : 'Show') + ' category on public menu'"
                   @click="toggleCategoryActive(cat)"
                 >
                   <span class="material-icons text-xl">{{ cat.is_active !== false ? 'visibility' : 'visibility_off' }}</span>
                 </button>
-                <AppButton variant="ghost" size="sm" class="min-h-[44px] min-w-[44px] shrink-0" @click="openCategoryModal(cat)">
+                <AppButton variant="ghost" size="sm" class="min-h-[44px] min-w-[44px] shrink-0" title="Edit category" aria-label="Edit category" @click="openCategoryModal(cat)">
                   <span class="material-icons">edit</span>
                 </AppButton>
                 <AppButton
                   variant="ghost"
                   size="sm"
                   class="min-h-[44px] min-w-[44px] shrink-0 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                  title="Remove category"
                   aria-label="Remove category"
                   @click="openDeleteCategoryModal(cat)"
                 >
@@ -366,6 +371,7 @@
               <button
                 type="button"
                 class="min-h-[44px] min-w-[44px] sm:min-w-0 flex items-center justify-center gap-2 rounded-full sm:rounded-xl bg-white dark:bg-zinc-800 text-charcoal dark:text-white shadow-lg border border-slate-200 dark:border-slate-700 px-4 py-2 text-sm font-medium hover:bg-slate-50 dark:hover:bg-zinc-700 transition-colors"
+                title="Add menu"
                 aria-label="Add menu"
                 @click="onFabAddMenu"
               >
@@ -375,6 +381,7 @@
               <button
                 type="button"
                 class="min-h-[44px] min-w-[44px] sm:min-w-0 flex items-center justify-center gap-2 rounded-full sm:rounded-xl bg-white dark:bg-zinc-800 text-charcoal dark:text-white shadow-lg border border-slate-200 dark:border-slate-700 px-4 py-2 text-sm font-medium hover:bg-slate-50 dark:hover:bg-zinc-700 transition-colors"
+                title="Add category"
                 aria-label="Add category"
                 @click="onFabAddCategory"
               >
@@ -386,6 +393,7 @@
           <button
             type="button"
             class="w-14 h-14 min-h-[56px] min-w-[56px] bg-primary text-white rounded-full shadow-lg flex items-center justify-center transition-transform hover:scale-105 active:scale-95"
+            :title="fabOpen ? 'Close' : 'Add menu or category'"
             :aria-expanded="fabOpen"
             :aria-label="fabOpen ? 'Close add menu' : 'Add menu or category'"
             @click="fabOpen = !fabOpen"

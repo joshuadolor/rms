@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\ForgotPasswordController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\MenuController;
 use App\Http\Controllers\Api\MenuItemController;
+use App\Http\Controllers\Api\MenuItemTagController;
 use App\Http\Controllers\Api\UserMenuItemController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\RestaurantController;
@@ -130,6 +131,12 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::match(['put', 'patch'], '/restaurants/{restaurant}/menus/{menu}/categories/{category}', [CategoryController::class, 'update']);
     Route::delete('/restaurants/{restaurant}/menus/{menu}/categories/{category}', [CategoryController::class, 'destroy']);
     Route::post('/restaurants/{restaurant}/menus/{menu}/categories/reorder', [CategoryController::class, 'reorder']);
+
+    // Menu item tags (list default only; POST/PATCH/DELETE return 403 — custom tags disabled)
+    Route::get('/menu-item-tags', [MenuItemTagController::class, 'index']);
+    Route::post('/menu-item-tags', [MenuItemTagController::class, 'store']);
+    Route::match(['put', 'patch'], '/menu-item-tags/{tag}', [MenuItemTagController::class, 'update']);
+    Route::delete('/menu-item-tags/{tag}', [MenuItemTagController::class, 'destroy']);
 
     // Menu items — user-level (standalone list/create + get/update/delete any owned item)
     Route::get('/menu-items', [UserMenuItemController::class, 'index']);
