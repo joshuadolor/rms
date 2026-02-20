@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Minimalist Restaurant Template</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1152d4",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101622",
+                        "neutral-dark": "#111318",
+                        "neutral-muted": "#616f89",
+                        "border-light": "#dbdfe6",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .menu-dots { flex-grow: 1; border-bottom: 1px dotted #dbdfe6; margin-bottom: 5px; margin-left: 8px; margin-right: 8px; }
+    </style>
+</head>
+<body class="bg-white text-neutral-dark font-display antialiased">
+<!-- Header -->
+<header class="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-sm border-b border-border-light">
+<div class="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 bg-neutral-dark text-white flex items-center justify-center rounded">
+<svg class="w-5 h-5" fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M44 4H30.6666V17.3334H17.3334V30.6666H4V44H44V4Z" fill="currentColor"></path>
+</svg>
+</div>
+<span class="text-xl font-bold tracking-tight uppercase">The Grand Table</span>
+</div>
+<nav class="hidden md:flex items-center gap-10">
+<a class="text-sm font-medium hover:text-primary transition-colors" href="#menu">Menu</a>
+<a class="text-sm font-medium hover:text-primary transition-colors" href="#reviews">Reviews</a>
+<a class="text-sm font-medium hover:text-primary transition-colors" href="#contact">Contact</a>
+<button class="bg-primary text-white px-6 py-2.5 rounded text-sm font-bold tracking-wide hover:bg-primary/90 transition-all">
+                    Book a Table
+                </button>
+</nav>
+<button class="md:hidden p-2">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</div>
+</header>
+<main>
+<!-- Hero Section -->
+<section class="max-w-6xl mx-auto px-6 py-8">
+<div class="relative w-full aspect-[21/9] overflow-hidden rounded-lg">
+<img alt="Elegant restaurant interior with soft lighting" class="w-full h-full object-cover" data-alt="Modern minimalist restaurant interior with ambient lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAaAV0dFkRHqubglMo_t4ZUdbRK7c_s64v3f2CFx66Iyn81E9uMV89pt_s3k1Vrqiarbx9rj2RU1ku7NKeF2nKwj49aLRYqt8S_0Uo6uq6ODGJO6qcS7iUiNaFjXX55REkdVLw3U6P7-xH4nmKEpl2t1wf451K1VXuRE4328CxYwA8QDTTJbZxLEDYttB0nQvZLciguWS_VLmoq_x03Z24RJJpGsdRbE0j2rZGLtq8Vcc_z0MyDwIkL07RwMEA9aK7UPL3jciW_FYA"/>
+<div class="absolute inset-0 bg-black/30 flex items-end p-8 md:p-12">
+<div class="max-w-2xl text-white">
+<h1 class="text-4xl md:text-6xl font-bold mb-4">The Art of Dining</h1>
+<p class="text-lg md:text-xl font-light opacity-90">Experience a fusion of seasonal ingredients and contemporary culinary techniques in a space designed for connection.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Our Menu -->
+<section class="max-w-6xl mx-auto px-6 py-20" id="menu">
+<div class="text-center mb-16">
+<h2 class="text-3xl font-bold tracking-tight mb-2">Our Menu</h2>
+<div class="w-12 h-1 bg-primary mx-auto"></div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-12">
+<!-- Appetizers -->
+<div>
+<h3 class="text-sm font-bold uppercase tracking-[0.2em] text-neutral-muted mb-8 border-b pb-2">Appetizers</h3>
+<div class="space-y-8">
+<div class="flex flex-col">
+<div class="flex items-end justify-between">
+<span class="text-lg font-bold">Classic Caesar Salad</span>
+<div class="menu-dots"></div>
+<span class="text-lg font-bold text-primary">$14</span>
+</div>
+<p class="text-neutral-muted text-sm mt-1">Crisp romaine, parmesan shavings, herb croutons, house dressing.</p>
+</div>
+<div class="flex flex-col">
+<div class="flex items-end justify-between">
+<span class="text-lg font-bold">Truffle Arancini</span>
+<div class="menu-dots"></div>
+<span class="text-lg font-bold text-primary">$16</span>
+</div>
+<p class="text-neutral-muted text-sm mt-1">Wild mushroom risotto balls with truffle oil and aioli dip.</p>
+</div>
+<div class="flex flex-col">
+<div class="flex items-end justify-between">
+<span class="text-lg font-bold">Burrata &amp; Heirloom Tomato</span>
+<div class="menu-dots"></div>
+<span class="text-lg font-bold text-primary">$18</span>
+</div>
+<p class="text-neutral-muted text-sm mt-1">Creamy burrata, balsamic glaze, fresh basil, and sourdough crisps.</p>
+</div>
+</div>
+</div>
+<!-- Main Courses -->
+<div>
+<h3 class="text-sm font-bold uppercase tracking-[0.2em] text-neutral-muted mb-8 border-b pb-2">Main Courses</h3>
+<div class="space-y-8">
+<div class="flex flex-col">
+<div class="flex items-end justify-between">
+<span class="text-lg font-bold">Pan-Seared Salmon</span>
+<div class="menu-dots"></div>
+<span class="text-lg font-bold text-primary">$28</span>
+</div>
+<p class="text-neutral-muted text-sm mt-1">Atlantic salmon, asparagus, lemon butter sauce, crushed potatoes.</p>
+</div>
+<div class="flex flex-col">
+<div class="flex items-end justify-between">
+<span class="text-lg font-bold">Braised Beef Short Rib</span>
+<div class="menu-dots"></div>
+<span class="text-lg font-bold text-primary">$32</span>
+</div>
+<p class="text-neutral-muted text-sm mt-1">Slow-cooked rib, red wine jus, creamy polenta, glazed carrots.</p>
+</div>
+<div class="flex flex-col">
+<div class="flex items-end justify-between">
+<span class="text-lg font-bold">Truffle Mushroom Risotto</span>
+<div class="menu-dots"></div>
+<span class="text-lg font-bold text-primary">$22</span>
+</div>
+<p class="text-neutral-muted text-sm mt-1">Arborio rice, wild mushrooms, truffle oil, aged parmesan.</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Customer Reviews -->
+<section class="bg-background-light py-20" id="reviews">
+<div class="max-w-6xl mx-auto px-6">
+<div class="text-center mb-16">
+<h2 class="text-3xl font-bold tracking-tight mb-2">Guest Experiences</h2>
+<p class="text-neutral-muted">What our patrons are saying</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<div class="bg-white p-8 border border-border-light rounded-lg">
+<div class="flex text-primary mb-4">
+<span class="material-symbols-outlined text-sm">star</span>
+<span class="material-symbols-outlined text-sm">star</span>
+<span class="material-symbols-outlined text-sm">star</span>
+<span class="material-symbols-outlined text-sm">star</span>
+<span class="material-symbols-outlined text-sm">star</span>
+</div>
+<p class="italic text-neutral-dark mb-6 leading-relaxed">"The atmosphere is sophisticated yet welcoming. The Pan-Seared Salmon was cooked to absolute perfection. A must-visit for foodies."</p>
+<p class="text-sm font-bold uppercase tracking-widest">— Sarah Jenkins</p>
+</div>
+<div class="bg-white p-8 border border-border-light rounded-lg">
+<div class="flex text-primary mb-4">
+<span class="material-symbols-outlined text-sm">star</span>
+<span class="material-symbols-outlined text-sm">star</span>
+<span class="material-symbols-outlined text-sm">star</span>
+<span class="material-symbols-outlined text-sm">star</span>
+<span class="material-symbols-outlined text-sm">star</span>
+</div>
+<p class="italic text-neutral-dark mb-6 leading-relaxed">"Impeccable service and an incredible wine list. The braised beef short rib melted in my mouth. Highly recommend for special occasions."</p>
+<p class="text-sm font-bold uppercase tracking-widest">— Michael Chen</p>
+</div>
+<div class="bg-white p-8 border border-border-light rounded-lg">
+<div class="flex text-primary mb-4">
+<span class="material-symbols-outlined text-sm">star</span>
+<span class="material-symbols-outlined text-sm">star</span>
+<span class="material-symbols-outlined text-sm">star</span>
+<span class="material-symbols-outlined text-sm">star</span>
+<span class="material-symbols-outlined text-sm">star</span>
+</div>
+<p class="italic text-neutral-dark mb-6 leading-relaxed">"The minimalist decor really lets the food shine. Every dish was a work of art. The truffle arancini are addictive."</p>
+<p class="text-sm font-bold uppercase tracking-widest">— Elena Rodriguez</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Contact & Schedule -->
+<section class="max-w-6xl mx-auto px-6 py-20" id="contact">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-16">
+<div>
+<h2 class="text-3xl font-bold tracking-tight mb-8">Contact Us</h2>
+<div class="space-y-6">
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-neutral-muted">location_on</span>
+<div>
+<p class="font-bold">Address</p>
+<p class="text-neutral-muted">123 Culinary Avenue, Food District<br/>New York, NY 10001</p>
+</div>
+</div>
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-neutral-muted">call</span>
+<div>
+<p class="font-bold">Phone</p>
+<p class="text-neutral-muted">(212) 555-0123</p>
+</div>
+</div>
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-neutral-muted">mail</span>
+<div>
+<p class="font-bold">Email</p>
+<p class="text-neutral-muted">hello@thegrandtable.com</p>
+</div>
+</div>
+</div>
+</div>
+<div>
+<h2 class="text-3xl font-bold tracking-tight mb-8">Opening Hours</h2>
+<div class="space-y-3">
+<div class="flex justify-between border-b border-border-light pb-2">
+<span class="font-medium">Monday - Thursday</span>
+<span class="text-neutral-muted">11:00 AM - 10:00 PM</span>
+</div>
+<div class="flex justify-between border-b border-border-light pb-2">
+<span class="font-medium">Friday - Saturday</span>
+<span class="text-neutral-muted">11:00 AM - 11:30 PM</span>
+</div>
+<div class="flex justify-between border-b border-border-light pb-2">
+<span class="font-medium">Sunday</span>
+<span class="text-neutral-muted">10:00 AM - 9:00 PM</span>
+</div>
+</div>
+<div class="mt-8 p-4 bg-primary/5 rounded border border-primary/10">
+<p class="text-sm text-primary font-medium">Join us for Weekend Brunch every Saturday &amp; Sunday starting at 10:00 AM.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Map -->
+<section class="w-full px-6 pb-20">
+<div class="max-w-6xl mx-auto h-[400px] bg-background-light rounded-lg overflow-hidden border border-border-light relative">
+<!-- Placeholder for actual Google Map embed -->
+<div class="w-full h-full bg-[#e5e7eb] flex flex-col items-center justify-center text-neutral-muted" data-location="New York City" style="">
+<span class="material-symbols-outlined text-4xl mb-2">map</span>
+<p class="font-medium">Interactive Map Placeholder</p>
+<p class="text-xs">123 Culinary Avenue, New York, NY</p>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="border-t border-border-light py-12">
+<div class="max-w-6xl mx-auto px-6 flex flex-col items-center gap-6">
+<div class="flex items-center gap-2 opacity-50 grayscale">
+<div class="size-4">
+<svg fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M44 4H30.6666V17.3334H17.3334V30.6666H4V44H44V4Z" fill="currentColor"></path>
+</svg>
+</div>
+<span class="text-sm font-bold uppercase tracking-tight">The Grand Table</span>
+</div>
+<div class="text-center text-neutral-muted text-sm space-y-2">
+<p>© 2024 The Grand Table. All rights reserved.</p>
+<p class="text-[10px] uppercase tracking-widest font-bold text-neutral-dark/30">Powered by RMS and DLR Web Solutions</p>
+</div>
+</div>
+</footer>
+</body></html>

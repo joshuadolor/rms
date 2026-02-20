@@ -831,7 +831,7 @@ Returns only restaurants owned by the authenticated user.
 | POST | `/api/restaurants/{uuid}/logo` | Bearer + verified |
 
 **Body:** `multipart/form-data` with field **`file`**. Allowed: image only (jpeg, jpg, png, gif, webp). Max size: **2MB**. Validation errors return **422**; the API returns a clear message for file too large (e.g. "The image must not be greater than 2MB.").  
-**Storage:** The stored filename is server-derived from the file’s MIME type (e.g. `logo.jpg`, `logo.png`). The client-provided filename/extension is not used.
+**Storage:** The stored filename is server-derived from the file’s MIME type (e.g. `logo.jpg`, `logo.png`). The client-provided filename/extension is not used. **Image optimization:** On upload, the image is resized to fit within **300×300 px** (proportional; no cropping). If the image is already within those dimensions, it is stored as-is.
 
 **Response (200):**
 ```json
@@ -841,7 +841,7 @@ Returns only restaurants owned by the authenticated user.
 }
 ```
 
-**403:** Not owner. **404:** Restaurant not found. **422:** Validation (e.g. file type/size).
+**403:** Not owner. **404:** Restaurant not found. **422:** Validation (file type/size) or image processing errors (invalid/corrupt image, resize failure); message and errors.file indicate the reason.
 
 ---
 
@@ -851,10 +851,10 @@ Returns only restaurants owned by the authenticated user.
 |--------|------|------|
 | POST | `/api/restaurants/{uuid}/banner` | Bearer + verified |
 
-**Body:** Same as logo – `multipart/form-data`, field **`file`** (image: jpeg, png, gif, webp; max 2MB). Same validation and error messages. Stored filename is server-derived from MIME (e.g. `banner.jpg`), not from the client filename.
+**Body:** Same as logo – `multipart/form-data`, field **`file`** (image: jpeg, png, gif, webp; max 2MB). Same validation and error messages. Stored filename is server-derived from MIME (e.g. `banner.jpg`), not from the client filename. **Image optimization:** On upload, the image is resized to fit within **1920×600 px** (proportional; no cropping). If the image is already within those dimensions, it is stored as-is.
 
 **Response (200):** `{ "message": "Banner updated.", "data": { restaurant payload } }`  
-**403/404/422:** Same as logo.
+**403:** Not owner. **404:** Restaurant not found. **422:** Validation (file type/size) or image processing errors (invalid/corrupt image, resize failure); message and errors.file indicate the reason.
 
 ---
 
@@ -1492,6 +1492,8 @@ When **source_variant_uuid** is present, **name** in `translations` is the catal
 
 ## Changelog
 
+- **2026-02-20**: **Logo/banner upload: 422 for image processing errors.** Upload logo and upload banner sections now document that 422 is also returned for image processing errors (invalid/corrupt image, resize failure), with message and errors.file indicating the reason.
+- **2026-02-20**: **Logo and banner image optimization.** On upload, logo images are resized to fit within 300×300 px and banner images within 1920×600 px (proportional; no cropping). Images already within those dimensions are stored as-is. Resizing is done server-side with PHP GD before storage; the stored file is the (possibly resized) image. No change to API response shape; no internal `id` in any response.
 - **2026-02-20**: **Availability for categories and menu items.** Categories and menu_items tables: added **availability** (JSON, nullable). Same shape as restaurant operating_hours (keyed by day sunday–saturday, each day `{ "open": bool, "slots": [ { "from": "HH:MM", "to": "HH:MM" }, ... ] }`). When **null** = "all available" (default). Validation via existing OperatingHoursRule and OperatingHoursSlotValidator (no overlapping slots per day). Category API: list/show/create/update include and accept optional **availability** (PATCH null to clear). Menu item API (restaurant): list/show/create/update include and accept optional **availability** (null to clear). GET `/api/public/restaurants/{slug}`: each menu_item in response includes **availability** (null = always available). No internal `id` in any response.
 - **2026-02-20**: **Owner feedback (feature requests).** New entity: owner feedback (uuid, user_id, restaurant_id nullable, title nullable, message, status default pending). Owner (Bearer + verified): POST `/api/owner-feedback` (message required, title and restaurant optional; 403 if restaurant uuid sent but not owned), GET `/api/owner-feedback` (list own submissions, newest first). Superadmin: GET `/api/superadmin/owner-feedbacks` (list all with submitter and restaurant), PATCH `/api/superadmin/owner-feedbacks/{uuid}` (optional status: pending | reviewed). No internal `id` in any response.
 - **2026-02-20**: **Superadmin module.** Superadmin identity via `is_superadmin` on users table; seeded from `SUPERADMIN_EMAIL` and `SUPERADMIN_PASSWORD` (env). User payload: added **is_superadmin**, **is_active** (GET /api/user, login). **is_active** (boolean, default true) added to users; deactivated users cannot log in (403 "Your account has been deactivated."). Superadmin-only endpoints (Bearer + verified + superadmin; 403 if not): GET `/api/superadmin/stats` (restaurants_count, users_count, paid_users_count), GET `/api/superadmin/users` (list all users), PATCH `/api/superadmin/users/{uuid}` (optional is_paid, is_active; cannot change own is_active), GET `/api/superadmin/restaurants` (read-only list). No internal `id` in any response.

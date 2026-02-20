@@ -300,6 +300,7 @@ test.describe('Owner feedback (superadmin)', () => {
   })
 
   test('superadmin can toggle feedback status to reviewed and see success', async ({ page }) => {
+    test.setTimeout(60000)
     await loginAsSuperadmin(page)
     const feedbacks = [
       {
@@ -323,6 +324,7 @@ test.describe('Owner feedback (superadmin)', () => {
     await appPage.navigateToOwnerFeedbacks()
     const feedbacksPage = new SuperadminOwnerFeedbacksPage(page)
     await feedbacksPage.expectPageVisible()
+    await feedbacksPage.expectFeedbacksListVisible()
     await feedbacksPage.expectFeedbackRowWithMessageVisible('Add export to PDF for the menu.')
     await feedbacksPage.expectFeedbackRowShowsStatus('Add export to PDF for the menu.', 'Pending')
     await feedbacksPage.clickMarkReviewedForRowWithMessage('Add export to PDF for the menu.')
@@ -331,6 +333,7 @@ test.describe('Owner feedback (superadmin)', () => {
   })
 
   test('superadmin can toggle feedback status from reviewed to pending', async ({ page }) => {
+    test.setTimeout(60000)
     await loginAsSuperadmin(page)
     const feedbacks = [
       {

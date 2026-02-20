@@ -19,7 +19,7 @@
         <p class="mt-2 text-slate-500 dark:text-slate-400">{{ error }}</p>
         <router-link
           :to="{ name: 'Landing' }"
-          class="mt-6 min-h-[44px] inline-flex items-center gap-2 font-semibold hover:underline py-2"
+          class="mt-6 min-h-[44px] inline-flex items-center gap-2 font-semibold hover:underline py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
           style="color: var(--public-accent)"
         >
           <span class="material-icons text-lg">arrow_back</span>
@@ -34,22 +34,22 @@
         <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <a
             href="#"
-            class="flex items-center gap-3 min-h-[44px]"
+            class="flex items-center gap-3 min-h-[44px] rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
             aria-label="Scroll to top"
             @click.prevent="scrollToTop"
           >
             <div
               v-if="data.logo_url"
-              class="w-9 h-9 rounded-lg overflow-hidden shrink-0 ring-1 ring-slate-200 dark:ring-slate-700"
+              class="w-12 h-12 sm:w-14 sm:h-14 rounded-xl overflow-hidden shrink-0 ring-1 ring-slate-200 dark:ring-slate-700"
             >
               <img :src="data.logo_url" :alt="data.name" class="w-full h-full object-cover" />
             </div>
             <div
               v-else
-              class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+              class="w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center shrink-0"
               style="background-color: var(--public-accent)"
             >
-              <span class="material-icons text-white text-lg">restaurant</span>
+              <span class="material-icons text-white text-2xl sm:text-3xl">restaurant</span>
             </div>
             <span class="font-bold text-lg tracking-tight text-charcoal dark:text-white truncate max-w-[180px] sm:max-w-none">
               {{ data.name }}
@@ -59,21 +59,21 @@
             <div class="hidden sm:flex items-center gap-6">
               <a
                 href="#"
-                class="min-h-[44px] min-w-[44px] inline-flex items-center text-sm font-medium text-slate-600 dark:text-slate-400 transition-colors hover:opacity-80 py-2.5"
+                class="min-h-[44px] min-w-[44px] inline-flex items-center text-sm font-medium text-slate-600 dark:text-slate-400 transition-colors hover:opacity-80 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
                 style="color: var(--public-accent)"
                 aria-label="Scroll to top"
                 @click.prevent="scrollToTop"
               >Home</a>
-              <a href="#menu" class="text-sm font-medium text-slate-600 dark:text-slate-400 transition-colors hover:opacity-80" style="color: var(--public-accent)">Menu</a>
-              <a href="#about" class="text-sm font-medium text-slate-600 dark:text-slate-400 transition-colors hover:opacity-80" style="color: var(--public-accent)">About</a>
-              <a href="#reviews" class="text-sm font-medium text-slate-600 dark:text-slate-400 transition-colors hover:opacity-80" style="color: var(--public-accent)">Reviews</a>
+              <a href="#menu" class="min-h-[44px] inline-flex items-center text-sm font-medium text-slate-600 dark:text-slate-400 transition-colors hover:opacity-80 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary" style="color: var(--public-accent)">Menu</a>
+              <a href="#about" class="min-h-[44px] inline-flex items-center text-sm font-medium text-slate-600 dark:text-slate-400 transition-colors hover:opacity-80 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary" style="color: var(--public-accent)">About</a>
+              <a href="#reviews" class="min-h-[44px] inline-flex items-center text-sm font-medium text-slate-600 dark:text-slate-400 transition-colors hover:opacity-80 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary" style="color: var(--public-accent)">Reviews</a>
             </div>
             <div v-if="data.languages?.length > 1" class="flex flex-wrap gap-1.5">
               <button
                 v-for="loc in data.languages"
                 :key="loc"
                 type="button"
-                class="min-h-[44px] min-w-[44px] flex items-center justify-center px-2.5 py-2.5 rounded-lg text-xs font-medium transition-colors"
+                class="min-h-[44px] min-w-[44px] flex items-center justify-center px-2.5 py-2.5 rounded-lg text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
                 :class="locale === loc
                   ? 'text-white'
                   : 'bg-slate-100 dark:bg-zinc-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-zinc-600'"
@@ -103,6 +103,13 @@
           style="background: linear-gradient(135deg, var(--public-accent) 0%, var(--public-accent) 50%, rgba(0,0,0,0.3) 100%);"
         />
         <div class="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 pb-12 sm:pb-16 pt-24">
+          <div v-if="data.logo_url" class="mb-4 sm:mb-6" data-testid="public-hero-logo">
+            <img
+              :src="data.logo_url"
+              :alt="data.name"
+              class="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-2xl object-cover ring-2 ring-white/50 shadow-xl"
+            />
+          </div>
           <span class="font-semibold tracking-[0.2em] uppercase text-xs sm:text-sm block mb-2 text-white/90" style="color: var(--public-accent)">
             {{ data.name }}
           </span>
@@ -114,7 +121,7 @@
           </p>
           <a
             href="#menu"
-            class="mt-6 inline-flex items-center gap-2 text-white font-semibold py-3 px-6 rounded-lg shadow-lg transition-all hover:opacity-90"
+            class="mt-6 min-h-[44px] inline-flex items-center gap-2 text-white font-semibold py-3 px-6 rounded-lg shadow-lg transition-all hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
             style="background-color: var(--public-accent); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2);"
           >
             Explore Menu
@@ -351,7 +358,7 @@
 
               <button
                 type="submit"
-                class="min-h-[44px] px-6 py-2.5 font-semibold rounded-lg text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+                class="min-h-[44px] px-6 py-2.5 font-semibold rounded-lg text-white transition-opacity hover:opacity-90 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
                 style="background-color: var(--public-accent)"
                 :disabled="feedbackSubmitting"
               >

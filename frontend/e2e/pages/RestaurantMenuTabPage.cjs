@@ -202,10 +202,10 @@ class RestaurantMenuTabPage {
     await expect(this.page.getByText('No categories yet. Use the + button below to add one.')).toBeVisible()
   }
 
-  /** Open Edit category modal by clicking edit on the category row with the given name (edit is 3rd button: drag, visibility, edit, delete) */
+  /** Open Edit category modal by clicking the Edit category button on the category row with the given name */
   async openEditCategoryModal(categoryName) {
     const row = this.page.locator('li').filter({ hasText: categoryName })
-    await row.locator('button').nth(2).click()
+    await row.getByRole('button', { name: 'Edit category' }).click()
   }
 
   /** Open the availability modal for the category row with the given name (schedule icon, "Set category availability") */

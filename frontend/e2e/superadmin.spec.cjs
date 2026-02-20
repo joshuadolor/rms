@@ -315,8 +315,8 @@ test.describe('Superadmin restaurants list', () => {
   })
 
   test('superadmin restaurants page shows empty state when no restaurants', async ({ page }) => {
-    await loginAsSuperadmin(page)
-    page.route('**/api/superadmin/restaurants', (route) => {
+    // Mock empty list before login so the route is in place before any navigation
+    page.route(/\/api\/superadmin\/restaurants(\?.*)?$/, (route) => {
       if (route.request().method() !== 'GET') return route.continue()
       route.fulfill({
         status: 200,
@@ -324,9 +324,12 @@ test.describe('Superadmin restaurants list', () => {
         body: JSON.stringify({ data: [] }),
       })
     })
+    await loginAsSuperadmin(page)
     const appPage = new SuperadminAppPage(page)
     await appPage.navigateToRestaurants()
+    await appPage.expectRestaurantsPageUrl()
     const restaurantsPage = new SuperadminRestaurantsPage(page)
+    await restaurantsPage.expectRestaurantsHeadingVisible()
     await restaurantsPage.expectNoRestaurantsFound()
   })
 })

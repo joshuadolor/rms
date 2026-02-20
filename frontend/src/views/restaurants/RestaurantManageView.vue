@@ -24,11 +24,11 @@
           @click="showImageModal = true"
         >
           <div v-if="restaurant.banner_url" class="relative w-full aspect-[21/9] max-h-44 lg:aspect-auto lg:absolute lg:inset-0 rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800">
-            <img :src="restaurant.banner_url" :alt="restaurant.name" class="absolute inset-0 w-full h-full object-cover" />
+            <img :key="restaurant.banner_url" :src="restaurant.banner_url" :alt="restaurant.name" class="absolute inset-0 w-full h-full object-cover" />
             <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
             <div class="absolute bottom-0 left-0 right-0 p-4 lg:p-6 flex items-end gap-4">
               <div v-if="restaurant.logo_url" class="w-16 h-16 lg:w-20 lg:h-20 rounded-xl border-2 border-white dark:border-zinc-900 bg-white dark:bg-zinc-900 shadow-lg overflow-hidden shrink-0">
-                <img :src="restaurant.logo_url" :alt="restaurant.name" class="w-full h-full object-cover" />
+                <img :key="restaurant.logo_url" :src="restaurant.logo_url" :alt="restaurant.name" class="w-full h-full object-cover" />
               </div>
               <div v-else class="w-16 h-16 lg:w-20 lg:h-20 rounded-xl border-2 border-white/80 bg-white/20 flex items-center justify-center shrink-0">
                 <span class="material-icons text-3xl lg:text-4xl text-white">restaurant</span>
@@ -43,7 +43,7 @@
             <div class="absolute inset-0 bg-gradient-to-r from-primary/20 to-transparent" />
             <div class="relative flex items-center gap-4 p-4 lg:p-6">
               <div v-if="restaurant.logo_url" class="w-16 h-16 lg:w-20 lg:h-20 rounded-xl bg-white dark:bg-zinc-900 border-2 border-white shadow flex items-center justify-center overflow-hidden shrink-0">
-                <img :src="restaurant.logo_url" :alt="restaurant.name" class="w-full h-full object-cover" />
+                <img :key="restaurant.logo_url" :src="restaurant.logo_url" :alt="restaurant.name" class="w-full h-full object-cover" />
               </div>
               <div v-else class="w-16 h-16 lg:w-20 lg:h-20 rounded-xl bg-white dark:bg-zinc-900 border-2 border-white shadow flex items-center justify-center shrink-0">
                 <span class="material-icons text-3xl lg:text-4xl text-primary">restaurant</span>
@@ -171,9 +171,12 @@
           <div data-testid="manage-image-modal-logo">
             <p class="text-sm font-medium text-charcoal dark:text-white mb-2">Logo</p>
             <div class="flex flex-col sm:flex-row gap-4 items-start">
-              <div class="w-20 h-20 rounded-xl bg-slate-100 dark:bg-zinc-800 overflow-hidden shrink-0 flex items-center justify-center border border-slate-200 dark:border-zinc-700">
-                <img v-if="restaurant?.logo_url" :src="restaurant.logo_url" alt="Logo" class="w-full h-full object-cover" />
+              <div class="relative w-20 h-20 rounded-xl bg-slate-100 dark:bg-zinc-800 overflow-hidden shrink-0 flex items-center justify-center border border-slate-200 dark:border-zinc-700">
+                <img v-if="restaurant?.logo_url" :src="restaurant.logo_url" :key="restaurant.logo_url" alt="Logo" class="w-full h-full object-cover" />
                 <span v-else class="material-icons text-3xl text-slate-400">image</span>
+                <div v-if="uploadingLogo" class="absolute inset-0 bg-slate-900/60 flex items-center justify-center rounded-xl" aria-busy="true" aria-label="Uploading logo">
+                  <span class="material-icons text-3xl text-white animate-spin">sync</span>
+                </div>
               </div>
               <div class="min-w-0 w-full sm:w-auto flex flex-col gap-2">
                 <input ref="logoInputRef" type="file" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp" class="sr-only" aria-label="Upload logo from gallery" data-testid="manage-image-logo-input" @change="onModalLogoChange" />
@@ -190,9 +193,12 @@
           <div data-testid="manage-image-modal-banner">
             <p class="text-sm font-medium text-charcoal dark:text-white mb-2">Banner</p>
             <div class="flex flex-col sm:flex-row gap-4 items-start">
-              <div class="w-full sm:w-auto sm:max-w-[200px] aspect-video rounded-xl bg-slate-100 dark:bg-zinc-800 overflow-hidden shrink-0 flex items-center justify-center border border-slate-200 dark:border-zinc-700">
-                <img v-if="restaurant?.banner_url" :src="restaurant.banner_url" alt="Banner" class="w-full h-full object-cover" />
+              <div class="relative w-full sm:w-auto sm:max-w-[200px] aspect-video rounded-xl bg-slate-100 dark:bg-zinc-800 overflow-hidden shrink-0 flex items-center justify-center border border-slate-200 dark:border-zinc-700">
+                <img v-if="restaurant?.banner_url" :src="restaurant.banner_url" :key="restaurant.banner_url" alt="Banner" class="w-full h-full object-cover" />
                 <span v-else class="material-icons text-3xl text-slate-400">image</span>
+                <div v-if="uploadingBanner" class="absolute inset-0 bg-slate-900/60 flex items-center justify-center rounded-xl" aria-busy="true" aria-label="Uploading banner">
+                  <span class="material-icons text-3xl text-white animate-spin">sync</span>
+                </div>
               </div>
               <div class="min-w-0 w-full sm:w-auto flex flex-col gap-2">
                 <input ref="bannerInputRef" type="file" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp" class="sr-only" aria-label="Upload banner from gallery" data-testid="manage-image-banner-input" @change="onModalBannerChange" />
@@ -276,6 +282,8 @@ const deleteConfirmSlug = ref('')
 const copyDone = ref(false)
 const showImageModal = ref(false)
 const imageUploadErrors = ref({ logo: '', banner: '' })
+const uploadingLogo = ref(false)
+const uploadingBanner = ref(false)
 const logoInputRef = ref(null)
 const logoCameraInputRef = ref(null)
 const bannerInputRef = ref(null)
@@ -411,28 +419,44 @@ async function onModalLogoChange(ev) {
   const file = ev.target?.files?.[0]
   if (!validateImageFile(file, 'logo')) return
   if (!restaurant.value?.uuid) return
+  uploadingLogo.value = true
+  imageUploadErrors.value.logo = ''
   try {
     const res = await restaurantService.uploadLogo(restaurant.value.uuid, file)
-    restaurant.value = res != null ? Restaurant.fromApi(res).toJSON() : restaurant.value
+    if (res != null) {
+      const payload = Restaurant.fromApi(res).toJSON()
+      if (payload.logo_url) payload.logo_url = payload.logo_url + '?t=' + Date.now()
+      restaurant.value = payload
+    }
     toastStore.success('Logo updated.')
     if (logoInputRef.value) logoInputRef.value.value = ''
     if (logoCameraInputRef.value) logoCameraInputRef.value.value = ''
   } catch (e) {
     imageUploadErrors.value.logo = normalizeApiError(e).message ?? 'Upload failed.'
+  } finally {
+    uploadingLogo.value = false
   }
 }
 async function onModalBannerChange(ev) {
   const file = ev.target?.files?.[0]
   if (!validateImageFile(file, 'banner')) return
   if (!restaurant.value?.uuid) return
+  uploadingBanner.value = true
+  imageUploadErrors.value.banner = ''
   try {
     const res = await restaurantService.uploadBanner(restaurant.value.uuid, file)
-    restaurant.value = res != null ? Restaurant.fromApi(res).toJSON() : restaurant.value
+    if (res != null) {
+      const payload = Restaurant.fromApi(res).toJSON()
+      if (payload.banner_url) payload.banner_url = payload.banner_url + '?t=' + Date.now()
+      restaurant.value = payload
+    }
     toastStore.success('Banner updated.')
     if (bannerInputRef.value) bannerInputRef.value.value = ''
     if (bannerCameraInputRef.value) bannerCameraInputRef.value.value = ''
   } catch (e) {
     imageUploadErrors.value.banner = normalizeApiError(e).message ?? 'Upload failed.'
+  } finally {
+    uploadingBanner.value = false
   }
 }
 function closeImageModal() {

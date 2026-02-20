@@ -10,6 +10,7 @@ const { AvailabilityModalPage } = require('./pages/AvailabilityModalPage.cjs')
 const { MenuItemFormPage } = require('./pages/MenuItemFormPage.cjs')
 const { RestaurantSettingsPage } = require('./pages/RestaurantSettingsPage.cjs')
 const { RestaurantManageAvailabilityPage } = require('./pages/RestaurantManageAvailabilityPage.cjs')
+const { RestaurantManagePage } = require('./pages/RestaurantManagePage.cjs')
 const { PublicRestaurantPage } = require('./pages/PublicRestaurantPage.cjs')
 
 const MOCK_VERIFIED_USER = {
@@ -125,6 +126,56 @@ function mockRestaurantGet(page, restaurant = MOCK_RESTAURANT) {
       return route.fulfill({ status: 204, body: '' })
     }
     return route.continue()
+  })
+}
+
+/**
+ * Mock GET/PATCH /api/restaurants/:uuid and POST .../logo, POST .../banner with shared state.
+ * Use when testing logo/banner upload so GET returns updated logo_url/banner_url after upload.
+ */
+function mockRestaurantGetWithMediaUpload(page, restaurant = MOCK_RESTAURANT) {
+  const state = { ...restaurant }
+  page.route(/^.*\/api\/restaurants\/[^/]+$/, (route) => {
+    const url = route.request().url()
+    if (url.endsWith('/logo') || url.endsWith('/banner')) return route.continue()
+    if (route.request().method() === 'GET') {
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ data: { ...state } }),
+      })
+    }
+    if (route.request().method() === 'PATCH' || route.request().method() === 'PUT') {
+      const body = JSON.parse(route.request().postData() || '{}')
+      Object.assign(state, body)
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ message: 'Restaurant updated.', data: { ...state } }),
+      })
+    }
+    if (route.request().method() === 'DELETE') {
+      return route.fulfill({ status: 204, body: '' })
+    }
+    return route.continue()
+  })
+  page.route(/^.*\/api\/restaurants\/[^/]+\/logo$/, (route) => {
+    if (route.request().method() !== 'POST') return route.continue()
+    state.logo_url = 'https://example.com/mocked-logo.png'
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ message: 'Logo updated.', data: { ...state } }),
+    })
+  })
+  page.route(/^.*\/api\/restaurants\/[^/]+\/banner$/, (route) => {
+    if (route.request().method() !== 'POST') return route.continue()
+    state.banner_url = 'https://example.com/mocked-banner.png'
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ message: 'Banner updated.', data: { ...state } }),
+    })
   })
 }
 
@@ -1102,6 +1153,52 @@ test.describe('Restaurant module', () => {
     const publicPage = new PublicRestaurantPage(page)
     await publicPage.goToPublicBySlug('test-pizza')
     await publicPage.expectNotAvailablePillVisible()
+  })
+
+  test('owner can open Logo & banner modal, upload logo (mocked), and see logo on manage banner without refresh', async ({ page }) => {
+    await loginAsVerifiedUser(page)
+    mockRestaurantList(page, [MOCK_RESTAURANT])
+    mockRestaurantGetWithMediaUpload(page, MOCK_RESTAURANT)
+    mockRestaurantMenus(page)
+    mockRestaurantCategories(page, [])
+    mockRestaurantMenuItems(page, [])
+    mockRestaurantLanguagesAndTranslations(page)
+
+    const managePage = new RestaurantManagePage(page)
+    await managePage.goToManagePage(MOCK_RESTAURANT.uuid)
+    await managePage.openLogoBannerModal()
+    await managePage.expectLogoBannerModalOpen()
+    await managePage.setLogoFile()
+    await managePage.closeLogoBannerModal()
+    await managePage.expectLogoBannerModalClosed()
+    await managePage.expectLogoVisibleInManageBanner()
+  })
+
+  test('public restaurant page with logo shows nav logo and hero logo block', async ({ page }) => {
+    mockPublicRestaurant(page, 'test-pizza', {
+      name: 'Test Pizza',
+      slug: 'test-pizza',
+      logo_url: 'https://example.com/logo.png',
+      banner_url: null,
+    })
+
+    const publicPage = new PublicRestaurantPage(page)
+    await publicPage.goToPublicBySlug('test-pizza')
+    await publicPage.expectNavLogoVisible('Test Pizza')
+    await publicPage.expectHeroLogoBlockVisible()
+  })
+
+  test('public restaurant page without logo does not show hero logo block', async ({ page }) => {
+    mockPublicRestaurant(page, 'test-pizza', {
+      name: 'Test Pizza',
+      slug: 'test-pizza',
+      logo_url: null,
+      banner_url: null,
+    })
+
+    const publicPage = new PublicRestaurantPage(page)
+    await publicPage.goToPublicBySlug('test-pizza')
+    await publicPage.expectHeroLogoBlockNotVisible()
   })
 
   test('restaurant Settings tab shows Currency, Languages, and description-by-language with dropdown and single textarea', async ({ page }) => {

@@ -152,6 +152,8 @@ class RestaurantController extends Controller
             $restaurant = $this->uploadLogo->handle($request->user(), $restaurant, $request->file('file'));
         } catch (\App\Exceptions\ForbiddenException $e) {
             return response()->json(['message' => $e->getMessage()], 403);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['message' => $e->getMessage(), 'errors' => ['file' => [$e->getMessage()]]], 422);
         }
 
         return response()->json([
@@ -175,6 +177,8 @@ class RestaurantController extends Controller
             $restaurant = $this->uploadBanner->handle($request->user(), $restaurant, $request->file('file'));
         } catch (\App\Exceptions\ForbiddenException $e) {
             return response()->json(['message' => $e->getMessage()], 403);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['message' => $e->getMessage(), 'errors' => ['file' => [$e->getMessage()]]], 422);
         }
 
         return response()->json([

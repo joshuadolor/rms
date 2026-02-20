@@ -18,6 +18,11 @@ class AvailabilityModalPage {
     return this.page.getByTestId('availability-modal')
   }
 
+  /** Dialog that contains the availability modal (Save/Cancel are in the dialog footer, not inside availability-modal div) */
+  _dialog() {
+    return this.page.getByRole('dialog').filter({ has: this._modal() })
+  }
+
   /** Assert the availability modal is open and visible */
   async expectModalOpen() {
     await expect(this._modal()).toBeVisible({ timeout: 10000 })
@@ -58,19 +63,19 @@ class AvailabilityModalPage {
     await inputs.nth(slotIndex).fill(time)
   }
 
-  /** Click Save in the modal footer */
+  /** Click Save in the modal footer (footer is in AppModal, sibling of availability-modal content) */
   async saveModal() {
-    await this._modal().getByRole('button', { name: 'Save' }).click()
+    await this._dialog().getByRole('button', { name: 'Save' }).click()
   }
 
   /** Click Cancel in the modal footer */
   async cancelModal() {
-    await this._modal().getByRole('button', { name: 'Cancel' }).click()
+    await this._dialog().getByRole('button', { name: 'Cancel' }).click()
   }
 
   /** Assert the modal shows an error (validation or API) containing the given text */
   async expectModalErrorToContain(text) {
-    await expect(this._modal().getByRole('alert')).toContainText(text)
+    await expect(this._modal().getByRole('alert').first()).toContainText(text)
   }
 
   /** Assert a success toast with the given message is visible (after modal closes) */

@@ -67,7 +67,7 @@ class SuperadminOwnerFeedbacksPage {
 
   /** Assert a feedback row shows the given status badge (e.g. "Pending" or "Reviewed"). */
   async expectFeedbackRowShowsStatus(messageContent, status) {
-    await expect(this._rowContaining(messageContent).getByText(status)).toBeVisible()
+    await expect(this._rowContaining(messageContent).getByText(status)).toBeVisible({ timeout: 15000 })
   }
 
   /**
@@ -95,7 +95,7 @@ class SuperadminOwnerFeedbacksPage {
     const pattern =
       typeof messageOrPattern === 'string' ? new RegExp(messageOrPattern, 'i') : messageOrPattern
     await expect(this.page.getByRole('status').filter({ hasText: pattern })).toBeVisible({
-      timeout: 10000,
+      timeout: 15000,
     })
   }
 

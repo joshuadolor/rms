@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>The Grand Table | Utilitarian Industrial Dining</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;800&amp;family=JetBrains+Mono:wght@400;500&amp;family=Inter:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "concrete-gray": "#E5E7EB", // Light concrete
+                        "pale-stone": "#F3F4F6",   // Pale stone
+                        "charcoal-blue": "#1E293B", // Deep charcoal blue
+                        "iron-brown": "#3D2B1F",    // Dark iron brown
+                        "oxidized-copper": "#B35C38", // Prominent copper accent
+                        "workshop-border": "#D1D5DB"
+                    },
+                    fontFamily: {
+                        "industrial": ["Barlow Condensed", "sans-serif"],
+                        "mono": ["JetBrains Mono", "monospace"],
+                        "body": ["Inter", "sans-serif"]
+                    }
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: theme('colors.pale-stone');
+            color: theme('colors.charcoal-blue');
+        }
+        .grid-container {
+            @apply border border-charcoal-blue/20 bg-white;
+        }
+        .heading-utilitarian {
+            font-family: 'Barlow Condensed', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+        .sharp-box {
+            @apply border border-charcoal-blue shadow-[4px_4px_0px_0px_rgba(30,41,59,1)];
+        }
+        .blueprint-line {
+            @apply border-charcoal-blue/10;
+        }
+        .accent-text {
+            color: theme('colors.oxidized-copper');
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-oxidized-copper selection:text-white">
+<header class="sticky top-0 z-50 w-full bg-white border-b-2 border-charcoal-blue">
+<div class="max-w-[1400px] mx-auto h-20 flex items-center justify-between px-6">
+<div class="flex items-center gap-3">
+<div class="w-12 h-12 bg-charcoal-blue text-white flex items-center justify-center border-2 border-oxidized-copper">
+<svg class="w-7 h-7" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M44 4H30.6666V17.3334H17.3334V30.6666H4V44H44V4Z" fill="currentColor"></path>
+</svg>
+</div>
+<span class="heading-utilitarian text-3xl font-extrabold tracking-tight text-charcoal-blue">The Grand Table</span>
+</div>
+<nav class="hidden md:flex items-center gap-1">
+<a class="heading-utilitarian text-sm px-6 py-2 hover:bg-concrete-gray transition-colors" href="#menu">01. Menu</a>
+<a class="heading-utilitarian text-sm px-6 py-2 hover:bg-concrete-gray transition-colors" href="#reviews">02. Reviews</a>
+<a class="heading-utilitarian text-sm px-6 py-2 hover:bg-concrete-gray transition-colors" href="#contact">03. Contact</a>
+<button class="ml-4 bg-oxidized-copper text-white px-8 py-3 heading-utilitarian text-sm font-bold border-2 border-charcoal-blue hover:translate-x-1 hover:translate-y-1 hover:shadow-none shadow-[4px_4px_0px_0px_rgba(30,41,59,1)] transition-all">
+                Book a Table
+            </button>
+</nav>
+<button class="md:hidden p-2 text-charcoal-blue">
+<span class="material-symbols-outlined text-4xl">menu</span>
+</button>
+</div>
+</header>
+<main class="space-y-0">
+<section class="border-b border-charcoal-blue">
+<div class="max-w-[1400px] mx-auto grid grid-cols-1 md:grid-cols-12 min-h-[700px]">
+<div class="md:col-span-7 relative border-r border-charcoal-blue overflow-hidden p-8 md:p-12 flex flex-col justify-center bg-concrete-gray">
+<div class="relative z-20">
+<div class="inline-block bg-charcoal-blue text-white px-4 py-1 mb-6 heading-utilitarian text-xs font-bold">EST. 2024 / SPECIFICATION 01</div>
+<h1 class="heading-utilitarian text-7xl md:text-9xl font-extrabold mb-8 leading-[0.85] text-charcoal-blue">
+                        The Art of <br/><span class="text-oxidized-copper">Dining</span>
+</h1>
+<div class="max-w-md border-l-8 border-oxidized-copper pl-8 py-2">
+<p class="text-lg font-body leading-relaxed text-charcoal-blue/80">
+                            Experience a fusion of seasonal ingredients and contemporary culinary techniques in a space designed for connection.
+                        </p>
+</div>
+</div>
+<div class="absolute inset-0 opacity-5 pointer-events-none" style="background-image: radial-gradient(#1e293b 1px, transparent 1px); background-size: 20px 20px;"></div>
+</div>
+<div class="md:col-span-5 relative bg-charcoal-blue group overflow-hidden">
+<img alt="Elegant restaurant interior" class="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 transition-all duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAaAV0dFkRHqubglMo_t4ZUdbRK7c_s64v3f2CFx66Iyn81E9uMV89pt_s3k1Vrqiarbx9rj2RU1ku7NKeF2nKwj49aLRYqt8S_0Uo6uq6ODGJO6qcS7iUiNaFjXX55REkdVLw3U6P7-xH4nmKEpl2t1wf451K1VXuRE4328CxYwA8QDTTJbZxLEDYttB0nQvZLciguWS_VLmoq_x03Z24RJJpGsdRbE0j2rZGLtq8Vcc_z0MyDwIkL07RwMEA9aK7UPL3jciW_FYA"/>
+<div class="absolute bottom-6 right-6 bg-white/90 backdrop-blur-sm p-4 border border-charcoal-blue text-[10px] font-mono uppercase tracking-widest">
+                    Fig 1.0 // Interior Vista
+                </div>
+</div>
+</div>
+</section>
+<section class="bg-pale-stone" id="menu">
+<div class="max-w-[1400px] mx-auto">
+<div class="grid grid-cols-1 md:grid-cols-12 border-x border-charcoal-blue">
+<div class="md:col-span-12 p-12 md:p-20 border-b border-charcoal-blue flex flex-col md:flex-row justify-between items-end gap-8">
+<div>
+<p class="font-mono text-oxidized-copper text-sm mb-4 tracking-tighter uppercase font-bold">// Culinary Output</p>
+<h2 class="heading-utilitarian text-6xl md:text-8xl font-extrabold leading-none">Our Menu</h2>
+</div>
+<div class="text-right hidden md:block">
+<p class="font-mono text-[10px] uppercase opacity-40">Ref: MENU_A_REV04</p>
+</div>
+</div>
+<div class="md:col-span-6 p-12 border-b md:border-b-0 border-r border-charcoal-blue bg-white">
+<h3 class="heading-utilitarian text-4xl font-extrabold mb-12 flex items-center gap-4">
+<span class="bg-charcoal-blue text-white px-3 py-1 text-xl">01</span>
+<span>Appetizers</span>
+<div class="flex-grow border-t-2 border-dotted border-charcoal-blue/20"></div>
+<span class="material-symbols-outlined text-oxidized-copper">restaurant_menu</span>
+</h3>
+<div class="space-y-16">
+<div class="group border-b border-concrete-gray pb-8 last:border-0">
+<div class="flex items-baseline justify-between mb-3">
+<span class="heading-utilitarian text-3xl group-hover:text-oxidized-copper transition-colors">Classic Caesar Salad</span>
+<span class="font-mono font-bold text-xl text-oxidized-copper">$14.00</span>
+</div>
+<p class="text-sm text-charcoal-blue/60 font-medium uppercase tracking-wider">Crisp romaine, parmesan shavings, herb croutons, house dressing.</p>
+</div>
+<div class="group border-b border-concrete-gray pb-8 last:border-0">
+<div class="flex items-baseline justify-between mb-3">
+<span class="heading-utilitarian text-3xl group-hover:text-oxidized-copper transition-colors">Truffle Arancini</span>
+<span class="font-mono font-bold text-xl text-oxidized-copper">$16.00</span>
+</div>
+<p class="text-sm text-charcoal-blue/60 font-medium uppercase tracking-wider">Wild mushroom risotto balls with truffle oil and aioli dip.</p>
+</div>
+<div class="group border-b border-concrete-gray pb-8 last:border-0">
+<div class="flex items-baseline justify-between mb-3">
+<span class="heading-utilitarian text-3xl group-hover:text-oxidized-copper transition-colors">Burrata &amp; Heirloom Tomato</span>
+<span class="font-mono font-bold text-xl text-oxidized-copper">$18.00</span>
+</div>
+<p class="text-sm text-charcoal-blue/60 font-medium uppercase tracking-wider">Creamy burrata, balsamic glaze, fresh basil, and sourdough crisps.</p>
+</div>
+</div>
+</div>
+<div class="md:col-span-6 p-12 bg-white">
+<h3 class="heading-utilitarian text-4xl font-extrabold mb-12 flex items-center gap-4">
+<span class="bg-charcoal-blue text-white px-3 py-1 text-xl">02</span>
+<span>Main Courses</span>
+<div class="flex-grow border-t-2 border-dotted border-charcoal-blue/20"></div>
+<span class="material-symbols-outlined text-oxidized-copper">outdoor_grill</span>
+</h3>
+<div class="space-y-16">
+<div class="group border-b border-concrete-gray pb-8 last:border-0">
+<div class="flex items-baseline justify-between mb-3">
+<span class="heading-utilitarian text-3xl group-hover:text-oxidized-copper transition-colors">Pan-Seared Salmon</span>
+<span class="font-mono font-bold text-xl text-oxidized-copper">$28.00</span>
+</div>
+<p class="text-sm text-charcoal-blue/60 font-medium uppercase tracking-wider">Atlantic salmon, asparagus, lemon butter sauce, crushed potatoes.</p>
+</div>
+<div class="group border-b border-concrete-gray pb-8 last:border-0">
+<div class="flex items-baseline justify-between mb-3">
+<span class="heading-utilitarian text-3xl group-hover:text-oxidized-copper transition-colors">Braised Beef Short Rib</span>
+<span class="font-mono font-bold text-xl text-oxidized-copper">$32.00</span>
+</div>
+<p class="text-sm text-charcoal-blue/60 font-medium uppercase tracking-wider">Slow-cooked rib, red wine jus, creamy polenta, glazed carrots.</p>
+</div>
+<div class="group border-b border-concrete-gray pb-8 last:border-0">
+<div class="flex items-baseline justify-between mb-3">
+<span class="heading-utilitarian text-3xl group-hover:text-oxidized-copper transition-colors">Truffle Mushroom Risotto</span>
+<span class="font-mono font-bold text-xl text-oxidized-copper">$22.00</span>
+</div>
+<p class="text-sm text-charcoal-blue/60 font-medium uppercase tracking-wider">Arborio rice, wild mushrooms, truffle oil, aged parmesan.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section class="border-y border-charcoal-blue" id="reviews">
+<div class="max-w-[1400px] mx-auto">
+<div class="grid grid-cols-1 md:grid-cols-3 border-x border-charcoal-blue">
+<div class="p-12 md:p-16 border-b md:border-b-0 md:border-r border-charcoal-blue flex flex-col justify-between">
+<div>
+<div class="flex gap-1 text-oxidized-copper mb-8">
+<span class="material-symbols-outlined fill-1">star</span>
+<span class="material-symbols-outlined fill-1">star</span>
+<span class="material-symbols-outlined fill-1">star</span>
+<span class="material-symbols-outlined fill-1">star</span>
+<span class="material-symbols-outlined fill-1">star</span>
+</div>
+<p class="text-2xl font-bold italic leading-tight text-charcoal-blue mb-10">"The atmosphere is sophisticated yet welcoming. The Pan-Seared Salmon was cooked to absolute perfection. A must-visit for foodies."</p>
+</div>
+<p class="heading-utilitarian text-oxidized-copper font-extrabold text-xl">— Sarah Jenkins</p>
+</div>
+<div class="p-12 md:p-16 border-b md:border-b-0 md:border-r border-charcoal-blue bg-concrete-gray flex flex-col justify-between">
+<div>
+<div class="flex gap-1 text-oxidized-copper mb-8">
+<span class="material-symbols-outlined fill-1">star</span>
+<span class="material-symbols-outlined fill-1">star</span>
+<span class="material-symbols-outlined fill-1">star</span>
+<span class="material-symbols-outlined fill-1">star</span>
+<span class="material-symbols-outlined fill-1">star</span>
+</div>
+<p class="text-2xl font-bold italic leading-tight text-charcoal-blue mb-10">"Impeccable service and an incredible wine list. The braised beef short rib melted in my mouth. Highly recommend for special occasions."</p>
+</div>
+<p class="heading-utilitarian text-oxidized-copper font-extrabold text-xl">— Michael Chen</p>
+</div>
+<div class="p-12 md:p-16 flex flex-col justify-between">
+<div>
+<div class="flex gap-1 text-oxidized-copper mb-8">
+<span class="material-symbols-outlined fill-1">star</span>
+<span class="material-symbols-outlined fill-1">star</span>
+<span class="material-symbols-outlined fill-1">star</span>
+<span class="material-symbols-outlined fill-1">star</span>
+<span class="material-symbols-outlined fill-1">star</span>
+</div>
+<p class="text-2xl font-bold italic leading-tight text-charcoal-blue mb-10">"The minimalist decor really lets the food shine. Every dish was a work of art. The truffle arancini are addictive."</p>
+</div>
+<p class="heading-utilitarian text-oxidized-copper font-extrabold text-xl">— Elena Rodriguez</p>
+</div>
+</div>
+</div>
+</section>
+<section class="bg-pale-stone" id="contact">
+<div class="max-w-[1400px] mx-auto border-x border-charcoal-blue grid grid-cols-1 md:grid-cols-12">
+<div class="md:col-span-5 p-12 md:p-20 border-b md:border-b-0 md:border-r border-charcoal-blue space-y-16">
+<div>
+<h2 class="heading-utilitarian text-5xl font-extrabold mb-12">Contact Us</h2>
+<div class="space-y-12">
+<div class="flex gap-6 group">
+<div class="w-12 h-12 bg-concrete-gray border border-charcoal-blue flex items-center justify-center shrink-0 group-hover:bg-charcoal-blue group-hover:text-white transition-colors">
+<span class="material-symbols-outlined text-3xl">location_on</span>
+</div>
+<div>
+<p class="font-mono text-xs text-oxidized-copper font-bold mb-2 uppercase">// Site Location</p>
+<p class="text-xl font-bold leading-tight">123 Culinary Avenue, Food District<br/>New York, NY 10001</p>
+</div>
+</div>
+<div class="flex gap-6 group">
+<div class="w-12 h-12 bg-concrete-gray border border-charcoal-blue flex items-center justify-center shrink-0 group-hover:bg-charcoal-blue group-hover:text-white transition-colors">
+<span class="material-symbols-outlined text-3xl">call</span>
+</div>
+<div>
+<p class="font-mono text-xs text-oxidized-copper font-bold mb-2 uppercase">// Comms Link</p>
+<p class="text-xl font-bold leading-tight">(212) 555-0123</p>
+</div>
+</div>
+<div class="flex gap-6 group">
+<div class="w-12 h-12 bg-concrete-gray border border-charcoal-blue flex items-center justify-center shrink-0 group-hover:bg-charcoal-blue group-hover:text-white transition-colors">
+<span class="material-symbols-outlined text-3xl">mail</span>
+</div>
+<div>
+<p class="font-mono text-xs text-oxidized-copper font-bold mb-2 uppercase">// Digital Mail</p>
+<p class="text-xl font-bold leading-tight">hello@thegrandtable.com</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="md:col-span-7 p-12 md:p-20 bg-white space-y-12">
+<h2 class="heading-utilitarian text-5xl font-extrabold">Operating Hours</h2>
+<div class="grid grid-cols-1 gap-4">
+<div class="flex justify-between items-center border-b-2 border-concrete-gray pb-4">
+<span class="heading-utilitarian text-2xl font-bold">Mon - Thu</span>
+<span class="font-mono text-xl font-bold bg-charcoal-blue text-white px-4 py-1">11:00 AM - 10:00 PM</span>
+</div>
+<div class="flex justify-between items-center border-b-2 border-concrete-gray pb-4">
+<span class="heading-utilitarian text-2xl font-bold">Fri - Sat</span>
+<span class="font-mono text-xl font-bold bg-oxidized-copper text-white px-4 py-1">11:00 AM - 11:30 PM</span>
+</div>
+<div class="flex justify-between items-center border-b-2 border-concrete-gray pb-4">
+<span class="heading-utilitarian text-2xl font-bold">Sunday</span>
+<span class="font-mono text-xl font-bold bg-charcoal-blue text-white px-4 py-1">10:00 AM - 09:00 PM</span>
+</div>
+</div>
+<div class="mt-12 p-10 border-2 border-charcoal-blue border-dashed bg-concrete-gray flex items-center gap-6">
+<span class="material-symbols-outlined text-5xl text-oxidized-copper">event_available</span>
+<p class="heading-utilitarian text-2xl font-extrabold leading-tight">Join us for Weekend Brunch every Saturday &amp; Sunday starting at 10:00 AM.</p>
+</div>
+</div>
+</div>
+</section>
+<section class="border-t border-charcoal-blue">
+<div class="max-w-[1400px] mx-auto border-x border-charcoal-blue">
+<div class="w-full h-[500px] flex flex-col items-center justify-center bg-concrete-gray relative overflow-hidden">
+<div class="absolute inset-0 opacity-10" style="background-image: linear-gradient(#1e293b 1px, transparent 1px), linear-gradient(90deg, #1e293b 1px, transparent 1px); background-size: 40px 40px;"></div>
+<div class="relative z-10 text-center flex flex-col items-center">
+<div class="w-24 h-24 rounded-full border-4 border-oxidized-copper flex items-center justify-center mb-6 bg-white animate-pulse">
+<span class="material-symbols-outlined text-6xl text-charcoal-blue">location_searching</span>
+</div>
+<p class="heading-utilitarian text-3xl font-extrabold text-charcoal-blue">Interactive Map Node</p>
+<div class="font-mono text-xs mt-3 bg-charcoal-blue text-white px-3 py-1 uppercase tracking-widest">Coord: 40.7128° N, 74.0060° W</div>
+<p class="heading-utilitarian text-lg text-charcoal-blue/60 mt-4 uppercase font-bold tracking-widest">123 Culinary Avenue, New York, NY</p>
+</div>
+</div>
+</div>
+</section>
+</main>
+<footer class="bg-charcoal-blue text-white py-16 border-t-4 border-oxidized-copper">
+<div class="max-w-[1400px] mx-auto px-6 grid grid-cols-1 md:grid-cols-2 items-center gap-12">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 border-2 border-oxidized-copper text-oxidized-copper flex items-center justify-center">
+<svg class="w-6 h-6" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M44 4H30.6666V17.3334H17.3334V30.6666H4V44H44V4Z" fill="currentColor"></path>
+</svg>
+</div>
+<span class="heading-utilitarian text-3xl font-extrabold tracking-tighter">The Grand Table</span>
+</div>
+<div class="md:text-right space-y-2">
+<p class="font-mono text-xs uppercase tracking-widest opacity-60">© 2024 The Grand Table. System Status: Nominal.</p>
+<p class="font-mono text-[10px] uppercase opacity-40 italic">Unit ID: RMS-DLR-WEB-9000 // All Rights Reserved</p>
+</div>
+</div>
+</footer>
+
+</body></html>

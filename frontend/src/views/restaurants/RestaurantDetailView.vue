@@ -28,14 +28,14 @@
           v-if="restaurant.banner_url"
           class="relative aspect-[21/9] max-h-44 lg:max-h-56 rounded-none lg:rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800"
         >
-          <img :src="restaurant.banner_url" :alt="restaurant.name" class="w-full h-full object-cover" />
+          <img :key="restaurant.banner_url" :src="restaurant.banner_url" :alt="restaurant.name" class="w-full h-full object-cover" />
           <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
           <div class="absolute bottom-0 left-0 right-0 p-4 lg:p-6 flex items-end gap-4">
             <div
               v-if="restaurant.logo_url"
               class="w-14 h-14 lg:w-16 lg:h-16 rounded-xl border-2 border-white dark:border-zinc-900 bg-white dark:bg-zinc-900 shadow-lg overflow-hidden shrink-0"
             >
-              <img :src="restaurant.logo_url" :alt="restaurant.name" class="w-full h-full object-cover" />
+              <img :key="restaurant.logo_url" :src="restaurant.logo_url" :alt="restaurant.name" class="w-full h-full object-cover" />
             </div>
             <div
               v-else
@@ -57,7 +57,7 @@
             v-if="restaurant.logo_url"
             class="w-14 h-14 lg:w-16 lg:h-16 rounded-xl bg-white dark:bg-zinc-900 border-2 border-white shadow overflow-hidden shrink-0"
           >
-            <img :src="restaurant.logo_url" :alt="restaurant.name" class="w-full h-full object-cover" />
+            <img :key="restaurant.logo_url" :src="restaurant.logo_url" :alt="restaurant.name" class="w-full h-full object-cover" />
           </div>
           <div v-else class="w-14 h-14 lg:w-16 lg:h-16 rounded-xl bg-white/20 border-2 border-white flex items-center justify-center shrink-0">
             <span class="material-icons text-2xl lg:text-3xl text-white">restaurant</span>
@@ -163,6 +163,7 @@
             <div class="w-24 h-24 rounded-xl bg-white dark:bg-zinc-800 overflow-hidden flex items-center justify-center ring-1 ring-slate-200/50 dark:ring-slate-700">
               <img
                 v-if="restaurant.logo_url"
+                :key="restaurant.logo_url"
                 :src="restaurant.logo_url"
                 :alt="restaurant.name"
                 class="w-full h-full object-cover"
@@ -220,9 +221,12 @@
           <div>
             <p class="text-sm font-medium text-charcoal dark:text-white mb-2">Logo</p>
             <div class="flex gap-4 items-start">
-              <div class="w-20 h-20 rounded-xl bg-slate-100 dark:bg-zinc-800 overflow-hidden shrink-0 flex items-center justify-center border border-slate-200 dark:border-zinc-700">
-                <img v-if="restaurant?.logo_url" :src="restaurant.logo_url" alt="Logo" class="w-full h-full object-cover" />
+              <div class="relative w-20 h-20 rounded-xl bg-slate-100 dark:bg-zinc-800 overflow-hidden shrink-0 flex items-center justify-center border border-slate-200 dark:border-zinc-700">
+                <img v-if="restaurant?.logo_url" :src="restaurant.logo_url" :key="restaurant.logo_url" alt="Logo" class="w-full h-full object-cover" />
                 <span v-else class="material-icons text-3xl text-slate-400">image</span>
+                <div v-if="uploadingLogo" class="absolute inset-0 bg-slate-900/60 flex items-center justify-center rounded-xl" aria-busy="true" aria-label="Uploading logo">
+                  <span class="material-icons text-3xl text-white animate-spin">sync</span>
+                </div>
               </div>
               <div class="min-w-0 flex-1">
                 <input
@@ -242,9 +246,12 @@
           <div>
             <p class="text-sm font-medium text-charcoal dark:text-white mb-2">Banner</p>
             <div class="flex gap-4 items-start">
-              <div class="w-full max-w-[200px] aspect-video rounded-xl bg-slate-100 dark:bg-zinc-800 overflow-hidden shrink-0 flex items-center justify-center border border-slate-200 dark:border-zinc-700">
-                <img v-if="restaurant?.banner_url" :src="restaurant.banner_url" alt="Banner" class="w-full h-full object-cover" />
+              <div class="relative w-full max-w-[200px] aspect-video rounded-xl bg-slate-100 dark:bg-zinc-800 overflow-hidden shrink-0 flex items-center justify-center border border-slate-200 dark:border-zinc-700">
+                <img v-if="restaurant?.banner_url" :src="restaurant.banner_url" :key="restaurant.banner_url" alt="Banner" class="w-full h-full object-cover" />
                 <span v-else class="material-icons text-3xl text-slate-400">image</span>
+                <div v-if="uploadingBanner" class="absolute inset-0 bg-slate-900/60 flex items-center justify-center rounded-xl" aria-busy="true" aria-label="Uploading banner">
+                  <span class="material-icons text-3xl text-white animate-spin">sync</span>
+                </div>
               </div>
               <div class="min-w-0 flex-1">
                 <input
@@ -340,6 +347,8 @@ const copyDone = ref(false)
 
 const showImageModal = ref(false)
 const imageUploadErrors = ref({ logo: '', banner: '' })
+const uploadingLogo = ref(false)
+const uploadingBanner = ref(false)
 const logoInputRef = ref(null)
 const bannerInputRef = ref(null)
 const heroButtonRef = ref(null)
@@ -376,13 +385,21 @@ async function onModalLogoChange(ev) {
   const file = ev.target?.files?.[0]
   if (!validateImageFile(file, 'logo')) return
   if (!restaurant.value?.uuid) return
+  uploadingLogo.value = true
+  imageUploadErrors.value.logo = ''
   try {
     const res = await restaurantService.uploadLogo(restaurant.value.uuid, file)
-    restaurant.value = res != null ? Restaurant.fromApi(res).toJSON() : restaurant.value
+    if (res != null) {
+      const payload = Restaurant.fromApi(res).toJSON()
+      if (payload.logo_url) payload.logo_url = payload.logo_url + '?t=' + Date.now()
+      restaurant.value = payload
+    }
     toastStore.success('Logo updated.')
     if (logoInputRef.value) logoInputRef.value.value = ''
   } catch (e) {
     imageUploadErrors.value.logo = normalizeApiError(e).message ?? 'Upload failed.'
+  } finally {
+    uploadingLogo.value = false
   }
 }
 
@@ -390,13 +407,21 @@ async function onModalBannerChange(ev) {
   const file = ev.target?.files?.[0]
   if (!validateImageFile(file, 'banner')) return
   if (!restaurant.value?.uuid) return
+  uploadingBanner.value = true
+  imageUploadErrors.value.banner = ''
   try {
     const res = await restaurantService.uploadBanner(restaurant.value.uuid, file)
-    restaurant.value = res != null ? Restaurant.fromApi(res).toJSON() : restaurant.value
+    if (res != null) {
+      const payload = Restaurant.fromApi(res).toJSON()
+      if (payload.banner_url) payload.banner_url = payload.banner_url + '?t=' + Date.now()
+      restaurant.value = payload
+    }
     toastStore.success('Banner updated.')
     if (bannerInputRef.value) bannerInputRef.value.value = ''
   } catch (e) {
     imageUploadErrors.value.banner = normalizeApiError(e).message ?? 'Upload failed.'
+  } finally {
+    uploadingBanner.value = false
   }
 }
 

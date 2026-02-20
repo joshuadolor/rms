@@ -116,6 +116,24 @@ class PublicRestaurantPage {
       typeof messageOrPattern === 'string' ? new RegExp(messageOrPattern, 'i') : messageOrPattern
     await expect(this.page.getByText(pattern)).toBeVisible()
   }
+
+  // --- Logo and hero (public restaurant page with logo/banner optimization) ---
+
+  /** Assert the nav logo (image in sticky nav) is visible. Restaurant name is the img alt. */
+  async expectNavLogoVisible(restaurantName) {
+    const nav = this.page.locator('.public-restaurant-page nav')
+    await expect(nav.getByRole('img', { name: restaurantName })).toBeVisible()
+  }
+
+  /** Assert the hero logo block (logo above restaurant name in hero) is visible. */
+  async expectHeroLogoBlockVisible() {
+    await expect(this.page.getByTestId('public-hero-logo')).toBeVisible()
+  }
+
+  /** Assert the hero logo block is not present (restaurant has no logo). */
+  async expectHeroLogoBlockNotVisible() {
+    await expect(this.page.getByTestId('public-hero-logo')).not.toBeVisible()
+  }
 }
 
 module.exports = { PublicRestaurantPage }

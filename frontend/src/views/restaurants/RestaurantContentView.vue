@@ -60,7 +60,7 @@
             <input
               v-model="primaryColorHex"
               type="color"
-              class="w-14 h-14 min-w-[56px] min-h-[56px] rounded-xl border-2 border-slate-200 dark:border-zinc-600 cursor-pointer bg-white dark:bg-zinc-800"
+              class="w-14 h-14 min-w-[56px] min-h-[56px] rounded-xl border-slate-200 dark:border-zinc-600 cursor-pointer bg-white dark:bg-zinc-800"
               aria-label="Pick primary color"
               data-testid="settings-primary-color-picker"
               @input="onPrimaryColorInput"

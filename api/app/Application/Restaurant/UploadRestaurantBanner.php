@@ -6,6 +6,7 @@ use App\Domain\Restaurant\Contracts\RestaurantRepositoryInterface;
 use App\Models\Restaurant;
 use App\Models\User;
 use App\Support\ImageExtensionFromMime;
+use App\Support\ImageResizer;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
@@ -26,11 +27,14 @@ final readonly class UploadRestaurantBanner
         $ext = ImageExtensionFromMime::extension($file->getMimeType());
         $filename = 'banner.' . $ext;
 
+        $content = ImageResizer::resizeToFit($file, 1920, 600);
+
         if ($restaurant->banner_path && Storage::disk($disk)->exists($restaurant->banner_path)) {
             Storage::disk($disk)->delete($restaurant->banner_path);
         }
 
-        $path = $file->storeAs($dir, $filename, $disk);
+        $path = $dir . '/' . $filename;
+        Storage::disk($disk)->put($path, $content);
 
         $this->restaurantRepository->update($restaurant, ['banner_path' => $path]);
 
