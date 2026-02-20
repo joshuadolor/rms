@@ -18,7 +18,15 @@ final readonly class ListUserMenuItems
     public function handle(User $user): Collection
     {
         return MenuItem::query()
-            ->with(['translations', 'category', 'sourceMenuItem.translations'])
+            ->with([
+                'translations',
+                'category',
+                'sourceMenuItem.translations',
+                'variantOptionGroups',
+                'variantSkus',
+                'comboEntries.referencedMenuItem.translations',
+                'comboEntries.variant',
+            ])
             ->where('user_id', $user->id)
             ->whereNull('restaurant_id')
             ->orderByRaw('category_id is null')

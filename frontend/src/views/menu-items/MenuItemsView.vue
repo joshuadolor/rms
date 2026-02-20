@@ -49,10 +49,19 @@
         <li
           v-for="item in menuItems"
           :key="item.uuid"
+          :data-testid="`menu-item-row-${item.uuid}`"
           class="flex items-center gap-3 p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-slate-800 min-h-[44px]"
         >
           <div class="min-w-0 flex-1">
-            <p class="font-medium text-charcoal dark:text-white truncate">{{ itemName(item) }}</p>
+            <div class="flex flex-wrap items-center gap-2">
+              <p class="font-medium text-charcoal dark:text-white truncate">{{ itemName(item) }}</p>
+              <span
+                class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium min-h-[24px]"
+                :class="item.type === 'combo' ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200' : item.type === 'with_variants' ? 'bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-200' : 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300'"
+              >
+                {{ itemTypeLabel(item.type) }}
+              </span>
+            </div>
             <p v-if="itemDescription(item)" class="text-sm text-slate-500 dark:text-slate-400 truncate mt-0.5">{{ itemDescription(item) }}</p>
             <p v-if="itemPrice(item) != null" class="text-sm font-medium text-slate-600 dark:text-slate-300 mt-0.5">{{ formatPrice(itemPrice(item)) }}</p>
           </div>
@@ -117,6 +126,7 @@
 import { ref, onMounted } from 'vue'
 import AppButton from '@/components/ui/AppButton.vue'
 import AppModal from '@/components/ui/AppModal.vue'
+import MenuItem from '@/models/MenuItem.js'
 import { menuItemService, normalizeApiError } from '@/services'
 import { useToastStore } from '@/stores/toast'
 
@@ -134,20 +144,29 @@ function defaultLocale(item) {
 }
 
 function itemName(item) {
+  if (item?.effectiveName) return item.effectiveName(defaultLocale(item))
   const locale = defaultLocale(item)
   const t = item?.translations?.[locale]
   return t?.name ?? '—'
 }
 
 function itemDescription(item) {
+  if (item?.effectiveDescription) return item.effectiveDescription(defaultLocale(item))
   const locale = defaultLocale(item)
   const t = item?.translations?.[locale]
   return t?.description ?? ''
 }
 
 function itemPrice(item) {
+  if (item?.effectivePrice != null) return item.effectivePrice
   if (item?.price != null) return Number(item.price)
   return null
+}
+
+function itemTypeLabel(type) {
+  if (type === 'combo') return 'Combo'
+  if (type === 'with_variants') return 'With variants'
+  return 'Simple'
 }
 
 function formatPrice(num) {
@@ -165,7 +184,8 @@ async function loadMenuItems() {
   error.value = ''
   try {
     const res = await menuItemService.list()
-    menuItems.value = res.data ?? []
+    const raw = res.data ?? []
+    menuItems.value = raw.map((item) => MenuItem.fromApi({ data: item }))
   } catch (e) {
     error.value = normalizeApiError(e).message
     menuItems.value = []

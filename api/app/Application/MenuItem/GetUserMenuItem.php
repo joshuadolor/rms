@@ -11,7 +11,16 @@ final readonly class GetUserMenuItem
     {
         $item = MenuItem::query()
             ->where('uuid', $itemUuid)
-            ->with(['translations', 'category', 'restaurant', 'sourceMenuItem.translations'])
+            ->with([
+                'translations',
+                'category',
+                'restaurant',
+                'sourceMenuItem.translations',
+                'variantOptionGroups',
+                'variantSkus',
+                'comboEntries.referencedMenuItem.translations',
+                'comboEntries.variant',
+            ])
             ->first();
 
         if ($item === null) {

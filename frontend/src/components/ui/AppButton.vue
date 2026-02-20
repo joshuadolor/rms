@@ -3,7 +3,7 @@
     :type="type"
     :disabled="disabled"
     :class="buttonClasses"
-    @click="$emit('click')"
+    @click="onClick"
   >
     <span v-if="$slots.icon" class="flex items-center justify-center shrink-0">
       <slot name="icon" />
@@ -26,6 +26,13 @@ const props = defineProps({
   size: { type: String, default: 'md', validator: (v) => ['sm', 'md', 'lg'].includes(v) },
   class: { type: String, default: '' },
 })
+
+const emit = defineEmits(['click'])
+
+function onClick(e) {
+  e.stopPropagation()
+  emit('click', e)
+}
 
 const buttonClasses = computed(() => {
   const base = 'inline-flex items-center justify-center gap-2 font-semibold transition-all rounded-lg'

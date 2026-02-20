@@ -846,11 +846,35 @@ Translations must use locales installed for the restaurant. **Response (201):** 
 
 ## Menu items (user-level / catalog)
 
-List, create, and manage **catalog** menu items from the standalone “Menu items” page. Catalog items are standalone (not tied to any restaurant). They can be added to restaurant categories as references (via the restaurant menu-items API). All endpoints **Bearer + verified**.
+List, create, and manage **catalog** menu items from the standalone “Menu items” page. Catalog items are standalone (not tied to any restaurant). They can be added to restaurant categories as references (via the restaurant menu-items API). All endpoints **Bearer + verified**. **No internal `id` in any response;** only `uuid` (and variant_skus[].uuid) are used.
 
 ### User-level menu item payload
 
-Same as menu item payload below, plus optional **restaurant_uuid** (present when the item belongs to a restaurant; `null` for standalone). For GET `/api/menu-items` list, all returned items are standalone (`restaurant_uuid` null).
+All catalog menu item payloads include:
+
+```ts
+{
+  uuid: string;
+  category_uuid: string | null;
+  sort_order: number;
+  type: 'simple' | 'combo' | 'with_variants';
+  price: number | null;        // effective: simple = base price; combo = combo_price if set; with_variants = null
+  translations: Record<string, { name: string; description: string | null }>;
+  created_at: string;
+  updated_at: string;
+  restaurant_uuid?: string | null;  // null for standalone catalog items
+}
+```
+
+- **When `type` is `combo`:** payload also includes:
+  - **combo_price**: number | null (optional combo-level price).
+  - **combo_entries**: array of `{ menu_item_uuid: string; variant_uuid?: string | null; quantity: number; modifier_label?: string | null }`. Each entry references another catalog menu item (by uuid); if that item has variants, **variant_uuid** must be the uuid of a variant_sku of that item. Referenced items must be owned by the same user.
+
+- **When `type` is `with_variants`:** payload also includes:
+  - **variant_option_groups**: array of `{ name: string; values: string[] }` (ordered option groups, e.g. Type: ["Hawaiian", "Pepperoni"], Size: ["Small", "Family"]).
+  - **variant_skus**: array of `{ uuid: string; option_values: Record<string, string>; price: number; image_url?: string | null }`. Each SKU is one combination of option values (Cartesian product) with its own price; **image_url** is optional (variant image upload may be a follow-up).
+
+For GET `/api/menu-items` list, all returned items are standalone (`restaurant_uuid` null).
 
 ### List all my menu items (catalog only)
 
@@ -878,14 +902,23 @@ Same as menu item payload below, plus optional **restaurant_uuid** (present when
 ```json
 {
   "sort_order": "integer (optional, min 0)",
-  "price": "number (optional, min 0)",
+  "price": "number (optional, min 0; only for type simple)",
+  "type": "string (optional: simple | combo | with_variants, default simple)",
+  "combo_price": "number (optional, min 0; only for type combo)",
   "translations": {
     "locale": { "name": "string (required)", "description": "string | null (optional)" }
-  }
+  },
+  "combo_entries": "array (required when type combo): [{ menu_item_uuid, variant_uuid?, quantity?, modifier_label? }]",
+  "variant_option_groups": "array (required when type with_variants): [{ name, values: string[] }]",
+  "variant_skus": "array (required when type with_variants): [{ option_values: object, price, image_url? }]"
 }
 ```
 
-At least one translation with a non-empty **name** is required. **Response (201):** `{ "message": "Menu item created.", "data": { user-level menu item payload } }`. **422:** No name in any translation.
+- At least one translation with a non-empty **name** is required.
+- **Combo:** `combo_entries` must have at least one entry; each **menu_item_uuid** must be a catalog menu item owned by the user. When the referenced item has variants, **variant_uuid** (uuid of that item’s variant_sku) is required.
+- **With variants:** `variant_option_groups` must have at least one group, each with **name** and non-empty **values**. **variant_skus** must cover exactly the Cartesian product of all option groups (one SKU per combination), each with **price** (required) and optional **image_url**.
+
+**Response (201):** `{ "message": "Menu item created.", "data": { user-level menu item payload } }`. **422:** Validation (e.g. missing name, invalid combo_entries or variant_skus).
 
 ### Update menu item
 
@@ -893,7 +926,7 @@ At least one translation with a non-empty **name** is required. **Response (201)
 |--------|------|------|
 | PUT/PATCH | `/api/menu-items/{item}` | Bearer + verified |
 
-**Body:** sort_order, price (optional), translations (optional). **Response (200):** `{ "message": "Menu item updated.", "data": { user-level menu item payload } }`. **404:** Not found or not owned.
+**Body:** sort_order, price (optional, for simple), type (optional), combo_price (optional, for combo), translations (optional), combo_entries (optional, for combo; replaces all entries), variant_option_groups and variant_skus (optional, for with_variants; both required together; replace all). When changing type, the appropriate data (combo_entries or variant_option_groups + variant_skus) must be sent and validated as for create. **Response (200):** `{ "message": "Menu item updated.", "data": { user-level menu item payload } }`. **404:** Not found or not owned. **422:** Validation.
 
 ### Delete menu item
 
@@ -1039,6 +1072,7 @@ When the item is a **restaurant usage of a catalog item** (added from “Menu it
 
 ## Changelog
 
+- **2026-02-19**: **Catalog menu items: combos and variants.** User-level menu items support **type**: `simple` (default), `combo`, or `with_variants`. **Combo:** optional `combo_price`; `combo_entries` array (menu_item_uuid, variant_uuid when referenced item has variants, quantity, modifier_label). Referenced items must be owned by the user. **With variants:** `variant_option_groups` (name + ordered values) and `variant_skus` (uuid, option_values, price, image_url optional); variant_skus must cover exactly the Cartesian product. GET/POST/PATCH `/api/menu-items` and GET `/api/menu-items/{item}` payloads include type and, when applicable, combo_entries or variant_option_groups + variant_skus. No internal `id` in any response; variant_skus use public `uuid`. Restaurant context “add ending variant only” and variant image upload are follow-ups.
 - **2026-02-19**: Public restaurant by slug: response now includes **operating_hours** (same shape as owner restaurant payload; null when not set) for display of opening hours on public pages.
 - **2026-02-19**: User-level menu items: GET `/api/menu-items` now returns **only standalone (catalog) items**. Restaurant menu items are no longer included; use GET `/api/restaurants/{restaurant}/menu-items` for per-restaurant lists. Fixes duplicate items on the Menu items (catalog) page after adding a catalog item to a restaurant category.
 - **2026-02-19**: Restaurants: **operating_hours** (optional). Column added to restaurants table (JSON, nullable). Create/update accept `operating_hours`: object keyed by day (sunday–saturday), each day `{ "open": bool, "slots": [ { "from": "HH:MM", "to": "HH:MM" }, ... ] }`. Times 24h (HH:MM or HH:MM:SS). Per day, timeslots must not overlap; `from` must be before `to`. List/show/update and create response include `operating_hours` in payload. Same structure will be reused for menu item availability.

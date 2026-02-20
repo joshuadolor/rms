@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\MenuItem;
 use App\Models\Restaurant;
 use App\Models\User;
 use PHPUnit\Framework\Attributes\Group;
@@ -512,6 +513,438 @@ class MenuTest extends TestCase
             ->assertJsonPath('data.category_uuid', $cat2->uuid);
         $item->refresh();
         $this->assertSame($cat2->id, $item->category_id);
+    }
+
+    public function test_catalog_menu_item_with_variants_creates_option_groups_and_skus(): void
+    {
+        $user = $this->createVerifiedUser();
+        $token = $user->createToken('auth')->plainTextToken;
+
+        $response = $this->postJson('/api/menu-items', [
+            'type' => 'with_variants',
+            'translations' => ['en' => ['name' => 'Pizza', 'description' => null]],
+            'variant_option_groups' => [
+                ['name' => 'Type', 'values' => ['Hawaiian', 'Pepperoni']],
+                ['name' => 'Size', 'values' => ['Small', 'Family']],
+            ],
+            'variant_skus' => [
+                ['option_values' => ['Type' => 'Hawaiian', 'Size' => 'Small'], 'price' => 8.00],
+                ['option_values' => ['Type' => 'Hawaiian', 'Size' => 'Family'], 'price' => 14.00],
+                ['option_values' => ['Type' => 'Pepperoni', 'Size' => 'Small'], 'price' => 9.00],
+                ['option_values' => ['Type' => 'Pepperoni', 'Size' => 'Family'], 'price' => 16.00],
+            ],
+        ], ['Authorization' => 'Bearer ' . $token]);
+
+        $response->assertStatus(201)
+            ->assertJsonPath('data.type', 'with_variants')
+            ->assertJsonPath('data.price', null)
+            ->assertJsonPath('data.translations.en.name', 'Pizza');
+        $data = $response->json('data');
+        $this->assertCount(2, $data['variant_option_groups']);
+        $this->assertCount(4, $data['variant_skus']);
+        foreach ($data['variant_skus'] as $sku) {
+            $this->assertArrayHasKey('uuid', $sku);
+            $this->assertArrayHasKey('option_values', $sku);
+            $this->assertArrayHasKey('price', $sku);
+            $this->assertArrayNotHasKey('id', $sku);
+        }
+    }
+
+    public function test_catalog_menu_item_combo_creates_entries_referencing_owned_items(): void
+    {
+        $user = $this->createVerifiedUser();
+        $token = $user->createToken('auth')->plainTextToken;
+
+        $burger = $this->postJson('/api/menu-items', [
+            'translations' => ['en' => ['name' => 'Burger', 'description' => null]],
+            'price' => 6.00,
+        ], ['Authorization' => 'Bearer ' . $token]);
+        $burger->assertStatus(201);
+        $burgerUuid = $burger->json('data.uuid');
+
+        $drink = $this->postJson('/api/menu-items', [
+            'translations' => ['en' => ['name' => 'Drink', 'description' => null]],
+            'price' => 2.00,
+        ], ['Authorization' => 'Bearer ' . $token]);
+        $drink->assertStatus(201);
+        $drinkUuid = $drink->json('data.uuid');
+
+        $response = $this->postJson('/api/menu-items', [
+            'type' => 'combo',
+            'combo_price' => 7.50,
+            'translations' => ['en' => ['name' => 'Combo 1', 'description' => 'Burger + Drink']],
+            'combo_entries' => [
+                ['menu_item_uuid' => $burgerUuid, 'quantity' => 1],
+                ['menu_item_uuid' => $drinkUuid, 'quantity' => 1, 'modifier_label' => 'Small'],
+            ],
+        ], ['Authorization' => 'Bearer ' . $token]);
+
+        $response->assertStatus(201)
+            ->assertJsonPath('data.type', 'combo')
+            ->assertJsonPath('data.price', 7.5)
+            ->assertJsonPath('data.combo_price', 7.5)
+            ->assertJsonPath('data.translations.en.name', 'Combo 1');
+        $data = $response->json('data');
+        $this->assertCount(2, $data['combo_entries']);
+        $entryUuids = array_column($data['combo_entries'], 'menu_item_uuid');
+        $this->assertContains($burgerUuid, $entryUuids);
+        $this->assertContains($drinkUuid, $entryUuids);
+    }
+
+    public function test_create_catalog_simple_item_explicit_type(): void
+    {
+        $user = $this->createVerifiedUser();
+        $token = $user->createToken('auth')->plainTextToken;
+
+        $response = $this->postJson('/api/menu-items', [
+            'type' => 'simple',
+            'price' => 5.99,
+            'translations' => ['en' => ['name' => 'Fries', 'description' => 'Crispy']],
+        ], ['Authorization' => 'Bearer ' . $token]);
+
+        $response->assertStatus(201)
+            ->assertJsonPath('data.type', 'simple')
+            ->assertJsonPath('data.price', 5.99)
+            ->assertJsonPath('data.translations.en.name', 'Fries')
+            ->assertJsonMissingPath('data.combo_entries')
+            ->assertJsonMissingPath('data.variant_option_groups');
+    }
+
+    public function test_catalog_combo_referencing_simple_and_variant_items(): void
+    {
+        $user = $this->createVerifiedUser();
+        $token = $user->createToken('auth')->plainTextToken;
+
+        $burger = $this->postJson('/api/menu-items', [
+            'type' => 'simple',
+            'translations' => ['en' => ['name' => 'Burger', 'description' => null]],
+            'price' => 6.00,
+        ], ['Authorization' => 'Bearer ' . $token]);
+        $burger->assertStatus(201);
+        $burgerUuid = $burger->json('data.uuid');
+
+        $pizza = $this->postJson('/api/menu-items', [
+            'type' => 'with_variants',
+            'translations' => ['en' => ['name' => 'Pizza', 'description' => null]],
+            'variant_option_groups' => [['name' => 'Size', 'values' => ['Small', 'Large']]],
+            'variant_skus' => [
+                ['option_values' => ['Size' => 'Small'], 'price' => 8.00],
+                ['option_values' => ['Size' => 'Large'], 'price' => 12.00],
+            ],
+        ], ['Authorization' => 'Bearer ' . $token]);
+        $pizza->assertStatus(201);
+        $pizzaUuid = $pizza->json('data.uuid');
+        $pizzaSkus = $pizza->json('data.variant_skus');
+        $largeSkuUuid = collect($pizzaSkus)->firstWhere('option_values.Size', 'Large')['uuid'];
+
+        $response = $this->postJson('/api/menu-items', [
+            'type' => 'combo',
+            'combo_price' => 15.00,
+            'translations' => ['en' => ['name' => 'Burger + Pizza', 'description' => null]],
+            'combo_entries' => [
+                ['menu_item_uuid' => $burgerUuid, 'quantity' => 1],
+                ['menu_item_uuid' => $pizzaUuid, 'variant_uuid' => $largeSkuUuid, 'quantity' => 1],
+            ],
+        ], ['Authorization' => 'Bearer ' . $token]);
+
+        $response->assertStatus(201)
+            ->assertJsonPath('data.type', 'combo');
+        $this->assertSame(15.0, (float) $response->json('data.combo_price'));
+        $data = $response->json('data');
+        $this->assertCount(2, $data['combo_entries']);
+        $pizzaEntry = collect($data['combo_entries'])->firstWhere('menu_item_uuid', $pizzaUuid);
+        $this->assertNotNull($pizzaEntry);
+        $this->assertSame($largeSkuUuid, $pizzaEntry['variant_uuid']);
+    }
+
+    public function test_reject_combo_when_variant_item_missing_variant_uuid(): void
+    {
+        $user = $this->createVerifiedUser();
+        $token = $user->createToken('auth')->plainTextToken;
+
+        $pizza = $this->postJson('/api/menu-items', [
+            'type' => 'with_variants',
+            'translations' => ['en' => ['name' => 'Pizza', 'description' => null]],
+            'variant_option_groups' => [['name' => 'Size', 'values' => ['Small']]],
+            'variant_skus' => [['option_values' => ['Size' => 'Small'], 'price' => 8.00]],
+        ], ['Authorization' => 'Bearer ' . $token]);
+        $pizza->assertStatus(201);
+        $pizzaUuid = $pizza->json('data.uuid');
+
+        $response = $this->postJson('/api/menu-items', [
+            'type' => 'combo',
+            'combo_price' => 8.00,
+            'translations' => ['en' => ['name' => 'Combo', 'description' => null]],
+            'combo_entries' => [
+                ['menu_item_uuid' => $pizzaUuid, 'quantity' => 1],
+            ],
+        ], ['Authorization' => 'Bearer ' . $token]);
+
+        $response->assertStatus(422);
+        $errors = $response->json('errors');
+        $variantMsg = $errors['combo_entries.0.variant_uuid'][0] ?? implode(' ', array_merge(...array_values($errors)));
+        $this->assertStringContainsString('variant', (string) $variantMsg);
+    }
+
+    public function test_reject_combo_reference_nonexistent_item(): void
+    {
+        $user = $this->createVerifiedUser();
+        $token = $user->createToken('auth')->plainTextToken;
+        $fakeUuid = '00000000-0000-0000-0000-000000000001';
+
+        $response = $this->postJson('/api/menu-items', [
+            'type' => 'combo',
+            'combo_price' => 6.00,
+            'translations' => ['en' => ['name' => 'Combo', 'description' => null]],
+            'combo_entries' => [
+                ['menu_item_uuid' => $fakeUuid, 'quantity' => 1],
+            ],
+        ], ['Authorization' => 'Bearer ' . $token]);
+
+        $response->assertStatus(422);
+        $errors = $response->json('errors');
+        $msg = (string) ($errors['combo_entries.0.menu_item_uuid'][0] ?? implode(' ', array_merge(...array_values($errors))));
+        $this->assertTrue(str_contains($msg, 'does not exist') || str_contains($msg, 'not owned'), 'Expected message about missing/non-owned item: ' . $msg);
+    }
+
+    public function test_reject_combo_non_owned_item(): void
+    {
+        $userA = User::factory()->create(['email' => 'combo-user-a@test.com', 'email_verified_at' => now()]);
+        $userB = User::factory()->create(['email' => 'combo-user-b@test.com', 'email_verified_at' => now()]);
+        $this->assertNotSame($userA->id, $userB->id, 'Need two distinct users');
+
+        $tokenA = $userA->createToken('auth')->plainTextToken;
+        $tokenB = $userB->createToken('auth')->plainTextToken;
+
+        // Item is created by user A (owner of the item)
+        $createItem = $this->postJson('/api/menu-items', [
+            'translations' => ['en' => ['name' => 'Burger', 'description' => null]],
+            'price' => 6.00,
+        ], ['Authorization' => 'Bearer ' . $tokenA]);
+        $createItem->assertStatus(201);
+        $itemUuid = $createItem->json('data.uuid');
+        $this->assertSame($userA->id, MenuItem::query()->where('uuid', $itemUuid)->value('user_id'), 'Item must belong to user A');
+
+        // User B tries to create a combo referencing user A's item — must be rejected
+        $response = $this->actingAs($userB)->postJson('/api/menu-items', [
+            'type' => 'combo',
+            'combo_price' => 6.00,
+            'translations' => ['en' => ['name' => 'Combo', 'description' => null]],
+            'combo_entries' => [
+                ['menu_item_uuid' => $itemUuid, 'quantity' => 1],
+            ],
+        ], ['Authorization' => 'Bearer ' . $tokenB]);
+
+        $response->assertStatus(422);
+        $errors = $response->json('errors');
+        $msg = (string) ($errors['combo_entries.0.menu_item_uuid'][0] ?? implode(' ', array_merge(...array_values($errors))));
+        $this->assertTrue(str_contains($msg, 'does not exist') || str_contains($msg, 'not owned'), 'Expected message about non-owned or missing item: ' . $msg);
+    }
+
+    public function test_reject_variant_skus_incomplete_cartesian_product(): void
+    {
+        $user = $this->createVerifiedUser();
+        $token = $user->createToken('auth')->plainTextToken;
+
+        $response = $this->postJson('/api/menu-items', [
+            'type' => 'with_variants',
+            'translations' => ['en' => ['name' => 'Pizza', 'description' => null]],
+            'variant_option_groups' => [
+                ['name' => 'Type', 'values' => ['A', 'B']],
+                ['name' => 'Size', 'values' => ['S', 'L']],
+            ],
+            'variant_skus' => [
+                ['option_values' => ['Type' => 'A', 'Size' => 'S'], 'price' => 8.00],
+                ['option_values' => ['Type' => 'A', 'Size' => 'L'], 'price' => 12.00],
+                ['option_values' => ['Type' => 'B', 'Size' => 'S'], 'price' => 9.00],
+            ],
+        ], ['Authorization' => 'Bearer ' . $token]);
+
+        $response->assertStatus(422);
+        $msg = (string) $response->json('errors.variant_skus.0');
+        $this->assertTrue(str_contains($msg, 'combination') || str_contains($msg, 'cover'), 'Expected Cartesian/product message: ' . $msg);
+    }
+
+    public function test_reject_variant_skus_duplicate_combination(): void
+    {
+        $user = $this->createVerifiedUser();
+        $token = $user->createToken('auth')->plainTextToken;
+
+        $response = $this->postJson('/api/menu-items', [
+            'type' => 'with_variants',
+            'translations' => ['en' => ['name' => 'Pizza', 'description' => null]],
+            'variant_option_groups' => [['name' => 'Size', 'values' => ['S', 'L']]],
+            'variant_skus' => [
+                ['option_values' => ['Size' => 'S'], 'price' => 8.00],
+                ['option_values' => ['Size' => 'L'], 'price' => 12.00],
+                ['option_values' => ['Size' => 'S'], 'price' => 7.00],
+            ],
+        ], ['Authorization' => 'Bearer ' . $token]);
+
+        $response->assertStatus(422);
+        $this->assertStringContainsString('Duplicate', (string) $response->json('errors.variant_skus.0'));
+    }
+
+    public function test_update_catalog_item_change_variant_skus(): void
+    {
+        $user = $this->createVerifiedUser();
+        $token = $user->createToken('auth')->plainTextToken;
+
+        $create = $this->postJson('/api/menu-items', [
+            'type' => 'with_variants',
+            'translations' => ['en' => ['name' => 'Pizza', 'description' => null]],
+            'variant_option_groups' => [['name' => 'Size', 'values' => ['S', 'L']]],
+            'variant_skus' => [
+                ['option_values' => ['Size' => 'S'], 'price' => 8.00],
+                ['option_values' => ['Size' => 'L'], 'price' => 12.00],
+            ],
+        ], ['Authorization' => 'Bearer ' . $token]);
+        $create->assertStatus(201);
+        $itemUuid = $create->json('data.uuid');
+
+        $response = $this->patchJson('/api/menu-items/' . $itemUuid, [
+            'variant_option_groups' => [['name' => 'Size', 'values' => ['S', 'L']]],
+            'variant_skus' => [
+                ['option_values' => ['Size' => 'S'], 'price' => 9.00],
+                ['option_values' => ['Size' => 'L'], 'price' => 14.00],
+            ],
+        ], ['Authorization' => 'Bearer ' . $token]);
+
+        $response->assertOk()
+            ->assertJsonPath('data.type', 'with_variants');
+        $skus = $response->json('data.variant_skus');
+        $this->assertCount(2, $skus);
+        $prices = collect($skus)->map(fn ($s) => (float) $s['price'])->all();
+        $this->assertContains(9.0, $prices);
+        $this->assertContains(14.0, $prices);
+    }
+
+    public function test_update_catalog_item_change_combo_entries(): void
+    {
+        $user = $this->createVerifiedUser();
+        $token = $user->createToken('auth')->plainTextToken;
+
+        $a = $this->postJson('/api/menu-items', [
+            'translations' => ['en' => ['name' => 'Item A', 'description' => null]],
+            'price' => 3.00,
+        ], ['Authorization' => 'Bearer ' . $token]);
+        $a->assertStatus(201);
+        $b = $this->postJson('/api/menu-items', [
+            'translations' => ['en' => ['name' => 'Item B', 'description' => null]],
+            'price' => 4.00,
+        ], ['Authorization' => 'Bearer ' . $token]);
+        $b->assertStatus(201);
+
+        $combo = $this->postJson('/api/menu-items', [
+            'type' => 'combo',
+            'combo_price' => 6.00,
+            'translations' => ['en' => ['name' => 'Combo', 'description' => null]],
+            'combo_entries' => [
+                ['menu_item_uuid' => $a->json('data.uuid'), 'quantity' => 1],
+            ],
+        ], ['Authorization' => 'Bearer ' . $token]);
+        $combo->assertStatus(201);
+        $comboUuid = $combo->json('data.uuid');
+
+        $response = $this->patchJson('/api/menu-items/' . $comboUuid, [
+            'combo_entries' => [
+                ['menu_item_uuid' => $a->json('data.uuid'), 'quantity' => 2],
+                ['menu_item_uuid' => $b->json('data.uuid'), 'quantity' => 1],
+            ],
+        ], ['Authorization' => 'Bearer ' . $token]);
+
+        $response->assertOk()
+            ->assertJsonPath('data.type', 'combo');
+        $entries = $response->json('data.combo_entries');
+        $this->assertCount(2, $entries);
+        $quantities = array_column($entries, 'quantity');
+        $this->assertContains(2, $quantities);
+        $this->assertContains(1, $quantities);
+    }
+
+    public function test_list_catalog_menu_items_includes_type_combo_entries_and_variants(): void
+    {
+        $user = $this->createVerifiedUser();
+        $token = $user->createToken('auth')->plainTextToken;
+
+        $this->postJson('/api/menu-items', [
+            'type' => 'simple',
+            'translations' => ['en' => ['name' => 'Simple', 'description' => null]],
+            'price' => 5.00,
+        ], ['Authorization' => 'Bearer ' . $token]);
+        $combo = $this->postJson('/api/menu-items', [
+            'type' => 'combo',
+            'combo_price' => 7.00,
+            'translations' => ['en' => ['name' => 'Combo', 'description' => null]],
+            'combo_entries' => [
+                ['menu_item_uuid' => $this->postJson('/api/menu-items', [
+                    'translations' => ['en' => ['name' => 'X', 'description' => null]],
+                    'price' => 3,
+                ], ['Authorization' => 'Bearer ' . $token])->json('data.uuid'), 'quantity' => 1],
+            ],
+        ], ['Authorization' => 'Bearer ' . $token]);
+        $this->postJson('/api/menu-items', [
+            'type' => 'with_variants',
+            'translations' => ['en' => ['name' => 'Variants', 'description' => null]],
+            'variant_option_groups' => [['name' => 'Size', 'values' => ['S']]],
+            'variant_skus' => [['option_values' => ['Size' => 'S'], 'price' => 6.00]],
+        ], ['Authorization' => 'Bearer ' . $token]);
+
+        $response = $this->getJson('/api/menu-items', ['Authorization' => 'Bearer ' . $token]);
+        $response->assertOk();
+        $data = $response->json('data');
+        $this->assertGreaterThanOrEqual(3, count($data));
+        $types = array_column($data, 'type');
+        $this->assertContains('simple', $types);
+        $this->assertContains('combo', $types);
+        $this->assertContains('with_variants', $types);
+        $comboItem = collect($data)->firstWhere('type', 'combo');
+        $this->assertNotNull($comboItem);
+        $this->assertArrayHasKey('combo_entries', $comboItem);
+        $variantItem = collect($data)->firstWhere('type', 'with_variants');
+        $this->assertNotNull($variantItem);
+        $this->assertArrayHasKey('variant_option_groups', $variantItem);
+        $this->assertArrayHasKey('variant_skus', $variantItem);
+    }
+
+    public function test_show_catalog_menu_item_returns_combo_entries_and_variant_skus(): void
+    {
+        $user = $this->createVerifiedUser();
+        $token = $user->createToken('auth')->plainTextToken;
+
+        $combo = $this->postJson('/api/menu-items', [
+            'type' => 'combo',
+            'combo_price' => 5.00,
+            'translations' => ['en' => ['name' => 'Combo', 'description' => null]],
+            'combo_entries' => [
+                ['menu_item_uuid' => $this->postJson('/api/menu-items', [
+                    'translations' => ['en' => ['name' => 'A', 'description' => null]],
+                    'price' => 2,
+                ], ['Authorization' => 'Bearer ' . $token])->json('data.uuid'), 'quantity' => 1],
+            ],
+        ], ['Authorization' => 'Bearer ' . $token]);
+        $comboUuid = $combo->json('data.uuid');
+
+        $show = $this->getJson('/api/menu-items/' . $comboUuid, ['Authorization' => 'Bearer ' . $token]);
+        $show->assertOk()
+            ->assertJsonPath('data.type', 'combo')
+            ->assertJsonStructure(['data' => ['combo_entries']]);
+        $this->assertSame(5.0, (float) $show->json('data.combo_price'));
+        $this->assertCount(1, $show->json('data.combo_entries'));
+
+        $pizza = $this->postJson('/api/menu-items', [
+            'type' => 'with_variants',
+            'translations' => ['en' => ['name' => 'Pizza', 'description' => null]],
+            'variant_option_groups' => [['name' => 'Size', 'values' => ['S']]],
+            'variant_skus' => [['option_values' => ['Size' => 'S'], 'price' => 8.00]],
+        ], ['Authorization' => 'Bearer ' . $token]);
+        $pizzaUuid = $pizza->json('data.uuid');
+        $showPizza = $this->getJson('/api/menu-items/' . $pizzaUuid, ['Authorization' => 'Bearer ' . $token]);
+        $showPizza->assertOk()
+            ->assertJsonPath('data.type', 'with_variants')
+            ->assertJsonStructure(['data' => ['variant_option_groups', 'variant_skus']]);
+        $this->assertCount(1, $showPizza->json('data.variant_option_groups'));
+        $this->assertCount(1, $showPizza->json('data.variant_skus'));
     }
 
     public function test_menus_require_ownership(): void

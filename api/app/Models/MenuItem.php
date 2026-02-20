@@ -9,12 +9,18 @@ use Illuminate\Support\Str;
 
 class MenuItem extends Model
 {
+    public const TYPE_SIMPLE = 'simple';
+    public const TYPE_COMBO = 'combo';
+    public const TYPE_WITH_VARIANTS = 'with_variants';
+
     protected $fillable = [
         'user_id',
         'restaurant_id',
         'category_id',
         'sort_order',
         'price',
+        'type',
+        'combo_price',
         'source_menu_item_uuid',
         'price_override',
         'translation_overrides',
@@ -56,7 +62,7 @@ class MenuItem extends Model
         return $this->belongsTo(MenuItem::class, 'source_menu_item_uuid', 'uuid');
     }
 
-    /** Effective price: override if set, else base from source or this item. */
+    /** Effective price: override if set, else base from source or this item. Combo: combo_price if set. With_variants: no single price. */
     public function getEffectivePrice(): ?float
     {
         if ($this->source_menu_item_uuid !== null) {
@@ -65,7 +71,13 @@ class MenuItem extends Model
                 return (float) $override;
             }
             $source = $this->sourceMenuItem;
-            return $source ? (float) $source->price : null;
+            return $source ? $source->getEffectivePrice() : null;
+        }
+        if ($this->isCombo() && $this->combo_price !== null) {
+            return (float) $this->combo_price;
+        }
+        if ($this->isWithVariants()) {
+            return null;
         }
         return $this->price !== null ? (float) $this->price : null;
     }
@@ -113,5 +125,36 @@ class MenuItem extends Model
     public function translations(): HasMany
     {
         return $this->hasMany(MenuItemTranslation::class, 'menu_item_id');
+    }
+
+    public function variantOptionGroups(): HasMany
+    {
+        return $this->hasMany(MenuItemVariantOptionGroup::class, 'menu_item_id')->orderBy('sort_order');
+    }
+
+    public function variantSkus(): HasMany
+    {
+        return $this->hasMany(MenuItemVariantSku::class, 'menu_item_id');
+    }
+
+    /** When this item is a combo, entries referencing other menu items. */
+    public function comboEntries(): HasMany
+    {
+        return $this->hasMany(ComboEntry::class, 'combo_menu_item_id')->orderBy('sort_order');
+    }
+
+    public function isSimple(): bool
+    {
+        return ($this->type ?? self::TYPE_SIMPLE) === self::TYPE_SIMPLE;
+    }
+
+    public function isCombo(): bool
+    {
+        return $this->type === self::TYPE_COMBO;
+    }
+
+    public function isWithVariants(): bool
+    {
+        return $this->type === self::TYPE_WITH_VARIANTS;
     }
 }

@@ -21,7 +21,9 @@ export function invalidateUserMenuItemsListCache() {
  * List only standalone (catalog) menu items. Used by the "Menu items" catalog page.
  * Restaurant menu items are listed per restaurant via restaurantService.listMenuItems.
  * Cached; next call returns cache until a menu item is created/updated/deleted.
- * @returns {Promise<{ data: Array<{ uuid: string, restaurant_uuid?: string | null, category_uuid: string | null, sort_order: number, translations: Record<string, { name: string, description: string | null }>, created_at: string, updated_at: string }> }>}
+ * Response shape per docs/API-REFERENCE.md (user-level menu item payload including type, combo_entries, variant_option_groups, variant_skus when applicable).
+ * Caller should apply MenuItem.fromApi({ data: item }) per item if using models.
+ * @returns {Promise<{ data: Array<object> }>}
  */
 export async function listUserMenuItems() {
   const cached = userMenuItemsListCache.get(USER_MENU_ITEMS_LIST_KEY)
@@ -46,7 +48,7 @@ export async function getUserMenuItem(itemUuid) {
 
 /**
  * Create a standalone menu item (not tied to any restaurant).
- * Body: { sort_order?: number, translations: { locale: { name: string, description?: string | null } } }
+ * Body per docs/API-REFERENCE.md: sort_order?, type? (simple|combo|with_variants), price? (simple), combo_price?, combo_entries? (when type combo), variant_option_groups?, variant_skus? (when type with_variants), translations (required; at least one name).
  * @param {object} payload
  * @returns {Promise<{ message: string, data: object }>}
  */
@@ -57,7 +59,7 @@ export async function createStandaloneMenuItem(payload) {
 }
 
 /**
- * Update a menu item (standalone or restaurant). Body: sort_order, translations (optional).
+ * Update a menu item (standalone or restaurant). Body per docs/API-REFERENCE.md: sort_order?, translations?, price? (simple), type?, combo_price?, combo_entries? (combo; replaces all), variant_option_groups? and variant_skus? (with_variants; both together).
  * @param {string} itemUuid
  * @param {object} payload
  * @returns {Promise<{ message: string, data: object }>}

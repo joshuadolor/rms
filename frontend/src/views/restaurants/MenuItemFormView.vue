@@ -35,54 +35,81 @@
           {{ error }}
         </div>
 
-        <!-- Price: base (standalone or restaurant-owned) or override (catalog usage) -->
+        <!-- Catalog item summary: type, combo entries or variant SKUs (read-only) -->
         <section
-          v-if="restaurant || standaloneItem"
-          class="bg-white dark:bg-zinc-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 lg:p-6 space-y-4"
+          v-if="standaloneItem && isMenuItemsModule && (standaloneItem.type === 'combo' || standaloneItem.type === 'with_variants')"
+          class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-zinc-900/80 p-4 lg:p-6 space-y-4"
         >
           <h3 class="font-semibold text-charcoal dark:text-white flex items-center gap-2">
-            <span class="material-icons text-slate-500 dark:text-slate-400">payments</span>
-            Price
+            <span class="material-icons text-slate-500 dark:text-slate-400">info</span>
+            Type: {{ standaloneItem.type === 'combo' ? 'Combo' : 'With variants' }}
           </h3>
-          <template v-if="itemFromCatalog">
-            <AppInput
-              v-model="form.price_override"
-              :label="`Override price (leave empty to use base: ${formatBasePrice(basePrice)})`"
-              type="number"
-              min="0"
-              step="0.01"
-              placeholder="Same as base"
-              :error="fieldErrors.price_override"
-            />
+          <template v-if="standaloneItem.type === 'combo'">
+            <p class="text-sm text-slate-600 dark:text-slate-400">Entries (edit below to change):</p>
+            <ul class="space-y-2">
+              <li
+                v-for="(entry, idx) in (standaloneItem.combo_entries || [])"
+                :key="idx"
+                class="flex flex-wrap items-baseline gap-2 text-sm"
+              >
+                <span class="font-medium text-charcoal dark:text-white">{{ comboEntryName(entry) }}</span>
+                <span v-if="comboEntryVariantLabel(entry)" class="text-slate-500 dark:text-slate-400">({{ comboEntryVariantLabel(entry) }})</span>
+                <span class="text-slate-600 dark:text-slate-300">× {{ entry.quantity }}</span>
+                <span v-if="entry.modifier_label" class="text-slate-500 dark:text-slate-400">— {{ entry.modifier_label }}</span>
+              </li>
+            </ul>
+            <p v-if="standaloneItem.combo_price != null" class="text-sm font-medium text-slate-700 dark:text-slate-300">
+              Combo price: {{ formatBasePrice(standaloneItem.combo_price) }}
+            </p>
           </template>
-          <AppInput
-            v-else
-            v-model="form.price"
-            label="Price (optional)"
-            type="number"
-            min="0"
-            step="0.01"
-            placeholder="e.g. 10.00"
-            :error="fieldErrors.price"
-          />
-          <AppButton
-            v-if="itemFromCatalog && hasOverrides"
-            type="button"
-            variant="secondary"
-            size="sm"
-            class="min-h-[44px]"
-            :disabled="saving || reverting"
-            data-testid="revert-to-base"
-            @click="revertToBase"
-          >
-            <template v-if="reverting" #icon>
-              <span class="material-icons animate-spin">sync</span>
-            </template>
-            {{ reverting ? 'Reverting…' : 'Revert to base value' }}
-          </AppButton>
+          <template v-else-if="standaloneItem.type === 'with_variants'">
+            <p class="text-sm text-slate-600 dark:text-slate-400">Option groups:</p>
+            <ul class="list-disc list-inside text-sm text-charcoal dark:text-white mb-4">
+              <li v-for="grp in (standaloneItem.variant_option_groups || [])" :key="grp.name">
+                {{ grp.name }}: {{ (grp.values || []).join(', ') }}
+              </li>
+            </ul>
+            <p class="text-sm text-slate-600 dark:text-slate-400 mb-2">Variants (price{{ standaloneItem.variant_skus?.some(s => s.image_url) ? ', image' : '' }}):</p>
+            <ul class="space-y-2">
+              <li
+                v-for="sku in (standaloneItem.variant_skus || [])"
+                :key="sku.uuid"
+                class="flex flex-wrap items-center gap-2 text-sm"
+              >
+                <span class="font-medium text-charcoal dark:text-white">{{ variantSkuLabel(sku) }}</span>
+                <span class="text-slate-600 dark:text-slate-300">{{ formatBasePrice(sku.price) }}</span>
+                <img v-if="sku.image_url" :src="sku.image_url" alt="" class="w-10 h-10 object-cover rounded" />
+              </li>
+            </ul>
+          </template>
         </section>
 
-        <!-- Translations: dropdown to pick language, then one section for the selected locale -->
+        <!-- Type selector (catalog standalone only) -->
+        <section
+          v-if="standaloneItem && isMenuItemsModule"
+          class="bg-white dark:bg-zinc-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 lg:p-6"
+        >
+          <h3 class="font-semibold text-charcoal dark:text-white mb-3">Type</h3>
+          <div class="flex flex-col gap-2" role="radiogroup" aria-label="Menu item type">
+            <label class="flex items-center gap-3 min-h-[44px] cursor-pointer rounded-lg border border-slate-200 dark:border-slate-700 p-3 has-[:checked]:ring-2 has-[:checked]:ring-primary has-[:checked]:border-primary">
+              <input v-model="form.type" type="radio" value="simple" class="w-5 h-5" data-testid="type-simple" />
+              <span class="font-medium text-charcoal dark:text-white">Simple</span>
+              <span class="text-sm text-slate-500 dark:text-slate-400">Single item with one price</span>
+            </label>
+            <label class="flex items-center gap-3 min-h-[44px] cursor-pointer rounded-lg border border-slate-200 dark:border-slate-700 p-3 has-[:checked]:ring-2 has-[:checked]:ring-primary has-[:checked]:border-primary">
+              <input v-model="form.type" type="radio" value="combo" class="w-5 h-5" data-testid="type-combo" />
+              <span class="font-medium text-charcoal dark:text-white">Combo</span>
+              <span class="text-sm text-slate-500 dark:text-slate-400">Bundle of other menu items</span>
+            </label>
+            <label class="flex items-center gap-3 min-h-[44px] cursor-pointer rounded-lg border border-slate-200 dark:border-slate-700 p-3 has-[:checked]:ring-2 has-[:checked]:ring-primary has-[:checked]:border-primary">
+              <input v-model="form.type" type="radio" value="with_variants" class="w-5 h-5" data-testid="type-with_variants" />
+              <span class="font-medium text-charcoal dark:text-white">With variants</span>
+              <span class="text-sm text-slate-500 dark:text-slate-400">Options (e.g. size, type) with price per combination</span>
+            </label>
+          </div>
+        </section>
+
+        <!-- Name & description (translations): before Price -->
         <template v-if="restaurant || standaloneItem">
           <section
             class="bg-white dark:bg-zinc-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 lg:p-6 space-y-4"
@@ -147,6 +174,187 @@
           </section>
         </template>
 
+        <!-- Price: hide for catalog with_variants (price per SKU); show for restaurant or catalog simple/combo -->
+        <section
+          v-if="restaurant || (standaloneItem && form.type !== 'with_variants')"
+          class="bg-white dark:bg-zinc-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 lg:p-6 space-y-4"
+        >
+          <h3 class="font-semibold text-charcoal dark:text-white flex items-center gap-2">
+            <span class="material-icons text-slate-500 dark:text-slate-400">payments</span>
+            {{ standaloneItem && form.type === 'combo' ? 'Combo price (optional)' : 'Price' }}
+          </h3>
+          <template v-if="itemFromCatalog">
+            <AppInput
+              v-model="form.price_override"
+              :label="`Override price (leave empty to use base: ${formatBasePrice(basePrice)})`"
+              type="number"
+              min="0"
+              step="0.01"
+              placeholder="Same as base"
+              :error="fieldErrors.price_override"
+            />
+          </template>
+          <template v-else-if="standaloneItem && form.type === 'combo'">
+            <AppInput
+              v-model="form.combo_price"
+              label="Combo price (optional)"
+              type="number"
+              min="0"
+              step="0.01"
+              placeholder="e.g. 12.00"
+              :error="fieldErrors.combo_price"
+            />
+          </template>
+          <AppInput
+            v-else
+            v-model="form.price"
+            label="Price (optional)"
+            type="number"
+            min="0"
+            step="0.01"
+            placeholder="e.g. 10.00"
+            :error="fieldErrors.price"
+          />
+          <AppButton
+            v-if="itemFromCatalog && hasOverrides"
+            type="button"
+            variant="secondary"
+            size="sm"
+            class="min-h-[44px]"
+            :disabled="saving || reverting"
+            data-testid="revert-to-base"
+            @click="revertToBase"
+          >
+            <template v-if="reverting" #icon>
+              <span class="material-icons animate-spin">sync</span>
+            </template>
+            {{ reverting ? 'Reverting…' : 'Revert to base value' }}
+          </AppButton>
+        </section>
+
+        <!-- Catalog combo entries (standalone edit) -->
+        <section
+          v-if="standaloneItem && isMenuItemsModule && form.type === 'combo'"
+          class="bg-white dark:bg-zinc-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 lg:p-6 space-y-4"
+        >
+          <div class="flex items-center justify-between gap-2">
+            <h3 class="font-semibold text-charcoal dark:text-white">Combo entries</h3>
+            <AppButton type="button" variant="secondary" size="sm" class="min-h-[44px]" @click="addComboEntry">
+              <template #icon><span class="material-icons">add</span></template>
+              Add entry
+            </AppButton>
+          </div>
+          <p v-if="fieldErrors.combo_entries" class="text-sm text-red-600 dark:text-red-400">{{ fieldErrors.combo_entries }}</p>
+          <ul class="space-y-4">
+            <li
+              v-for="(entry, idx) in form.combo_entries"
+              :key="idx"
+              class="flex flex-col gap-3 p-4 rounded-xl border border-slate-200 dark:border-slate-700"
+            >
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-medium text-slate-600 dark:text-slate-400">Entry {{ idx + 1 }}</span>
+                <AppButton type="button" variant="ghost" size="sm" class="min-h-[44px] min-w-[44px] text-red-600 dark:text-red-400" aria-label="Remove entry" @click="removeComboEntry(idx)">
+                  <span class="material-icons">remove_circle_outline</span>
+                </AppButton>
+              </div>
+              <div class="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label :for="`edit-combo-item-${idx}`" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Menu item</label>
+                  <select
+                    :id="`edit-combo-item-${idx}`"
+                    v-model="entry.menu_item_uuid"
+                    class="w-full min-h-[44px] rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-zinc-800 text-charcoal dark:text-white px-4 py-2"
+                  >
+                    <option value="">— Select item —</option>
+                    <option v-for="catItem in catalogItemsForSummary" :key="catItem.uuid" :value="catItem.uuid">
+                      {{ catalogEditComboItemName(catItem) }}
+                    </option>
+                  </select>
+                </div>
+                <div v-if="catalogEditItemHasVariants(entry.menu_item_uuid)">
+                  <label :for="`edit-combo-variant-${idx}`" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Variant</label>
+                  <select
+                    :id="`edit-combo-variant-${idx}`"
+                    v-model="entry.variant_uuid"
+                    class="w-full min-h-[44px] rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-zinc-800 text-charcoal dark:text-white px-4 py-2"
+                  >
+                    <option :value="null">— Select variant —</option>
+                    <option v-for="sku in catalogEditVariantSkus(entry.menu_item_uuid)" :key="sku.uuid" :value="sku.uuid">
+                      {{ sku.displayLabel ? sku.displayLabel() : Object.values(sku.option_values || {}).join(', ') }}
+                    </option>
+                  </select>
+                </div>
+              </div>
+              <div class="grid gap-3 sm:grid-cols-2">
+                <AppInput v-model.number="entry.quantity" label="Quantity" type="number" min="1" :error="fieldErrors[`combo_entries.${idx}.quantity`]" />
+                <AppInput v-model="entry.modifier_label" label="Modifier (optional)" type="text" placeholder="e.g. No ice" />
+              </div>
+            </li>
+          </ul>
+        </section>
+
+        <!-- Catalog with variants (standalone edit) -->
+        <template v-if="standaloneItem && isMenuItemsModule && form.type === 'with_variants'">
+          <section class="bg-white dark:bg-zinc-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 lg:p-6 space-y-4">
+            <div class="flex items-center justify-between gap-2">
+              <h3 class="font-semibold text-charcoal dark:text-white">Option groups</h3>
+              <AppButton type="button" variant="secondary" size="sm" class="min-h-[44px]" @click="addEditOptionGroup">
+                <template #icon><span class="material-icons">add</span></template>
+                Add group
+              </AppButton>
+            </div>
+            <p v-if="fieldErrors.variant_option_groups" class="text-sm text-red-600 dark:text-red-400">{{ fieldErrors.variant_option_groups }}</p>
+            <ul class="space-y-4">
+              <li v-for="(grp, gIdx) in form.variant_option_groups" :key="gIdx" class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 space-y-3">
+                <div class="flex items-center justify-between gap-2">
+                  <AppInput v-model="grp.name" :label="`Group name`" type="text" placeholder="e.g. Size" />
+                  <AppButton type="button" variant="ghost" size="sm" class="min-h-[44px] min-w-[44px] text-red-600 dark:text-red-400 shrink-0" aria-label="Remove group" @click="removeEditOptionGroup(gIdx)">
+                    <span class="material-icons">remove_circle_outline</span>
+                  </AppButton>
+                </div>
+                <div>
+                  <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Values (comma-separated)</label>
+                  <textarea
+                    v-model="grp.valuesText"
+                    rows="2"
+                    class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-zinc-800 py-3 px-4 text-charcoal dark:text-white min-h-[44px]"
+                    placeholder="Small, Medium, Large"
+                    @input="syncEditGroupValues(gIdx)"
+                  />
+                </div>
+              </li>
+            </ul>
+          </section>
+          <section v-if="form.variant_skus.length > 0" class="bg-white dark:bg-zinc-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 lg:p-6 overflow-x-auto">
+            <h3 class="font-semibold text-charcoal dark:text-white mb-3">Variant prices</h3>
+            <p v-if="fieldErrors.variant_skus" class="text-sm text-red-600 dark:text-red-400 mb-2">{{ fieldErrors.variant_skus }}</p>
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="border-b border-slate-200 dark:border-slate-700">
+                  <th scope="col" class="text-left py-2 px-2 font-semibold text-charcoal dark:text-white">Combination</th>
+                  <th scope="col" class="text-left py-2 px-2 font-semibold text-charcoal dark:text-white">Price</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(row, rIdx) in form.variant_skus" :key="rIdx" class="border-b border-slate-100 dark:border-slate-800">
+                  <td class="py-3 px-2 text-charcoal dark:text-white">{{ row.label }}</td>
+                  <td class="py-3 px-2">
+                    <input
+                      v-model.number="row.price"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="0.00"
+                      :aria-label="`Price for ${row.label || 'variant'}`"
+                      class="w-full min-w-[5rem] min-h-[44px] rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-zinc-800 px-3 py-2 text-charcoal dark:text-white"
+                    />
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
+        </template>
+
         <div class="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center justify-between gap-3">
           <router-link :to="backLink" class="block w-full sm:w-auto">
             <AppButton type="button" variant="secondary" class="min-h-[44px] w-full sm:w-auto">Cancel</AppButton>
@@ -165,6 +373,36 @@
           </AppButton>
         </div>
       </form>
+
+      <!-- Confirmation modal when saving edit with deletions or text updates -->
+      <AppModal
+        :open="showSaveConfirmModal"
+        title="Save changes?"
+        description="Confirm saving changes that remove variants, combo entries, or update text."
+        @close="showSaveConfirmModal = false"
+      >
+        <p class="text-slate-600 dark:text-slate-300">
+          You’ve removed variants or combo entries, or updated name or description. Do you want to save these changes?
+        </p>
+        <template #footer>
+          <AppButton type="button" variant="secondary" class="min-h-[44px]" @click="showSaveConfirmModal = false">
+            Cancel
+          </AppButton>
+          <AppButton
+            type="button"
+            variant="primary"
+            class="min-h-[44px]"
+            data-testid="save-confirm-submit"
+            :disabled="saving"
+            @click="confirmSaveAndSubmit"
+          >
+            <template v-if="saving" #icon>
+              <span class="material-icons animate-spin">sync</span>
+            </template>
+            Save changes
+          </AppButton>
+        </template>
+      </AppModal>
     </template>
   </div>
 </template>
@@ -175,6 +413,7 @@ import { useRoute, useRouter } from 'vue-router'
 import AppInput from '@/components/ui/AppInput.vue'
 import AppButton from '@/components/ui/AppButton.vue'
 import AppBackLink from '@/components/AppBackLink.vue'
+import AppModal from '@/components/ui/AppModal.vue'
 import { getLocaleDisplay } from '@/config/locales'
 import { formatCurrency } from '@/utils/format'
 import { useBreadcrumbStore } from '@/stores/breadcrumb'
@@ -215,6 +454,12 @@ const catalogSourceUuid = ref(null)
 const baseTranslations = ref({})
 const basePrice = ref(null)
 const hasOverrides = ref(false)
+/** Catalog menu items (for combo entry names / variant labels in summary). Loaded when standalone edit and type is combo. */
+const catalogItemsForSummary = ref([])
+/** When true, show the "Save changes?" confirmation modal (edit only, when deletions or text updates detected). */
+const showSaveConfirmModal = ref(false)
+/** Snapshot after loading edit form: used to detect combo/variant deletions or text changes. */
+const initialEditState = ref(null)
 
 const form = reactive({
   sort_order: 0,
@@ -222,6 +467,11 @@ const form = reactive({
   price: '',
   price_override: '',
   translations: {},
+  type: 'simple',
+  combo_price: '',
+  combo_entries: [],
+  variant_option_groups: [],
+  variant_skus: [],
 })
 
 /** True only in restaurant context when this item is a catalog reference. Menu items (catalog) context never uses overrides. */
@@ -230,6 +480,124 @@ const itemFromCatalog = computed(() => !!restaurant.value && !!catalogSourceUuid
 function formatBasePrice(price) {
   const currency = restaurant.value?.currency ?? 'USD'
   return formatCurrency(price, currency)
+}
+
+/** Catalog item by uuid for combo entry names (standalone edit). */
+const catalogItemByUuid = computed(() => {
+  const list = catalogItemsForSummary.value
+  const map = {}
+  for (const item of list) {
+    if (item?.uuid) map[item.uuid] = item
+  }
+  return map
+})
+
+function firstLocaleFromItem(item) {
+  if (!item?.translations) return 'en'
+  const keys = Object.keys(item.translations)
+  return keys[0] ?? 'en'
+}
+
+function comboEntryName(entry) {
+  const item = catalogItemByUuid.value[entry?.menu_item_uuid]
+  if (!item) return entry?.menu_item_uuid ? `Item ${String(entry.menu_item_uuid).slice(0, 8)}…` : '—'
+  const loc = item.effectiveName ? firstLocaleFromItem(item) : (Object.keys(item.translations || {})[0] ?? 'en')
+  return item.effectiveName ? item.effectiveName(loc) : (item.translations?.[loc]?.name ?? '—')
+}
+
+function comboEntryVariantLabel(entry) {
+  if (!entry?.variant_uuid) return ''
+  const item = catalogItemByUuid.value[entry.menu_item_uuid]
+  if (!item?.variant_skus) return ''
+  const sku = item.variant_skus.find((s) => s.uuid === entry.variant_uuid)
+  if (!sku) return ''
+  return sku.displayLabel ? sku.displayLabel(item.variantOptionGroupNames) : Object.values(sku.option_values || {}).join(', ')
+}
+
+function variantSkuLabel(sku) {
+  if (sku?.displayLabel) return sku.displayLabel()
+  const ov = sku?.option_values
+  if (!ov || typeof ov !== 'object') return '—'
+  return Object.values(ov).filter(Boolean).join(', ')
+}
+
+function catalogEditComboItemName(catItem) {
+  const loc = firstLocaleFromItem(catItem)
+  return catItem.effectiveName ? catItem.effectiveName(loc) : (catItem.translations?.[loc]?.name ?? '—')
+}
+
+function catalogEditItemHasVariants(menuItemUuid) {
+  const item = catalogItemsForSummary.value.find((i) => i.uuid === menuItemUuid)
+  return item?.type === 'with_variants' && Array.isArray(item?.variant_skus) && item.variant_skus.length > 0
+}
+
+function catalogEditVariantSkus(menuItemUuid) {
+  const item = catalogItemsForSummary.value.find((i) => i.uuid === menuItemUuid)
+  return item?.variant_skus ?? []
+}
+
+const ADD_THROTTLE_MS = 250
+let lastComboEntryAdd = 0
+let lastOptionGroupAdd = 0
+
+function addComboEntry() {
+  const now = Date.now()
+  if (now - lastComboEntryAdd < ADD_THROTTLE_MS) return
+  lastComboEntryAdd = now
+  form.combo_entries.push({
+    menu_item_uuid: '',
+    variant_uuid: null,
+    quantity: 1,
+    modifier_label: '',
+  })
+}
+
+function removeComboEntry(idx) {
+  form.combo_entries.splice(idx, 1)
+}
+
+function cartesianProductEdit(groups) {
+  if (!groups.length) return []
+  const [first, ...rest] = groups
+  const firstCombos = (first?.values ?? []).map((v) => ({ [first?.name ?? '']: v }))
+  if (rest.length === 0) return firstCombos
+  const restCombos = cartesianProductEdit(rest)
+  return firstCombos.flatMap((opt) => restCombos.map((r) => ({ ...opt, ...r })))
+}
+
+function updateEditCartesianSkus() {
+  const groups = form.variant_option_groups.filter((g) => (g.name ?? '').trim() && (g.values ?? []).length > 0)
+  const combos = cartesianProductEdit(groups)
+  const existingByKey = {}
+  for (const row of form.variant_skus) {
+    const key = JSON.stringify(row.option_values || row)
+    if (row.price !== '' && row.price != null && !Number.isNaN(Number(row.price))) existingByKey[key] = row.price
+  }
+  form.variant_skus = combos.map((opt) => ({
+    option_values: opt,
+    label: Object.values(opt).filter(Boolean).join(', '),
+    price: existingByKey[JSON.stringify(opt)] ?? '',
+  }))
+}
+
+function addEditOptionGroup() {
+  const now = Date.now()
+  if (now - lastOptionGroupAdd < ADD_THROTTLE_MS) return
+  lastOptionGroupAdd = now
+  form.variant_option_groups.push({ name: '', values: [], valuesText: '' })
+}
+
+function removeEditOptionGroup(idx) {
+  form.variant_option_groups.splice(idx, 1)
+  updateEditCartesianSkus()
+}
+
+function syncEditGroupValues(gIdx) {
+  const grp = form.variant_option_groups[gIdx]
+  if (!grp) return
+  const text = (grp.valuesText ?? '').trim()
+  grp.values = text ? text.split(/[\n,]+/).map((v) => v.trim()).filter(Boolean) : []
+  updateEditCartesianSkus()
 }
 
 const installedLanguages = computed(() => restaurant.value?.languages ?? [])
@@ -270,7 +638,24 @@ function validate() {
   if (itemFromCatalog.value) {
     const p = form.price_override === '' || form.price_override == null ? null : Number(form.price_override)
     if (p !== null && (Number.isNaN(p) || p < 0)) err.price_override = 'Price must be 0 or greater.'
-  } else {
+  } else if (standaloneItem.value && form.type === 'combo') {
+    const p = form.combo_price === '' || form.combo_price == null ? null : Number(form.combo_price)
+    if (p !== null && (Number.isNaN(p) || p < 0)) err.combo_price = 'Combo price must be 0 or greater.'
+    if (!form.combo_entries.length) err.combo_entries = 'Add at least one combo entry.'
+    form.combo_entries.forEach((entry, idx) => {
+      if (!(entry.menu_item_uuid ?? '').trim()) err[`combo_entries.${idx}.menu_item_uuid`] = 'Select a menu item.'
+      else if (catalogEditItemHasVariants(entry.menu_item_uuid) && !(entry.variant_uuid ?? '')) {
+        err[`combo_entries.${idx}.variant_uuid`] = 'Select a variant for this item.'
+      }
+      const q = entry.quantity != null ? Number(entry.quantity) : 1
+      if (Number.isNaN(q) || q < 1) err[`combo_entries.${idx}.quantity`] = 'Quantity must be at least 1.'
+    })
+  } else if (standaloneItem.value && form.type === 'with_variants') {
+    const groups = form.variant_option_groups.filter((g) => (g.name ?? '').trim() && (g.values ?? []).length > 0)
+    if (!groups.length) err.variant_option_groups = 'Add at least one option group with values.'
+    const missingPrice = form.variant_skus.find((s) => s.price === '' || s.price == null || Number.isNaN(Number(s.price)) || Number(s.price) < 0)
+    if (missingPrice && form.variant_skus.length > 0) err.variant_skus = 'Set a price for every variant.'
+  } else if (!itemFromCatalog.value) {
     const p = form.price === '' || form.price == null ? null : Number(form.price)
     if (p !== null && (Number.isNaN(p) || p < 0)) err.price = 'Price must be 0 or greater.'
   }
@@ -295,15 +680,88 @@ function buildTranslationOverrides() {
   return overrides
 }
 
-async function handleSubmit() {
+function setInitialEditState() {
+  if (!isEdit.value) return
+  const snap = {
+    comboEntriesCount: form.combo_entries.length,
+    variantOptionGroupsCount: form.variant_option_groups.length,
+    variantSkusCount: form.variant_skus.length,
+    translations: {},
+  }
+  for (const loc of Object.keys(form.translations || {})) {
+    const t = form.translations[loc]
+    snap.translations[loc] = { name: (t?.name ?? '').trim(), description: t?.description ?? null }
+  }
+  initialEditState.value = snap
+}
+
+function hasSensitiveChanges() {
+  const init = initialEditState.value
+  if (!init) return false
+  if (form.combo_entries.length < init.comboEntriesCount) return true
+  if (form.variant_option_groups.length < init.variantOptionGroupsCount) return true
+  if (form.variant_skus.length < init.variantSkusCount) return true
+  for (const loc of Object.keys(init.translations || {})) {
+    const t = form.translations?.[loc]
+    const name = (t?.name ?? '').trim()
+    const desc = t?.description ?? null
+    if (name !== (init.translations[loc]?.name ?? '') || desc !== (init.translations[loc]?.description ?? null)) return true
+  }
+  for (const loc of Object.keys(form.translations || {})) {
+    if (init.translations[loc]) continue
+    const t = form.translations[loc]
+    if ((t?.name ?? '').trim() || t?.description != null) return true
+  }
+  return false
+}
+
+function handleSubmit() {
   error.value = ''
   fieldErrors.value = {}
   if (!validate()) return
+  if (isEdit.value && hasSensitiveChanges()) {
+    showSaveConfirmModal.value = true
+    return
+  }
+  doActualSubmit()
+}
+
+async function confirmSaveAndSubmit() {
+  showSaveConfirmModal.value = false
+  doActualSubmit()
+}
+
+async function doActualSubmit() {
   saving.value = true
   try {
     let payload = { sort_order: form.sort_order }
-    // Menu items (catalog) context: only base translations and price; no overrides. Restaurant context with catalog reference: send overrides.
-    if (!isMenuItemsModule.value && itemFromCatalog.value) {
+    // Menu items (catalog) context: type, translations, and type-specific fields.
+    if (isMenuItemsModule.value && standaloneItem.value) {
+      payload.translations = buildTranslations()
+      payload.type = form.type
+      if (form.type === 'simple') {
+        const p = form.price === '' || form.price == null ? null : Number(form.price)
+        if (p != null && !Number.isNaN(p)) payload.price = p
+      } else if (form.type === 'combo') {
+        const cp = form.combo_price === '' || form.combo_price == null ? null : Number(form.combo_price)
+        if (cp != null && !Number.isNaN(cp)) payload.combo_price = cp
+        payload.combo_entries = form.combo_entries.map((e) => ({
+          menu_item_uuid: e.menu_item_uuid,
+          variant_uuid: e.variant_uuid || null,
+          quantity: Math.max(1, Number(e.quantity) || 1),
+          modifier_label: (e.modifier_label ?? '').trim() || null,
+        }))
+      } else if (form.type === 'with_variants') {
+        payload.variant_option_groups = form.variant_option_groups
+          .filter((g) => (g.name ?? '').trim() && (g.values ?? []).length > 0)
+          .map((g) => ({ name: g.name.trim(), values: g.values }))
+        payload.variant_skus = form.variant_skus.map((s) => ({
+          option_values: s.option_values,
+          price: Number(s.price),
+          image_url: s.image_url ?? null,
+        }))
+      }
+    } else if (!isMenuItemsModule.value && itemFromCatalog.value) {
       payload.price_override = form.price_override === '' || form.price_override == null ? null : Number(form.price_override)
       payload.translation_overrides = buildTranslationOverrides()
     } else {
@@ -316,11 +774,11 @@ async function handleSubmit() {
       if (standaloneItem.value) {
         await menuItemService.update(itemUuid.value, payload)
         toastStore.success('Menu item updated.')
-        router.push({ name: 'MenuItems' })
+        await loadStandaloneMenuItem()
       } else {
         await restaurantService.updateMenuItem(uuid.value, itemUuid.value, payload)
         toastStore.success('Menu item updated.')
-        router.push(isMenuItemsModule.value ? { name: 'MenuItems' } : { name: 'RestaurantMenuItems', params: { uuid: uuid.value } })
+        await loadMenuItem()
       }
     } else {
       await restaurantService.createMenuItem(uuid.value, payload)
@@ -462,6 +920,7 @@ async function loadMenuItem() {
     selectedLocale.value = locs.includes(selectedLocale.value) ? selectedLocale.value : (defLoc ?? locs[0] ?? 'en')
     const defaultName = defLoc ? (form.translations[defLoc]?.name ?? '') : ''
     breadcrumbStore.setMenuItemName(defaultName.trim() || null)
+    setInitialEditState()
   } catch (e) {
     if (e?.response?.status === 404) restaurant.value = null
   }
@@ -480,8 +939,27 @@ async function loadStandaloneMenuItem() {
     hasOverrides.value = false
     form.sort_order = item.sort_order ?? 0
     form.category_uuid = null
+    form.type = item.type ?? 'simple'
     form.price = item.price != null ? String(item.price) : ''
     form.price_override = ''
+    form.combo_price = item.combo_price != null ? String(item.combo_price) : ''
+    form.combo_entries = (item.combo_entries ?? []).map((e) => ({
+      menu_item_uuid: e.menu_item_uuid ?? '',
+      variant_uuid: e.variant_uuid ?? null,
+      quantity: e.quantity ?? 1,
+      modifier_label: e.modifier_label ?? '',
+    }))
+    form.variant_option_groups = (item.variant_option_groups ?? []).map((g) => ({
+      name: g.name ?? '',
+      values: Array.isArray(g.values) ? [...g.values] : [],
+      valuesText: Array.isArray(g.values) ? g.values.join(', ') : '',
+    }))
+    form.variant_skus = (item.variant_skus ?? []).map((s) => ({
+      ...s,
+      option_values: s.option_values ?? {},
+      label: Object.values(s.option_values || {}).filter(Boolean).join(', '),
+      price: s.price != null ? s.price : '',
+    }))
     const trans = item.translations ?? {}
     form.translations = {}
     for (const loc of Object.keys(trans)) {
@@ -495,6 +973,14 @@ async function loadStandaloneMenuItem() {
     selectedLocale.value = Object.keys(form.translations).includes(selectedLocale.value) ? selectedLocale.value : firstLoc
     const defaultName = firstLoc ? (form.translations[firstLoc]?.name ?? '') : ''
     breadcrumbStore.setMenuItemName(defaultName.trim() || null)
+    if (item.type === 'combo') {
+      const listRes = await menuItemService.list()
+      const raw = listRes.data ?? []
+      catalogItemsForSummary.value = raw.map((i) => MenuItem.fromApi({ data: i }))
+    } else {
+      catalogItemsForSummary.value = []
+    }
+    setInitialEditState()
   } catch (e) {
     if (e?.response?.status === 404) standaloneItem.value = null
   } finally {
@@ -528,4 +1014,16 @@ watch(formLocales, (locs) => {
     selectedLocale.value = (def && locs.includes(def)) ? def : locs[0]
   }
 }, { immediate: true })
+
+watch(() => form.type, async (type) => {
+  if (isMenuItemsModule.value && standaloneItem.value && type === 'combo' && catalogItemsForSummary.value.length === 0) {
+    try {
+      const listRes = await menuItemService.list()
+      const raw = listRes.data ?? []
+      catalogItemsForSummary.value = raw.map((i) => MenuItem.fromApi({ data: i }))
+    } catch {
+      catalogItemsForSummary.value = []
+    }
+  }
+})
 </script>

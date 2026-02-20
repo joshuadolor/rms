@@ -26,7 +26,7 @@
         <router-link
           to="/app"
           class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-colors text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 min-h-[44px]"
-          exact-active-class="nav-link-active"
+          :class="{ 'nav-link-active': isNavActive('/app', true) }"
           @click="closeSidebar"
         >
           <span class="material-icons">dashboard</span>
@@ -35,7 +35,7 @@
         <router-link
           to="/app/restaurants"
           class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-colors text-slate-600 dark:text-slate-400 hover:bg-sage/10 dark:hover:bg-sage/15 hover:text-sage min-h-[44px]"
-          active-class="nav-link-active"
+          :class="{ 'nav-link-active': isNavActive('/app/restaurants') }"
           @click="closeSidebar"
         >
           <span class="material-icons">storefront</span>
@@ -44,7 +44,7 @@
         <router-link
           to="/app/menu-items"
           class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-colors text-slate-600 dark:text-slate-400 hover:bg-sage/10 dark:hover:bg-sage/15 hover:text-sage min-h-[44px]"
-          active-class="nav-link-active"
+          :class="{ 'nav-link-active': isNavActive('/app/menu-items') }"
           @click="closeSidebar"
         >
           <span class="material-icons">restaurant_menu</span>
@@ -53,7 +53,7 @@
         <router-link
           to="/app/profile"
           class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-colors text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 min-h-[44px]"
-          active-class="nav-link-active"
+          :class="{ 'nav-link-active': isNavActive('/app/profile') }"
           @click="closeSidebar"
         >
           <span class="material-icons">settings</span>
@@ -138,6 +138,13 @@ const userInitial = computed(() => {
   const n = user.value?.fullName || user.value?.email || '?'
   return n.charAt(0).toUpperCase()
 })
+
+/** True when the current route should show this nav item as active. exact: only when path equals basePath; otherwise path equals basePath or starts with basePath + '/' */
+function isNavActive(basePath, exact = false) {
+  const path = route.path
+  if (exact) return path === basePath || path === basePath + '/'
+  return path === basePath || path === basePath + '/' || path.startsWith(basePath + '/')
+}
 
 function closeSidebar() {
   sidebarOpen.value = false
