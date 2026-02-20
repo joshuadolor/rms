@@ -11,6 +11,7 @@ use App\Application\MenuItem\UpdateMenuItem;
 use App\Application\Restaurant\GetRestaurant;
 use App\Http\Controllers\Controller;
 use App\Models\MenuItem;
+use App\Rules\OperatingHoursRule;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -78,6 +79,7 @@ class MenuItemController extends Controller
         $validated = $request->validate([
             'category_uuid' => ['nullable', 'string', 'uuid'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
+            'availability' => ['nullable', 'array', new OperatingHoursRule()],
             'source_menu_item_uuid' => ['nullable', 'string', 'uuid'],
             'source_variant_uuid' => ['nullable', 'string', 'uuid'],
             'price_override' => ['nullable', 'numeric', 'min:0'],
@@ -131,6 +133,7 @@ class MenuItemController extends Controller
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
             'is_available' => ['nullable', 'boolean'],
+            'availability' => ['sometimes', 'nullable', 'array', new OperatingHoursRule()],
             'price' => ['nullable', 'numeric', 'min:0'],
             'price_override' => ['nullable', 'numeric', 'min:0'],
             'translation_overrides' => ['nullable', 'array'],
@@ -193,6 +196,7 @@ class MenuItemController extends Controller
             'sort_order' => $item->sort_order,
             'is_active' => (bool) $item->is_active,
             'is_available' => (bool) ($item->is_available ?? true),
+            'availability' => $item->availability,
             'price' => $item->getEffectivePrice(),
             'translations' => $effectiveTranslations,
             'tags' => $tags,

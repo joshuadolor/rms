@@ -21,6 +21,7 @@ class MenuItem extends Model
         'sort_order',
         'is_active',
         'is_available',
+        'availability',
         'price',
         'type',
         'combo_price',
@@ -33,6 +34,7 @@ class MenuItem extends Model
     protected $casts = [
         'is_active' => 'boolean',
         'is_available' => 'boolean',
+        'availability' => 'array',
         'translation_overrides' => 'array',
     ];
 

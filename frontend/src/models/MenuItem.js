@@ -36,6 +36,8 @@ export default class MenuItem {
     this.is_active = data.is_active === undefined ? true : !!data.is_active
     // When false, item is shown on public menu but marked "Not Available" (default true when missing)
     this.is_available = data.is_available === undefined ? true : !!data.is_available
+    // OperatingHours-shaped object or null (all available)
+    this.availability = data.availability ?? null
 
     // Tags attached to this item (payload: [{ uuid, color, icon, text }])
     this.tags = Array.isArray(data.tags) ? data.tags.map((t) => ({ ...t })) : []
@@ -115,6 +117,7 @@ export default class MenuItem {
       base_translations: this.base_translations,
       has_overrides: this.has_overrides,
       is_available: this.is_available,
+      availability: this.availability,
       tags: this.tags.map((t) => ({ ...t })),
     }
     if (this.type === 'combo') {

@@ -6,6 +6,7 @@
 const { test, expect } = require('@playwright/test')
 const { RestaurantMenuTabPage } = require('./pages/RestaurantMenuTabPage.cjs')
 const { CategoryMenuItemsPage } = require('./pages/CategoryMenuItemsPage.cjs')
+const { AvailabilityModalPage } = require('./pages/AvailabilityModalPage.cjs')
 const { MenuItemFormPage } = require('./pages/MenuItemFormPage.cjs')
 const { RestaurantSettingsPage } = require('./pages/RestaurantSettingsPage.cjs')
 const { RestaurantManageAvailabilityPage } = require('./pages/RestaurantManageAvailabilityPage.cjs')
@@ -284,6 +285,7 @@ function mockRestaurantCategories(page, categories = []) {
           })
         }
         if (body.is_active !== undefined) next.is_active = body.is_active
+        if (body.availability !== undefined) next.availability = body.availability
         state[idx] = next
       }
       return route.fulfill({
@@ -365,6 +367,7 @@ function mockRestaurantMenuItems(page, items = []) {
         if (body.sort_order !== undefined) state[idx].sort_order = body.sort_order
         if (body.is_active !== undefined) state[idx].is_active = body.is_active
         if (body.is_available !== undefined) state[idx].is_available = body.is_available
+        if (body.availability !== undefined) state[idx].availability = body.availability
         state[idx].updated_at = new Date().toISOString()
       }
       return route.fulfill({
@@ -1410,6 +1413,194 @@ test.describe('Restaurant module', () => {
     const body2 = JSON.parse(await patchRequest2.postData() || '{}')
     expect(body2).toMatchObject({ is_available: true })
     await categoryItemsPage.expectAvailabilityShowsAvailable()
+  })
+
+  test('category availability modal opens with All available selected; save sends PATCH and shows toast', async ({ page }) => {
+    const cat = { uuid: 'cat-avail-modal', sort_order: 0, is_active: true, translations: { en: { name: 'Starters' } }, created_at: new Date().toISOString(), updated_at: new Date().toISOString() }
+    await loginAsVerifiedUser(page)
+    mockRestaurantList(page, [MOCK_RESTAURANT])
+    mockRestaurantGet(page, MOCK_RESTAURANT)
+    mockRestaurantMenus(page)
+    mockRestaurantCategories(page, [cat])
+    mockRestaurantMenuItems(page, [])
+    mockRestaurantLanguagesAndTranslations(page)
+
+    const menuTabPage = new RestaurantMenuTabPage(page)
+    const availabilityModal = new AvailabilityModalPage(page)
+    await menuTabPage.goToMenuTab(MOCK_RESTAURANT.uuid)
+    await menuTabPage.expectCategoryVisible('Starters')
+    await menuTabPage.openCategoryAvailabilityModal('Starters')
+    await availabilityModal.expectModalOpen()
+    await availabilityModal.expectAllAvailableSelected()
+
+    const patchPromise = page.waitForRequest(
+      (req) =>
+        req.method() === 'PATCH' &&
+        req.url().includes('/api/restaurants/') &&
+        req.url().includes('/menus/') &&
+        req.url().includes('/categories/')
+    )
+    await availabilityModal.saveModal()
+    const patchRequest = await patchPromise
+    const body = JSON.parse(await patchRequest.postData() || '{}')
+    expect(body).toHaveProperty('availability', null)
+
+    await availabilityModal.expectModalClosed()
+    await availabilityModal.expectSuccessToastWithMessage('Availability updated.')
+  })
+
+  test('category availability modal: Set specific times with valid slot saves and shows toast', async ({ page }) => {
+    const cat = { uuid: 'cat-avail-schedule', sort_order: 0, is_active: true, translations: { en: { name: 'Mains' } }, created_at: new Date().toISOString(), updated_at: new Date().toISOString() }
+    await loginAsVerifiedUser(page)
+    mockRestaurantList(page, [MOCK_RESTAURANT])
+    mockRestaurantGet(page, MOCK_RESTAURANT)
+    mockRestaurantMenus(page)
+    mockRestaurantCategories(page, [cat])
+    mockRestaurantMenuItems(page, [])
+    mockRestaurantLanguagesAndTranslations(page)
+
+    const menuTabPage = new RestaurantMenuTabPage(page)
+    const availabilityModal = new AvailabilityModalPage(page)
+    await menuTabPage.goToMenuTab(MOCK_RESTAURANT.uuid)
+    await menuTabPage.openCategoryAvailabilityModal('Mains')
+    await availabilityModal.expectModalOpen()
+    await availabilityModal.selectSetSpecificTimes()
+    await availabilityModal.expectScheduleVisible()
+    await availabilityModal.setSlotTime('monday', 0, 'from', '09:00')
+    await availabilityModal.setSlotTime('monday', 0, 'to', '17:00')
+
+    const patchPromise = page.waitForRequest(
+      (req) =>
+        req.method() === 'PATCH' &&
+        req.url().includes('/categories/')
+    )
+    await availabilityModal.saveModal()
+    const patchRequest = await patchPromise
+    const body = JSON.parse(await patchRequest.postData() || '{}')
+    expect(body.availability).toBeDefined()
+    expect(body.availability.monday).toBeDefined()
+    expect(body.availability.monday.slots).toHaveLength(1)
+    expect(body.availability.monday.slots[0]).toEqual({ from: '09:00', to: '17:00' })
+
+    await availabilityModal.expectModalClosed()
+    await availabilityModal.expectSuccessToastWithMessage('Availability updated.')
+  })
+
+  test('category availability modal: invalid slot (from after to) shows error in modal', async ({ page }) => {
+    const cat = { uuid: 'cat-avail-invalid', sort_order: 0, is_active: true, translations: { en: { name: 'Sides' } }, created_at: new Date().toISOString(), updated_at: new Date().toISOString() }
+    await loginAsVerifiedUser(page)
+    mockRestaurantList(page, [MOCK_RESTAURANT])
+    mockRestaurantGet(page, MOCK_RESTAURANT)
+    mockRestaurantMenus(page)
+    mockRestaurantCategories(page, [cat])
+    mockRestaurantMenuItems(page, [])
+    mockRestaurantLanguagesAndTranslations(page)
+
+    const menuTabPage = new RestaurantMenuTabPage(page)
+    const availabilityModal = new AvailabilityModalPage(page)
+    await menuTabPage.goToMenuTab(MOCK_RESTAURANT.uuid)
+    await menuTabPage.openCategoryAvailabilityModal('Sides')
+    await availabilityModal.expectModalOpen()
+    await availabilityModal.selectSetSpecificTimes()
+    await availabilityModal.expectScheduleVisible()
+    await availabilityModal.setSlotTime('monday', 0, 'from', '12:00')
+    await availabilityModal.setSlotTime('monday', 0, 'to', '10:00')
+
+    await availabilityModal.saveModal()
+    await availabilityModal.expectModalErrorToContain('From must be before to')
+    await availabilityModal.expectModalOpen()
+  })
+
+  test('menu item availability modal opens with All available selected; save sends PATCH and shows toast', async ({ page }) => {
+    const cat = { uuid: 'cat-item-avail', sort_order: 0, is_active: true, translations: { en: { name: 'Mains' } }, created_at: new Date().toISOString(), updated_at: new Date().toISOString() }
+    const item = {
+      uuid: 'item-avail-modal',
+      category_uuid: cat.uuid,
+      sort_order: 0,
+      price: '10.00',
+      is_active: true,
+      is_available: true,
+      translations: { en: { name: 'Burger', description: null } },
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }
+    await loginAsVerifiedUser(page)
+    mockRestaurantList(page, [MOCK_RESTAURANT])
+    mockRestaurantGet(page, MOCK_RESTAURANT)
+    mockRestaurantMenus(page)
+    mockRestaurantCategories(page, [cat])
+    mockRestaurantMenuItems(page, [item])
+    mockRestaurantLanguagesAndTranslations(page)
+
+    const categoryItemsPage = new CategoryMenuItemsPage(page)
+    const availabilityModal = new AvailabilityModalPage(page)
+    await categoryItemsPage.goTo(MOCK_RESTAURANT.uuid, cat.uuid, { name: 'Mains' })
+    await categoryItemsPage.expectItemVisible('Burger')
+    await categoryItemsPage.openItemAvailabilityModal('Burger')
+    await availabilityModal.expectModalOpen()
+    await availabilityModal.expectAllAvailableSelected()
+
+    const patchPromise = page.waitForRequest(
+      (req) =>
+        req.method() === 'PATCH' &&
+        req.url().includes('/api/restaurants/') &&
+        req.url().includes('/menu-items/')
+    )
+    await availabilityModal.saveModal()
+    const patchRequest = await patchPromise
+    const body = JSON.parse(await patchRequest.postData() || '{}')
+    expect(body).toHaveProperty('availability', null)
+
+    await availabilityModal.expectModalClosed()
+    await availabilityModal.expectSuccessToastWithMessage('Availability updated.')
+  })
+
+  test('menu item availability modal: Set specific times and save sends schedule and shows toast', async ({ page }) => {
+    const cat = { uuid: 'cat-item-sched', sort_order: 0, is_active: true, translations: { en: { name: 'Starters' } }, created_at: new Date().toISOString(), updated_at: new Date().toISOString() }
+    const item = {
+      uuid: 'item-avail-sched',
+      category_uuid: cat.uuid,
+      sort_order: 0,
+      price: '8.00',
+      is_active: true,
+      is_available: true,
+      translations: { en: { name: 'Soup', description: null } },
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }
+    await loginAsVerifiedUser(page)
+    mockRestaurantList(page, [MOCK_RESTAURANT])
+    mockRestaurantGet(page, MOCK_RESTAURANT)
+    mockRestaurantMenus(page)
+    mockRestaurantCategories(page, [cat])
+    mockRestaurantMenuItems(page, [item])
+    mockRestaurantLanguagesAndTranslations(page)
+
+    const categoryItemsPage = new CategoryMenuItemsPage(page)
+    const availabilityModal = new AvailabilityModalPage(page)
+    await categoryItemsPage.goTo(MOCK_RESTAURANT.uuid, cat.uuid, { name: 'Starters' })
+    await categoryItemsPage.expectItemVisible('Soup')
+    await categoryItemsPage.openItemAvailabilityModal('Soup')
+    await availabilityModal.expectModalOpen()
+    await availabilityModal.selectSetSpecificTimes()
+    await availabilityModal.expectScheduleVisible()
+    await availabilityModal.setSlotTime('tuesday', 0, 'from', '11:00')
+    await availabilityModal.setSlotTime('tuesday', 0, 'to', '15:00')
+
+    const patchPromise = page.waitForRequest(
+      (req) =>
+        req.method() === 'PATCH' &&
+        req.url().includes('/menu-items/')
+    )
+    await availabilityModal.saveModal()
+    const patchRequest = await patchPromise
+    const body = JSON.parse(await patchRequest.postData() || '{}')
+    expect(body.availability).toBeDefined()
+    expect(body.availability.tuesday).toBeDefined()
+    expect(body.availability.tuesday.slots[0]).toEqual({ from: '11:00', to: '15:00' })
+
+    await availabilityModal.expectModalClosed()
+    await availabilityModal.expectSuccessToastWithMessage('Availability updated.')
   })
 
   test('owner can open category items page, click Add menu item, and see modal with search and toggle', async ({ page }) => {

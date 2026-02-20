@@ -134,6 +134,15 @@
                 <div class="flex flex-wrap gap-2 shrink-0 w-full sm:w-auto">
                 <button
                   type="button"
+                  class="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-zinc-800 text-slate-600 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 hover:bg-slate-50 dark:hover:bg-zinc-700"
+                  title="Set availability times"
+                  aria-label="Set availability times for this menu item"
+                  @click="openAvailabilityModal(item)"
+                >
+                  <span class="material-icons">schedule</span>
+                </button>
+                <button
+                  type="button"
                   class="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg border transition-colors disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                   :class="itemIsAvailable(item) ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800' : 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800'"
                   :title="itemIsAvailable(item) ? 'Available' : 'Not available'"
@@ -251,6 +260,16 @@
         </template>
       </AppModal>
 
+      <AvailabilityModal
+        :open="availabilityModalOpen"
+        :model-value="itemForAvailability ? (itemForAvailability.availability ?? null) : null"
+        title="Item availability"
+        :entity-name="itemForAvailability ? itemDisplayName(itemForAvailability) : ''"
+        :api-save-error="availabilitySaveError"
+        @save="saveItemAvailability"
+        @close="closeAvailabilityModal"
+      />
+
       <!-- Assign tags modal -->
       <AppModal
         :open="assignTagsModalOpen"
@@ -315,6 +334,7 @@ import { useRoute } from 'vue-router'
 import draggable from 'vuedraggable'
 import AppBackLink from '@/components/AppBackLink.vue'
 import AppModal from '@/components/ui/AppModal.vue'
+import AvailabilityModal from '@/components/availability/AvailabilityModal.vue'
 import AppButton from '@/components/ui/AppButton.vue'
 import AppInput from '@/components/ui/AppInput.vue'
 import Restaurant from '@/models/Restaurant.js'
@@ -373,6 +393,10 @@ const assignTagsModalAvailable = ref([])
 const assignTagsModalLoading = ref(false)
 const assignTagsModalSaving = ref(false)
 const assignTagsModalError = ref('')
+const availabilityModalOpen = ref(false)
+const itemForAvailability = ref(null)
+const savingAvailability = ref(false)
+const availabilitySaveError = ref('')
 /** Items for modal: restaurant items + catalog (standalone) items not already in this restaurant. */
 const allMenuItemsForModal = ref([])
 /** Catalog item uuids that have type with_variants (so restaurant items without source_variant_uuid cannot be added). */
@@ -687,6 +711,34 @@ async function toggleItemVisibility(item) {
     toastStore.error(normalizeApiError(e).message)
   } finally {
     togglingItemUuid.value = null
+  }
+}
+
+function openAvailabilityModal(item) {
+  itemForAvailability.value = item
+  availabilityModalOpen.value = true
+}
+
+function closeAvailabilityModal() {
+  availabilityModalOpen.value = false
+  itemForAvailability.value = null
+  availabilitySaveError.value = ''
+}
+
+async function saveItemAvailability(availability) {
+  const item = itemForAvailability.value
+  if (!uuid.value || !item?.uuid || savingAvailability.value) return
+  savingAvailability.value = true
+  availabilitySaveError.value = ''
+  try {
+    await restaurantService.updateMenuItem(uuid.value, item.uuid, { availability })
+    items.value = items.value.map((i) => (i.uuid === item.uuid ? { ...i, availability } : i))
+    toastStore.success('Availability updated.')
+    closeAvailabilityModal()
+  } catch (e) {
+    availabilitySaveError.value = normalizeApiError(e).message
+  } finally {
+    savingAvailability.value = false
   }
 }
 

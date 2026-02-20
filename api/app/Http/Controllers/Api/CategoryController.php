@@ -11,6 +11,7 @@ use App\Application\Category\UpdateCategory;
 use App\Application\Restaurant\GetRestaurant;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Rules\OperatingHoursRule;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -77,6 +78,7 @@ class CategoryController extends Controller
 
         $validated = $request->validate([
             'sort_order' => ['nullable', 'integer', 'min:0'],
+            'availability' => ['nullable', 'array', new OperatingHoursRule()],
             'translations' => ['nullable', 'array'],
             'translations.*.name' => ['required_with:translations', 'string', 'max:255'],
             'translations.*.description' => ['nullable', 'string', 'max:65535'],
@@ -116,6 +118,7 @@ class CategoryController extends Controller
         $validated = $request->validate([
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
+            'availability' => ['sometimes', 'nullable', 'array', new OperatingHoursRule()],
             'translations' => ['nullable', 'array'],
             'translations.*.name' => ['nullable', 'string', 'max:255'],
             'translations.*.description' => ['nullable', 'string', 'max:65535'],
@@ -195,6 +198,7 @@ class CategoryController extends Controller
             'uuid' => $category->uuid,
             'sort_order' => $category->sort_order,
             'is_active' => $category->is_active,
+            'availability' => $category->availability,
             'translations' => $translations,
             'created_at' => $category->created_at?->toIso8601String(),
             'updated_at' => $category->updated_at?->toIso8601String(),

@@ -12,10 +12,12 @@ class Category extends Model
     protected $fillable = [
         'sort_order',
         'is_active',
+        'availability',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'availability' => 'array',
     ];
 
     /**

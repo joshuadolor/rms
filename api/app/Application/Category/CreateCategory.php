@@ -34,7 +34,11 @@ final readonly class CreateCategory
             ? (int) $input['sort_order']
             : (int) $menu->categories()->max('sort_order') + 1;
 
-        $category = $menu->categories()->create(['sort_order' => $sortOrder]);
+        $categoryData = ['sort_order' => $sortOrder];
+        if (array_key_exists('availability', $input)) {
+            $categoryData['availability'] = $input['availability'];
+        }
+        $category = $menu->categories()->create($categoryData);
 
         $translations = $input['translations'] ?? [];
         $installedLocales = $restaurant->languages()->pluck('locale')->all();

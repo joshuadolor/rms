@@ -208,6 +208,12 @@ class RestaurantMenuTabPage {
     await row.locator('button').nth(2).click()
   }
 
+  /** Open the availability modal for the category row with the given name (schedule icon, "Set category availability") */
+  async openCategoryAvailabilityModal(categoryName) {
+    const row = this.page.locator('li').filter({ hasText: categoryName })
+    await row.getByRole('button', { name: 'Set category availability' }).click()
+  }
+
   /** Open Remove category modal by clicking delete on the category row with the given name */
   async openDeleteCategoryModal(categoryName) {
     const row = this.page.locator('li').filter({ hasText: categoryName })

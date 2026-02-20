@@ -46,6 +46,9 @@ final readonly class UpdateCategory
         if (array_key_exists('is_active', $input)) {
             $update['is_active'] = (bool) $input['is_active'];
         }
+        if (array_key_exists('availability', $input)) {
+            $update['availability'] = $input['availability'];
+        }
         if ($update !== []) {
             $category->update($update);
         }

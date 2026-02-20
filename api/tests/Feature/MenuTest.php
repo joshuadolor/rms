@@ -267,8 +267,32 @@ class MenuTest extends TestCase
             ->assertJsonPath('data.uuid', $category->uuid)
             ->assertJsonPath('data.translations.en.name', 'Starters')
             ->assertJsonPath('data.is_active', true)
-            ->assertJsonStructure(['data' => ['uuid', 'sort_order', 'is_active', 'translations', 'created_at', 'updated_at']])
+            ->assertJsonStructure(['data' => ['uuid', 'sort_order', 'is_active', 'availability', 'translations', 'created_at', 'updated_at']])
             ->assertJsonMissingPath('data.id');
+    }
+
+    public function test_list_categories_includes_availability_and_excludes_internal_id(): void
+    {
+        $user = $this->createVerifiedUser();
+        $restaurant = $this->createRestaurantForUser($user);
+        $menu = $restaurant->menus()->create(['name' => 'Main', 'sort_order' => 0]);
+        $availability = [
+            'friday' => ['open' => true, 'slots' => [['from' => '18:00', 'to' => '23:00']]],
+        ];
+        $category = $menu->categories()->create(['sort_order' => 0, 'is_active' => true, 'availability' => $availability]);
+        $category->translations()->create(['locale' => 'en', 'name' => 'Weekend']);
+        $token = $user->createToken('auth')->plainTextToken;
+
+        $response = $this->getJson('/api/restaurants/' . $restaurant->uuid . '/menus/' . $menu->uuid . '/categories', [
+            'Authorization' => 'Bearer ' . $token,
+        ]);
+
+        $response->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.uuid', $category->uuid)
+            ->assertJsonPath('data.0.availability.friday.open', true)
+            ->assertJsonPath('data.0.availability.friday.slots.0.from', '18:00')
+            ->assertJsonMissingPath('data.0.id');
     }
 
     public function test_update_category_toggles_is_active(): void
@@ -290,6 +314,96 @@ class MenuTest extends TestCase
             ->assertJsonPath('message', 'Category updated.')
             ->assertJsonPath('data.is_active', false);
         $this->assertFalse($category->fresh()->is_active);
+    }
+
+    public function test_create_category_with_availability_persists_and_returns_in_payload(): void
+    {
+        $user = $this->createVerifiedUser();
+        $restaurant = $this->createRestaurantForUser($user);
+        $menu = $restaurant->menus()->create(['name' => 'Main', 'sort_order' => 0]);
+        $token = $user->createToken('auth')->plainTextToken;
+
+        $availability = [
+            'monday' => ['open' => true, 'slots' => [['from' => '09:00', 'to' => '12:00'], ['from' => '14:00', 'to' => '17:00']]],
+            'tuesday' => ['open' => true, 'slots' => [['from' => '09:00', 'to' => '17:00']]],
+            'wednesday' => ['open' => false, 'slots' => []],
+        ];
+
+        $response = $this->postJson('/api/restaurants/' . $restaurant->uuid . '/menus/' . $menu->uuid . '/categories', [
+            'translations' => ['en' => ['name' => 'Lunch Only']],
+            'availability' => $availability,
+        ], [
+            'Authorization' => 'Bearer ' . $token,
+        ]);
+
+        $response->assertStatus(201)
+            ->assertJsonPath('data.availability.monday.open', true)
+            ->assertJsonPath('data.availability.monday.slots.0.from', '09:00')
+            ->assertJsonPath('data.availability.monday.slots.0.to', '12:00')
+            ->assertJsonPath('data.availability.wednesday.open', false);
+        $category = \App\Models\Category::where('uuid', $response->json('data.uuid'))->first();
+        $this->assertSame($availability, $category->availability);
+    }
+
+    public function test_update_category_availability_and_null_clears(): void
+    {
+        $user = $this->createVerifiedUser();
+        $restaurant = $this->createRestaurantForUser($user);
+        $menu = $restaurant->menus()->create(['name' => 'Main', 'sort_order' => 0]);
+        $category = $menu->categories()->create(['sort_order' => 0, 'is_active' => true, 'availability' => ['monday' => ['open' => true, 'slots' => [['from' => '09:00', 'to' => '17:00']]]]]);
+        $category->translations()->create(['locale' => 'en', 'name' => 'Mains']);
+        $token = $user->createToken('auth')->plainTextToken;
+
+        $response = $this->patchJson('/api/restaurants/' . $restaurant->uuid . '/menus/' . $menu->uuid . '/categories/' . $category->uuid, [
+            'availability' => null,
+        ], [
+            'Authorization' => 'Bearer ' . $token,
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('data.availability', null);
+        $this->assertNull($category->fresh()->availability);
+    }
+
+    public function test_category_availability_rejects_overlapping_slots(): void
+    {
+        $user = $this->createVerifiedUser();
+        $restaurant = $this->createRestaurantForUser($user);
+        $menu = $restaurant->menus()->create(['name' => 'Main', 'sort_order' => 0]);
+        $token = $user->createToken('auth')->plainTextToken;
+
+        $response = $this->postJson('/api/restaurants/' . $restaurant->uuid . '/menus/' . $menu->uuid . '/categories', [
+            'translations' => ['en' => ['name' => 'Bad Slots']],
+            'availability' => [
+                'monday' => ['open' => true, 'slots' => [['from' => '09:00', 'to' => '12:00'], ['from' => '11:00', 'to' => '14:00']]],
+            ],
+        ], [
+            'Authorization' => 'Bearer ' . $token,
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['availability']);
+    }
+
+    public function test_show_category_includes_availability_in_payload(): void
+    {
+        $user = $this->createVerifiedUser();
+        $restaurant = $this->createRestaurantForUser($user);
+        $menu = $restaurant->menus()->create(['name' => 'Main', 'sort_order' => 0]);
+        $availability = ['saturday' => ['open' => true, 'slots' => [['from' => '10:00', 'to' => '22:00']]]];
+        $category = $menu->categories()->create(['sort_order' => 0, 'is_active' => true, 'availability' => $availability]);
+        $category->translations()->create(['locale' => 'en', 'name' => 'Brunch']);
+        $token = $user->createToken('auth')->plainTextToken;
+
+        $response = $this->getJson('/api/restaurants/' . $restaurant->uuid . '/menus/' . $menu->uuid . '/categories/' . $category->uuid, [
+            'Authorization' => 'Bearer ' . $token,
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('data.uuid', $category->uuid)
+            ->assertJsonPath('data.availability.saturday.open', true)
+            ->assertJsonPath('data.availability.saturday.slots.0.from', '10:00')
+            ->assertJsonMissingPath('data.id');
     }
 
     public function test_delete_category_uncategorizes_menu_items(): void
@@ -381,8 +495,37 @@ class MenuTest extends TestCase
             ->assertJsonPath('data.price', 9.99)
             ->assertJsonPath('data.translations.en.name', 'Salad')
             ->assertJsonPath('data.is_active', true)
-            ->assertJsonStructure(['data' => ['uuid', 'category_uuid', 'sort_order', 'is_active', 'is_available', 'price', 'translations', 'created_at', 'updated_at']])
+            ->assertJsonStructure(['data' => ['uuid', 'category_uuid', 'sort_order', 'is_active', 'is_available', 'availability', 'price', 'translations', 'created_at', 'updated_at']])
             ->assertJsonMissingPath('data.id');
+    }
+
+    public function test_list_menu_items_includes_availability_and_excludes_internal_id(): void
+    {
+        $user = $this->createVerifiedUser();
+        $restaurant = $this->createRestaurantForUser($user);
+        $menu = $restaurant->menus()->create(['name' => 'Main', 'sort_order' => 0]);
+        $category = $menu->categories()->create(['sort_order' => 0]);
+        $category->translations()->create(['locale' => 'en', 'name' => 'Mains']);
+        $availability = ['sunday' => ['open' => true, 'slots' => [['from' => '11:00', 'to' => '21:00']]]];
+        $item = $restaurant->menuItems()->create([
+            'category_id' => $category->id,
+            'sort_order' => 0,
+            'price' => 12,
+            'availability' => $availability,
+        ]);
+        $item->translations()->create(['locale' => 'en', 'name' => 'Sunday Roast']);
+        $token = $user->createToken('auth')->plainTextToken;
+
+        $response = $this->getJson('/api/restaurants/' . $restaurant->uuid . '/menu-items', [
+            'Authorization' => 'Bearer ' . $token,
+        ]);
+
+        $response->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.uuid', $item->uuid)
+            ->assertJsonPath('data.0.availability.sunday.open', true)
+            ->assertJsonPath('data.0.availability.sunday.slots.0.from', '11:00')
+            ->assertJsonMissingPath('data.0.id');
     }
 
     public function test_update_menu_item_succeeds(): void
@@ -455,9 +598,82 @@ class MenuTest extends TestCase
             'is_available' => true,
         ], ['Authorization' => 'Bearer ' . $token]);
 
-        $response2->assertOk()
-            ->assertJsonPath('data.is_available', true);
-        $this->assertTrue($item->fresh()->is_available);
+        $response2->assertOk()->assertJsonPath('data.is_available', true);
+    }
+
+    public function test_menu_item_create_with_availability_persists_and_returns_in_payload(): void
+    {
+        $user = $this->createVerifiedUser();
+        $restaurant = $this->createRestaurantForUser($user);
+        $menu = $restaurant->menus()->create(['name' => 'Main', 'sort_order' => 0]);
+        $category = $menu->categories()->create(['sort_order' => 0]);
+        $category->translations()->create(['locale' => 'en', 'name' => 'Mains']);
+        $token = $user->createToken('auth')->plainTextToken;
+
+        $availability = [
+            'friday' => ['open' => true, 'slots' => [['from' => '18:00', 'to' => '23:00']]],
+            'saturday' => ['open' => true, 'slots' => [['from' => '12:00', 'to' => '23:00']]],
+        ];
+
+        $response = $this->postJson('/api/restaurants/' . $restaurant->uuid . '/menu-items', [
+            'category_uuid' => $category->uuid,
+            'translations' => ['en' => ['name' => 'Weekend Special']],
+            'availability' => $availability,
+        ], [
+            'Authorization' => 'Bearer ' . $token,
+        ]);
+
+        $response->assertStatus(201)
+            ->assertJsonPath('data.availability.friday.open', true)
+            ->assertJsonPath('data.availability.friday.slots.0.from', '18:00')
+            ->assertJsonPath('data.availability.saturday.slots.0.to', '23:00');
+        $item = MenuItem::where('uuid', $response->json('data.uuid'))->where('restaurant_id', $restaurant->id)->first();
+        $this->assertSame($availability, $item->availability);
+    }
+
+    public function test_update_menu_item_availability_and_null_clears(): void
+    {
+        $user = $this->createVerifiedUser();
+        $restaurant = $this->createRestaurantForUser($user);
+        $menu = $restaurant->menus()->create(['name' => 'Main', 'sort_order' => 0]);
+        $category = $menu->categories()->create(['sort_order' => 0]);
+        $category->translations()->create(['locale' => 'en', 'name' => 'Mains']);
+        $item = $restaurant->menuItems()->create(['category_id' => $category->id, 'sort_order' => 0, 'availability' => ['monday' => ['open' => true, 'slots' => [['from' => '09:00', 'to' => '17:00']]]]]);
+        $item->translations()->create(['locale' => 'en', 'name' => 'Item']);
+        $token = $user->createToken('auth')->plainTextToken;
+
+        $response = $this->patchJson('/api/restaurants/' . $restaurant->uuid . '/menu-items/' . $item->uuid, [
+            'availability' => null,
+        ], [
+            'Authorization' => 'Bearer ' . $token,
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('data.availability', null);
+        $this->assertNull($item->fresh()->availability);
+    }
+
+    public function test_menu_item_availability_rejects_overlapping_slots(): void
+    {
+        $user = $this->createVerifiedUser();
+        $restaurant = $this->createRestaurantForUser($user);
+        $menu = $restaurant->menus()->create(['name' => 'Main', 'sort_order' => 0]);
+        $category = $menu->categories()->create(['sort_order' => 0]);
+        $category->translations()->create(['locale' => 'en', 'name' => 'Mains']);
+        $token = $user->createToken('auth')->plainTextToken;
+
+        $response = $this->postJson('/api/restaurants/' . $restaurant->uuid . '/menu-items', [
+            'category_uuid' => $category->uuid,
+            'translations' => ['en' => ['name' => 'Bad Slots Item']],
+            'availability' => [
+                'monday' => ['open' => true, 'slots' => [['from' => '09:00', 'to' => '12:00'], ['from' => '11:00', 'to' => '14:00']]],
+            ],
+        ], [
+            'Authorization' => 'Bearer ' . $token,
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['availability']);
     }
 
     public function test_menu_item_create_with_tag_uuids_creates_item_with_tags_and_response_includes_tags(): void

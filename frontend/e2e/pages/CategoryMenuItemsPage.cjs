@@ -140,6 +140,12 @@ class CategoryMenuItemsPage {
     await expect(this.page.getByRole('button', { name: 'Mark available on public menu' }).first()).toBeVisible()
   }
 
+  /** Open the availability modal for the menu item row that contains the given item name ("Set availability times for this menu item") */
+  async openItemAvailabilityModal(itemName) {
+    const row = this.page.locator('li').filter({ hasText: itemName })
+    await row.getByRole('button', { name: 'Set availability times for this menu item' }).click()
+  }
+
   /**
    * In the Add item modal, assert a variant row with this exact display name is visible
    * (e.g. "Pizza – Hawaiian, Small"). Use after modal is open and list has loaded.

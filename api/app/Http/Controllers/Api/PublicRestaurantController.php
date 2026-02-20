@@ -56,6 +56,7 @@ class PublicRestaurantController extends Controller
                 'price' => $item->getEffectivePrice(),
                 'sort_order' => $item->sort_order,
                 'is_available' => (bool) ($item->is_available ?? true),
+                'availability' => $item->availability,
                 'tags' => $tags,
             ];
         })->all();

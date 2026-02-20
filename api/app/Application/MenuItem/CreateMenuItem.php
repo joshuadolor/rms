@@ -79,12 +79,15 @@ final readonly class CreateMenuItem
             : $restaurant->menuItems()->whereNull('category_id')->max('sort_order');
         $sortOrder = (int) ($input['sort_order'] ?? $maxSort + 1);
 
+        $availability = array_key_exists('availability', $input) ? $input['availability'] : null;
+
         if ($sourceMenuItemUuid !== null && $sourceMenuItemUuid !== '') {
             $item = $restaurant->menuItems()->create([
                 'category_id' => $categoryId,
                 'sort_order' => $sortOrder,
                 'is_active' => true,
                 'is_available' => true,
+                'availability' => $availability,
                 'source_menu_item_uuid' => $sourceMenuItemUuid,
                 'source_variant_uuid' => $sourceVariantUuid,
                 'price_override' => isset($input['price_override']) ? (float) $input['price_override'] : null,
@@ -99,6 +102,7 @@ final readonly class CreateMenuItem
             'sort_order' => $sortOrder,
             'is_active' => true,
             'is_available' => true,
+            'availability' => $availability,
             'price' => isset($input['price']) ? (float) $input['price'] : null,
         ]);
 

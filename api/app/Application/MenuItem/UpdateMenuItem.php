@@ -41,6 +41,9 @@ final readonly class UpdateMenuItem
         if (array_key_exists('is_available', $input)) {
             $update['is_available'] = (bool) $input['is_available'];
         }
+        if (array_key_exists('availability', $input)) {
+            $update['availability'] = $input['availability'];
+        }
         if (array_key_exists('category_uuid', $input)) {
             $categoryId = null;
             if ($input['category_uuid'] !== null && $input['category_uuid'] !== '') {

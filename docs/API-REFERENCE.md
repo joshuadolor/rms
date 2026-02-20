@@ -913,6 +913,7 @@ Returns public restaurant data and menu items for subdomain or `/r/:slug` pages.
         "price": "number | null",
         "sort_order": "number",
         "is_available": "boolean",
+        "availability": "object | null",
         "tags": [{ "uuid": "string", "color": "string", "icon": "string", "text": "string" }, ...]
       }
     ],
@@ -923,7 +924,7 @@ Returns public restaurant data and menu items for subdomain or `/r/:slug` pages.
 }
 ```
 
-`operating_hours` has the same shape as in the restaurant payload (see **Operating hours shape** above); `null` when not set. **feedbacks** contains only **approved** feedbacks (owner approves via PATCH); no internal `id` in any field.
+`operating_hours` has the same shape as in the restaurant payload (see **Operating hours shape** above); `null` when not set. Each **menu_item** includes **availability** (same type as operating_hours; `null` = always available). **feedbacks** contains only **approved** feedbacks (owner approves via PATCH); no internal `id` in any field.
 
 **404:** Restaurant not found for the given slug.
 
@@ -1117,6 +1118,7 @@ Categories belong to a menu (e.g. Appetizers, Mains). Name is translated per res
   uuid: string;
   sort_order: number;
   is_active: boolean;  // when false, category and its items are hidden on the public menu
+  availability: OperatingHours | null;  // same type as operating_hours; null = all available (menu del día)
   translations: Record<string, { name: string; description: string | null }>;  // locale -> { name, description? }
   created_at: string;
   updated_at: string;
@@ -1149,13 +1151,14 @@ Categories belong to a menu (e.g. Appetizers, Mains). Name is translated per res
 ```json
 {
   "sort_order": "integer (optional, min 0)",
+  "availability": "object | null (optional; same shape as operating_hours; null = all available; timeslots must not overlap per day)",
   "translations": {
     "locale": { "name": "string (required with translations, max 255)", "description": "string (optional, nullable)" }
   }
 }
 ```
 
-Translations must use locales installed for the restaurant. **Response (201):** `{ "message": "Category created.", "data": { category payload } }`. **422:** Uninstalled locale(s).
+Translations must use locales installed for the restaurant. **Response (201):** `{ "message": "Category created.", "data": { category payload } }`. **422:** Uninstalled locale(s) or invalid availability.
 
 ### Update category
 
@@ -1163,7 +1166,7 @@ Translations must use locales installed for the restaurant. **Response (201):** 
 |--------|------|------|
 | PUT/PATCH | `/api/restaurants/{restaurant}/menus/{menu}/categories/{category}` | Bearer + verified |
 
-**Body:** sort_order, is_active (optional boolean), translations (optional; each locale: name, description optional). **Response (200):** `{ "message": "Category updated.", "data": { category payload } }`.
+**Body:** sort_order, is_active (optional boolean), **availability** (optional; same shape as operating_hours; send **null** to clear / set "all available"; timeslots must not overlap per day), translations (optional; each locale: name, description optional). **Response (200):** `{ "message": "Category updated.", "data": { category payload } }`.
 
 ### Delete category
 
@@ -1356,6 +1359,7 @@ All menu item payloads include:
   sort_order: number;
   is_active: boolean;     // when false, item is hidden on the public menu
   is_available: boolean;  // when false, item is shown but marked "Not Available" on the public menu
+  availability: OperatingHours | null;  // same type as operating_hours; null = all available
   price: number | null;   // effective price (base or override)
   translations: Record<string, { name: string; description: string | null }>;  // effective per locale
   tags: Array<{ uuid: string; color: string; icon: string; text: string }>;  // menu item tags attached to this item
@@ -1415,6 +1419,7 @@ When **source_variant_uuid** is present, **name** in `translations` is the catal
 {
   "category_uuid": "string (optional)",
   "sort_order": "integer (optional, min 0)",
+  "availability": "object | null (optional; same shape as operating_hours; null = all available; timeslots must not overlap per day)",
   "source_menu_item_uuid": "string (optional, uuid of catalog item; when set, adds catalog item to category)",
   "source_variant_uuid": "string (optional, uuid of catalog item's variant_sku; required when catalog type is with_variants; must be absent when simple/combo)",
   "price_override": "number (optional, min 0; only when source_menu_item_uuid set)",
@@ -1427,7 +1432,7 @@ When **source_variant_uuid** is present, **name** in `translations` is the catal
 }
 ```
 
-**Response (201):** `{ "message": "Menu item created.", "data": { menu item payload } }`. **422:** Uninstalled locale(s), source_variant_uuid validation, or invalid tag_uuids. **403:** Catalog item not found or not owned.
+**Response (201):** `{ "message": "Menu item created.", "data": { menu item payload } }`. **422:** Uninstalled locale(s), source_variant_uuid validation, invalid availability, or invalid tag_uuids. **403:** Catalog item not found or not owned.
 
 ### Update menu item
 
@@ -1435,7 +1440,7 @@ When **source_variant_uuid** is present, **name** in `translations` is the catal
 |--------|------|------|
 | PUT/PATCH | `/api/restaurants/{restaurant}/menu-items/{item}` | Bearer + verified |
 
-**Body:** category_uuid, sort_order, **is_active** (optional boolean; when false, item is hidden on the public menu), **is_available** (optional boolean; when false, item is shown on the public menu but marked "Not Available"), translations (for items without source), price (for items without source), price_override, translation_overrides (for items with source), **revert_to_base** (boolean; when true, clears price_override and translation_overrides so effective values revert to catalog base), **tag_uuids** (optional array of UUIDs; replaces item's tags; only default tag UUIDs allowed; 422 if invalid). **Response (200):** `{ "message": "Menu item updated.", "data": { menu item payload } }`.
+**Body:** category_uuid, sort_order, **is_active** (optional boolean; when false, item is hidden on the public menu), **is_available** (optional boolean; when false, item is shown on the public menu but marked "Not Available"), **availability** (optional; same shape as operating_hours; send **null** to clear / set "all available"; timeslots must not overlap per day), translations (for items without source), price (for items without source), price_override, translation_overrides (for items with source), **revert_to_base** (boolean; when true, clears price_override and translation_overrides so effective values revert to catalog base), **tag_uuids** (optional array of UUIDs; replaces item's tags; only default tag UUIDs allowed; 422 if invalid). **Response (200):** `{ "message": "Menu item updated.", "data": { menu item payload } }`.
 
 ### Delete menu item
 
@@ -1487,6 +1492,7 @@ When **source_variant_uuid** is present, **name** in `translations` is the catal
 
 ## Changelog
 
+- **2026-02-20**: **Availability for categories and menu items.** Categories and menu_items tables: added **availability** (JSON, nullable). Same shape as restaurant operating_hours (keyed by day sunday–saturday, each day `{ "open": bool, "slots": [ { "from": "HH:MM", "to": "HH:MM" }, ... ] }`). When **null** = "all available" (default). Validation via existing OperatingHoursRule and OperatingHoursSlotValidator (no overlapping slots per day). Category API: list/show/create/update include and accept optional **availability** (PATCH null to clear). Menu item API (restaurant): list/show/create/update include and accept optional **availability** (null to clear). GET `/api/public/restaurants/{slug}`: each menu_item in response includes **availability** (null = always available). No internal `id` in any response.
 - **2026-02-20**: **Owner feedback (feature requests).** New entity: owner feedback (uuid, user_id, restaurant_id nullable, title nullable, message, status default pending). Owner (Bearer + verified): POST `/api/owner-feedback` (message required, title and restaurant optional; 403 if restaurant uuid sent but not owned), GET `/api/owner-feedback` (list own submissions, newest first). Superadmin: GET `/api/superadmin/owner-feedbacks` (list all with submitter and restaurant), PATCH `/api/superadmin/owner-feedbacks/{uuid}` (optional status: pending | reviewed). No internal `id` in any response.
 - **2026-02-20**: **Superadmin module.** Superadmin identity via `is_superadmin` on users table; seeded from `SUPERADMIN_EMAIL` and `SUPERADMIN_PASSWORD` (env). User payload: added **is_superadmin**, **is_active** (GET /api/user, login). **is_active** (boolean, default true) added to users; deactivated users cannot log in (403 "Your account has been deactivated."). Superadmin-only endpoints (Bearer + verified + superadmin; 403 if not): GET `/api/superadmin/stats` (restaurants_count, users_count, paid_users_count), GET `/api/superadmin/users` (list all users), PATCH `/api/superadmin/users/{uuid}` (optional is_paid, is_active; cannot change own is_active), GET `/api/superadmin/restaurants` (read-only list). No internal `id` in any response.
 - **2026-02-20**: **Feedbacks.** New entity: feedback per restaurant (uuid, rating 1-5, text, name, is_approved). Public: POST `/api/public/restaurants/{slug}/feedback` (no auth, rate-limited 10/min). Owner: GET `/api/restaurants/{restaurant}/feedbacks`, PATCH `/api/restaurants/{restaurant}/feedbacks/{feedback}` (is_approved), DELETE. GET `/api/public/restaurants/{slug}` response includes **feedbacks** array (approved only: uuid, rating, text, name, created_at). No internal `id` in any response.

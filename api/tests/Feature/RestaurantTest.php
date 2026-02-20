@@ -433,6 +433,31 @@ class RestaurantTest extends TestCase
         $this->assertSame($tag->text, $tags[0]['text']);
     }
 
+    public function test_public_restaurant_menu_items_include_availability(): void
+    {
+        $user = $this->createVerifiedUser();
+        $restaurant = $this->createRestaurantForUser($user, ['slug' => 'availability-bistro']);
+        $availability = [
+            'friday' => ['open' => true, 'slots' => [['from' => '18:00', 'to' => '23:00']]],
+            'saturday' => ['open' => true, 'slots' => [['from' => '12:00', 'to' => '23:00']]],
+        ];
+        $itemWithAvailability = $restaurant->menuItems()->create(['sort_order' => 0, 'is_active' => true, 'is_available' => true, 'availability' => $availability]);
+        $itemWithAvailability->translations()->create(['locale' => 'en', 'name' => 'Weekend Special', 'description' => null]);
+        $itemNullAvailability = $restaurant->menuItems()->create(['sort_order' => 1, 'is_active' => true, 'is_available' => true, 'availability' => null]);
+        $itemNullAvailability->translations()->create(['locale' => 'en', 'name' => 'Always Available', 'description' => null]);
+
+        $response = $this->getJson('/api/public/restaurants/availability-bistro');
+
+        $response->assertOk()
+            ->assertJsonPath('data.slug', 'availability-bistro');
+        $menuItems = $response->json('data.menu_items');
+        $this->assertCount(2, $menuItems);
+        $this->assertArrayHasKey('availability', $menuItems[0]);
+        $this->assertSame($availability, $menuItems[0]['availability']);
+        $this->assertArrayHasKey('availability', $menuItems[1]);
+        $this->assertNull($menuItems[1]['availability']);
+    }
+
     public function test_restaurant_endpoints_require_authentication(): void
     {
         $user = $this->createVerifiedUser();

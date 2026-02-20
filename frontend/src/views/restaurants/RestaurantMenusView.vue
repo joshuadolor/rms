@@ -138,6 +138,16 @@
                 >
                   <span class="material-icons text-xl">{{ cat.is_active !== false ? 'visibility' : 'visibility_off' }}</span>
                 </button>
+                <AppButton
+                  variant="ghost"
+                  size="sm"
+                  class="min-h-[44px] min-w-[44px] shrink-0"
+                  title="Availability"
+                  aria-label="Set category availability"
+                  @click="openAvailabilityModal(cat)"
+                >
+                  <span class="material-icons">schedule</span>
+                </AppButton>
                 <AppButton variant="ghost" size="sm" class="min-h-[44px] min-w-[44px] shrink-0" title="Edit category" aria-label="Edit category" @click="openCategoryModal(cat)">
                   <span class="material-icons">edit</span>
                 </AppButton>
@@ -277,6 +287,16 @@
         </template>
       </AppModal>
 
+      <AvailabilityModal
+        :open="availabilityModalOpen"
+        :model-value="categoryForAvailability?.availability ?? null"
+        title="Category availability"
+        :entity-name="categoryForAvailability ? categoryName(categoryForAvailability) : ''"
+        :api-save-error="availabilitySaveError"
+        @save="saveCategoryAvailability"
+        @close="closeAvailabilityModal"
+      />
+
       <AppModal
         :open="deleteCategoryModalOpen"
         title="Remove category"
@@ -413,6 +433,7 @@ import { useRoute } from 'vue-router'
 import draggable from 'vuedraggable'
 import AppBackLink from '@/components/AppBackLink.vue'
 import AppModal from '@/components/ui/AppModal.vue'
+import AvailabilityModal from '@/components/availability/AvailabilityModal.vue'
 import AppInput from '@/components/ui/AppInput.vue'
 import { useBreadcrumbStore } from '@/stores/breadcrumb'
 import AppButton from '@/components/ui/AppButton.vue'
@@ -462,6 +483,10 @@ const editMenuForm = ref({ translations: {} })
 const editMenuFormError = ref('')
 const savingEditMenu = ref(false)
 const selectedEditMenuLocale = ref('en')
+const availabilityModalOpen = ref(false)
+const categoryForAvailability = ref(null)
+const savingAvailability = ref(false)
+const availabilitySaveError = ref('')
 
 const defaultLocale = computed(() => restaurant.value?.default_locale ?? 'en')
 
@@ -785,6 +810,36 @@ async function confirmDeleteCategory() {
     error.value = normalizeApiError(e).message
   } finally {
     deletingCategory.value = false
+  }
+}
+
+function openAvailabilityModal(cat) {
+  categoryForAvailability.value = cat
+  availabilityModalOpen.value = true
+}
+
+function closeAvailabilityModal() {
+  availabilityModalOpen.value = false
+  categoryForAvailability.value = null
+  availabilitySaveError.value = ''
+}
+
+async function saveCategoryAvailability(availability) {
+  const cat = categoryForAvailability.value
+  if (!uuid.value || !selectedMenuUuid.value || !cat?.uuid || savingAvailability.value) return
+  savingAvailability.value = true
+  availabilitySaveError.value = ''
+  try {
+    await restaurantService.updateCategory(uuid.value, selectedMenuUuid.value, cat.uuid, { availability })
+    categories.value = categories.value.map((c) =>
+      c.uuid === cat.uuid ? { ...c, availability } : c
+    )
+    toastStore.success('Availability updated.')
+    closeAvailabilityModal()
+  } catch (e) {
+    availabilitySaveError.value = normalizeApiError(e).message
+  } finally {
+    savingAvailability.value = false
   }
 }
 
