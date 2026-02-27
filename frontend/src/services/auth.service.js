@@ -122,6 +122,18 @@ export async function getMe() {
 }
 
 /**
+ * Refresh access token using HttpOnly refresh cookie (no Bearer required).
+ * POST /auth/refresh
+ * @returns {Promise<{ user: User, token: string, token_type: string }>}
+ */
+export async function refresh(options = undefined) {
+  // Allow callers (e.g. bootstrapAuth) to pass axios config like { timeout }.
+  // Backend expects no body; send null.
+  const { data } = await api.post('/auth/refresh', null, options)
+  return withUser(data)
+}
+
+/**
  * Update profile. Uses the shared api client (Bearer token + Accept: application/json). Sends PATCH /user.
  * Name updates immediately; new email sends verification to new address and sets pending_email until verified.
  * @param {{ name?: string, email?: string }} payload
@@ -228,6 +240,7 @@ export const authService = {
   verifyEmail,
   verifyNewEmail,
   getMe,
+  refresh,
   updateProfile,
   changePassword,
   logout,

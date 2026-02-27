@@ -61,6 +61,14 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(SocialAccount::class);
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<RefreshToken, $this>
+     */
+    public function refreshTokens(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(RefreshToken::class);
+    }
+
     protected function casts(): array
     {
         return [

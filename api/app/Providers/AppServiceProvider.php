@@ -55,6 +55,12 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(5)->by($request->ip());
         });
 
+        RateLimiter::for('auth.refresh', function (Request $request) {
+            // Slightly higher since refresh can happen on page load and after token expiry.
+            $limit = app()->environment('local') ? 120 : 30;
+            return Limit::perMinute($limit)->by($request->ip());
+        });
+
         RateLimiter::for('auth.register', function (Request $request) {
             // Relax in local so e2e (and manual testing) can run multiple registers without 429
             $limit = app()->environment('local') ? 30 : 3;

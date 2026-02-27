@@ -70,6 +70,7 @@ Route::get('/test-email', $testEmailHandler);
 // Auth (guest) — rate limited
 Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:auth.register');
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:auth.login');
+Route::post('/auth/refresh', [AuthController::class, 'refresh'])->middleware('throttle:auth.refresh');
 Route::post('/forgot-password', ForgotPasswordController::class)->middleware('throttle:auth.forgot-password');
 Route::post('/reset-password', ResetPasswordController::class);
 

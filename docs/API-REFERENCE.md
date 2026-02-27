@@ -99,12 +99,41 @@ Used wherever the API returns a user object:
 }
 ```
 
+**Refresh token cookie:** On successful login, the API also sets an **HttpOnly** refresh token cookie named **`rms_refresh`** (SameSite=Lax, Path=/, Secure when not in local environment, or whenever SameSite is `none`). The refresh token is **not** returned in JSON. The cookie is used by `POST /api/auth/refresh` to obtain a new access token on page reload and is **rotated on every refresh**.
+
 **Errors:** Use **403** for unverified email or deactivated account; use **422** only for wrong credentials or validation.
 - **422** – Invalid credentials or validation: `errors.email` = "The provided credentials are incorrect." (and/or other validation `errors`).
 - **403** – Email not verified: `{ "message": "Your email address is not verified." }`. Never 404 or 422 for this case.
 - **403** – Account deactivated: `{ "message": "Your account has been deactivated." }`.
 
 ---
+
+#### Refresh access token
+
+Use the refresh token stored in the **HttpOnly** cookie to get a new access token. **No Bearer token is required.**
+
+| Method | Path | Auth | Rate limit |
+|--------|------|------|------------|
+| POST | `/api/auth/refresh` | No (refresh cookie) | 30/min |
+
+**Body:** none.
+
+**Response (200):**
+```json
+{
+  "message": "Token refreshed successfully.",
+  "user": { "uuid", "name", "email", "email_verified_at", "pending_email", "is_paid", "is_superadmin", "is_active" },
+  "token": "string",
+  "token_type": "Bearer"
+}
+```
+
+**Behavior:** On success, the API **rotates** the refresh token by setting a **new** `rms_refresh` cookie and revoking the previous refresh token server-side. On **401** or **403**, the API also **clears** the refresh cookie to prevent client refresh loops and to avoid stale-cookie downgrade behavior.
+
+**Errors:**
+- **401** – Missing/invalid/expired/revoked refresh token cookie (also clears refresh cookie): `{ "message": "Invalid or expired refresh token." }`
+- **403** – Email not verified (also clears refresh cookie): `{ "message": "Your email address is not verified." }`
+- **403** – Account deactivated (also clears refresh cookie): `{ "message": "Your account has been deactivated." }`
 
 #### Forgot password
 
@@ -413,6 +442,8 @@ All require `Authorization: Bearer <token>` and **verified email**.
 }
 ```
 
+**Behavior:** Revokes the current access token (Sanctum) and, if a refresh cookie is present, revokes that refresh token and clears the `rms_refresh` cookie.
+
 ---
 
 #### Logout all devices
@@ -427,6 +458,8 @@ All require `Authorization: Bearer <token>` and **verified email**.
   "message": "Logged out from all devices successfully."
 }
 ```
+
+**Behavior:** Revokes **all** access tokens and **all** refresh tokens for the user and clears the `rms_refresh` cookie.
 
 ---
 
@@ -1666,6 +1699,7 @@ When **source_variant_uuid** is present, **name** in `translations` is the catal
 
 ## Changelog
 
+- **2026-02-27**: **Refresh-token auth (rotation).** `POST /api/login` now sets an HttpOnly refresh token cookie (`rms_refresh`). New `POST /api/auth/refresh` rotates the refresh token and returns a new access token (403 when email not verified or account deactivated); **401/403 clear the refresh cookie**. Refresh rotation tolerates near-parallel refresh calls via a short grace window (revoked token reuse only when rotated). `POST /api/logout` and `POST /api/logout-all` now also revoke refresh tokens (if present / all) and clear the refresh cookie. Cookie Secure is set when not local, or whenever SameSite is `none`. No internal `id` in any response.
 - **2026-02-21**: **GET /api/public/restaurants/{slug}: menu_groups availability.** Each entry in **menu_groups** now includes **availability** (object | null; same shape as operating_hours). When the group has a category (category_uuid non-null), availability is the category’s availability; when uncategorized (category_uuid null), availability is null. No internal `id` in any response.
 - **2026-02-21**: **Contact & links (restaurant contacts) refactor.** Module renamed conceptually to "Contact & links"; API path unchanged `/api/restaurants/{restaurant}/contacts`. Supports **phone types** (whatsapp, mobile, phone, fax, other) and **link types** (facebook, instagram, twitter, website). Unified **value** field (phone number or URL); **number** kept for backward compat (same as value for phone types, null for link types). Migration adds **value** column, backfills from number, makes number nullable. Validation: link types require valid URL in value; phone types require non-empty value (max 500). Owner payload and GET `/api/public/restaurants/{slug}` **contacts** now include **value** and **number**. No internal `id` in any response.
 - **2026-02-21**: **Restaurant year established.** New optional field **year_established** (integer, nullable) on restaurants: migration adds column; valid range 1800–(current year + 1). Included in restaurant payload (list, show, create response, update, logo/banner upload). Create and update accept optional **year_established**; send `null` to clear on update. GET `/api/public/restaurants/{slug}` includes **year_established** so public sites can display "Est. 1995". No internal `id` in any response.

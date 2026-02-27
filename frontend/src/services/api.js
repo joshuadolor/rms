@@ -9,6 +9,7 @@
 
 import axios from 'axios'
 import { useAppStore } from '@/stores/app'
+import { getSessionToken, getSessionTokenType } from '@/auth/session'
 
 const rawBase = import.meta.env.VITE_API_URL ?? ''
 // Ensure no trailing slash so paths like '/login' become base/login
@@ -42,37 +43,97 @@ export const api = axios.create({
 })
 
 /** Get stored auth token (e.g. Bearer). Adjust key/format to match your auth. */
-function getAuthToken() {
-  return localStorage.getItem('rms-auth-token') ?? ''
-}
-
 api.interceptors.request.use((config) => {
-  const token = getAuthToken()
+  const token = getSessionToken()
   if (token) {
-    config.headers.Authorization = `Bearer ${token}`
+    const type = getSessionTokenType() || 'Bearer'
+    config.headers.Authorization = `${type} ${token}`
   }
   return config
 })
 
 const UNVERIFIED_MESSAGE = 'Your email address is not verified.'
 
+function isRefreshRequest(error) {
+  const url = error?.config?.url ?? ''
+  return typeof url === 'string' && url.includes('/auth/refresh')
+}
+
+function normalizeApiPath(inputPath) {
+  if (!inputPath || typeof inputPath !== 'string') return ''
+  let p = inputPath
+  // strip querystring if present
+  const q = p.indexOf('?')
+  if (q !== -1) p = p.slice(0, q)
+  if (!p.startsWith('/')) p = `/${p}`
+  // Axios config.url is typically '/login' etc, but normalize just in case someone passes '/api/login'
+  if (p === '/api') return '/'
+  if (p.startsWith('/api/')) p = p.slice(4)
+  return p
+}
+
+function getRequestPath(error) {
+  const url = error?.config?.url ?? ''
+  if (!url || typeof url !== 'string') return ''
+  try {
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return normalizeApiPath(new URL(url).pathname)
+    }
+  } catch {
+    // fall through
+  }
+  return normalizeApiPath(url)
+}
+
+function isAuthOrEmailEndpoint(path) {
+  const p = normalizeApiPath(path)
+  if (!p) return false
+  if (p === '/login') return true
+  if (p === '/register') return true
+  if (p === '/forgot-password') return true
+  if (p === '/reset-password') return true
+  if (p === '/auth/refresh') return true
+  if (p.startsWith('/auth/')) return true
+  if (p.startsWith('/email/')) return true
+  return false
+}
+
+function safeGetAppStore() {
+  try {
+    return useAppStore()
+  } catch {
+    return null
+  }
+}
+
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     const status = error.response?.status
     const message = error.response?.data?.message ?? ''
+    const appStore = safeGetAppStore()
+    const isBootstrapping = appStore?.isAuthBootstrapping ?? false
+    const requestPath = getRequestPath(error)
+    const skipHardRedirect = isRefreshRequest(error) || isBootstrapping || isAuthOrEmailEndpoint(requestPath)
 
     if (status === 401) {
-      const appStore = useAppStore()
-      appStore.clearAuthState()
-      if (typeof window !== 'undefined') {
-        window.location.assign(`${window.location.origin}/login`)
+      // Do not clear a newly-established in-memory session if a stale refresh-on-boot request fails
+      // (refresh may have started before login completed).
+      if (!isRefreshRequest(error) || !appStore?.user) {
+        appStore?.clearAuthState?.()
       }
+      // Do not hard-redirect on 401. Route guards handle protected-route access,
+      // and bootstrapping uses refresh-on-load to restore a session when possible.
     } else if (status === 403 && typeof message === 'string' && message.includes(UNVERIFIED_MESSAGE)) {
-      const appStore = useAppStore()
-      appStore.clearAuthState()
-      const params = new URLSearchParams({ message: 'Please verify your email to continue.' })
-      if (typeof window !== 'undefined') {
+      // Only clear local auth state for refresh failures (server clears refresh cookie on 401/403).
+      // For regular protected calls, keep user/token so the Verify Email page can show the email and allow resend.
+      if (isRefreshRequest(error) && !appStore?.user) {
+        appStore?.clearAuthState?.()
+      }
+      if (!skipHardRedirect && typeof window !== 'undefined') {
+        const params = new URLSearchParams({ message: 'Please verify your email to continue.' })
+        const knownEmail = appStore?.user?.email ? String(appStore.user.email) : ''
+        if (knownEmail) params.set('email', knownEmail)
         window.location.assign(`${window.location.origin}/verify-email?${params.toString()}`)
       }
     }
@@ -175,7 +236,9 @@ export function normalizeApiError(err) {
       statusFallback ??
       err.message ??
       'Request failed'
-    const group = err.code === 'ERR_NETWORK' ? API_ERROR_GROUPS.NETWORK : getErrorGroup(status)
+    // axios: network/CORS/DNS failures and timeouts typically have no response.
+    const isNetworkLike = err.code === 'ERR_NETWORK' || err.response == null
+    const group = isNetworkLike ? API_ERROR_GROUPS.NETWORK : getErrorGroup(status)
     return {
       message: typeof msg === 'string' ? msg : JSON.stringify(msg),
       status,

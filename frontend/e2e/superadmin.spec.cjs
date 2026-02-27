@@ -10,7 +10,36 @@ const { SuperadminDashboardPage } = require('./pages/SuperadminDashboardPage.cjs
 const { SuperadminUsersPage } = require('./pages/SuperadminUsersPage.cjs')
 const { SuperadminRestaurantsPage } = require('./pages/SuperadminRestaurantsPage.cjs')
 
+const REFRESH_COOKIE_NAME = 'rms_refresh'
 const MOCK_TOKEN = 'mock-sanctum-token'
+
+const LEGACY_AUTH_STORAGE_KEYS = [
+  'rms-auth',
+  'rms-auth-token',
+  'rms-user-id',
+  'rms-user-name',
+  'rms-user-email',
+  'rms-user-verified',
+  'rms-user-pending-email',
+  'rms-user-is-paid',
+  'rms-user-is-superadmin',
+  'rms-user-is-active',
+]
+
+function makeRefreshSetCookie(value) {
+  return `${REFRESH_COOKIE_NAME}=${value}; Path=/; HttpOnly; SameSite=Lax`
+}
+
+async function expectNoLegacyAuthInStorage(page) {
+  const values = await page.evaluate((keys) => {
+    const out = {}
+    for (const k of keys) out[k] = localStorage.getItem(k)
+    return out
+  }, LEGACY_AUTH_STORAGE_KEYS)
+  for (const [k, v] of Object.entries(values)) {
+    expect(v, `localStorage key "${k}" should not be set`).toBeNull()
+  }
+}
 
 const MOCK_REGULAR_USER = {
   uuid: 'usr-regular-111',
@@ -39,6 +68,9 @@ function mockLoginAndUser(page, userPayload) {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
+      headers: {
+        'Set-Cookie': makeRefreshSetCookie('rt-1'),
+      },
       body: JSON.stringify({
         message: 'Logged in successfully.',
         user: userPayload,
@@ -64,6 +96,26 @@ async function loginAsRegularUser(page) {
   await loginPage.goto()
   await loginPage.login(MOCK_REGULAR_USER.email, 'password123')
   await page.waitForURL(/\/app(\/)?$/, { timeout: 10000 })
+  await expectNoLegacyAuthInStorage(page)
+
+  // Keep auth across page.goto() navigations by mocking refresh.
+  await page.route('**/api/auth/refresh', (route) => {
+    if (route.request().method() !== 'POST') return route.continue()
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      headers: {
+        // refresh rotation
+        'Set-Cookie': makeRefreshSetCookie('rt-2'),
+      },
+      body: JSON.stringify({
+        message: 'Token refreshed successfully.',
+        user: MOCK_REGULAR_USER,
+        token: MOCK_TOKEN,
+        token_type: 'Bearer',
+      }),
+    })
+  })
 }
 
 /** Log in as superadmin; mocks and performs login. */
@@ -73,6 +125,26 @@ async function loginAsSuperadmin(page) {
   await loginPage.goto()
   await loginPage.login(MOCK_SUPERADMIN_USER.email, 'password123')
   await page.waitForURL(/\/app(\/)?$/, { timeout: 10000 })
+  await expectNoLegacyAuthInStorage(page)
+
+  // Keep auth across page.goto() navigations by mocking refresh.
+  await page.route('**/api/auth/refresh', (route) => {
+    if (route.request().method() !== 'POST') return route.continue()
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      headers: {
+        // refresh rotation
+        'Set-Cookie': makeRefreshSetCookie('rt-2'),
+      },
+      body: JSON.stringify({
+        message: 'Token refreshed successfully.',
+        user: MOCK_SUPERADMIN_USER,
+        token: MOCK_TOKEN,
+        token_type: 'Bearer',
+      }),
+    })
+  })
 }
 
 test.describe('Superadmin access control', () => {

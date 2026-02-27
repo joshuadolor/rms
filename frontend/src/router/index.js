@@ -196,37 +196,48 @@ const router = createRouter({
   routes,
 })
 
-router.beforeEach((to, _from, next) => {
+router.beforeEach(async (to) => {
   const appStore = useAppStore()
+  const requiresAuth = to.matched.some((r) => r.meta.requiresAuth)
+  const requiresVerified = to.matched.some((r) => r.meta.requiresVerified)
+  const requiresSuperadmin = to.matched.some((r) => r.meta.requiresSuperadmin)
+  const isGuestRoute = to.matched.some((r) => r.meta.guest)
+  const needsBlockingAuthDecision = requiresAuth || requiresVerified || requiresSuperadmin
+  if (needsBlockingAuthDecision) {
+    await appStore.bootstrapAuth()
+  } else {
+    // Guest/public routes should render immediately; bootstrap runs in background.
+    appStore.bootstrapAuth().catch(() => {})
+  }
   const isAuthenticated = !!appStore.user
   const isVerified = appStore.user?.isEmailVerified ?? false
+  const knownEmail = appStore.user?.email ? String(appStore.user.email) : ''
 
-  if (to.meta.requiresAuth && !isAuthenticated) {
-    next({ name: 'Login', query: { redirect: to.fullPath } })
-    return
+  if (requiresAuth && !isAuthenticated) {
+    return {
+      name: 'Login',
+      query: {
+        redirect: to.fullPath,
+        ...(appStore.authBootstrapHadNetworkError ? { message: 'You appear offline. Please reconnect to continue.' } : {}),
+      },
+    }
   }
 
-  if (to.meta.guest && isAuthenticated) {
-    next(isVerified ? { name: 'App' } : { name: 'VerifyEmail' })
-    return
+  if (isGuestRoute && isAuthenticated) {
+    return isVerified ? { name: 'App' } : (knownEmail ? { name: 'VerifyEmail', query: { email: knownEmail } } : { name: 'VerifyEmail' })
   }
 
-  if (to.meta.requiresVerified && isAuthenticated && !isVerified) {
-    next({ name: 'VerifyEmail' })
-    return
+  if (requiresVerified && isAuthenticated && !isVerified) {
+    return knownEmail ? { name: 'VerifyEmail', query: { email: knownEmail } } : { name: 'VerifyEmail' }
   }
 
-  if (to.meta.requiresSuperadmin && isAuthenticated && !appStore.user?.isSuperadmin) {
-    next({ name: 'App' })
-    return
+  if (requiresSuperadmin && isAuthenticated && !appStore.user?.isSuperadmin) {
+    return { name: 'App' }
   }
 
   if (to.name === 'VerifyEmail' && isAuthenticated && isVerified) {
-    next({ name: 'App' })
-    return
+    return { name: 'App' }
   }
-
-  next()
 })
 
 export default router

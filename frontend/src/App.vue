@@ -14,27 +14,39 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, onMounted, watch } from 'vue'
 import { useAppStore } from '@/stores/app'
-import { authService } from '@/services'
+import { useRoute, useRouter } from 'vue-router'
 import ToastContainer from '@/components/ui/ToastContainer.vue'
 
+const appStore = useAppStore()
+const route = useRoute()
 const router = useRouter()
-const appLoading = ref(false)
+
+const isProtectedRoute = computed(() => route.matched.some((r) => r.meta.requiresAuth || r.meta.requiresVerified || r.meta.requiresSuperadmin))
+const appLoading = computed(() => isProtectedRoute.value && appStore.isAuthBootstrapping && !appStore.isAuthBootstrapped)
 
 onMounted(async () => {
-  if (!localStorage.getItem('rms-auth-token')) return
-  appLoading.value = true
-  const appStore = useAppStore()
-  try {
-    const data = await authService.getMe()
-    if (data?.user) appStore.setUserFromApi(data.user)
-  } catch {
-    await appStore.logout()
-    router.replace({ name: 'Landing' })
-  } finally {
-    appLoading.value = false
-  }
+  // Ensure we attempt refresh-on-boot even on public routes.
+  // Protected routes will still block via router guards; guest routes can render immediately.
+  appStore.bootstrapAuth().catch(() => {})
 })
+
+// If we soft-loaded a guest/public page but bootstrap later restores auth,
+// redirect away from guest routes without requiring a full reload.
+watch(
+  () => [appStore.isAuthBootstrapped, appStore.user?.uuid, route.fullPath],
+  () => {
+    if (!appStore.isAuthBootstrapped) return
+    if (!route.matched.some((r) => r.meta.guest)) return
+    if (!appStore.user) return
+    const isVerified = appStore.user?.isEmailVerified ?? false
+    if (isVerified) {
+      router.replace({ name: 'App' })
+      return
+    }
+    const email = appStore.user.email
+    router.replace(email ? { name: 'VerifyEmail', query: { email } } : { name: 'VerifyEmail' })
+  }
+)
 </script>

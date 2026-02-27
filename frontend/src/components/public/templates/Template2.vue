@@ -32,7 +32,7 @@
           </h2>
           <div class="rms-reviews-and-feedback__box border-charcoal-blue bg-pale-stone">
             <div class="rms-reviews-feedback-grid grid grid-cols-1 md:grid-cols-[1fr_auto] gap-0">
-              <div v-if="restaurant.feedbacks && restaurant.feedbacks.length" class="rms-reviews-feedback-grid__reviews min-w-0 p-6 md:p-8 md:border-charcoal-blue">
+              <div class="rms-reviews-feedback-grid__reviews min-w-0 p-6 md:p-8 md:border-charcoal-blue">
                 <Template2Reviews
                   :feedbacks="restaurant.feedbacks || []"
                   :nested="true"

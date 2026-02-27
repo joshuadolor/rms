@@ -5,14 +5,48 @@
  */
 const { test, expect } = require('@playwright/test')
 
+const REFRESH_COOKIE_NAME = 'rms_refresh'
+
 const MOCK_VERIFIED_USER = {
-  id: 1,
+  uuid: 'usr-owner-001',
   name: 'Test Owner',
   email: 'verified@example.com',
   email_verified_at: '2025-01-01T00:00:00.000000Z',
+  pending_email: null,
+  is_paid: false,
+  is_superadmin: false,
+  is_active: true,
 }
 
 const MOCK_TOKEN = 'mock-sanctum-token'
+
+const LEGACY_AUTH_STORAGE_KEYS = [
+  'rms-auth',
+  'rms-auth-token',
+  'rms-user-id',
+  'rms-user-name',
+  'rms-user-email',
+  'rms-user-verified',
+  'rms-user-pending-email',
+  'rms-user-is-paid',
+  'rms-user-is-superadmin',
+  'rms-user-is-active',
+]
+
+function makeRefreshSetCookie(value) {
+  return `${REFRESH_COOKIE_NAME}=${value}; Path=/; HttpOnly; SameSite=Lax`
+}
+
+async function expectNoLegacyAuthInStorage(page) {
+  const values = await page.evaluate((keys) => {
+    const out = {}
+    for (const k of keys) out[k] = localStorage.getItem(k)
+    return out
+  }, LEGACY_AUTH_STORAGE_KEYS)
+  for (const [k, v] of Object.entries(values)) {
+    expect(v, `localStorage key "${k}" should not be set`).toBeNull()
+  }
+}
 
 async function loginAsVerifiedUser(page) {
   await page.route('**/api/login', (route) => {
@@ -20,6 +54,9 @@ async function loginAsVerifiedUser(page) {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
+      headers: {
+        'Set-Cookie': makeRefreshSetCookie('rt-1'),
+      },
       body: JSON.stringify({
         message: 'Logged in successfully.',
         user: MOCK_VERIFIED_USER,
@@ -41,6 +78,26 @@ async function loginAsVerifiedUser(page) {
   await page.getByPlaceholder(/••••••••/).fill('password123')
   await page.getByRole('button', { name: /sign in/i }).click()
   await expect(page).toHaveURL(/\/app/)
+  await expectNoLegacyAuthInStorage(page)
+
+  // Keep auth across page.goto() navigations by mocking refresh.
+  await page.route('**/api/auth/refresh', (route) => {
+    if (route.request().method() !== 'POST') return route.continue()
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      headers: {
+        // refresh rotation
+        'Set-Cookie': makeRefreshSetCookie('rt-2'),
+      },
+      body: JSON.stringify({
+        message: 'Token refreshed successfully.',
+        user: MOCK_VERIFIED_USER,
+        token: MOCK_TOKEN,
+        token_type: 'Bearer',
+      }),
+    })
+  })
 }
 
 test.describe('Profile & Settings', () => {

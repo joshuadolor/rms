@@ -9,7 +9,36 @@ const { OwnerFeedbackPage } = require('./pages/OwnerFeedbackPage.cjs')
 const { SuperadminAppPage } = require('./pages/SuperadminAppPage.cjs')
 const { SuperadminOwnerFeedbacksPage } = require('./pages/SuperadminOwnerFeedbacksPage.cjs')
 
+const REFRESH_COOKIE_NAME = 'rms_refresh'
 const MOCK_TOKEN = 'mock-sanctum-token'
+
+const LEGACY_AUTH_STORAGE_KEYS = [
+  'rms-auth',
+  'rms-auth-token',
+  'rms-user-id',
+  'rms-user-name',
+  'rms-user-email',
+  'rms-user-verified',
+  'rms-user-pending-email',
+  'rms-user-is-paid',
+  'rms-user-is-superadmin',
+  'rms-user-is-active',
+]
+
+function makeRefreshSetCookie(value) {
+  return `${REFRESH_COOKIE_NAME}=${value}; Path=/; HttpOnly; SameSite=Lax`
+}
+
+async function expectNoLegacyAuthInStorage(page) {
+  const values = await page.evaluate((keys) => {
+    const out = {}
+    for (const k of keys) out[k] = localStorage.getItem(k)
+    return out
+  }, LEGACY_AUTH_STORAGE_KEYS)
+  for (const [k, v] of Object.entries(values)) {
+    expect(v, `localStorage key "${k}" should not be set`).toBeNull()
+  }
+}
 
 const MOCK_REGULAR_USER = {
   uuid: 'usr-owner-fb-001',
@@ -37,6 +66,9 @@ function mockLoginAndUser(page, userPayload) {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
+      headers: {
+        'Set-Cookie': makeRefreshSetCookie('rt-1'),
+      },
       body: JSON.stringify({
         message: 'Logged in successfully.',
         user: userPayload,
@@ -61,14 +93,64 @@ async function loginAsRegularUser(page) {
   await loginPage.goto()
   await loginPage.login(MOCK_REGULAR_USER.email, 'password123')
   await page.waitForURL(/\/app(\/)?$/, { timeout: 10000 })
+  await expectNoLegacyAuthInStorage(page)
+
+  // Keep auth across page.goto() navigations by mocking refresh.
+  await page.route('**/api/auth/refresh', (route) => {
+    if (route.request().method() !== 'POST') return route.continue()
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      headers: {
+        // refresh rotation
+        'Set-Cookie': makeRefreshSetCookie('rt-2'),
+      },
+      body: JSON.stringify({
+        message: 'Token refreshed successfully.',
+        user: MOCK_REGULAR_USER,
+        token: MOCK_TOKEN,
+        token_type: 'Bearer',
+      }),
+    })
+  })
 }
 
 async function loginAsSuperadmin(page) {
+  // Dashboard may request superadmin stats right after login; mock to avoid 401 redirects.
+  await page.route('**/api/superadmin/stats', (route) => {
+    if (route.request().method() !== 'GET') return route.continue()
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ data: { restaurants_count: 0, users_count: 1, paid_users_count: 0 } }),
+    })
+  })
+
   mockLoginAndUser(page, MOCK_SUPERADMIN_USER)
   const loginPage = new LoginPage(page)
   await loginPage.goto()
   await loginPage.login(MOCK_SUPERADMIN_USER.email, 'password123')
   await page.waitForURL(/\/app(\/)?$/, { timeout: 10000 })
+  await expectNoLegacyAuthInStorage(page)
+
+  // Keep auth across page.goto() navigations by mocking refresh.
+  await page.route('**/api/auth/refresh', (route) => {
+    if (route.request().method() !== 'POST') return route.continue()
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      headers: {
+        // refresh rotation
+        'Set-Cookie': makeRefreshSetCookie('rt-2'),
+      },
+      body: JSON.stringify({
+        message: 'Token refreshed successfully.',
+        user: MOCK_SUPERADMIN_USER,
+        token: MOCK_TOKEN,
+        token_type: 'Bearer',
+      }),
+    })
+  })
 }
 
 /** Mock GET and POST /api/owner-feedback. GET returns myFeedbacks array (mutate and push from POST). */
@@ -255,11 +337,7 @@ test.describe('Owner feedback (superadmin)', () => {
   test('regular user visiting /app/superadmin/owner-feedbacks is redirected to /app', async ({
     page,
   }) => {
-    mockLoginAndUser(page, MOCK_REGULAR_USER)
-    const loginPage = new LoginPage(page)
-    await loginPage.goto()
-    await loginPage.login(MOCK_REGULAR_USER.email, 'password123')
-    await expect(page).toHaveURL(/\/app(\/)?$/)
+    await loginAsRegularUser(page)
 
     const appPage = new SuperadminAppPage(page)
     await appPage.goto('/app/superadmin/owner-feedbacks')
@@ -269,6 +347,15 @@ test.describe('Owner feedback (superadmin)', () => {
   test('superadmin can open Owner feedbacks page and see list with submitter, message, status', async ({
     page,
   }) => {
+    // Dashboard may request superadmin stats right after login; mock to avoid 401 hard redirects.
+    page.route('**/api/superadmin/stats', (route) => {
+      if (route.request().method() !== 'GET') return route.continue()
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ data: { restaurants_count: 0, users_count: 1, paid_users_count: 0 } }),
+      })
+    })
     await loginAsSuperadmin(page)
     const feedbacks = [
       {

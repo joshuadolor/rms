@@ -15,6 +15,7 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { authService, normalizeApiError } from '@/services'
+import { setSessionToken } from '@/auth/session'
 
 const route = useRoute()
 const router = useRouter()
@@ -22,6 +23,9 @@ const appStore = useAppStore()
 
 const message = ref('Completing sign in…')
 const error = ref('')
+
+const UNVERIFIED_MESSAGE = 'Your email address is not verified.'
+const VERIFY_EMAIL_MESSAGE = 'Please verify your email to continue.'
 
 /** Parse access_token from hash (#access_token=...). */
 function getAccessTokenFromHash() {
@@ -47,13 +51,30 @@ onMounted(async () => {
       const data = provider === 'facebook'
         ? await authService.loginWithFacebook({ access_token: accessToken })
         : await authService.loginWithInstagram({ access_token: accessToken })
-      if (data.token) localStorage.setItem('rms-auth-token', data.token)
-      if (data.user) appStore.setUserFromApi(data.user)
-      const isVerified = data.user?.isEmailVerified ?? false
-      router.replace(isVerified ? redirect : { name: 'VerifyEmail' })
+      appStore.applyAuthResponse(data)
+      const isVerified = appStore.user?.isEmailVerified ?? false
+      if (isVerified) {
+        router.replace(redirect)
+        return
+      }
+      const knownEmail = appStore.user?.email ? String(appStore.user.email) : ''
+      router.replace(knownEmail ? { name: 'VerifyEmail', query: { email: knownEmail } } : { name: 'VerifyEmail' })
     } catch (e) {
-      const { message: msg } = normalizeApiError(e)
-      error.value = msg || 'Sign-in failed. Please try again.'
+      const normalized = normalizeApiError(e)
+      if (normalized.status === 403 && normalized.message?.includes(UNVERIFIED_MESSAGE)) {
+        // For SSO, we often don't know the email when the backend blocks before issuing a token.
+        // Still route to Verify Email and show a friendly message.
+        const knownEmail = typeof route.query.email === 'string' ? route.query.email : ''
+        router.replace({
+          name: 'VerifyEmail',
+          query: {
+            ...(knownEmail ? { email: knownEmail } : {}),
+            message: VERIFY_EMAIL_MESSAGE,
+          },
+        })
+        return
+      }
+      error.value = normalized.message || 'Sign-in failed. Please try again.'
       message.value = 'Sign-in could not be completed.'
       setTimeout(() => router.replace({ name: 'Login' }), 4000)
     }
@@ -71,8 +92,7 @@ onMounted(async () => {
     return
   }
 
-  localStorage.setItem('rms-auth-token', token)
-  localStorage.setItem('rms-auth', '1')
+  setSessionToken(String(token))
 
   if (userParam) {
     try {
@@ -84,6 +104,11 @@ onMounted(async () => {
   }
 
   const isVerified = appStore.user?.isEmailVerified ?? false
-  router.replace(isVerified ? redirect : { name: 'VerifyEmail' })
+  if (isVerified) {
+    router.replace(redirect)
+    return
+  }
+  const knownEmail = appStore.user?.email ? String(appStore.user.email) : ''
+  router.replace(knownEmail ? { name: 'VerifyEmail', query: { email: knownEmail } } : { name: 'VerifyEmail' })
 })
 </script>

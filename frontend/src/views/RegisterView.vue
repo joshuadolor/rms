@@ -242,6 +242,8 @@ import { authService, normalizeApiError, getValidationErrors } from '@/services'
 const router = useRouter()
 const appStore = useAppStore()
 
+const UNVERIFIED_MESSAGE = 'Your email address is not verified.'
+
 const hasGoogleSso = !!(import.meta.env.VITE_GOOGLE_CLIENT_ID ?? '')
 const hasFacebookSso = !!(import.meta.env.VITE_FACEBOOK_APP_ID ?? '')
 const hasInstagramSso = !!(import.meta.env.VITE_INSTAGRAM_APP_ID ?? '')
@@ -263,6 +265,28 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const MIN_PASSWORD_LENGTH = 8
 const MAX_NAME_LENGTH = 255
 const MAX_EMAIL_LENGTH = 255
+
+function decodeJwtPayload(jwt) {
+  if (!jwt || typeof jwt !== 'string') return null
+  const parts = jwt.split('.')
+  if (parts.length < 2) return null
+  let payload = parts[1]
+  payload = payload.replace(/-/g, '+').replace(/_/g, '/')
+  const pad = payload.length % 4
+  if (pad) payload += '='.repeat(4 - pad)
+  try {
+    const json = atob(payload)
+    return JSON.parse(json)
+  } catch {
+    return null
+  }
+}
+
+function getEmailFromIdToken(idToken) {
+  const payload = decodeJwtPayload(idToken)
+  const email = payload?.email
+  return typeof email === 'string' && email ? email : ''
+}
 
 function goToStep2() {
   error.value = ''
@@ -367,12 +391,22 @@ async function onGoogleSuccess({ credential }) {
   loading.value = true
   try {
     const data = await authService.loginWithGoogle({ id_token: credential })
-    if (data.token) localStorage.setItem('rms-auth-token', data.token)
-    appStore.setUserFromApi(data.user)
+    appStore.applyAuthResponse(data)
     router.push('/app')
   } catch (e) {
-    const { message } = normalizeApiError(e)
-    error.value = message || 'Google sign-in failed. Please try again.'
+    const normalized = normalizeApiError(e)
+    if (normalized.status === 403 && normalized.message?.includes(UNVERIFIED_MESSAGE)) {
+      const knownEmail = getEmailFromIdToken(credential)
+      router.push({
+        name: 'VerifyEmail',
+        query: {
+          ...(knownEmail ? { email: knownEmail } : {}),
+          message: 'Please verify your email to continue.',
+        },
+      })
+      return
+    }
+    error.value = normalized.message || 'Google sign-in failed. Please try again.'
   } finally {
     loading.value = false
   }

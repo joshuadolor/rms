@@ -11,14 +11,63 @@ const { execSync } = require('child_process')
 const { test, expect } = require('@playwright/test')
 const { createE2eUser } = require('./helpers/e2e-user.cjs')
 
+const REFRESH_COOKIE_NAME = 'rms_refresh'
+
 const MOCK_VERIFIED_USER = {
-  id: 1,
+  uuid: 'usr-owner-001',
   name: 'Test Owner',
   email: 'verified@example.com',
   email_verified_at: '2025-01-01T00:00:00.000000Z',
+  pending_email: null,
+  is_paid: false,
+  is_superadmin: false,
+  is_active: true,
 }
 
 const MOCK_TOKEN = 'mock-sanctum-token'
+
+const LEGACY_AUTH_STORAGE_KEYS = [
+  'rms-auth',
+  'rms-auth-token',
+  'rms-user-id',
+  'rms-user-name',
+  'rms-user-email',
+  'rms-user-verified',
+  'rms-user-pending-email',
+  'rms-user-is-paid',
+  'rms-user-is-superadmin',
+  'rms-user-is-active',
+]
+
+function makeRefreshSetCookie(value) {
+  // Minimal cookie string. Domain omitted so it defaults to the response host.
+  return `${REFRESH_COOKIE_NAME}=${value}; Path=/; HttpOnly; SameSite=Lax`
+}
+
+function makeRefreshClearCookie() {
+  return `${REFRESH_COOKIE_NAME}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax`
+}
+
+async function expectNoLegacyAuthInStorage(page) {
+  const values = await page.evaluate((keys) => {
+    const out = {}
+    for (const k of keys) out[k] = localStorage.getItem(k)
+    return out
+  }, LEGACY_AUTH_STORAGE_KEYS)
+  for (const [k, v] of Object.entries(values)) {
+    expect(v, `localStorage key "${k}" should not be set`).toBeNull()
+  }
+}
+
+async function expectRefreshCookieState(page, { expectedValue } = {}) {
+  const cookies = await page.context().cookies()
+  const cookie = cookies.find((c) => c.name === REFRESH_COOKIE_NAME)
+  expect(cookie, `${REFRESH_COOKIE_NAME} cookie should be present (HttpOnly refresh cookie).`).toBeTruthy()
+  if (expectedValue !== undefined) expect(cookie.value).toBe(expectedValue)
+  // HttpOnly cookie should not be readable by app JS.
+  const docCookie = await page.evaluate(() => document.cookie)
+  expect(docCookie).not.toContain(`${REFRESH_COOKIE_NAME}=`)
+}
 
 test.describe('Landing', () => {
   test('shows sign in and create account options', async ({ page }) => {
@@ -65,12 +114,36 @@ test.describe('Login', () => {
     await expect(page).toHaveURL(/\/login/)
   })
 
+  test('unverified email (403) redirects to verify-email with email query', async ({ page }) => {
+    await page.route('**/api/login', (route) => {
+      if (route.request().method() !== 'POST') return route.continue()
+      route.fulfill({
+        status: 403,
+        contentType: 'application/json',
+        body: JSON.stringify({ message: 'Your email address is not verified.' }),
+      })
+    })
+
+    await page.goto('/login')
+    await page.getByPlaceholder(/you@example\.com/i).fill('unverified@example.com')
+    await page.getByPlaceholder(/••••••••/).fill('password123')
+    await page.getByRole('button', { name: /sign in/i }).click()
+
+    await expect(page).toHaveURL(/\/verify-email/)
+    await expect(page).toHaveURL(/email=unverified(%40|@)example\.com/)
+    await expect(page.getByRole('heading', { name: 'Check your email' })).toBeVisible()
+    await expect(page.getByText(/unverified@example\.com/)).toBeVisible()
+  })
+
   test('successful login redirects to /app and shows Sign out', async ({ page }) => {
     await page.route('**/api/login', (route) => {
       if (route.request().method() !== 'POST') return route.continue()
       route.fulfill({
         status: 200,
         contentType: 'application/json',
+        headers: {
+          'Set-Cookie': makeRefreshSetCookie('rt-1'),
+        },
         body: JSON.stringify({
           message: 'Logged in successfully.',
           user: MOCK_VERIFIED_USER,
@@ -88,6 +161,11 @@ test.describe('Login', () => {
     await expect(page).toHaveURL(/\/app/)
     await expect(page.getByRole('button', { name: /sign out/i })).toBeVisible()
     await expect(page.getByText(/welcome,/i)).toBeVisible()
+
+    // Access token is in memory only (no legacy localStorage tokens).
+    await expectNoLegacyAuthInStorage(page)
+    // Refresh token is an HttpOnly cookie (not readable by JS, but visible to the browser).
+    await expectRefreshCookieState(page, { expectedValue: 'rt-1' })
   })
 
   test('Forgot password link goes to /forgot-password', async ({ page }) => {
@@ -126,7 +204,7 @@ test.describe('Register', () => {
         contentType: 'application/json',
         body: JSON.stringify({
           message: 'Registered. Please verify your email using the link we sent you.',
-          user: { id: 2, name: 'Jane', email: 'jane@example.com', email_verified_at: null },
+          user: { uuid: 'usr-jane-002', name: 'Jane', email: 'jane@example.com', email_verified_at: null },
         }),
       })
     })
@@ -224,6 +302,9 @@ test.describe('Route guards', () => {
       route.fulfill({
         status: 200,
         contentType: 'application/json',
+        headers: {
+          'Set-Cookie': makeRefreshSetCookie('rt-1'),
+        },
         body: JSON.stringify({
           message: 'Logged in successfully.',
           user: MOCK_VERIFIED_USER,
@@ -232,7 +313,7 @@ test.describe('Route guards', () => {
         }),
       })
     })
-    // App.vue onMounted calls getMe() when token exists; mock so it doesn't redirect to Landing
+    // Some app flows call GET /api/user; keep mocked for stability.
     await page.route('**/api/user', (route) => {
       if (route.request().method() !== 'GET') return route.continue()
       route.fulfill({
@@ -249,6 +330,25 @@ test.describe('Route guards', () => {
 
     await expect(page).toHaveURL(/\/app/)
 
+    // After a full navigation/reload, the app restores auth by POST /api/auth/refresh (cookie-based).
+    // Mock refresh so the app becomes authenticated again on the next page load.
+    await page.route('**/api/auth/refresh', (route) => {
+      if (route.request().method() !== 'POST') return route.continue()
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        headers: {
+          'Set-Cookie': makeRefreshSetCookie('rt-2'),
+        },
+        body: JSON.stringify({
+          message: 'Token refreshed successfully.',
+          user: MOCK_VERIFIED_USER,
+          token: MOCK_TOKEN,
+          token_type: 'Bearer',
+        }),
+      })
+    })
+
     await page.goto('/login')
     await expect(page).toHaveURL(/\/app/)
   })
@@ -261,6 +361,9 @@ test.describe('Logout', () => {
       route.fulfill({
         status: 200,
         contentType: 'application/json',
+        headers: {
+          'Set-Cookie': makeRefreshSetCookie('rt-1'),
+        },
         body: JSON.stringify({
           message: 'Logged in successfully.',
           user: MOCK_VERIFIED_USER,
@@ -289,12 +392,124 @@ test.describe('Logout', () => {
   })
 })
 
+test.describe('Refresh token auth (cookie-based)', () => {
+  test('login -> /app -> reload -> refresh is called and user stays authenticated (no localStorage token)', async ({ page }) => {
+    await page.route('**/api/login', (route) => {
+      if (route.request().method() !== 'POST') return route.continue()
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        headers: {
+          'Set-Cookie': makeRefreshSetCookie('rt-1'),
+        },
+        body: JSON.stringify({
+          message: 'Logged in successfully.',
+          user: MOCK_VERIFIED_USER,
+          token: MOCK_TOKEN,
+          token_type: 'Bearer',
+        }),
+      })
+    })
+
+    await page.route('**/api/auth/refresh', (route) => {
+      if (route.request().method() !== 'POST') return route.continue()
+
+      // Important: the app calls refresh-on-load even on guest routes (like /login).
+      // Only return 200 when the browser has the refresh cookie set (after login).
+      const cookieHeader = route.request().headers()['cookie'] || ''
+      const hasRefreshCookie = cookieHeader.includes(`${REFRESH_COOKIE_NAME}=rt-1`)
+      if (!hasRefreshCookie) {
+        return route.fulfill({
+          status: 401,
+          contentType: 'application/json',
+          headers: {
+            'Set-Cookie': makeRefreshClearCookie(),
+          },
+          body: JSON.stringify({ message: 'Invalid or expired refresh token.' }),
+        })
+      }
+
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        headers: {
+          // refresh rotation
+          'Set-Cookie': makeRefreshSetCookie('rt-2'),
+        },
+        body: JSON.stringify({
+          message: 'Token refreshed successfully.',
+          user: MOCK_VERIFIED_USER,
+          token: MOCK_TOKEN,
+          token_type: 'Bearer',
+        }),
+      })
+    })
+
+    await page.goto('/login')
+    await page.getByPlaceholder(/you@example\.com/i).fill('verified@example.com')
+    await page.getByPlaceholder(/••••••••/).fill('password123')
+    await page.getByRole('button', { name: /sign in/i }).click()
+
+    await expect(page).toHaveURL(/\/app/)
+    await expect(page.getByRole('button', { name: /sign out/i })).toBeVisible()
+    await expectNoLegacyAuthInStorage(page)
+    await expectRefreshCookieState(page, { expectedValue: 'rt-1' })
+
+    const refreshRequestPromise = page.waitForRequest(
+      (req) => req.method() === 'POST' && req.url().includes('/api/auth/refresh'),
+      { timeout: 10000 }
+    )
+    await page.reload()
+    await refreshRequestPromise
+
+    await expect(page).toHaveURL(/\/app/)
+    await expect(page.getByRole('button', { name: /sign out/i })).toBeVisible()
+    await expect(page.getByText(/welcome,/i)).toBeVisible()
+    await expectNoLegacyAuthInStorage(page)
+    await expectRefreshCookieState(page, { expectedValue: 'rt-2' })
+  })
+
+  test('refresh 401 -> treated as logged out -> protected route redirects to login', async ({ page }) => {
+    // Simulate an existing refresh cookie from a prior session.
+    await page.context().addCookies([
+      {
+        name: REFRESH_COOKIE_NAME,
+        value: 'rt-stale',
+        domain: 'localhost',
+        path: '/',
+        httpOnly: true,
+        sameSite: 'Lax',
+      },
+    ])
+
+    await page.route('**/api/auth/refresh', (route) => {
+      if (route.request().method() !== 'POST') return route.continue()
+      route.fulfill({
+        status: 401,
+        contentType: 'application/json',
+        headers: {
+          // backend clears refresh cookie on 401/403 to prevent loops
+          'Set-Cookie': makeRefreshClearCookie(),
+        },
+        body: JSON.stringify({ message: 'Invalid or expired refresh token.' }),
+      })
+    })
+
+    await page.goto('/app')
+    await expect(page).toHaveURL(/\/login/)
+    await expect(page).toHaveURL(/\?redirect=/)
+    await expect(page.getByRole('heading', { name: /sign in/i })).toBeVisible()
+    await expectNoLegacyAuthInStorage(page)
+  })
+})
+
 // ---- Email delivery (real API + Mailhog; skipped if unreachable) ----
 const MAILHOG_URL = process.env.MAILHOG_URL || 'http://localhost:8025'
 const API_ORIGIN = (process.env.E2E_API_BASE || process.env.VITE_PROXY_TARGET || '').replace(/\/$/, '')
 const API_HEALTH = API_ORIGIN ? `${API_ORIGIN}/api/health` : '/api/health'
 const API_REGISTER = API_ORIGIN ? `${API_ORIGIN}/api/register` : '/api/register'
 const API_FORGOT_PASSWORD = API_ORIGIN ? `${API_ORIGIN}/api/forgot-password` : '/api/forgot-password'
+const RUN_EMAIL_DELIVERY = process.env.E2E_EMAIL_DELIVERY === '1'
 
 function getMessageCount(body) {
   if (Array.isArray(body)) return body.length
@@ -377,6 +592,7 @@ function runE2eCleanup() {
 }
 
 test.describe('Email delivery (real API + Mailhog)', () => {
+  test.skip(!RUN_EMAIL_DELIVERY, 'Set E2E_EMAIL_DELIVERY=1 to run real API + Mailhog email delivery tests.')
   test.setTimeout(90000)
   test.afterAll(runE2eCleanup)
   test.describe.serial('', () => {

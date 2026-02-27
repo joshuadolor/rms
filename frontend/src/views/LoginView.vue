@@ -169,6 +169,8 @@ const router = useRouter()
 const route = useRoute()
 const appStore = useAppStore()
 
+const UNVERIFIED_MESSAGE = 'Your email address is not verified.'
+
 const hasGoogleSso = !!(import.meta.env.VITE_GOOGLE_CLIENT_ID ?? '')
 const hasFacebookSso = !!(import.meta.env.VITE_FACEBOOK_APP_ID ?? '')
 const hasInstagramSso = !!(import.meta.env.VITE_INSTAGRAM_APP_ID ?? '')
@@ -182,7 +184,37 @@ const loading = ref(false)
 const error = ref('')
 const fieldErrors = ref({ email: '', password: '' })
 
+// Optional messages (e.g. redirected from a protected route while offline).
+if (typeof route.query.message === 'string' && route.query.message) {
+  error.value = route.query.message
+}
+if (!email.value && typeof route.query.email === 'string' && route.query.email) {
+  email.value = route.query.email
+}
+
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+function decodeJwtPayload(jwt) {
+  if (!jwt || typeof jwt !== 'string') return null
+  const parts = jwt.split('.')
+  if (parts.length < 2) return null
+  let payload = parts[1]
+  payload = payload.replace(/-/g, '+').replace(/_/g, '/')
+  const pad = payload.length % 4
+  if (pad) payload += '='.repeat(4 - pad)
+  try {
+    const json = atob(payload)
+    return JSON.parse(json)
+  } catch {
+    return null
+  }
+}
+
+function getEmailFromIdToken(idToken) {
+  const payload = decodeJwtPayload(idToken)
+  const email = payload?.email
+  return typeof email === 'string' && email ? email : ''
+}
 
 function validateLogin() {
   fieldErrors.value = { email: '', password: '' }
@@ -210,8 +242,7 @@ async function handleSubmit() {
   loading.value = true
   try {
     const data = await authService.login({ email: email.value.trim(), password: password.value })
-    if (data.token) localStorage.setItem('rms-auth-token', data.token)
-    appStore.setUserFromApi(data.user)
+    appStore.applyAuthResponse(data)
     const redirect = route.query.redirect || '/app'
     router.push(redirect)
   } catch (e) {
@@ -219,8 +250,18 @@ async function handleSubmit() {
     if (Object.keys(errors).length > 0) {
       fieldErrors.value = { ...fieldErrors.value, ...errors }
     }
-    const { message } = normalizeApiError(e)
-    error.value = message || 'Sign in failed. Please try again.'
+    const normalized = normalizeApiError(e)
+    if (normalized.status === 403 && normalized.message?.includes(UNVERIFIED_MESSAGE)) {
+      router.push({
+        name: 'VerifyEmail',
+        query: {
+          email: email.value.trim(),
+          message: 'Please verify your email to continue.',
+        },
+      })
+      return
+    }
+    error.value = normalized.message || 'Sign in failed. Please try again.'
   } finally {
     loading.value = false
   }
@@ -231,13 +272,23 @@ async function onGoogleSuccess({ credential }) {
   loading.value = true
   try {
     const data = await authService.loginWithGoogle({ id_token: credential })
-    if (data.token) localStorage.setItem('rms-auth-token', data.token)
-    appStore.setUserFromApi(data.user)
+    appStore.applyAuthResponse(data)
     const redirect = route.query.redirect || '/app'
     router.push(redirect)
   } catch (e) {
-    const { message } = normalizeApiError(e)
-    error.value = message || 'Google sign-in failed. Please try again.'
+    const normalized = normalizeApiError(e)
+    if (normalized.status === 403 && normalized.message?.includes(UNVERIFIED_MESSAGE)) {
+      const knownEmail = getEmailFromIdToken(credential)
+      router.push({
+        name: 'VerifyEmail',
+        query: {
+          ...(knownEmail ? { email: knownEmail } : {}),
+          message: 'Please verify your email to continue.',
+        },
+      })
+      return
+    }
+    error.value = normalized.message || 'Google sign-in failed. Please try again.'
   } finally {
     loading.value = false
   }
