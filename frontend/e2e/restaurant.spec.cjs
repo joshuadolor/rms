@@ -2063,6 +2063,51 @@ test.describe('Restaurant module', () => {
     await publicPage.expectMenuImageWithSrcVisible('e2e.test/images/cat-starters.png')
   })
 
+  test('clicking a menu item opens detail modal with category, name, price, and description', async ({ page }) => {
+    mockPublicRestaurant(page, 'detail-modal-cafe', {
+      name: 'Detail Modal Cafe',
+      slug: 'detail-modal-cafe',
+      template: 'template-1',
+      menu_groups: [
+        {
+          category_name: 'Starters',
+          category_uuid: 'cat-1',
+          availability: null,
+          image_url: null,
+          items: [
+            {
+              uuid: 'item-1',
+              type: 'simple',
+              name: 'House Salad',
+              description: 'Fresh greens with vinaigrette.',
+              price: 8.5,
+              is_available: true,
+              availability: null,
+              tags: [],
+              image_url: null,
+            },
+          ],
+        },
+      ],
+      menu_items: [],
+      feedbacks: [],
+    })
+
+    const publicPage = new PublicRestaurantPage(page)
+    await publicPage.goToPublicBySlug('detail-modal-cafe')
+    await publicPage.expectMenuSectionVisible()
+    await publicPage.expectMenuItemNameVisible('House Salad')
+    await publicPage.clickMenuItemInMenu('House Salad')
+    await publicPage.expectItemDetailModalVisible()
+    await publicPage.expectItemDetailModalShowsName('House Salad')
+    await publicPage.expectItemDetailModalShowsCategory('Starters')
+    const panel = page.locator('.rms-item-detail-modal__panel').first()
+    await expect(panel).toContainText('$8.50')
+    await expect(panel).toContainText('Fresh greens with vinaigrette.')
+    await publicPage.closeItemDetailModal()
+    await expect(page.locator('.rms-item-detail-modal__panel').first()).not.toBeVisible()
+  })
+
   test.describe('Public menu view: names, prices, tags', () => {
     test('public menu shows item with name, price, and tag pills (template-1)', async ({ page }) => {
       mockPublicRestaurant(page, 'tags-t1', {

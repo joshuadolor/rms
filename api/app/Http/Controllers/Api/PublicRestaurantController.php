@@ -316,8 +316,13 @@ class PublicRestaurantController extends Controller
         $baseUrl = rtrim(config('app.url'), '/');
         $restaurantUuid = $restaurant?->uuid;
         $variantSkus = ($skus ?? collect())->map(function ($sku) use ($baseUrl, $restaurantUuid, $item) {
+            $path = $sku->image_url;
+            if ($path === null && $item->source_menu_item_uuid !== null && $item->relationLoaded('sourceMenuItem') && $item->sourceMenuItem !== null) {
+                $sourceSku = $item->sourceMenuItem->variantSkus?->firstWhere('uuid', $sku->uuid);
+                $path = $sourceSku?->image_url;
+            }
             $imageUrl = null;
-            if ($sku->image_url && $restaurantUuid !== null) {
+            if ($path !== null && $restaurantUuid !== null) {
                 $imageUrl = $baseUrl . '/api/restaurants/' . $restaurantUuid . '/menu-items/' . $item->uuid . '/variants/' . $sku->uuid . '/image';
             }
 

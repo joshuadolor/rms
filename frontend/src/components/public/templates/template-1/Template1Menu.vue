@@ -18,22 +18,24 @@
           <span v-if="getAvailabilityDisplay(group.availability).label(now)" class="block text-xs font-normal normal-case tracking-normal mt-1">{{ getAvailabilityDisplay(group.availability).label(now) }}</span>
         </h3>
         <div class="space-y-8">
-          <div
+          <button
             v-for="item in group.items"
             :key="item.uuid"
+            type="button"
             data-testid="public-menu-item"
-            class="flex flex-col bg-white rounded-xl py-5 px-6"
+            class="rms-menu-item-card flex flex-col bg-white rounded-xl py-5 px-6 w-full text-left"
+            @click="onItemClick(item, group.category_name, $event)"
           >
-            <div class="flex items-start gap-4">
+            <div class="flex w-full items-center gap-4">
               <img
-                v-if="(item.type === 'simple' || item.type === 'combo') && item.image_url"
+                v-if="item.image_url"
                 :src="item.image_url"
                 :alt="item.name || 'Untitled'"
                 loading="lazy"
                 class="w-20 h-20 md:w-24 md:h-24 shrink-0 aspect-square object-cover rounded-lg"
               />
               <div class="flex-1 min-w-0">
-            <div class="flex items-center justify-between">
+            <div class="flex items-center justify-between gap-4 w-full">
               <div class="flex flex-wrap items-center gap-1.5 min-w-0">
                 <span class="text-lg font-bold text-t1-neutral-dark" :style="itemUnavailableNow(item.availability) ? { opacity: 0.8 } : undefined">{{ item.name || 'Untitled' }}</span>
                 <span
@@ -69,13 +71,13 @@
                 >
                   <span class="text-t1-neutral-dark text-sm font-medium">{{ variantSkuLabel(sku) }}</span>
                   <span v-if="sku.price != null" class="text-sm font-bold" :style="[primaryTextStyle, itemUnavailableNow(item.availability) ? { opacity: 0.8 } : undefined]">{{ formatPrice(sku.price) }}</span>
-                  <img v-if="sku.image_url" :src="sku.image_url" :alt="variantSkuLabel(sku)" loading="lazy" class="w-12 h-12 object-cover rounded" />
+                  <img v-if="sku.image_url" :src="sku.image_url" :alt="variantSkuLabel(sku) || 'Variant'" loading="lazy" class="w-12 h-12 shrink-0 aspect-square object-cover rounded" />
                 </li>
               </ul>
             </template>
               </div>
             </div>
-          </div>
+          </button>
         </div>
       </div>
     </div>
@@ -87,12 +89,22 @@ import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { usePublicMenuDisplay } from '@/composables/usePublicMenuDisplay'
 import { formatAvailabilityForDisplay, isAvailableNow } from '@/utils/availability'
 
+const emit = defineEmits(['select-item'])
+
 const props = defineProps({
   menuGroups: { type: Array, default: () => [] },
   menuItems: { type: Array, default: () => [] },
   currency: { type: String, default: 'USD' },
   primaryColor: { type: String, default: '' },
 })
+
+function onItemClick(item, categoryName, event) {
+  emit('select-item', {
+    item,
+    categoryName: categoryName || 'Menu',
+    trigger: event?.currentTarget ?? null,
+  })
+}
 
 const {
   displayGroups,
@@ -125,3 +137,21 @@ function itemUnavailableNow(availability) {
 const primaryBarStyle = computed(() => ({ backgroundColor: props.primaryColor || '#1152d4' }))
 const primaryTextStyle = computed(() => ({ color: props.primaryColor || '#1152d4' }))
 </script>
+
+<style scoped>
+.rms-menu-item-card {
+  cursor: pointer;
+  border: none;
+  transition: box-shadow 0.2s, transform 0.15s;
+}
+
+.rms-menu-item-card:focus-visible {
+  outline: 2px solid var(--t1-primary, #1152d4);
+  outline-offset: 2px;
+}
+@media (min-width: 768px) {
+  .rms-menu-item-card {
+    min-height: 44px;
+  }
+}
+</style>

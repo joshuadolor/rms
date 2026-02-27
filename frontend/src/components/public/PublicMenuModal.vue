@@ -86,17 +86,19 @@
                 :aria-hidden="openIndex !== gIdx"
               >
                 <div class="rms-menu-modal__category-panel-inner">
-                <div
+                <button
                   v-for="item in group.items"
                   :key="item.uuid"
+                  type="button"
                   :ref="(el) => setItemRef(item.uuid, el)"
                   :data-item-uuid="item.uuid"
                   class="rms-menu-modal__item"
                   :class="{ 'rms-menu-modal__item--highlight': highlightedUuid === item.uuid }"
+                  @click="onItemClick(item, group.category_name, $event)"
                 >
                   <div class="rms-menu-modal__item-top">
                     <img
-                      v-if="(item.type === 'simple' || item.type === 'combo') && item.image_url"
+                      v-if="item.image_url"
                       :src="item.image_url"
                       :alt="item.name || 'Untitled'"
                       loading="lazy"
@@ -139,13 +141,13 @@
                       >
                         <span class="rms-menu-modal__sku-label">{{ variantSkuLabel(sku) }}</span>
                         <span v-if="sku.price != null" class="rms-menu-modal__item-price" :style="[primaryTextStyle, itemUnavailableNow(item.availability) ? { opacity: 0.8 } : undefined]">{{ formatPrice(sku.price) }}</span>
-                        <img v-if="sku.image_url" :src="sku.image_url" :alt="variantSkuLabel(sku)" loading="lazy" class="rms-menu-modal__sku-img" />
+                        <img v-if="sku.image_url" :src="sku.image_url" :alt="variantSkuLabel(sku) || 'Variant'" loading="lazy" class="rms-menu-modal__sku-img" />
                       </li>
                     </ul>
                   </template>
                     </div>
                   </div>
-                </div>
+                </button>
                 </div>
               </div>
             </div>
@@ -165,12 +167,22 @@
         </div>
       </div>
     </div>
+
+    <PublicMenuItemDetailModal
+      v-model="detailOpen"
+      :item="detailItem"
+      :category-name="detailCategoryName"
+      :primary-color="restaurant?.primary_color"
+      :currency="restaurant?.currency || 'USD'"
+      @update:model-value="onDetailClose"
+    />
   </Teleport>
 </template>
 
 <script setup>
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { formatAvailabilityForDisplay, isAvailableNow } from '@/utils/availability'
+import PublicMenuItemDetailModal from '@/components/public/PublicMenuItemDetailModal.vue'
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
@@ -186,6 +198,31 @@ const openIndex = ref(0)
 const highlightedUuid = ref(null)
 const itemRefs = ref({})
 const isPicking = ref(false)
+
+const detailItem = ref(null)
+const detailCategoryName = ref('Menu')
+const detailOpen = ref(false)
+let detailTriggerEl = null
+
+function onItemClick(item, categoryName, event) {
+  detailItem.value = item
+  detailCategoryName.value = categoryName || 'Menu'
+  detailTriggerEl = event?.currentTarget ?? null
+  detailOpen.value = true
+}
+
+function onDetailClose(open) {
+  if (!open) {
+    detailItem.value = null
+    detailCategoryName.value = 'Menu'
+    nextTick(() => {
+      if (detailTriggerEl && typeof detailTriggerEl.focus === 'function') {
+        detailTriggerEl.focus()
+      }
+      detailTriggerEl = null
+    })
+  }
+}
 
 const now = ref(new Date())
 let nowInterval
@@ -616,9 +653,23 @@ function surpriseMe() {
 }
 
 .rms-menu-modal__item {
+  display: block;
+  width: 100%;
   padding: 0.75rem 0;
+  border: none;
   border-bottom: 1px solid #f1f5f9;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  min-height: 44px;
   transition: background 0.2s, box-shadow 0.2s;
+}
+.rms-menu-modal__item:hover {
+  background: #f8fafc;
+}
+.rms-menu-modal__item:focus-visible {
+  outline: 2px solid var(--rms-accent, #2563eb);
+  outline-offset: -2px;
 }
 
 .rms-menu-modal__item:last-child {
@@ -768,6 +819,8 @@ function surpriseMe() {
 .rms-menu-modal__sku-img {
   width: 48px;
   height: 48px;
+  flex-shrink: 0;
+  aspect-ratio: 1;
   object-fit: cover;
   border-radius: 6px;
 }

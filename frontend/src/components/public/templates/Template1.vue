@@ -23,6 +23,15 @@
         :menu-items="restaurant.menu_items || []"
         :currency="restaurant.currency || 'USD'"
         :primary-color="restaurant.primary_color"
+        @select-item="onSelectMenuItem"
+      />
+      <PublicMenuItemDetailModal
+        v-model="detailOpen"
+        :item="detailItem"
+        :category-name="detailCategoryName"
+        :primary-color="restaurant.primary_color"
+        :currency="restaurant.currency || 'USD'"
+        @update:model-value="onDetailClose"
       />
       <section id="reviews" class="rms-reviews-and-feedback" aria-labelledby="reviews-section-heading">
         <div class="rms-reviews-and-feedback__inner max-w-6xl mx-auto px-6 py-12 md:py-16">
@@ -59,7 +68,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 import Template1Header from '@/components/public/templates/template-1/Template1Header.vue'
 import Template1Hero from '@/components/public/templates/template-1/Template1Hero.vue'
 import Template1Menu from '@/components/public/templates/template-1/Template1Menu.vue'
@@ -68,6 +77,7 @@ import Template1About from '@/components/public/templates/template-1/Template1Ab
 import Template1Contact from '@/components/public/templates/template-1/Template1Contact.vue'
 import Template1Map from '@/components/public/templates/template-1/Template1Map.vue'
 import Template1Footer from '@/components/public/templates/template-1/Template1Footer.vue'
+import PublicMenuItemDetailModal from '@/components/public/PublicMenuItemDetailModal.vue'
 
 const props = defineProps({
   restaurant: { type: Object, required: true },
@@ -76,6 +86,31 @@ const props = defineProps({
 })
 
 defineEmits(['select-locale'])
+
+const detailItem = ref(null)
+const detailCategoryName = ref('Menu')
+const detailOpen = ref(false)
+let detailTriggerEl = null
+
+function onSelectMenuItem(payload) {
+  detailItem.value = payload?.item ?? null
+  detailCategoryName.value = payload?.categoryName ?? 'Menu'
+  detailTriggerEl = payload?.trigger ?? null
+  detailOpen.value = true
+}
+
+function onDetailClose(open) {
+  if (!open) {
+    detailItem.value = null
+    detailCategoryName.value = 'Menu'
+    nextTick(() => {
+      if (detailTriggerEl && typeof detailTriggerEl.focus === 'function') {
+        detailTriggerEl.focus()
+      }
+      detailTriggerEl = null
+    })
+  }
+}
 
 const wrapperStyle = computed(() => ({
   '--rms-public-primary': props.restaurant?.primary_color || '#1152d4',

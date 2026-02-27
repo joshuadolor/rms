@@ -149,6 +149,37 @@ class PublicRestaurantPage {
     await expect(menu.getByText(itemName)).toBeVisible({ timeout: 5000 })
   }
 
+  /** Click a menu item by name in the in-page menu (opens item detail modal). Clicks the first public-menu-item card that contains the text. */
+  async clickMenuItemInMenu(itemName) {
+    const menu = this.page.locator('.rms-menu')
+    await expect(menu).toBeVisible({ timeout: 5000 })
+    await menu.getByTestId('public-menu-item').filter({ hasText: itemName }).first().click()
+  }
+
+  /** Assert the menu item detail modal is visible. Uses first visible panel (multiple instances may exist in DOM). */
+  async expectItemDetailModalVisible() {
+    const panel = this.page.locator('.rms-item-detail-modal__panel').first()
+    await expect(panel).toBeVisible({ timeout: 5000 })
+  }
+
+  /** Assert the item detail modal shows the given item name. */
+  async expectItemDetailModalShowsName(itemName) {
+    const panel = this.page.locator('.rms-item-detail-modal__panel').first()
+    await expect(panel).toBeVisible({ timeout: 5000 })
+    await expect(panel).toContainText(itemName)
+  }
+
+  /** Assert the item detail modal shows the given category name. */
+  async expectItemDetailModalShowsCategory(categoryName) {
+    const panel = this.page.locator('.rms-item-detail-modal__panel').first()
+    await expect(panel).toContainText(categoryName)
+  }
+
+  /** Close the item detail modal via the Close button (first visible). */
+  async closeItemDetailModal() {
+    await this.page.locator('.rms-item-detail-modal').first().getByRole('button', { name: 'Close' }).click()
+  }
+
   /**
    * Assert the formatted availability text (category or item) is visible in the in-page public menu.
    * Use the exact string the frontend shows (e.g. "Mon–Fri 11:00–15:00"). Scoped to .rms-menu.

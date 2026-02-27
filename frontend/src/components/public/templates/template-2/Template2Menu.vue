@@ -33,23 +33,25 @@
             </span>
             <span v-if="formatAvailabilityForDisplay(group.availability, now)" class="text-sm font-mono font-medium uppercase tracking-wider text-charcoal-blue/70">{{ formatAvailabilityForDisplay(group.availability, now) }}</span>
           </h3>
-          <div class="space-y-16">
-            <div
+          <div class="space-y-8">
+            <button
               v-for="item in group.items"
               :key="item.uuid"
+              type="button"
               data-testid="public-menu-item"
-              class="group border-b border-concrete-gray pb-8 last:border-0"
+              class="rms-menu-item-card group border-b border-concrete-gray pb-8 last:border-0 w-full text-left"
+              @click="onItemClick(item, group.category_name, $event)"
             >
-              <div class="flex items-start gap-4">
+              <div class="flex w-full items-center gap-4">
                 <img
-                  v-if="(item.type === 'simple' || item.type === 'combo') && item.image_url"
+                  v-if="item.image_url"
                   :src="item.image_url"
                   :alt="item.name || 'Untitled'"
                   loading="lazy"
                   class="w-20 h-20 md:w-24 md:h-24 shrink-0 aspect-square object-cover rounded"
                 />
                 <div class="flex-1 min-w-0">
-              <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center justify-between gap-4 w-full mb-3">
                 <div class="flex flex-wrap items-center gap-2 min-w-0" :class="item.is_available === false ? 'text-charcoal-blue/60' : 'group-hover:[&_.heading-utilitarian]:text-oxidized-copper'">
                   <span class="heading-utilitarian text-3xl transition-colors" :style="itemUnavailableNow(item.availability) ? { opacity: 0.8 } : undefined">{{ item.name || 'Untitled' }}</span>
                   <span
@@ -84,13 +86,13 @@
                   >
                     <span class="text-charcoal-blue font-medium">{{ variantSkuLabel(sku) }}</span>
                     <span v-if="sku.price != null" class="font-mono font-bold text-oxidized-copper" :style="itemUnavailableNow(item.availability) ? { opacity: 0.8 } : undefined">{{ formatPrice(sku.price) }}</span>
-                    <img v-if="sku.image_url" :src="sku.image_url" :alt="variantSkuLabel(sku)" loading="lazy" class="w-12 h-12 object-cover rounded" />
+                    <img v-if="sku.image_url" :src="sku.image_url" :alt="variantSkuLabel(sku) || 'Variant'" loading="lazy" class="w-12 h-12 shrink-0 aspect-square object-cover rounded" />
                   </li>
                 </ul>
               </template>
                 </div>
               </div>
-            </div>
+            </button>
           </div>
         </div>
       </div>
@@ -103,12 +105,22 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { usePublicMenuDisplay } from '@/composables/usePublicMenuDisplay'
 import { formatAvailabilityForDisplay, isAvailableNow } from '@/utils/availability'
 
+const emit = defineEmits(['select-item'])
+
 const props = defineProps({
   menuGroups: { type: Array, default: () => [] },
   menuItems: { type: Array, default: () => [] },
   currency: { type: String, default: 'USD' },
   menuDescription: { type: String, default: '' },
 })
+
+function onItemClick(item, categoryName, event) {
+  emit('select-item', {
+    item,
+    categoryName: categoryName || 'Menu',
+    trigger: event?.currentTarget ?? null,
+  })
+}
 
 const {
   displayGroups,
@@ -137,3 +149,22 @@ function itemUnavailableNow(availability) {
   return availability != null && typeof availability === 'object' && !isAvailableNow(availability, now.value)
 }
 </script>
+
+<style scoped>
+.rms-menu-item-card {
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  min-height: 44px;
+  transition: opacity 0.15s;
+}
+.rms-menu-item-card:hover {
+  opacity: 0.9;
+}
+.rms-menu-item-card:focus-visible {
+  outline: 2px solid var(--t2-primary, #B35C38);
+  outline-offset: 2px;
+}
+</style>

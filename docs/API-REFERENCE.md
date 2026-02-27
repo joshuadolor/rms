@@ -1709,7 +1709,7 @@ When **source_variant_uuid** is present, **name** in `translations` is the catal
 
 **Upload (POST):** Request body **multipart/form-data** with field **file**. Image only (jpeg, png, gif, webp), max 2MB. Image is resized/cropped to 512×512 (center-crop to square). User must own the restaurant. **Response (200):** `{ "message": "Image updated.", "data": { menu item payload } }`. **422:** Validation (e.g. file too large, wrong type); **403:** Not owner.
 
-**Serve (GET):** Returns the image file (no auth). **404:** Restaurant, item, or file not found.
+**Serve (GET):** Returns the image file (no auth). When the restaurant item has no image but is linked to a catalog item that has an image, the catalog image is served. **404:** Restaurant, item, or file not found.
 
 **Delete (DELETE):** Clears the menu item image. **Response (200):** `{ "message": "Image removed.", "data": { menu item payload } }`. **404:** Menu item not found; **403:** Not owner.
 
@@ -1723,7 +1723,7 @@ When **source_variant_uuid** is present, **name** in `translations` is the catal
 
 **Upload (POST):** Request body **multipart/form-data** with field **file**. Same validation as menu item image (image only, jpeg/png/gif/webp, max 2MB; resized to 512×512). **Response (200):** `{ "message": "Image updated.", "data": { uuid, option_values, price, image_url } }` where **image_url** is the full serve URL. **404:** Menu item or variant not found; **422/403:** as above.
 
-**Serve (GET):** Returns the variant image file (no auth). **404:** Not found.
+**Serve (GET):** Returns the variant image file (no auth). When the restaurant variant has no image but the item is linked to a catalog item whose variant (same uuid) has an image, the catalog variant image is served. **404:** Not found.
 
 **Delete (DELETE):** Clears the variant image. **Response (200):** `{ "message": "Image removed.", "data": { uuid, option_values, price, image_url: null } }`.
 
