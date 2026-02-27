@@ -8,13 +8,18 @@ use App\Application\Category\GetCategory;
 use App\Application\Category\ListCategories;
 use App\Application\Category\ReorderCategories;
 use App\Application\Category\UpdateCategory;
+use App\Application\Category\UploadCategoryImage;
+use App\Application\Category\DeleteCategoryImage;
 use App\Application\Restaurant\GetRestaurant;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\UploadMenuItemImageRequest;
 use App\Models\Category;
 use App\Rules\OperatingHoursRule;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CategoryController extends Controller
 {
@@ -25,7 +30,9 @@ class CategoryController extends Controller
         private readonly CreateCategory $createCategory,
         private readonly UpdateCategory $updateCategory,
         private readonly DeleteCategory $deleteCategory,
-        private readonly ReorderCategories $reorderCategories
+        private readonly ReorderCategories $reorderCategories,
+        private readonly UploadCategoryImage $uploadCategoryImage,
+        private readonly DeleteCategoryImage $deleteCategoryImage
     ) {}
 
     /**
@@ -44,7 +51,7 @@ class CategoryController extends Controller
         }
 
         return response()->json([
-            'data' => $categories->map(fn (Category $c) => $this->categoryPayload($c)),
+            'data' => $categories->map(fn (Category $c) => $this->categoryPayload($c, $restaurant, $menu)),
         ]);
     }
 
@@ -63,7 +70,7 @@ class CategoryController extends Controller
             return response()->json(['message' => __('Category not found.')], 404);
         }
 
-        return response()->json(['data' => $this->categoryPayload($categoryModel)]);
+        return response()->json(['data' => $this->categoryPayload($categoryModel, $restaurant, $menu)]);
     }
 
     /**
@@ -106,7 +113,7 @@ class CategoryController extends Controller
 
         return response()->json([
             'message' => __('Category created.'),
-            'data' => $this->categoryPayload($category),
+            'data' => $this->categoryPayload($category, $restaurant, $menu),
         ], 201);
     }
 
@@ -136,7 +143,7 @@ class CategoryController extends Controller
 
         return response()->json([
             'message' => __('Category updated.'),
-            'data' => $this->categoryPayload($categoryModel),
+            'data' => $this->categoryPayload($categoryModel, $restaurant, $menu),
         ]);
     }
 
@@ -182,9 +189,80 @@ class CategoryController extends Controller
     }
 
     /**
+     * Upload category image (restaurant context). Multipart: file.
+     */
+    public function uploadImage(UploadMenuItemImageRequest $request, string $restaurant, string $menu, string $category): JsonResponse|Response
+    {
+        $categoryModel = $this->getCategory->handle($request->user(), $restaurant, $menu, $category);
+        if ($categoryModel === null) {
+            return response()->json(['message' => __('Category not found.')], 404);
+        }
+        $categoryModel->load('menu.restaurant');
+
+        try {
+            $categoryModel = $this->uploadCategoryImage->handle($request->user(), $categoryModel, $request->file('file'));
+        } catch (\App\Exceptions\ForbiddenException $e) {
+            return response()->json(['message' => $e->getMessage()], 403);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['message' => $e->getMessage(), 'errors' => ['file' => [$e->getMessage()]]], 422);
+        }
+
+        return response()->json([
+            'message' => __('Image updated.'),
+            'data' => $this->categoryPayload($categoryModel, $restaurant, $menu),
+        ]);
+    }
+
+    /**
+     * Serve category image (public; for <img> src).
+     */
+    public function serveImage(string $restaurant, string $menu, string $category): StreamedResponse|JsonResponse
+    {
+        $categoryModel = Category::query()
+            ->where('uuid', $category)
+            ->whereHas('menu', fn ($q) => $q->where('uuid', $menu)->whereHas('restaurant', fn ($r) => $r->where('uuid', $restaurant)))
+            ->first();
+        if ($categoryModel === null || ! $categoryModel->image_path) {
+            return response()->json(['message' => __('File not found.')], 404);
+        }
+
+        $disk = Storage::disk(config('filesystems.default'));
+        if (! $disk->exists($categoryModel->image_path)) {
+            return response()->json(['message' => __('File not found.')], 404);
+        }
+
+        return $disk->response($categoryModel->image_path, null, [
+            'Content-Type' => $disk->mimeType($categoryModel->image_path),
+        ]);
+    }
+
+    /**
+     * Delete category image.
+     */
+    public function deleteImage(Request $request, string $restaurant, string $menu, string $category): JsonResponse|Response
+    {
+        $categoryModel = $this->getCategory->handle($request->user(), $restaurant, $menu, $category);
+        if ($categoryModel === null) {
+            return response()->json(['message' => __('Category not found.')], 404);
+        }
+        $categoryModel->load('menu.restaurant');
+
+        try {
+            $categoryModel = $this->deleteCategoryImage->handle($request->user(), $categoryModel);
+        } catch (\App\Exceptions\ForbiddenException $e) {
+            return response()->json(['message' => $e->getMessage()], 403);
+        }
+
+        return response()->json([
+            'message' => __('Image removed.'),
+            'data' => $this->categoryPayload($categoryModel, $restaurant, $menu),
+        ]);
+    }
+
+    /**
      * @return array<string, mixed>
      */
-    private function categoryPayload(Category $category): array
+    private function categoryPayload(Category $category, string $restaurantUuid, string $menuUuid): array
     {
         $translations = [];
         foreach ($category->translations as $t) {
@@ -194,11 +272,17 @@ class CategoryController extends Controller
             ];
         }
 
+        $baseUrl = rtrim(config('app.url'), '/');
+        $imageUrl = $category->image_path
+            ? $baseUrl . '/api/restaurants/' . $restaurantUuid . '/menus/' . $menuUuid . '/categories/' . $category->uuid . '/image'
+            : null;
+
         return [
             'uuid' => $category->uuid,
             'sort_order' => $category->sort_order,
             'is_active' => $category->is_active,
             'availability' => $category->availability,
+            'image_url' => $imageUrl,
             'translations' => $translations,
             'created_at' => $category->created_at?->toIso8601String(),
             'updated_at' => $category->updated_at?->toIso8601String(),

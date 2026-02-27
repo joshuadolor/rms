@@ -27,6 +27,7 @@ class MenuItem extends Model
         'combo_price',
         'source_menu_item_uuid',
         'source_variant_uuid',
+        'image_path',
         'price_override',
         'translation_overrides',
     ];

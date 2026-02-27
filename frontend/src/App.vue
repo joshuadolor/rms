@@ -10,6 +10,7 @@
   <div v-else>
     <ToastContainer />
     <router-view />
+    <PaidFeatureModal />
   </div>
 </template>
 
@@ -18,6 +19,7 @@ import { computed, onMounted, watch } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { useRoute, useRouter } from 'vue-router'
 import ToastContainer from '@/components/ui/ToastContainer.vue'
+import PaidFeatureModal from '@/components/ui/PaidFeatureModal.vue'
 
 const appStore = useAppStore()
 const route = useRoute()

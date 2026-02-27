@@ -24,7 +24,7 @@ final readonly class ListMenuItems
         }
 
         return $restaurant->menuItems()
-            ->with(['translations', 'category', 'sourceMenuItem.translations', 'sourceVariantSku', 'menuItemTags'])
+            ->with(['translations', 'category', 'sourceMenuItem.translations', 'sourceVariantSku', 'menuItemTags', 'variantSkus'])
             ->orderByRaw('category_id is null')
             ->orderBy('sort_order')
             ->orderBy('id')

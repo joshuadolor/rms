@@ -80,12 +80,72 @@ export async function deleteUserMenuItem(itemUuid) {
   invalidateUserMenuItemsListCache()
 }
 
+/**
+ * Upload image for a catalog (standalone) menu item. Only used in menu items context. Multipart form field "file"; image jpeg/png/gif/webp, max 2MB.
+ * @param {string} itemUuid
+ * @param {File} file
+ * @returns {Promise<{ message: string, data: object }>}
+ */
+export async function uploadImage(itemUuid, file) {
+  const form = new FormData()
+  form.append('file', file)
+  const { data } = await api.post(`/menu-items/${itemUuid}/image`, form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+  invalidateUserMenuItemsListCache()
+  return data
+}
+
+/**
+ * Delete image for a catalog menu item.
+ * @param {string} itemUuid
+ * @returns {Promise<{ message: string, data: object }>}
+ */
+export async function deleteImage(itemUuid) {
+  const { data } = await api.delete(`/menu-items/${itemUuid}/image`)
+  invalidateUserMenuItemsListCache()
+  return data
+}
+
+/**
+ * Upload variant SKU image for a catalog menu item (type with_variants).
+ * @param {string} itemUuid
+ * @param {string} skuUuid
+ * @param {File} file
+ * @returns {Promise<{ message: string, data: object }>}
+ */
+export async function uploadVariantImage(itemUuid, skuUuid, file) {
+  const form = new FormData()
+  form.append('file', file)
+  const { data } = await api.post(`/menu-items/${itemUuid}/variants/${skuUuid}/image`, form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+  invalidateUserMenuItemsListCache()
+  return data
+}
+
+/**
+ * Delete variant SKU image for a catalog menu item.
+ * @param {string} itemUuid
+ * @param {string} skuUuid
+ * @returns {Promise<{ message: string, data: object }>}
+ */
+export async function deleteVariantImage(itemUuid, skuUuid) {
+  const { data } = await api.delete(`/menu-items/${itemUuid}/variants/${skuUuid}/image`)
+  invalidateUserMenuItemsListCache()
+  return data
+}
+
 export const menuItemService = {
   list: listUserMenuItems,
   get: getUserMenuItem,
   create: createStandaloneMenuItem,
   update: updateUserMenuItem,
   delete: deleteUserMenuItem,
+  uploadImage,
+  deleteImage,
+  uploadVariantImage,
+  deleteVariantImage,
   invalidateUserMenuItemsListCache,
 }
 

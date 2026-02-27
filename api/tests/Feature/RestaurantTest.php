@@ -617,7 +617,7 @@ class RestaurantTest extends TestCase
         $tags = $menuItems[0]['tags'];
         $this->assertIsArray($tags);
         $this->assertCount(1, $tags);
-        $this->assertSame($tag->uuid, $tags[0]['uuid']);
+        $this->assertSame((string) $tag->uuid, $tags[0]['uuid']);
         $this->assertSame($tag->color, $tags[0]['color']);
         $this->assertSame($tag->icon, $tags[0]['icon']);
         $this->assertSame($tag->text, $tags[0]['text']);
@@ -901,6 +901,75 @@ class RestaurantTest extends TestCase
         $this->assertSame(MenuItem::TYPE_SIMPLE, $item['type'], 'Ending variant item must be exposed as type simple');
         $this->assertArrayNotHasKey('variant_option_groups', $item);
         $this->assertArrayNotHasKey('variant_skus', $item);
+    }
+
+    public function test_public_restaurant_catalog_combo_exposes_type_combo_and_combo_entries_from_source(): void
+    {
+        $user = $this->createVerifiedUser();
+        $restaurant = $this->createRestaurantForUser($user, ['slug' => 'catalog-combo-bistro']);
+
+        $catalogBurger = MenuItem::query()->create([
+            'user_id' => $user->id,
+            'restaurant_id' => null,
+            'sort_order' => 0,
+            'type' => MenuItem::TYPE_SIMPLE,
+        ]);
+        $catalogBurger->translations()->create(['locale' => 'en', 'name' => 'Cheeseburger', 'description' => null]);
+        $catalogFries = MenuItem::query()->create([
+            'user_id' => $user->id,
+            'restaurant_id' => null,
+            'sort_order' => 1,
+            'type' => MenuItem::TYPE_SIMPLE,
+        ]);
+        $catalogFries->translations()->create(['locale' => 'en', 'name' => 'Fries', 'description' => null]);
+
+        $catalogCombo = MenuItem::query()->create([
+            'user_id' => $user->id,
+            'restaurant_id' => null,
+            'sort_order' => 2,
+            'type' => MenuItem::TYPE_COMBO,
+            'combo_price' => 12.00,
+        ]);
+        $catalogCombo->translations()->create(['locale' => 'en', 'name' => 'Burger Combo', 'description' => null]);
+        ComboEntry::query()->create([
+            'combo_menu_item_id' => $catalogCombo->id,
+            'referenced_menu_item_id' => $catalogBurger->id,
+            'variant_id' => null,
+            'quantity' => 1,
+            'modifier_label' => null,
+            'sort_order' => 0,
+        ]);
+        ComboEntry::query()->create([
+            'combo_menu_item_id' => $catalogCombo->id,
+            'referenced_menu_item_id' => $catalogFries->id,
+            'variant_id' => null,
+            'quantity' => 1,
+            'modifier_label' => null,
+            'sort_order' => 1,
+        ]);
+
+        $restaurantItem = $restaurant->menuItems()->create([
+            'sort_order' => 0,
+            'is_active' => true,
+            'is_available' => true,
+            'source_menu_item_uuid' => $catalogCombo->uuid,
+        ]);
+        $restaurantItem->translations()->create(['locale' => 'en', 'name' => 'Burger Combo', 'description' => null]);
+
+        $response = $this->getJson('/api/public/restaurants/catalog-combo-bistro');
+
+        $response->assertOk();
+        $menuItems = $response->json('data.menu_items');
+        $this->assertCount(1, $menuItems);
+        $item = $menuItems[0];
+        $this->assertSame(MenuItem::TYPE_COMBO, $item['type'], 'Restaurant item from catalog combo must be exposed as type combo');
+        $this->assertArrayHasKey('combo_entries', $item);
+        $entries = $item['combo_entries'];
+        $this->assertIsArray($entries);
+        $this->assertCount(2, $entries);
+        $names = array_column($entries, 'name');
+        $this->assertContains('Cheeseburger', $names);
+        $this->assertContains('Fries', $names);
     }
 
     public function test_public_restaurant_response_has_no_internal_id(): void

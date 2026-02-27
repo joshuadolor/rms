@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\MenuItemTag;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
 
 class MenuItemTagSeeder extends Seeder
 {
@@ -32,6 +33,7 @@ class MenuItemTagSeeder extends Seeder
                     'user_id' => null,
                 ],
                 [
+                    'uuid' => (string) Str::uuid(),
                     'color' => $row['color'],
                     'icon' => $row['icon'],
                 ]

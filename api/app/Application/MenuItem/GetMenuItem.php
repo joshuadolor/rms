@@ -22,7 +22,7 @@ final readonly class GetMenuItem
         return MenuItem::query()
             ->where('uuid', $itemUuid)
             ->where('restaurant_id', $restaurant->id)
-            ->with(['translations', 'category', 'sourceMenuItem.translations', 'sourceVariantSku', 'menuItemTags'])
+            ->with(['translations', 'category', 'sourceMenuItem.translations', 'sourceVariantSku', 'menuItemTags', 'variantSkus'])
             ->first();
     }
 }

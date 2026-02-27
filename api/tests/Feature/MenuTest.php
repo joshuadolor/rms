@@ -701,7 +701,7 @@ class MenuTest extends TestCase
         $response->assertStatus(201)
             ->assertJsonPath('data.translations.en.name', 'Hot Wings')
             ->assertJsonStructure(['data' => ['tags']])
-            ->assertJsonPath('data.tags.0.uuid', $defaultTag->uuid)
+            ->assertJsonPath('data.tags.0.uuid', (string) $defaultTag->uuid)
             ->assertJsonPath('data.tags.0.color', $defaultTag->color)
             ->assertJsonPath('data.tags.0.icon', $defaultTag->icon)
             ->assertJsonPath('data.tags.0.text', $defaultTag->text);
@@ -744,7 +744,7 @@ class MenuTest extends TestCase
         $response->assertOk()
             ->assertJsonPath('message', 'Menu item updated.')
             ->assertJsonCount(1, 'data.tags')
-            ->assertJsonPath('data.tags.0.uuid', $tag2->uuid)
+            ->assertJsonPath('data.tags.0.uuid', (string) $tag2->uuid)
             ->assertJsonPath('data.tags.0.text', $tag2->text);
         $item->refresh();
         $this->assertSame(1, $item->menuItemTags()->count());
@@ -836,6 +836,45 @@ class MenuTest extends TestCase
 
         $response->assertNoContent();
         $this->assertDatabaseMissing('menu_items', ['id' => $item->id]);
+    }
+
+    public function test_menu_item_image_upload_serve_and_delete(): void
+    {
+        $user = $this->createVerifiedUser();
+        $restaurant = $this->createRestaurantForUser($user);
+        $item = $restaurant->menuItems()->create(['sort_order' => 0, 'is_active' => true, 'is_available' => true]);
+        $item->translations()->create(['locale' => 'en', 'name' => 'Dish', 'description' => null]);
+        $token = $user->createToken('auth')->plainTextToken;
+
+        $showBefore = $this->getJson('/api/restaurants/' . $restaurant->uuid . '/menu-items/' . $item->uuid, [
+            'Authorization' => 'Bearer ' . $token,
+        ]);
+        $showBefore->assertOk()->assertJsonPath('data.image_url', null);
+
+        $file = \Illuminate\Http\UploadedFile::fake()->image('item.jpg', 200, 200);
+        $upload = $this->post('/api/restaurants/' . $restaurant->uuid . '/menu-items/' . $item->uuid . '/image', [
+            'file' => $file,
+        ], [
+            'Authorization' => 'Bearer ' . $token,
+            'Accept' => 'application/json',
+        ]);
+        $upload->assertOk()
+            ->assertJsonPath('message', 'Image updated.')
+            ->assertJsonStructure(['data' => ['uuid', 'image_url']]);
+        $imageUrl = $upload->json('data.image_url');
+        $this->assertNotEmpty($imageUrl);
+        $this->assertStringContainsString('/api/restaurants/' . $restaurant->uuid . '/menu-items/' . $item->uuid . '/image', $imageUrl);
+
+        $servePath = '/api/restaurants/' . $restaurant->uuid . '/menu-items/' . $item->uuid . '/image';
+        $serve = $this->get($servePath);
+        $serve->assertOk()->assertHeader('Content-Type', 'image/jpeg');
+
+        $delete = $this->deleteJson('/api/restaurants/' . $restaurant->uuid . '/menu-items/' . $item->uuid . '/image', [], [
+            'Authorization' => 'Bearer ' . $token,
+        ]);
+        $delete->assertOk()
+            ->assertJsonPath('message', 'Image removed.')
+            ->assertJsonPath('data.image_url', null);
     }
 
     public function test_menu_item_can_have_category_and_reorder_within_category(): void

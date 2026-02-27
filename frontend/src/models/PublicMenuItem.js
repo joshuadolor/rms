@@ -15,6 +15,7 @@ export default class PublicMenuItem {
     this._isAvailable = data.is_available ?? data.isAvailable ?? true
     this._availability = data.availability ?? null
     this._tags = Array.isArray(data.tags) ? data.tags.map((t) => ({ ...t })) : []
+    this._imageUrl = data.image_url ?? data.imageUrl ?? null
 
     // Combo: only when type === 'combo'
     this._comboEntries = Array.isArray(data.combo_entries)
@@ -80,6 +81,10 @@ export default class PublicMenuItem {
     return this._tags
   }
 
+  get image_url() {
+    return this._imageUrl
+  }
+
   get combo_entries() {
     return this._comboEntries
   }
@@ -109,6 +114,7 @@ export default class PublicMenuItem {
       is_available: this._isAvailable,
       availability: this._availability,
       tags: this._tags.map((t) => ({ ...t })),
+      image_url: this._imageUrl,
       combo_entries: this._comboEntries.map((e) => ({ ...e })),
       variant_option_groups: this._variantOptionGroups.map((g) => ({ ...g })),
       variant_skus: this._variantSkus.map((s) => ({ ...s })),

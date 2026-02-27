@@ -4,14 +4,21 @@ namespace App\Http\Controllers\Api;
 
 use App\Application\MenuItem\CreateStandaloneMenuItem;
 use App\Application\MenuItem\DeleteUserMenuItem;
+use App\Application\MenuItem\DeleteUserMenuItemImage;
+use App\Application\MenuItem\DeleteUserMenuItemVariantImage;
 use App\Application\MenuItem\GetUserMenuItem;
 use App\Application\MenuItem\ListUserMenuItems;
 use App\Application\MenuItem\UpdateUserMenuItem;
+use App\Application\MenuItem\UploadUserMenuItemImage;
+use App\Application\MenuItem\UploadUserMenuItemVariantImage;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\UploadMenuItemImageRequest;
 use App\Models\MenuItem;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class UserMenuItemController extends Controller
 {
@@ -20,7 +27,11 @@ class UserMenuItemController extends Controller
         private readonly GetUserMenuItem $getUserMenuItem,
         private readonly CreateStandaloneMenuItem $createStandaloneMenuItem,
         private readonly UpdateUserMenuItem $updateUserMenuItem,
-        private readonly DeleteUserMenuItem $deleteUserMenuItem
+        private readonly DeleteUserMenuItem $deleteUserMenuItem,
+        private readonly UploadUserMenuItemImage $uploadUserMenuItemImage,
+        private readonly DeleteUserMenuItemImage $deleteUserMenuItemImage,
+        private readonly UploadUserMenuItemVariantImage $uploadUserMenuItemVariantImage,
+        private readonly DeleteUserMenuItemVariantImage $deleteUserMenuItemVariantImage
     ) {}
 
     /**
@@ -160,6 +171,172 @@ class UserMenuItemController extends Controller
     }
 
     /**
+     * Upload image for a standalone (catalog) menu item. Only available for menu items in the catalog context.
+     */
+    public function uploadImage(UploadMenuItemImageRequest $request, string $item): JsonResponse|Response
+    {
+        $menuItem = $this->getUserMenuItem->handle($request->user(), $item);
+        if ($menuItem === null || ! $menuItem->isStandalone()) {
+            return response()->json(['message' => __('Menu item not found.')], 404);
+        }
+
+        try {
+            $menuItem = $this->uploadUserMenuItemImage->handle($request->user(), $menuItem, $request->file('file'));
+        } catch (\App\Exceptions\ForbiddenException $e) {
+            return response()->json(['message' => $e->getMessage()], 403);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['message' => $e->getMessage(), 'errors' => ['file' => [$e->getMessage()]]], 422);
+        }
+
+        return response()->json([
+            'message' => __('Image updated.'),
+            'data' => $this->menuItemPayload($menuItem),
+        ]);
+    }
+
+    /**
+     * Serve catalog menu item image (public; for <img> src).
+     */
+    public function serveImage(string $item): StreamedResponse|JsonResponse
+    {
+        $menuItem = MenuItem::query()
+            ->whereNull('restaurant_id')
+            ->where('uuid', $item)
+            ->first();
+        if ($menuItem === null || ! $menuItem->image_path) {
+            return response()->json(['message' => __('File not found.')], 404);
+        }
+
+        $disk = Storage::disk(config('filesystems.default'));
+        if (! $disk->exists($menuItem->image_path)) {
+            return response()->json(['message' => __('File not found.')], 404);
+        }
+
+        return $disk->response($menuItem->image_path, null, [
+            'Content-Type' => $disk->mimeType($menuItem->image_path),
+        ]);
+    }
+
+    /**
+     * Delete image for a standalone menu item.
+     */
+    public function deleteImage(Request $request, string $item): JsonResponse|Response
+    {
+        $menuItem = $this->getUserMenuItem->handle($request->user(), $item);
+        if ($menuItem === null || ! $menuItem->isStandalone()) {
+            return response()->json(['message' => __('Menu item not found.')], 404);
+        }
+
+        try {
+            $menuItem = $this->deleteUserMenuItemImage->handle($request->user(), $menuItem);
+        } catch (\App\Exceptions\ForbiddenException $e) {
+            return response()->json(['message' => $e->getMessage()], 403);
+        }
+
+        return response()->json([
+            'message' => __('Image removed.'),
+            'data' => $this->menuItemPayload($menuItem),
+        ]);
+    }
+
+    /**
+     * Upload variant SKU image for a standalone menu item (type with_variants).
+     */
+    public function uploadVariantImage(UploadMenuItemImageRequest $request, string $item, string $sku): JsonResponse|Response
+    {
+        $menuItem = $this->getUserMenuItem->handle($request->user(), $item);
+        if ($menuItem === null || ! $menuItem->isStandalone()) {
+            return response()->json(['message' => __('Menu item not found.')], 404);
+        }
+
+        $variantSku = $menuItem->variantSkus()->where('uuid', $sku)->first();
+        if ($variantSku === null) {
+            return response()->json(['message' => __('Variant not found.')], 404);
+        }
+
+        try {
+            $variantSku = $this->uploadUserMenuItemVariantImage->handle($request->user(), $menuItem, $variantSku, $request->file('file'));
+        } catch (\App\Exceptions\ForbiddenException $e) {
+            return response()->json(['message' => $e->getMessage()], 403);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['message' => $e->getMessage(), 'errors' => ['file' => [$e->getMessage()]]], 422);
+        }
+
+        $baseUrl = rtrim(config('app.url'), '/');
+        $imageUrl = $baseUrl . '/api/menu-items/' . $item . '/variants/' . $variantSku->uuid . '/image';
+
+        return response()->json([
+            'message' => __('Image updated.'),
+            'data' => [
+                'uuid' => $variantSku->uuid,
+                'option_values' => $variantSku->option_values,
+                'price' => (float) $variantSku->price,
+                'image_url' => $imageUrl,
+            ],
+        ]);
+    }
+
+    /**
+     * Serve catalog menu item variant image (public; for <img> src).
+     */
+    public function serveVariantImage(string $item, string $sku): StreamedResponse|JsonResponse
+    {
+        $menuItem = MenuItem::query()
+            ->whereNull('restaurant_id')
+            ->where('uuid', $item)
+            ->first();
+        if ($menuItem === null) {
+            return response()->json(['message' => __('Not found.')], 404);
+        }
+
+        $variantSku = $menuItem->variantSkus()->where('uuid', $sku)->first();
+        if ($variantSku === null || ! $variantSku->image_url) {
+            return response()->json(['message' => __('File not found.')], 404);
+        }
+
+        $disk = Storage::disk(config('filesystems.default'));
+        if (! $disk->exists($variantSku->image_url)) {
+            return response()->json(['message' => __('File not found.')], 404);
+        }
+
+        return $disk->response($variantSku->image_url, null, [
+            'Content-Type' => $disk->mimeType($variantSku->image_url),
+        ]);
+    }
+
+    /**
+     * Delete variant SKU image for a standalone menu item.
+     */
+    public function deleteVariantImage(Request $request, string $item, string $sku): JsonResponse|Response
+    {
+        $menuItem = $this->getUserMenuItem->handle($request->user(), $item);
+        if ($menuItem === null || ! $menuItem->isStandalone()) {
+            return response()->json(['message' => __('Menu item not found.')], 404);
+        }
+
+        $variantSku = $menuItem->variantSkus()->where('uuid', $sku)->first();
+        if ($variantSku === null) {
+            return response()->json(['message' => __('Variant not found.')], 404);
+        }
+
+        try {
+            $variantSku = $this->deleteUserMenuItemVariantImage->handle($request->user(), $menuItem, $variantSku);
+        } catch (\App\Exceptions\ForbiddenException $e) {
+            return response()->json(['message' => $e->getMessage()], 403);
+        }
+
+        return response()->json([
+            'message' => __('Image removed.'),
+            'data' => [
+                'uuid' => $variantSku->uuid,
+                'option_values' => $variantSku->option_values,
+                'price' => (float) $variantSku->price,
+                'image_url' => null,
+            ],
+        ]);
+    }
+
+    /**
      * @return array<string, mixed>
      */
     private function menuItemPayload(MenuItem $item): array
@@ -176,12 +353,16 @@ class UserMenuItemController extends Controller
         }
 
         $type = $item->type ?? MenuItem::TYPE_SIMPLE;
+        $baseUrl = $item->isStandalone() ? rtrim(config('app.url'), '/') : null;
         $payload = [
             'uuid' => $item->uuid,
             'category_uuid' => $item->category?->uuid,
             'sort_order' => $item->sort_order,
             'type' => $type,
             'price' => $item->getEffectivePrice(),
+            'image_url' => $item->isStandalone() && $item->image_path
+                ? $baseUrl . '/api/menu-items/' . $item->uuid . '/image'
+                : null,
             'translations' => $translations,
             'created_at' => $item->created_at?->toIso8601String(),
             'updated_at' => $item->updated_at?->toIso8601String(),
@@ -209,12 +390,18 @@ class UserMenuItemController extends Controller
                 'name' => $g->name,
                 'values' => $g->values,
             ])->values()->all();
-            $payload['variant_skus'] = $item->variantSkus->map(fn ($sku) => [
-                'uuid' => $sku->uuid,
-                'option_values' => $sku->option_values,
-                'price' => (float) $sku->price,
-                'image_url' => $sku->image_url,
-            ])->values()->all();
+            $payload['variant_skus'] = $item->variantSkus->map(function ($sku) use ($item, $baseUrl) {
+                $imageUrl = null;
+                if ($sku->image_url && $baseUrl !== null) {
+                    $imageUrl = $baseUrl . '/api/menu-items/' . $item->uuid . '/variants/' . $sku->uuid . '/image';
+                }
+                return [
+                    'uuid' => $sku->uuid,
+                    'option_values' => $sku->option_values,
+                    'price' => (float) $sku->price,
+                    'image_url' => $imageUrl,
+                ];
+            })->values()->all();
         }
 
         if ($item->relationLoaded('restaurant')) {

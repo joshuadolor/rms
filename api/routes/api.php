@@ -95,6 +95,14 @@ Route::post('/auth/instagram', [SocialAuthController::class, 'instagram'])->midd
 // Restaurant media (public — for <img> src)
 Route::get('/restaurants/{uuid}/logo', [RestaurantController::class, 'serveLogo']);
 Route::get('/restaurants/{uuid}/banner', [RestaurantController::class, 'serveBanner']);
+// Menu item and variant images (public — for <img> src)
+Route::get('/restaurants/{restaurant}/menu-items/{item}/image', [MenuItemController::class, 'serveImage']);
+Route::get('/restaurants/{restaurant}/menu-items/{item}/variants/{sku}/image', [MenuItemController::class, 'serveVariantImage']);
+// Catalog (standalone) menu item images (public — for <img> src)
+Route::get('/menu-items/{item}/image', [UserMenuItemController::class, 'serveImage']);
+Route::get('/menu-items/{item}/variants/{sku}/image', [UserMenuItemController::class, 'serveVariantImage']);
+// Category images (public — for <img> src; restaurant context)
+Route::get('/restaurants/{restaurant}/menus/{menu}/categories/{category}/image', [CategoryController::class, 'serveImage']);
 
 // Public restaurant page by slug (no auth). For {slug}.RESTAURANT_DOMAIN (subdomain-only).
 Route::get('/public/restaurants/{slug}', [PublicRestaurantController::class, 'show']);
@@ -152,6 +160,8 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::get('/restaurants/{restaurant}/menus/{menu}/categories/{category}', [CategoryController::class, 'show']);
     Route::match(['put', 'patch'], '/restaurants/{restaurant}/menus/{menu}/categories/{category}', [CategoryController::class, 'update']);
     Route::delete('/restaurants/{restaurant}/menus/{menu}/categories/{category}', [CategoryController::class, 'destroy']);
+    Route::post('/restaurants/{restaurant}/menus/{menu}/categories/{category}/image', [CategoryController::class, 'uploadImage']);
+    Route::delete('/restaurants/{restaurant}/menus/{menu}/categories/{category}/image', [CategoryController::class, 'deleteImage']);
     Route::post('/restaurants/{restaurant}/menus/{menu}/categories/reorder', [CategoryController::class, 'reorder']);
 
     // Menu item tags (list default only; POST/PATCH/DELETE return 403 — custom tags disabled)
@@ -160,19 +170,27 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::match(['put', 'patch'], '/menu-item-tags/{tag}', [MenuItemTagController::class, 'update']);
     Route::delete('/menu-item-tags/{tag}', [MenuItemTagController::class, 'destroy']);
 
-    // Menu items — user-level (standalone list/create + get/update/delete any owned item)
+    // Menu items — user-level (standalone list/create + get/update/delete any owned item; images in catalog context only)
     Route::get('/menu-items', [UserMenuItemController::class, 'index']);
     Route::post('/menu-items', [UserMenuItemController::class, 'store']);
     Route::get('/menu-items/{item}', [UserMenuItemController::class, 'show']);
     Route::match(['put', 'patch'], '/menu-items/{item}', [UserMenuItemController::class, 'update']);
     Route::delete('/menu-items/{item}', [UserMenuItemController::class, 'destroy']);
+    Route::post('/menu-items/{item}/image', [UserMenuItemController::class, 'uploadImage']);
+    Route::delete('/menu-items/{item}/image', [UserMenuItemController::class, 'deleteImage']);
+    Route::post('/menu-items/{item}/variants/{sku}/image', [UserMenuItemController::class, 'uploadVariantImage']);
+    Route::delete('/menu-items/{item}/variants/{sku}/image', [UserMenuItemController::class, 'deleteVariantImage']);
 
-    // Menu items — restaurant-scoped (CRUD with translations; optional category; reorder within category)
+    // Menu items — restaurant-scoped (CRUD with translations; optional category; reorder within category; images)
     Route::get('/restaurants/{restaurant}/menu-items', [MenuItemController::class, 'index']);
     Route::post('/restaurants/{restaurant}/menu-items', [MenuItemController::class, 'store']);
     Route::get('/restaurants/{restaurant}/menu-items/{item}', [MenuItemController::class, 'show']);
     Route::match(['put', 'patch'], '/restaurants/{restaurant}/menu-items/{item}', [MenuItemController::class, 'update']);
     Route::delete('/restaurants/{restaurant}/menu-items/{item}', [MenuItemController::class, 'destroy']);
+    Route::post('/restaurants/{restaurant}/menu-items/{item}/image', [MenuItemController::class, 'uploadImage']);
+    Route::delete('/restaurants/{restaurant}/menu-items/{item}/image', [MenuItemController::class, 'deleteImage']);
+    Route::post('/restaurants/{restaurant}/menu-items/{item}/variants/{sku}/image', [MenuItemController::class, 'uploadVariantImage']);
+    Route::delete('/restaurants/{restaurant}/menu-items/{item}/variants/{sku}/image', [MenuItemController::class, 'deleteVariantImage']);
     Route::post('/restaurants/{restaurant}/categories/{category}/menu-items/reorder', [MenuItemController::class, 'reorder']);
 
     // Machine translation (LibreTranslate when configured); rate-limited

@@ -760,13 +760,11 @@ test.describe('Restaurant module', () => {
   test('create restaurant form shows fields and Create restaurant submit', async ({ page }) => {
     await loginAsVerifiedUser(page)
     mockRestaurantList(page, [])
-    await page.goto('/app/restaurants/new')
-
-    await expect(page.getByRole('heading', { name: 'Add new restaurant' })).toBeVisible()
-    await expect(page.getByLabel('Restaurant name')).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Create restaurant' })).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Cancel' })).toBeVisible()
-    await expect(page.getByRole('heading', { name: 'Basic information' })).toBeVisible()
+    const formPage = new RestaurantFormPage(page)
+    await formPage.goToCreatePage()
+    await formPage.expectCreateFormVisible()
+    await formPage.expectPhoneFieldHidden()
+    await formPage.expectAvailabilitySectionHidden()
   })
 
   test('create restaurant with name succeeds and navigates', async ({ page }) => {
@@ -778,12 +776,14 @@ test.describe('Restaurant module', () => {
     mockRestaurantMenuItems(page, [])
     mockRestaurantLanguagesAndTranslations(page)
 
-    await page.goto('/app/restaurants/new')
-    await page.getByLabel('Restaurant name').fill('New Restaurant')
-    await page.getByRole('button', { name: 'Create restaurant' }).click()
+    const formPage = new RestaurantFormPage(page)
+    const managePage = new RestaurantManagePage(page)
+    await formPage.goToCreatePage()
+    await formPage.fillName('New Restaurant')
+    await formPage.submitCreate()
 
     await expect(page).toHaveURL(/\/app\/restaurants\/rstr-new-1/)
-    await expect(page.getByRole('heading', { name: 'New Restaurant' }).first()).toBeVisible({ timeout: 8000 })
+    await managePage.expectRestaurantNameHeadingVisible('New Restaurant')
   })
 
   test('restaurant manage page shows Profile, Menu, Availability, Settings tabs', async ({ page }) => {
@@ -1977,6 +1977,8 @@ test.describe('Restaurant module', () => {
     await publicPage.expectTextVisible('$8.00')
     await publicPage.expectMenuItemNameVisible('Burger Combo')
     await publicPage.expectComboContentsListVisible()
+    await publicPage.expectComboEntryLineVisible('Cheeseburger × 1')
+    await publicPage.expectComboEntryLineVisible('Fries × 1')
     await publicPage.expectTextVisible('Cheeseburger')
     await publicPage.expectTextVisible('Fries')
     await publicPage.expectMenuItemNameVisible('Pizza')
@@ -1985,7 +1987,7 @@ test.describe('Restaurant module', () => {
     await publicPage.expectTextVisible('$16.00')
   })
 
-  test('public menu shows Price on request for simple item with no price', async ({ page }) => {
+  test('public menu shows simple item with no price (price area left blank)', async ({ page }) => {
     mockPublicRestaurant(page, 'on-request', {
       name: 'On Request Cafe',
       slug: 'on-request',
@@ -1999,7 +2001,8 @@ test.describe('Restaurant module', () => {
     await publicPage.goToPublicBySlug('on-request')
     await publicPage.expectMenuSectionVisible()
     await publicPage.expectMenuItemNameVisible('Chef\'s Special')
-    await publicPage.expectPriceOnRequestVisible()
+    // When price is null we leave it blank (no "Price on request" text)
+    await expect(page.locator('.rms-menu').getByText('Price on request')).not.toBeVisible()
   })
 
   test('public menu shows Not available for unavailable item without price', async ({ page }) => {
@@ -2017,6 +2020,47 @@ test.describe('Restaurant module', () => {
     await publicPage.expectMenuSectionVisible()
     await publicPage.expectMenuItemNameVisible('Sold Out Soup')
     await publicPage.expectNotAvailablePillVisible()
+  })
+
+  test('public menu shows menu item and category images when image_url present', async ({ page }) => {
+    const categoryImageUrl = 'https://e2e.test/images/cat-starters.png'
+    const itemImageUrl = 'https://e2e.test/images/soup.png'
+    mockPublicRestaurant(page, 'with-images', {
+      name: 'Cafe With Images',
+      slug: 'with-images',
+      menu_groups: [
+        {
+          category_name: 'Starters',
+          category_uuid: 'cat-1',
+          availability: null,
+          image_url: categoryImageUrl,
+          items: [
+            {
+              uuid: 'img-item-1',
+              type: 'simple',
+              name: 'Tomato Soup',
+              description: null,
+              price: 6,
+              is_available: true,
+              availability: null,
+              tags: [],
+              image_url: itemImageUrl,
+            },
+          ],
+        },
+      ],
+      menu_items: [],
+      feedbacks: [],
+    })
+
+    const publicPage = new PublicRestaurantPage(page)
+    await publicPage.goToPublicBySlug('with-images')
+    await publicPage.expectMenuSectionVisible()
+    await publicPage.expectMenuItemNameVisible('Tomato Soup')
+    await publicPage.expectMenuItemImageVisible('Tomato Soup')
+    await publicPage.expectCategoryImageVisible('Starters')
+    await publicPage.expectMenuImageWithSrcVisible('e2e.test/images/soup.png')
+    await publicPage.expectMenuImageWithSrcVisible('e2e.test/images/cat-starters.png')
   })
 
   test.describe('Public menu view: names, prices, tags', () => {

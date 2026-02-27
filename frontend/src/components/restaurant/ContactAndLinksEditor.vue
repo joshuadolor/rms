@@ -74,20 +74,11 @@
         </div>
 
         <div class="flex items-center gap-3 min-h-[44px]">
-          <button
-            type="button"
-            role="switch"
-            :aria-checked="form.is_active"
+          <AppSwitch
+            v-model="form.is_active"
             aria-label="Show on public page"
-            class="relative inline-flex items-center h-8 w-14 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 p-2 -m-2"
-            :class="form.is_active ? 'bg-primary' : 'bg-slate-200 dark:bg-zinc-600'"
-            @click="form.is_active = !form.is_active"
-          >
-            <span
-              class="pointer-events-none inline-block h-6 w-6 shrink-0 rounded-full bg-white shadow ring-0 transition duration-200 ease-out"
-              :class="form.is_active ? 'translate-x-6' : 'translate-x-0.5'"
-            />
-          </button>
+            test-id="contact-show-on-public-switch"
+          />
           <span class="text-sm text-slate-600 dark:text-slate-400">Show on public page</span>
         </div>
 
@@ -215,6 +206,7 @@
 <script setup>
 import { ref, watch, nextTick } from 'vue'
 import AppButton from '@/components/ui/AppButton.vue'
+import AppSwitch from '@/components/ui/AppSwitch.vue'
 import RestaurantContact, { CONTACT_TYPES, LINK_TYPES, isLinkType } from '@/models/RestaurantContact.js'
 import { contactService, getValidationErrors, normalizeApiError } from '@/services'
 import { useToastStore } from '@/stores/toast'

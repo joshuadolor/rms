@@ -62,6 +62,13 @@
                 :id="`rms-menu-modal-trigger-${gIdx}`"
                 @click="toggleCategory(gIdx)"
               >
+                <img
+                  v-if="group.image_url"
+                  :src="group.image_url"
+                  :alt="group.category_name || 'Category'"
+                  loading="lazy"
+                  class="rms-menu-modal__category-thumb"
+                />
                 <span class="rms-menu-modal__category-name">
                   <span :style="categoryUnavailableNow(group.availability) ? { opacity: 0.8 } : undefined">{{ group.category_name }}</span>
                   <span v-if="formatAvailabilityForDisplay(group.availability, now)" class="rms-menu-modal__category-availability">{{ formatAvailabilityForDisplay(group.availability, now) }}</span>
@@ -87,6 +94,15 @@
                   class="rms-menu-modal__item"
                   :class="{ 'rms-menu-modal__item--highlight': highlightedUuid === item.uuid }"
                 >
+                  <div class="rms-menu-modal__item-top">
+                    <img
+                      v-if="(item.type === 'simple' || item.type === 'combo') && item.image_url"
+                      :src="item.image_url"
+                      :alt="item.name || 'Untitled'"
+                      loading="lazy"
+                      class="rms-menu-modal__item-thumb"
+                    />
+                    <div class="rms-menu-modal__item-body">
                   <div class="rms-menu-modal__item-row">
                     <span class="rms-menu-modal__item-name" :style="itemUnavailableNow(item.availability) ? { opacity: 0.8 } : undefined">
                       {{ item.name || 'Untitled' }}
@@ -105,7 +121,6 @@
                     </span>
                     <span v-if="item.type !== 'with_variants' && item.is_available !== false && itemPrice(item) != null" class="rms-menu-modal__item-price" :style="[primaryTextStyle, itemUnavailableNow(item.availability) ? { opacity: 0.8 } : undefined]">{{ formatPrice(itemPrice(item)) }}</span>
                     <span v-else-if="item.type !== 'with_variants' && item.is_available === false" class="rms-menu-modal__item-muted">Not available</span>
-                    <span v-else-if="item.type !== 'with_variants'" class="rms-menu-modal__item-muted">Price on request</span>
                   </div>
                   <p v-if="formatAvailabilityForDisplay(item.availability, now)" class="rms-menu-modal__item-availability">{{ formatAvailabilityForDisplay(item.availability, now) }}</p>
                   <p v-if="item.description" class="rms-menu-modal__item-desc">{{ item.description }}</p>
@@ -124,10 +139,12 @@
                       >
                         <span class="rms-menu-modal__sku-label">{{ variantSkuLabel(sku) }}</span>
                         <span v-if="sku.price != null" class="rms-menu-modal__item-price" :style="[primaryTextStyle, itemUnavailableNow(item.availability) ? { opacity: 0.8 } : undefined]">{{ formatPrice(sku.price) }}</span>
-                        <img v-if="sku.image_url" :src="sku.image_url" :alt="variantSkuLabel(sku)" class="rms-menu-modal__sku-img" />
+                        <img v-if="sku.image_url" :src="sku.image_url" :alt="variantSkuLabel(sku)" loading="lazy" class="rms-menu-modal__sku-img" />
                       </li>
                     </ul>
                   </template>
+                    </div>
+                  </div>
                 </div>
                 </div>
               </div>
@@ -516,6 +533,7 @@ function surpriseMe() {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 0.75rem;
   min-height: 44px;
   padding: 0.75rem 1.25rem;
   font-size: 1rem;
@@ -526,6 +544,14 @@ function surpriseMe() {
   cursor: pointer;
   text-align: left;
   transition: background 0.15s;
+}
+.rms-menu-modal__category-thumb {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 6px;
 }
 
 .rms-menu-modal__category-head:hover {
@@ -624,6 +650,23 @@ function surpriseMe() {
   to { box-shadow: 0 0 0 2px var(--rms-accent, #2563eb); }
 }
 
+.rms-menu-modal__item-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+.rms-menu-modal__item-thumb {
+  width: 72px;
+  height: 72px;
+  flex-shrink: 0;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 8px;
+}
+.rms-menu-modal__item-body {
+  flex: 1;
+  min-width: 0;
+}
 .rms-menu-modal__item-row {
   display: flex;
   align-items: flex-end;
@@ -685,15 +728,28 @@ function surpriseMe() {
 .rms-menu-modal__combo-list,
 .rms-menu-modal__sku-list {
   margin: 0.5rem 0 0;
-  padding-left: 1.25rem;
   list-style: none;
+}
+.rms-menu-modal__combo-list {
+  padding-left: 1.25rem;
+  margin-left: 0.125rem;
+  border-left: 2px solid #e2e8f0;
+  font-size: 0.75rem;
+}
+.rms-menu-modal__sku-list {
+  padding-left: 1.25rem;
 }
 
 .rms-menu-modal__combo-list li,
 .rms-menu-modal__sku-list li {
-  font-size: 0.875rem;
   color: #64748b;
   margin-top: 0.25rem;
+}
+.rms-menu-modal__combo-list li {
+  font-size: 0.75rem;
+}
+.rms-menu-modal__sku-list li {
+  font-size: 0.875rem;
 }
 
 .rms-menu-modal__sku {

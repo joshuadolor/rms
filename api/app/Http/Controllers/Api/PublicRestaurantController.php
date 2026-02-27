@@ -47,12 +47,16 @@ class PublicRestaurantController extends Controller
         $translation = $restaurant->translations()->where('locale', $locale)->first();
         $description = $translation?->description ?? null;
 
+        // Eager-load relations required for public payload: combo breakdown (combo_entries), variant data, and item/category images.
+        // When item is from catalog (source_menu_item_uuid), source's type and combo_entries are used for combo display.
         $menuItems = $this->queryPublicMenuItems($restaurant)
             ->with([
                 'translations',
                 'sourceMenuItem.translations',
                 'sourceMenuItem.variantOptionGroups',
                 'sourceMenuItem.variantSkus',
+                'sourceMenuItem.comboEntries.referencedMenuItem.translations',
+                'sourceMenuItem.comboEntries.variant',
                 'sourceVariantSku',
                 'menuItemTags',
                 'comboEntries.referencedMenuItem.translations',
@@ -61,7 +65,8 @@ class PublicRestaurantController extends Controller
                 'variantSkus',
             ])
             ->orderBy('sort_order')->orderBy('id')->get();
-        $menuPayload = $menuItems->map(fn ($item) => $this->buildPublicMenuItemPayload($item, $locale, true))
+        $restaurantForPayload = $restaurant;
+        $menuPayload = $menuItems->map(fn ($item) => $this->buildPublicMenuItemPayload($item, $locale, true, $restaurantForPayload))
             ->all();
 
         $menuGroups = $this->buildMenuGroupsForLocale($restaurant, $locale);
@@ -159,9 +164,10 @@ class PublicRestaurantController extends Controller
      * (source_variant_uuid set) we expose type as 'simple' and do not include variant blocks.
      *
      * @param  bool  $includeSortOrder  When true (flat menu_items), include sort_order.
+     * @param  Restaurant|null  $restaurant  When set, used to build image_url (item and variant images).
      * @return array{uuid: string, type: string, name: string, description: string|null, price: float|null, ...}
      */
-    private function buildPublicMenuItemPayload(MenuItem $item, string $locale, bool $includeSortOrder = false): array
+    private function buildPublicMenuItemPayload(MenuItem $item, string $locale, bool $includeSortOrder = false, ?Restaurant $restaurant = null): array
     {
         $effective = $item->getEffectiveTranslations();
         $t = $effective[$locale] ?? reset($effective) ?: ['name' => '', 'description' => null];
@@ -169,6 +175,16 @@ class PublicRestaurantController extends Controller
 
         $publicType = $this->getPublicMenuItemType($item);
 
+        $baseUrl = rtrim(config('app.url'), '/');
+        $restaurantUuid = $restaurant !== null ? $restaurant->uuid : null;
+        $itemImageUrl = null;
+        if ($restaurantUuid !== null) {
+            if ($item->image_path) {
+                $itemImageUrl = $baseUrl . '/api/restaurants/' . $restaurantUuid . '/menu-items/' . $item->uuid . '/image';
+            } elseif ($item->source_menu_item_uuid !== null && $item->relationLoaded('sourceMenuItem') && $item->sourceMenuItem !== null && $item->sourceMenuItem->image_path) {
+                $itemImageUrl = $baseUrl . '/api/restaurants/' . $restaurantUuid . '/menu-items/' . $item->uuid . '/image';
+            }
+        }
         $payload = [
             'uuid' => $item->uuid,
             'type' => $publicType,
@@ -178,17 +194,22 @@ class PublicRestaurantController extends Controller
             'is_available' => (bool) ($item->is_available ?? true),
             'availability' => $item->availability,
             'tags' => $tags,
+            'image_url' => $itemImageUrl,
         ];
         if ($includeSortOrder) {
             $payload['sort_order'] = $item->sort_order;
         }
 
-        if ($publicType === MenuItem::TYPE_COMBO && $item->relationLoaded('comboEntries')) {
-            $payload['combo_entries'] = $this->buildPublicComboEntries($item->comboEntries, $locale);
+        // Combo items must include combo_entries (array). Use item's own entries, or source catalog's when item is from catalog.
+        if ($publicType === MenuItem::TYPE_COMBO) {
+            $entries = $this->getComboEntriesForPublic($item);
+            $payload['combo_entries'] = $entries !== null
+                ? $this->buildPublicComboEntries($entries, $locale)
+                : [];
         }
 
         if ($publicType === MenuItem::TYPE_WITH_VARIANTS) {
-            $variantData = $this->resolveVariantDataForPublic($item);
+            $variantData = $this->resolveVariantDataForPublic($item, $restaurant);
             if ($variantData !== null) {
                 $payload['variant_option_groups'] = $variantData['variant_option_groups'];
                 $payload['variant_skus'] = $variantData['variant_skus'];
@@ -198,15 +219,38 @@ class PublicRestaurantController extends Controller
         return $payload;
     }
 
-    /** Public type: 'simple' for ending variant (single SKU); otherwise type or 'simple' when null. */
+    /** Public type: 'simple' for ending variant (single SKU); when item is from catalog (no variant), use source's type so combo shows as combo. */
     private function getPublicMenuItemType(MenuItem $item): string
     {
         if ($item->source_variant_uuid !== null) {
             return MenuItem::TYPE_SIMPLE;
         }
-        $type = $item->type ?? MenuItem::TYPE_SIMPLE;
+        if ($item->source_menu_item_uuid !== null && $item->relationLoaded('sourceMenuItem') && $item->sourceMenuItem) {
+            $type = $item->sourceMenuItem->type ?? $item->type ?? MenuItem::TYPE_SIMPLE;
+        } else {
+            $type = $item->type ?? MenuItem::TYPE_SIMPLE;
+        }
 
         return in_array($type, self::PUBLIC_MENU_ITEM_TYPES, true) ? $type : MenuItem::TYPE_SIMPLE;
+    }
+
+    /**
+     * Entries to use for combo_entries in public payload: item's own comboEntries, or source catalog's when item is from catalog.
+     *
+     * @return \Illuminate\Support\Collection<int, \App\Models\ComboEntry>|null
+     */
+    private function getComboEntriesForPublic(MenuItem $item): ?\Illuminate\Support\Collection
+    {
+        if ($item->relationLoaded('comboEntries') && $item->comboEntries->isNotEmpty()) {
+            return $item->comboEntries;
+        }
+        if ($item->source_menu_item_uuid !== null && $item->relationLoaded('sourceMenuItem') && $item->sourceMenuItem
+            && ($item->sourceMenuItem->type ?? MenuItem::TYPE_SIMPLE) === MenuItem::TYPE_COMBO
+            && $item->sourceMenuItem->relationLoaded('comboEntries')) {
+            return $item->sourceMenuItem->comboEntries;
+        }
+
+        return null;
     }
 
     /**
@@ -248,10 +292,13 @@ class PublicRestaurantController extends Controller
     /**
      * Resolve variant_option_groups and variant_skus for public payload. Uses item's own data,
      * or source catalog item's when this item is a restaurant usage of a with_variants catalog item.
+     * When restaurant is provided, variant image_url is the full serve URL; the serve endpoint
+     * returns the restaurant variant's image or the catalog source variant's image when the item
+     * has no own variant image (catalog fallback).
      *
      * @return array{variant_option_groups: array, variant_skus: array}|null
      */
-    private function resolveVariantDataForPublic(MenuItem $item): ?array
+    private function resolveVariantDataForPublic(MenuItem $item, ?Restaurant $restaurant = null): ?array
     {
         $groups = $item->variantOptionGroups;
         $skus = $item->variantSkus;
@@ -266,15 +313,24 @@ class PublicRestaurantController extends Controller
         if (($groups === null || $groups->isEmpty()) && ($skus === null || $skus->isEmpty())) {
             return null;
         }
+        $baseUrl = rtrim(config('app.url'), '/');
+        $restaurantUuid = $restaurant?->uuid;
+        $variantSkus = ($skus ?? collect())->map(function ($sku) use ($baseUrl, $restaurantUuid, $item) {
+            $imageUrl = null;
+            if ($sku->image_url && $restaurantUuid !== null) {
+                $imageUrl = $baseUrl . '/api/restaurants/' . $restaurantUuid . '/menu-items/' . $item->uuid . '/variants/' . $sku->uuid . '/image';
+            }
+
+            return [
+                'uuid' => $sku->uuid,
+                'option_values' => $sku->option_values ?? [],
+                'price' => (float) $sku->price,
+                'image_url' => $imageUrl,
+            ];
+        })->values()->all();
         $variantOptionGroups = ($groups ?? collect())->map(fn ($g) => [
             'name' => $g->name,
             'values' => $g->values ?? [],
-        ])->values()->all();
-        $variantSkus = ($skus ?? collect())->map(fn ($sku) => [
-            'uuid' => $sku->uuid,
-            'option_values' => $sku->option_values ?? [],
-            'price' => (float) $sku->price,
-            'image_url' => $sku->image_url,
         ])->values()->all();
 
         return [
@@ -292,15 +348,19 @@ class PublicRestaurantController extends Controller
      */
     private function buildMenuGroupsForLocale(Restaurant $restaurant, string $locale): array
     {
+        // Same relations as flat menu_items; category.menu required for category image_url; source comboEntries for catalog combos.
         $items = $this->queryPublicMenuItems($restaurant)
             ->with([
                 'translations',
                 'sourceMenuItem.translations',
                 'sourceMenuItem.variantOptionGroups',
                 'sourceMenuItem.variantSkus',
+                'sourceMenuItem.comboEntries.referencedMenuItem.translations',
+                'sourceMenuItem.comboEntries.variant',
                 'sourceVariantSku',
                 'menuItemTags',
                 'category.translations',
+                'category.menu',
                 'comboEntries.referencedMenuItem.translations',
                 'comboEntries.variant',
                 'variantOptionGroups',
@@ -308,18 +368,26 @@ class PublicRestaurantController extends Controller
             ])
             ->orderBy('sort_order')->orderBy('id')->get();
 
+        $baseUrl = rtrim(config('app.url'), '/');
+        $restaurantUuid = $restaurant->uuid;
         $byCategory = [];
         foreach ($items as $item) {
-            $payload = $this->buildPublicMenuItemPayload($item, $locale, false);
+            $payload = $this->buildPublicMenuItemPayload($item, $locale, false, $restaurant);
             $catUuid = null;
             $catName = __('Menu');
             $catSort = 9999;
+            $categoryImageUrl = null;
             if ($item->category_id !== null && $item->relationLoaded('category') && $item->category) {
-                $catUuid = $item->category->uuid;
-                $catSort = (int) ($item->category->sort_order ?? 0);
-                $catTrans = $item->category->translations->firstWhere('locale', $locale)
-                    ?? $item->category->translations->first();
+                $category = $item->category;
+                $catUuid = $category->uuid;
+                $catSort = (int) ($category->sort_order ?? 0);
+                $catTrans = $category->translations->firstWhere('locale', $locale)
+                    ?? $category->translations->first();
                 $catName = $catTrans?->name ?? __('Menu');
+                // category.menu required for category image_url (serve path uses menu uuid).
+                if ($category->image_path && $category->relationLoaded('menu') && $category->menu) {
+                    $categoryImageUrl = $baseUrl . '/api/restaurants/' . $restaurantUuid . '/menus/' . $category->menu->uuid . '/categories/' . $category->uuid . '/image';
+                }
             }
             $key = $catUuid ?? 'uncategorized';
             if (! isset($byCategory[$key])) {
@@ -329,6 +397,7 @@ class PublicRestaurantController extends Controller
                     'category_name' => $catName,
                     'category_sort_order' => $catSort,
                     'availability' => $groupAvailability,
+                    'image_url' => $categoryImageUrl,
                     'items' => [],
                 ];
             }
@@ -340,6 +409,7 @@ class PublicRestaurantController extends Controller
             'category_name' => $g['category_name'],
             'category_uuid' => $g['category_uuid'],
             'availability' => $g['availability'],
+            'image_url' => $g['image_url'] ?? null,
             'items' => $g['items'],
         ], $byCategory));
     }

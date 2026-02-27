@@ -27,6 +27,11 @@ class RestaurantManagePage {
     await expect(this.page.getByTestId('restaurant-manage-page')).toBeVisible({ timeout: 10000 })
   }
 
+  /** Assert the page shows a heading with the restaurant name (e.g. after create redirect). */
+  async expectRestaurantNameHeadingVisible(restaurantName, timeout = 8000) {
+    await expect(this.page.getByRole('heading', { name: restaurantName }).first()).toBeVisible({ timeout })
+  }
+
   /** Open the Logo & banner modal by clicking the banner/logo block. */
   async openLogoBannerModal() {
     await this.page.getByTestId('manage-banner-button').click()

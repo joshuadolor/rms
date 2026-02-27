@@ -26,6 +26,7 @@ export default class PublicRestaurant {
           category_name: g.category_name ?? 'Menu',
           category_uuid: g.category_uuid ?? null,
           availability: g.availability ?? null,
+          image_url: g.image_url ?? null,
           items: Array.isArray(g.items) ? g.items.map((i) => PublicMenuItem.fromApi(i)) : [],
         }))
       : []
@@ -143,6 +144,7 @@ export default class PublicRestaurant {
         category_name: g.category_name,
         category_uuid: g.category_uuid,
         availability: g.availability ?? null,
+        image_url: g.image_url ?? null,
         items: (g.items ?? []).map((i) => (i.toJSON ? i.toJSON() : { ...i })),
       })),
       feedbacks: this._feedbacks.map((f) => ({ ...f })),

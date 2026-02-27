@@ -230,6 +230,54 @@
               class="w-full min-h-[44px] rounded-lg ring-1 ring-gray-200 dark:ring-zinc-700 focus:ring-2 focus:ring-primary transition-all bg-background-light dark:bg-zinc-800 border-0 py-3 px-4 text-charcoal dark:text-white resize-none"
             />
           </div>
+
+          <!-- Category image (restaurant context, edit only) -->
+          <div v-if="editingCategory" class="space-y-2">
+            <label class="block text-sm font-semibold text-charcoal dark:text-white">Image (optional)</label>
+            <p class="text-sm text-slate-500 dark:text-slate-400">JPEG, PNG, GIF or WebP, max 2MB. Stored as 512×512 square.</p>
+            <div class="flex flex-wrap items-center gap-3">
+              <img
+                v-if="editingCategory.image_url"
+                :src="editingCategory.image_url"
+                alt=""
+                class="w-20 h-20 object-cover rounded-lg border border-slate-200 dark:border-slate-700"
+              />
+              <label class="cursor-pointer">
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/gif,image/webp"
+                  class="sr-only"
+                  :disabled="!!uploadingCategoryImage"
+                  @change="onCategoryImageSelect"
+                />
+                <AppButton
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  class="min-h-[44px]"
+                  :disabled="!!uploadingCategoryImage"
+                >
+                  <template v-if="uploadingCategoryImage" #icon>
+                    <span class="material-icons animate-spin">sync</span>
+                  </template>
+                  <template v-else #icon><span class="material-icons">upload</span></template>
+                  {{ editingCategory.image_url ? 'Change image' : 'Upload image' }}
+                </AppButton>
+              </label>
+              <AppButton
+                v-if="editingCategory.image_url"
+                type="button"
+                variant="ghost"
+                size="sm"
+                class="min-h-[44px] min-w-[44px] text-red-600 dark:text-red-400"
+                aria-label="Remove category image"
+                :disabled="!!uploadingCategoryImage"
+                @click="removeCategoryImage"
+              >
+                <span class="material-icons">close</span>
+              </AppButton>
+            </div>
+          </div>
         </form>
         <template #footer>
           <AppButton variant="secondary" class="min-h-[44px]" type="button" @click="closeCategoryModal">Cancel</AppButton>
@@ -470,6 +518,7 @@ const editingCategory = ref(null)
 const categoryForm = ref({ translations: {} })
 const categoryFormError = ref('')
 const savingCategory = ref(false)
+const uploadingCategoryImage = ref(false)
 const selectedCategoryLocale = ref('en')
 const addMenuModalOpen = ref(false)
 const addMenuForm = ref({ translations: {} })
@@ -786,6 +835,42 @@ function closeCategoryModal() {
   editingCategory.value = null
   categoryForm.value = { translations: {} }
   categoryFormError.value = ''
+}
+
+async function onCategoryImageSelect(event) {
+  const file = event.target?.files?.[0]
+  const cat = editingCategory.value
+  if (!file || !uuid.value || !selectedMenuUuid.value || !cat?.uuid) return
+  uploadingCategoryImage.value = true
+  try {
+    await restaurantService.uploadCategoryImage(uuid.value, selectedMenuUuid.value, cat.uuid, file)
+    toastStore.success('Image updated.')
+    await loadCategories()
+    const updated = categories.value.find((c) => c.uuid === cat.uuid)
+    if (updated) editingCategory.value = updated
+  } catch (e) {
+    toastStore.error(e?.response?.data?.message ?? normalizeApiError(e).message)
+  } finally {
+    uploadingCategoryImage.value = false
+  }
+  event.target.value = ''
+}
+
+async function removeCategoryImage() {
+  const cat = editingCategory.value
+  if (!uuid.value || !selectedMenuUuid.value || !cat?.uuid) return
+  uploadingCategoryImage.value = true
+  try {
+    await restaurantService.deleteCategoryImage(uuid.value, selectedMenuUuid.value, cat.uuid)
+    toastStore.success('Image removed.')
+    await loadCategories()
+    const updated = categories.value.find((c) => c.uuid === cat.uuid)
+    if (updated) editingCategory.value = updated
+  } catch (e) {
+    toastStore.error(e?.response?.data?.message ?? normalizeApiError(e).message)
+  } finally {
+    uploadingCategoryImage.value = false
+  }
 }
 
 function openDeleteCategoryModal(cat) {

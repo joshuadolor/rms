@@ -6,6 +6,13 @@
     </div>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-12">
       <div v-for="(group, gIdx) in displayGroups" :key="gIdx" class="flex flex-col">
+        <img
+          v-if="group.image_url"
+          :src="group.image_url"
+          :alt="group.category_name || 'Category'"
+          loading="lazy"
+          class="w-full aspect-square object-cover rounded-lg mb-4 max-h-[140px] md:max-h-[180px]"
+        />
         <h3 class="text-sm font-bold uppercase tracking-[0.2em] text-t1-neutral-muted mb-8 border-b border-t1-border pb-2">
           <span :style="getAvailabilityDisplay(group.availability).isUnavailableNow(now) ? { opacity: 0.8 } : undefined">{{ group.category_name }}</span>
           <span v-if="getAvailabilityDisplay(group.availability).label(now)" class="block text-xs font-normal normal-case tracking-normal mt-1">{{ getAvailabilityDisplay(group.availability).label(now) }}</span>
@@ -15,8 +22,17 @@
             v-for="item in group.items"
             :key="item.uuid"
             data-testid="public-menu-item"
-            class="flex flex-col bg-white rounded-xl py-5 px-6 shadow-sm"
+            class="flex flex-col bg-white rounded-xl py-5 px-6"
           >
+            <div class="flex items-start gap-4">
+              <img
+                v-if="(item.type === 'simple' || item.type === 'combo') && item.image_url"
+                :src="item.image_url"
+                :alt="item.name || 'Untitled'"
+                loading="lazy"
+                class="w-20 h-20 md:w-24 md:h-24 shrink-0 aspect-square object-cover rounded-lg"
+              />
+              <div class="flex-1 min-w-0">
             <div class="flex items-center justify-between">
               <div class="flex flex-wrap items-center gap-1.5 min-w-0">
                 <span class="text-lg font-bold text-t1-neutral-dark" :style="itemUnavailableNow(item.availability) ? { opacity: 0.8 } : undefined">{{ item.name || 'Untitled' }}</span>
@@ -35,11 +51,10 @@
               <div class="menu-dots shrink-0" aria-hidden="true"></div>
               <span v-if="item.type !== 'with_variants' && item.is_available !== false && itemPrice(item) != null" class="text-lg font-bold whitespace-nowrap shrink-0" :style="[primaryTextStyle, itemUnavailableNow(item.availability) ? { opacity: 0.8 } : undefined]">{{ formatPrice(itemPrice(item)) }}</span>
               <span v-else-if="item.type !== 'with_variants' && item.is_available === false" class="text-sm text-t1-neutral-muted whitespace-nowrap shrink-0">Not available</span>
-              <span v-else-if="item.type !== 'with_variants'" class="text-sm text-t1-neutral-muted whitespace-nowrap shrink-0">Price on request</span>
             </div>
             <p v-if="formatAvailabilityForDisplay(item.availability, now)" class="text-t1-neutral-muted text-xs mt-0.5">{{ formatAvailabilityForDisplay(item.availability, now) }}</p>
             <p v-if="item.description" class="text-t1-neutral-muted text-sm mt-1">{{ item.description }}</p>
-            <ul v-if="item.type === 'combo' && comboEntries(item).length" class="mt-2 list-none pl-0 space-y-1 text-t1-neutral-muted text-sm" aria-label="Combo contents">
+            <ul v-if="item.type === 'combo' && comboEntries(item).length" class="mt-2 list-none pl-4 md:pl-6 space-y-1 text-t1-neutral-muted text-xs border-l-2 border-t1-border ml-0.5" aria-label="Combo contents">
               <li v-for="(entry, eIdx) in comboEntries(item)" :key="eIdx">
                 {{ entry.name }} × {{ entry.quantity }}{{ entry.modifier_label ? ` (${entry.modifier_label})` : '' }}
               </li>
@@ -54,10 +69,12 @@
                 >
                   <span class="text-t1-neutral-dark text-sm font-medium">{{ variantSkuLabel(sku) }}</span>
                   <span v-if="sku.price != null" class="text-sm font-bold" :style="[primaryTextStyle, itemUnavailableNow(item.availability) ? { opacity: 0.8 } : undefined]">{{ formatPrice(sku.price) }}</span>
-                  <img v-if="sku.image_url" :src="sku.image_url" :alt="variantSkuLabel(sku)" class="w-12 h-12 object-cover rounded" />
+                  <img v-if="sku.image_url" :src="sku.image_url" :alt="variantSkuLabel(sku)" loading="lazy" class="w-12 h-12 object-cover rounded" />
                 </li>
               </ul>
             </template>
+              </div>
+            </div>
           </div>
         </div>
       </div>

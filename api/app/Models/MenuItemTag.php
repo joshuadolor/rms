@@ -10,6 +10,7 @@ use Illuminate\Support\Str;
 class MenuItemTag extends Model
 {
     protected $fillable = [
+        'uuid',
         'color',
         'icon',
         'text',

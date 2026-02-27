@@ -5,7 +5,7 @@
         {{ isEdit ? 'Edit restaurant' : 'Add new restaurant' }}
       </h2>
       <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
-        {{ isEdit ? 'Update details and media.' : 'Fill in the essentials to list your restaurant.' }}
+        {{ isEdit ? 'Update details and media.' : 'Fill in the essentials to list your restaurant. You can set opening hours and contacts after creating it.' }}
       </p>
     </header>
 
@@ -73,14 +73,6 @@
           />
           <p v-if="fieldErrors.address" id="form-address-error" class="text-xs text-red-600 dark:text-red-400 mt-1" role="alert">{{ fieldErrors.address }}</p>
         </div>
-        <AppInput
-          v-model="form.phone"
-          label="Phone (optional)"
-          type="tel"
-          placeholder="+1 234 567 8900"
-          :error="fieldErrors.phone"
-          data-testid="form-input-phone"
-        />
         <div>
           <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1" for="form-input-description">Description (optional)</label>
           <textarea
@@ -111,8 +103,8 @@
           class="[&_input]:min-h-[44px]"
         />
 
-        <!-- Availability: only when not embedded (embed uses Availability tab) -->
-        <div v-if="!embed" class="pt-4 border-t border-slate-200 dark:border-slate-800">
+        <!-- Availability: only when editing and not embedded (embed uses Availability tab) -->
+        <div v-if="!embed && isEdit" class="pt-4 border-t border-slate-200 dark:border-slate-800">
           <h4 class="font-medium text-charcoal dark:text-white flex items-center gap-2 mb-3">
             <span class="material-icons text-slate-500 dark:text-slate-400 text-lg">schedule</span>
             Availability
@@ -199,7 +191,6 @@ const form = reactive({
   name: '',
   tagline: '',
   address: '',
-  phone: '',
   email: '',
   website: '',
   description: '',
@@ -209,7 +200,7 @@ const form = reactive({
   operatingHours: {},
 })
 
-const MAX = { name: 255, tagline: 255, address: 1000, phone: 50, email: 255, website: 500, socialUrl: 500 }
+const MAX = { name: 255, tagline: 255, address: 1000, email: 255, website: 500, socialUrl: 500 }
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const URL_RE = /^https?:\/\/.+/i
 const YEAR_ESTABLISHED_MIN = 1800
@@ -231,7 +222,6 @@ function validateForm() {
   else if (n.length > MAX.name) err.name = `Name must be at most ${MAX.name} characters.`
   if (form.tagline && form.tagline.length > MAX.tagline) err.tagline = `Tagline must be at most ${MAX.tagline} characters.`
   if (form.address && form.address.length > MAX.address) err.address = `Address must be at most ${MAX.address} characters.`
-  if (form.phone && form.phone.length > MAX.phone) err.phone = `Phone must be at most ${MAX.phone} characters.`
   if (form.email && !EMAIL_RE.test(form.email)) err.email = 'Please enter a valid email address.'
   if (form.website && !URL_RE.test(form.website)) err.website = 'Please enter a valid URL.'
   const yearStr = String(form.year_established ?? '').trim()
@@ -253,7 +243,6 @@ function buildPayload() {
     name: form.name.trim(),
     tagline: form.tagline.trim() || undefined,
     address: form.address.trim() || undefined,
-    phone: form.phone.trim() || undefined,
     email: form.email.trim() || undefined,
     website: form.website.trim() || undefined,
   }
@@ -334,7 +323,6 @@ async function loadRestaurant() {
       form.name = r.name ?? ''
       form.tagline = r.tagline ?? ''
       form.address = r.address ?? ''
-      form.phone = r.phone ?? ''
       form.description = ''
       form.email = r.email ?? ''
       form.website = r.website ?? ''

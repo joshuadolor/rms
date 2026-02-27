@@ -4,6 +4,15 @@ RESTful API backend for the Restaurant Management System. See [restaurant-manage
 
 ## Quick start with Docker (recommended)
 
+**Single source for env:** use the **root `.env`** (same folder as `docker-compose.yml`). Docker Compose and the API container both use this file (the API’s `/app/.env` is mounted from it). Copy from `.env.example`, then generate the Laravel app key:
+
+```bash
+cp .env.example .env
+docker compose run --rm api php artisan key:generate
+```
+
+Edit `.env` if you need different DB passwords, URLs, etc. If you don’t create `.env`, Compose falls back to defaults in `docker-compose.yml`; the API container still needs a root `.env` file (and `APP_KEY`) to boot.
+
 From the project root:
 
 ```bash
@@ -16,6 +25,7 @@ Then open:
 - **http://localhost:8080** — Frontend only (Vite; proxies `/api` to the API)
 - **http://localhost:3000** — API only (e.g. `http://localhost:3000/api/health`)
 - **http://localhost:8025** — Mailhog (dev mail; outbound mail from the API appears here)
+- **http://localhost:8081** — phpMyAdmin (local only; MySQL admin; login: `root` / `root_secret` or `rms` / `rms_secret`)
 
 Nginx uses **keepalive** to the API and frontend so repeated requests reuse connections and feel faster. If the first request is slow, later ones should be quicker.
 
@@ -72,12 +82,27 @@ You should get `"message": "Test email sent. Check Mailhog at http://localhost:8
 
 Requires PHP 8.2+ and Composer.
 
+**With MySQL** (e.g. local MySQL or another container): set `DB_CONNECTION=mysql`, `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` in `api/.env`, then:
+
 ```bash
 cd api
 cp .env.example .env
+# Edit .env: DB_CONNECTION=mysql and MySQL host/database/user/password
 composer install
 php artisan key:generate
-touch database/database.sqlite
+php artisan migrate
+php artisan serve --port=3000
+```
+
+**With SQLite:** set `DB_CONNECTION=sqlite` and `DB_DATABASE=storage/db/database.sqlite` in `api/.env`, then create the file and migrate:
+
+```bash
+cd api
+cp .env.example .env
+# Edit .env: DB_CONNECTION=sqlite, DB_DATABASE=storage/db/database.sqlite
+composer install
+php artisan key:generate
+mkdir -p storage/db && touch storage/db/database.sqlite
 php artisan migrate
 php artisan serve --port=3000
 ```
@@ -96,8 +121,8 @@ This backend is **Laravel**, not Lumen, on purpose:
 ## Stack
 
 - **Laravel** (API)
-- **SQLite** (database; file: `api/database/database.sqlite`)
-- **Docker** (optional, for consistent local runs)
+- **MySQL 8.0** (database in Docker; use `DB_*` in `api/.env` or docker-compose env)
+- **Docker** (recommended for local: `docker compose up`; API uses MySQL in the `mysql` service)
 
 ## Project layout (DDD)
 
@@ -121,7 +146,7 @@ Restaurant/menu domains will be added when those features are built.
 
 ## Database (migrations)
 
-Current migrations are **auth-only** (Laravel + Sanctum + social):
+Migrations cover auth (Laravel + Sanctum + social), restaurants, menus, and related tables. They are **MySQL-compatible** (Laravel schema builder; the only raw SQL uses MySQL-style column quoting).
 
 | Table | Purpose |
 |-------|--------|
@@ -130,8 +155,8 @@ Current migrations are **auth-only** (Laravel + Sanctum + social):
 | `personal_access_tokens` | Sanctum API tokens |
 | `social_accounts` | OAuth provider link (provider, provider_id) |
 
+- **Docker:** The API uses MySQL in the `mysql` service (the container entrypoint forces `DB_*` to MySQL even if `api/.env` has SQLite). On first `docker compose up`, the API runs `php artisan migrate` on start. To run migrations manually: `docker compose exec api php artisan migrate`. To reset: `docker compose exec api php artisan migrate:fresh --force` (this wipes the MySQL DB; phpMyAdmin at :8081 will show the result).
 - **Local (no Docker):** `cd api && php artisan migrate`. To reset: `cd api && php artisan migrate:fresh --force`.
-- **Docker:** The app uses the DB in the volume at `/app/storage/db`, so running migrate inside the container affects that DB. To reset: `docker compose exec api php artisan migrate:fresh --force`. Running `php artisan migrate:fresh` on the **host** (`cd api`) resets the host file only, not the volume—run it in the container when using Docker.
 
 ## Auth API (for frontend)
 

@@ -47,4 +47,30 @@ class ImageResizerTest extends TestCase
 
         ImageResizer::resizeToFit($file, 300, 300);
     }
+
+    public function test_resize_to_square_returns_square_image(): void
+    {
+        $file = UploadedFile::fake()->image('item.jpg', 800, 400);
+
+        $content = ImageResizer::resizeToSquare($file, 512);
+
+        $this->assertNotEmpty($content);
+        $info = getimagesizefromstring($content);
+        $this->assertNotFalse($info);
+        $this->assertSame(512, $info[0]);
+        $this->assertSame(512, $info[1]);
+    }
+
+    public function test_resize_to_square_small_image_upscales_to_target(): void
+    {
+        $file = UploadedFile::fake()->image('item.jpg', 100, 100);
+
+        $content = ImageResizer::resizeToSquare($file, 512);
+
+        $this->assertNotEmpty($content);
+        $info = getimagesizefromstring($content);
+        $this->assertNotFalse($info);
+        $this->assertSame(512, $info[0]);
+        $this->assertSame(512, $info[1]);
+    }
 }

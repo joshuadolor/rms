@@ -13,6 +13,7 @@ export default class MenuItem {
     this.sort_order = data.sort_order ?? 0
     this.type = data.type ?? 'simple'
     this.price = data.price != null ? Number(data.price) : null
+    this.image_url = data.image_url ?? null
     this.translations = data.translations ?? {}
     this.created_at = data.created_at ?? null
     this.updated_at = data.updated_at ?? null
@@ -104,6 +105,7 @@ export default class MenuItem {
       sort_order: this.sort_order,
       type: this.type,
       price: this.price,
+      image_url: this.image_url,
       translations: this.translations,
       created_at: this.created_at,
       updated_at: this.updated_at,

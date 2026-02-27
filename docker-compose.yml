@@ -1,4 +1,6 @@
-# Dev: docker compose up. Then open http://localhost (via nginx) or http://localhost:8080 (Vite). Mailhog: :8025
+# Dev: docker compose up. Then open http://localhost (via nginx) or http://localhost:8080 (Vite). Mailhog: :8025. phpMyAdmin: :8081 (local only).
+# Env: set variables in .env (project root, next to this file). Copy from .env.example.
+# First time (or after adding migrations): docker compose exec api php artisan migrate
 services:
   nginx:   # Single origin: / → frontend, /api → API. *.rms.local → Laravel (Blade). Use http://localhost or http://test.rms.local
     build:
@@ -13,6 +15,24 @@ services:
       - api
       - frontend
 
+  mysql:
+    image: mysql:8.0
+    ports:
+      - "3306:3306"   # optional: for local DB tools (e.g. TablePlus, mysql CLI)
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-rms}
+      MYSQL_USER: ${MYSQL_USER:-rms}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-rms_secret}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_secret}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p\"$$MYSQL_ROOT_PASSWORD\" || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
   api:
     build:
       context: ./api
@@ -22,27 +42,33 @@ services:
     volumes:
       # Mount host API code so route/code changes apply without rebuilding (run composer install on host if needed)
       - ./api:/app
-      # Persist DB; overrides /app/storage/db from the mount above
-      - api_database:/app/storage/db
+      # Single source: Laravel reads this file (project root .env). Create from .env.example; run key:generate once.
+      - ./.env:/app/.env
     environment:
       - APP_ENV=local
       - APP_DEBUG=true
-      - APP_URL=http://rms.local
-      - FRONTEND_URL=http://rms.local
-      - RESTAURANT_DOMAIN=rms.local
-      - DB_CONNECTION=sqlite
-      - DB_DATABASE=/app/storage/db/database.sqlite
-      # Mailhog: API sends mail to mailhog:1025 (SMTP). View at http://localhost:8025
-      - MAIL_MAILER=smtp
-      - MAIL_HOST=mailhog
-      - MAIL_PORT=1025
-      - MAIL_USERNAME=null
-      - MAIL_PASSWORD=null
-      - MAIL_ENCRYPTION=null
-      - MAIL_FROM_ADDRESS=noreply@rms.local
-      - MAIL_FROM_NAME="${APP_NAME:-RMS}"
+      - APP_URL=${APP_URL:-http://rms.local}
+      - FRONTEND_URL=${FRONTEND_URL:-http://rms.local}
+      - RESTAURANT_DOMAIN=${RESTAURANT_DOMAIN:-rms.local}
+      - DB_CONNECTION=${DB_CONNECTION:-mysql}
+      - DB_HOST=${DB_HOST:-mysql}
+      - DB_PORT=${DB_PORT:-3306}
+      - DB_DATABASE=${DB_DATABASE:-rms}
+      - DB_USERNAME=${DB_USERNAME:-rms}
+      - DB_PASSWORD=${DB_PASSWORD:-rms_secret}
+      - MAIL_MAILER=${MAIL_MAILER:-smtp}
+      - MAIL_HOST=${MAIL_HOST:-mailhog}
+      - MAIL_PORT=${MAIL_PORT:-1025}
+      - MAIL_USERNAME=${MAIL_USERNAME:-null}
+      - MAIL_PASSWORD=${MAIL_PASSWORD:-null}
+      - MAIL_ENCRYPTION=${MAIL_ENCRYPTION:-null}
+      - MAIL_FROM_ADDRESS=${MAIL_FROM_ADDRESS:-noreply@rms.local}
+      - MAIL_FROM_NAME=${MAIL_FROM_NAME:-RMS}
     depends_on:
-      - mailhog
+      mysql:
+        condition: service_healthy
+      mailhog:
+        condition: service_started
 
   frontend:
     image: node:22-alpine
@@ -55,10 +81,9 @@ services:
     command: sh -c "npm install && npm run dev"
     environment:
       - NODE_ENV=development
-      # With nginx: open http://localhost (port 80); frontend uses relative /api. Without nginx: open http://localhost:8080 and Vite proxies /api.
-      - VITE_PROXY_TARGET=http://api:3000
-      - VITE_API_URL=
-      - VITE_APP_PUBLIC_DOMAIN=rms.local
+      - VITE_PROXY_TARGET=${VITE_PROXY_TARGET:-http://api:3000}
+      - VITE_API_URL=${VITE_API_URL:-}
+      - VITE_APP_PUBLIC_DOMAIN=${VITE_APP_PUBLIC_DOMAIN:-rms.local}
     depends_on:
       - api
 
@@ -68,6 +93,19 @@ services:
       - "1025:1025"   # SMTP
       - "8025:8025"   # Web UI
 
+  # Local only: DB admin UI. Login with root/root_secret or rms/rms_secret. Do not enable in production.
+  phpmyadmin:
+    image: phpmyadmin:latest
+    ports:
+      - "8081:80"
+    environment:
+      - PMA_HOST=mysql
+      - PMA_PORT=3306
+      - UPLOAD_LIMIT=64M
+    depends_on:
+      mysql:
+        condition: service_healthy
+
 volumes:
   frontend_node_modules:
-  api_database:
+  mysql_data:

@@ -1049,7 +1049,8 @@ Returns public restaurant data and menu items for subdomain or `/r/:slug` pages.
         "is_available": "boolean",
         "availability": "object | null",
         "tags": [{ "uuid": "string", "color": "string", "icon": "string", "text": "string" }, ...],
-        "combo_entries": "optional; only when type is combo",
+        "image_url": "string | null",
+        "combo_entries": "always present when type is combo (array of combo entry objects)",
         "variant_option_groups": "optional; only when type is with_variants",
         "variant_skus": "optional; only when type is with_variants"
       }
@@ -1059,6 +1060,7 @@ Returns public restaurant data and menu items for subdomain or `/r/:slug` pages.
         "category_name": "string",
         "category_uuid": "string | null",
         "availability": "object | null",
+        "image_url": "string | null",
         "items": [
           {
             "uuid": "string",
@@ -1069,7 +1071,8 @@ Returns public restaurant data and menu items for subdomain or `/r/:slug` pages.
             "is_available": "boolean",
             "availability": "object | null",
             "tags": [...],
-            "combo_entries": "optional when type is combo",
+            "image_url": "string | null",
+            "combo_entries": "always present when type is combo (array of combo entry objects)",
             "variant_option_groups": "optional when type is with_variants",
             "variant_skus": "optional when type is with_variants"
           }
@@ -1088,12 +1091,12 @@ Returns public restaurant data and menu items for subdomain or `/r/:slug` pages.
 
 **contacts** (Contact & links) contains only **active** entries (is_active true); inactive are excluded. Each has **uuid**, **type**, **value** (phone number or URL), **number** (same as value for phone types; null for link types, for backward compat), and **label**. **template** is always one of `template-1` or `template-2` (legacy values `default` and `minimal` are normalized before returning; invalid values fall back to `template-1`).
 
-**menu_groups** mirrors the Blade public page: categories sorted by sort_order; uncategorized items appear in a group with `category_name` "Menu" and `category_uuid` null. Each group has **category_name**, **category_uuid** (nullable), **availability** (object | null; same shape as operating_hours; from the category when category_uuid is non-null, null for uncategorized), and **items** (menu item payloads with same shape as **menu_items** below, minus **sort_order**). **menu_items** remains the flat list for backward compatibility.
+**menu_groups** mirrors the Blade public page: categories sorted by sort_order; uncategorized items appear in a group with `category_name` "Menu" and `category_uuid` null. Each group has **category_name**, **category_uuid** (nullable), **availability** (object | null; same shape as operating_hours; from the category when category_uuid is non-null, null for uncategorized), **image_url** (full URL to category image or null; requires category to have image_path and menu relation), and **items** (menu item payloads with same shape as **menu_items** below, minus **sort_order**). **menu_items** remains the flat list for backward compatibility. Each menu item (in **menu_items** and in **menu_groups**[].**items**) includes **image_url** (full URL to the item image, or null). **Item image_url:** When the restaurant menu item has its own image (`image_path`), the URL points to `GET /api/restaurants/{restaurant}/menu-items/{item}/image`, which serves that image. When the item has no image but is linked to a catalog item (`source_menu_item_uuid`) and the catalog item has an image, the same URL is returned and the serve endpoint returns the catalog item’s image (fallback). **Variant image_url:** For **variant_skus**, **image_url** is the full URL to `GET /api/restaurants/{restaurant}/menu-items/{item}/variants/{sku}/image`. The serve endpoint returns the restaurant variant’s image when present, or the catalog source variant’s image when the item uses catalog variants and the variant has an image (fallback).
 
 **Menu item type and optional fields:**
 - **type** is always one of `simple`, `combo`, or `with_variants`. Restaurant items that are a single "ending variant" (linked to one catalog variant via `source_variant_uuid`) are exposed as **type** `simple` with one name and one price (no variant blocks).
 - When **type** is **combo**, each item includes **combo_entries**: array of `{ "referenced_item_uuid": "string", "name": "string", "quantity": number, "modifier_label": "string | null", "variant_uuid": "string | null" }`. **name** is the referenced item's name in the requested locale (and variant label if the entry references a specific variant). Only UUIDs are used; no internal id.
-- When **type** is **with_variants**, each item includes **variant_option_groups**: array of `{ "name": "string", "values": ["string", ...] }` and **variant_skus**: array of `{ "uuid": "string", "option_values": { "GroupName": "value", ... }, "price": number, "image_url": "string | null" }`. Option groups define choices (e.g. Size, Type); each SKU is one combination with a price. For restaurant items that use a catalog item with variants, variant data comes from the catalog when the restaurant item has no own groups/SKUs.
+- When **type** is **with_variants**, each item includes **variant_option_groups**: array of `{ "name": "string", "values": ["string", ...] }` and **variant_skus**: array of `{ "uuid": "string", "option_values": { "GroupName": "value", ... }, "price": number, "image_url": "string | null" }`. Option groups define choices (e.g. Size, Type); each SKU is one combination with a price; **image_url** is the full URL to the variant image (or null). For restaurant items that use a catalog item with variants, variant data (including **image_url** when the catalog variant has an image) comes from the catalog when the restaurant item has no own groups/SKUs. The same serve URL is used; the backend serves the catalog variant’s image when the restaurant item has no own variant image.
 
 `operating_hours` has the same shape as in the restaurant payload (see **Operating hours shape** above); `null` when not set. Each **menu_item** includes **availability** (same type as operating_hours; `null` = always available). **feedbacks** contains only **approved** feedbacks (owner approves via PATCH); no internal `id` in any field.
 
@@ -1326,6 +1329,7 @@ Categories belong to a menu (e.g. Appetizers, Mains). Name is translated per res
   sort_order: number;
   is_active: boolean;  // when false, category and its items are hidden on the public menu
   availability: OperatingHours | null;  // same type as operating_hours; null = all available (menu del día)
+  image_url: string | null;  // full URL to serve category image (512×512 square; restaurant context)
   translations: Record<string, { name: string; description: string | null }>;  // locale -> { name, description? }
   created_at: string;
   updated_at: string;
@@ -1382,6 +1386,16 @@ Translations must use locales installed for the restaurant. **Response (201):** 
 | DELETE | `/api/restaurants/{restaurant}/menus/{menu}/categories/{category}` | Bearer + verified |
 
 **Response (204):** No content.
+
+### Category image (restaurant context)
+
+| Method | Path | Auth |
+|--------|------|------|
+| POST | `/api/restaurants/{restaurant}/menus/{menu}/categories/{category}/image` | Bearer + verified |
+| GET | `/api/restaurants/{restaurant}/menus/{menu}/categories/{category}/image` | No (public, for `<img src>`) |
+| DELETE | `/api/restaurants/{restaurant}/menus/{menu}/categories/{category}/image` | Bearer + verified |
+
+**Upload (POST):** Request body **multipart/form-data** with field **file**. Image only (jpeg, png, gif, webp), max 2MB. Image is resized/cropped to 512×512 (center-crop to square). User must own the restaurant. **Response (200):** `{ "message": "Image updated.", "data": { category payload } }`. **422:** Validation; **403:** Not owner. **Serve (GET):** Returns the image file (no auth). **Delete (DELETE):** Clears the category image. **Response (200):** `{ "message": "Image removed.", "data": { category payload } }`.
 
 ### Reorder categories
 
@@ -1472,6 +1486,7 @@ All catalog menu item payloads include:
   sort_order: number;
   type: 'simple' | 'combo' | 'with_variants';
   price: number | null;        // effective: simple = base price; combo = combo_price if set; with_variants = null
+  image_url: string | null;    // full URL to serve image (catalog context only; 512×512 square)
   translations: Record<string, { name: string; description: string | null }>;
   created_at: string;
   updated_at: string;
@@ -1549,6 +1564,30 @@ For GET `/api/menu-items` list, all returned items are standalone (`restaurant_u
 
 **Response (204):** No content. **404:** Not found or not owned.
 
+### Catalog menu item image (simple/combo: one image per item)
+
+| Method | Path | Auth |
+|--------|------|------|
+| POST | `/api/menu-items/{item}/image` | Bearer + verified |
+| GET | `/api/menu-items/{item}/image` | No (public, for `<img src>`) |
+| DELETE | `/api/menu-items/{item}/image` | Bearer + verified |
+
+**Upload (POST):** Request body **multipart/form-data** with field **file**. Image only (jpeg, png, gif, webp), max 2MB. Image is resized/cropped to 512×512 (center-crop to square). Only available for **standalone (catalog) menu items** (not restaurant-scoped items). **Response (200):** `{ "message": "Image updated.", "data": { user-level menu item payload } }`. **404:** Not found or item is not standalone. **422:** Validation (e.g. file too large, wrong type). **403:** Not owner.
+
+**Serve (GET):** Returns the image file (no auth). **404:** Item or file not found.
+
+**Delete (DELETE):** Clears the catalog menu item image. **Response (200):** `{ "message": "Image removed.", "data": { user-level menu item payload } }`.
+
+### Catalog menu item variant SKU image (type with_variants)
+
+| Method | Path | Auth |
+|--------|------|------|
+| POST | `/api/menu-items/{item}/variants/{sku}/image` | Bearer + verified |
+| GET | `/api/menu-items/{item}/variants/{sku}/image` | No (public, for `<img src>`) |
+| DELETE | `/api/menu-items/{item}/variants/{sku}/image` | Bearer + verified |
+
+**Upload (POST):** Same validation as catalog menu item image (multipart file, 512×512). **Response (200):** `{ "message": "Image updated.", "data": { uuid, option_values, price, image_url } }`. **404:** Item or variant not found. **Serve (GET)** and **Delete (DELETE)** as above.
+
 ---
 
 ## Menu items (restaurant-scoped)
@@ -1570,10 +1609,13 @@ All menu item payloads include:
   price: number | null;   // effective price (base or override)
   translations: Record<string, { name: string; description: string | null }>;  // effective per locale
   tags: Array<{ uuid: string; color: string; icon: string; text: string }>;  // menu item tags attached to this item
+  image_url: string | null;  // full URL to serve image (simple/combo: one image per item); null when no image
   created_at: string;
   updated_at: string;
 }
 ```
+
+When the item has **type** `with_variants`, the payload also includes **variant_skus**: `Array<{ uuid: string; option_values: object; price: number; image_url: string | null }>`. Each variant’s **image_url** is the full URL to serve that variant’s image (null when none). No internal `id` in any variant.
 
 When the item is a **restaurant usage of a catalog item** (added from “Menu items” into a restaurant category), the payload also includes:
 
@@ -1657,6 +1699,34 @@ When **source_variant_uuid** is present, **name** in `translations` is the catal
 
 **Response (204):** No content.
 
+### Menu item image (simple/combo: one image per item)
+
+| Method | Path | Auth |
+|--------|------|------|
+| POST | `/api/restaurants/{restaurant}/menu-items/{item}/image` | Bearer + verified |
+| GET | `/api/restaurants/{restaurant}/menu-items/{item}/image` | No (public, for `<img src>`) |
+| DELETE | `/api/restaurants/{restaurant}/menu-items/{item}/image` | Bearer + verified |
+
+**Upload (POST):** Request body **multipart/form-data** with field **file**. Image only (jpeg, png, gif, webp), max 2MB. Image is resized/cropped to 512×512 (center-crop to square). User must own the restaurant. **Response (200):** `{ "message": "Image updated.", "data": { menu item payload } }`. **422:** Validation (e.g. file too large, wrong type); **403:** Not owner.
+
+**Serve (GET):** Returns the image file (no auth). **404:** Restaurant, item, or file not found.
+
+**Delete (DELETE):** Clears the menu item image. **Response (200):** `{ "message": "Image removed.", "data": { menu item payload } }`. **404:** Menu item not found; **403:** Not owner.
+
+### Variant SKU image (menu items with type with_variants: one image per variant)
+
+| Method | Path | Auth |
+|--------|------|------|
+| POST | `/api/restaurants/{restaurant}/menu-items/{item}/variants/{sku}/image` | Bearer + verified |
+| GET | `/api/restaurants/{restaurant}/menu-items/{item}/variants/{sku}/image` | No (public, for `<img src>`) |
+| DELETE | `/api/restaurants/{restaurant}/menu-items/{item}/variants/{sku}/image` | Bearer + verified |
+
+**Upload (POST):** Request body **multipart/form-data** with field **file**. Same validation as menu item image (image only, jpeg/png/gif/webp, max 2MB; resized to 512×512). **Response (200):** `{ "message": "Image updated.", "data": { uuid, option_values, price, image_url } }` where **image_url** is the full serve URL. **404:** Menu item or variant not found; **422/403:** as above.
+
+**Serve (GET):** Returns the variant image file (no auth). **404:** Not found.
+
+**Delete (DELETE):** Clears the variant image. **Response (200):** `{ "message": "Image removed.", "data": { uuid, option_values, price, image_url: null } }`.
+
 ### Reorder menu items (within category)
 
 | Method | Path | Auth |
@@ -1699,6 +1769,11 @@ When **source_variant_uuid** is present, **name** in `translations` is the catal
 
 ## Changelog
 
+- **2026-02-27**: **GET /api/public/restaurants/{slug}: catalog image fallback for menu items and variants.** When a restaurant menu item has no own image but is linked to a catalog item (`source_menu_item_uuid`) that has an image, **image_url** is now set to the same restaurant-scoped URL and `GET /api/restaurants/{restaurant}/menu-items/{item}/image` serves the catalog item’s image. When variant data comes from the catalog and a catalog variant has an image, **variant_skus**[].**image_url** is set and `GET /api/restaurants/{restaurant}/menu-items/{item}/variants/{sku}/image` serves the catalog variant’s image. No new routes; behavior documented under Public restaurant by slug.
+- **2026-02-27**: **GET /api/public/restaurants/{slug}: catalog combo type and combo_entries.** When a restaurant menu item is linked to a catalog item (`source_menu_item_uuid` set, no `source_variant_uuid`), the public API now uses the **source’s type** and **source’s combo_entries** for that item. So a catalog combo added to a restaurant is exposed as **type: combo** with **combo_entries** from the catalog, fixing items that previously appeared as type `simple` with no breakdown.
+- **2026-02-27**: **GET /api/public/restaurants/{slug}: combo_entries, image_url.** For **combo** items, **combo_entries** is always present (array; empty if none); controller eager-loads `comboEntries` and nested relations. Every menu item (flat and in **menu_groups**[].**items**) includes **image_url** (full URL to restaurant-scoped item image or null). Each **menu_groups** entry includes **image_url** (category image full URL or null); category image requires `category.menu` to be loaded. Documented in response schema. No internal `id` in any response.
+- **2026-02-27**: **Menu item images: catalog-only; category images in restaurant context.** **Catalog (menu items context):** Image upload for standalone menu items is available only in the catalog (Menu items) flow. New endpoints: POST/GET/DELETE `/api/menu-items/{item}/image` and POST/GET/DELETE `/api/menu-items/{item}/variants/{sku}/image`. User-level menu item payload now includes **image_url** (full URL or null); variant_skus include **image_url** (full URL when set). **Restaurant context:** Menu item image UI is not shown when editing a restaurant’s menu item; images for catalog items are managed in the Menu items (catalog) page. **Category images:** Categories support one image per category in the restaurant context. New column **image_path** on `categories`; new endpoints POST/GET/DELETE `/api/restaurants/{restaurant}/menus/{menu}/categories/{category}/image`. Validation and resize (512×512 square) as for menu item images. Category payload now includes **image_url** (full URL or null). No internal `id` in any response.
+- **2026-02-27**: **Images for menu items and variant SKUs.** Menu items (simple/combo) support one image per item: **image_path** on `menu_items`; stored under `restaurants/{restaurant_uuid}/menu-items/{item_uuid}/image`. Variant SKUs (type `with_variants`) support one image per SKU: path stored in existing **image_url** column on `menu_item_variant_skus`; stored under `restaurants/{restaurant_uuid}/menu-items/{item_uuid}/variants/{sku_uuid}/image`. Upload: POST multipart (file); validation as restaurant logo (image only, jpeg/png/gif/webp, max 2MB); server resizes to 512×512 (center-crop to square). Serve: GET (public, for `<img src>`). Delete: DELETE to clear image. New endpoints: POST/GET/DELETE `/api/restaurants/{restaurant}/menu-items/{item}/image`; POST/GET/DELETE `/api/restaurants/{restaurant}/menu-items/{item}/variants/{sku}/image`. Restaurant-scoped menu item payload now includes **image_url** (full URL or null) and, when type is `with_variants`, **variant_skus** with **image_url** per variant (full URL or null). Public GET `/api/public/restaurants/{slug}` menu items and variant_skus include **image_url** (full serve URL). No internal `id` in any response.
 - **2026-02-27**: **Refresh-token auth (rotation).** `POST /api/login` now sets an HttpOnly refresh token cookie (`rms_refresh`). New `POST /api/auth/refresh` rotates the refresh token and returns a new access token (403 when email not verified or account deactivated); **401/403 clear the refresh cookie**. Refresh rotation tolerates near-parallel refresh calls via a short grace window (revoked token reuse only when rotated). `POST /api/logout` and `POST /api/logout-all` now also revoke refresh tokens (if present / all) and clear the refresh cookie. Cookie Secure is set when not local, or whenever SameSite is `none`. No internal `id` in any response.
 - **2026-02-21**: **GET /api/public/restaurants/{slug}: menu_groups availability.** Each entry in **menu_groups** now includes **availability** (object | null; same shape as operating_hours). When the group has a category (category_uuid non-null), availability is the category’s availability; when uncategorized (category_uuid null), availability is null. No internal `id` in any response.
 - **2026-02-21**: **Contact & links (restaurant contacts) refactor.** Module renamed conceptually to "Contact & links"; API path unchanged `/api/restaurants/{restaurant}/contacts`. Supports **phone types** (whatsapp, mobile, phone, fax, other) and **link types** (facebook, instagram, twitter, website). Unified **value** field (phone number or URL); **number** kept for backward compat (same as value for phone types, null for link types). Migration adds **value** column, backfills from number, makes number nullable. Validation: link types require valid URL in value; phone types require non-empty value (max 500). Owner payload and GET `/api/public/restaurants/{slug}` **contacts** now include **value** and **number**. No internal `id` in any response.

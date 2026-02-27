@@ -9,11 +9,11 @@ export function usePublicMenuDisplay(props) {
   const menuGroups = toRef(props, 'menuGroups')
   const menuItems = toRef(props, 'menuItems')
   const currency = toRef(props, 'currency')
-
   const displayGroups = computed(() => {
     if (menuGroups.value?.length) return menuGroups.value
     if (!menuItems.value?.length) return []
-    return [{ category_name: 'Menu', category_uuid: null, availability: null, items: [...menuItems.value] }]
+    const heading = props.menuHeading ?? 'Menu'
+    return [{ category_name: heading, category_uuid: null, availability: null, items: [...menuItems.value] }]
   })
 
   /** Availability display model for a menu item or category. */

@@ -1,7 +1,14 @@
 <template>
   <section class="rms-menu" id="menu" aria-labelledby="menu-heading">
     <h3 id="menu-heading" class="rms-menu__heading">{{ menuHeading }}</h3>
-    <div v-for="(group, gIdx) in groups" :key="gIdx" class="rms-menu__group">
+    <div v-for="(group, gIdx) in displayGroups" :key="gIdx" class="rms-menu__group">
+      <img
+        v-if="group.image_url"
+        :src="group.image_url"
+        :alt="group.category_name || 'Category'"
+        loading="lazy"
+        class="rms-menu__category-img"
+      />
       <h4 class="rms-menu__category">{{ group.category_name }}</h4>
       <ul class="rms-menu__list">
         <li
@@ -10,6 +17,15 @@
           class="rms-menu-item"
           :class="{ 'rms-menu-item--unavailable': item.is_available === false }"
         >
+          <div class="rms-menu-item__top">
+            <img
+              v-if="(item.type === 'simple' || item.type === 'combo') && item.image_url"
+              :src="item.image_url"
+              :alt="item.name || 'Untitled'"
+              loading="lazy"
+              class="rms-menu-item__thumb"
+            />
+            <div class="rms-menu-item__content">
           <div class="rms-menu-item__row">
             <span class="rms-menu-item__name">
               {{ item.name || 'Untitled' }}
@@ -33,7 +49,6 @@
               {{ formatPrice(itemPrice(item)) }}
             </span>
             <span v-else-if="item.type !== 'with_variants' && item.is_available === false" class="rms-menu-item__price rms-menu-item__price--unavailable">Not available</span>
-            <span v-else-if="item.type !== 'with_variants'" class="rms-menu-item__price rms-menu-item__price--unavailable">Price on request</span>
           </div>
           <p v-if="item.description" class="rms-menu-item__description">
             {{ item.description }}
@@ -49,10 +64,12 @@
               <li v-for="sku in variantSkus(item)" :key="sku.uuid" class="rms-menu-item__variant-sku">
                 <span>{{ variantSkuLabel(sku) }}</span>
                 <span v-if="sku.price != null">{{ formatPrice(sku.price) }}</span>
-                <img v-if="sku.image_url" :src="sku.image_url" :alt="variantSkuLabel(sku)" class="rms-menu-item__sku-img" />
+                <img v-if="sku.image_url" :src="sku.image_url" :alt="variantSkuLabel(sku)" loading="lazy" class="rms-menu-item__sku-img" />
               </li>
             </ul>
           </template>
+            </div>
+          </div>
         </li>
       </ul>
     </div>
@@ -60,7 +77,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { usePublicMenuDisplay } from '@/composables/usePublicMenuDisplay'
 
 const props = defineProps({
   menuHeading: { type: String, default: 'Menu' },
@@ -77,53 +94,16 @@ const props = defineProps({
   currency: { type: String, default: 'USD' },
 })
 
-const groups = computed(() => {
-  if (props.menuGroups.length) return props.menuGroups
-  if (!props.menuItems.length) return []
-  return [
-    {
-      category_name: props.menuHeading,
-      items: [...props.menuItems],
-    },
-  ]
-})
-
-function formatPrice(price) {
-  return new Intl.NumberFormat(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(price) + ' ' + props.currency
-}
-
-function itemPrice(item) {
-  if (!item) return null
-  if (item.type === 'with_variants') return null
-  return item.price != null ? Number(item.price) : null
-}
-
-function itemTags(item) {
-  return Array.isArray(item?.tags) ? item.tags : []
-}
-
-function comboEntries(item) {
-  return Array.isArray(item?.combo_entries) ? item.combo_entries : []
-}
-
-function variantOptionGroupsSummary(item) {
-  const groups = Array.isArray(item?.variant_option_groups) ? item.variant_option_groups : []
-  if (!groups.length) return ''
-  return groups.map((g) => `${g.name || 'Option'}: ${Array.isArray(g.values) ? g.values.join(', ') : ''}`).join('; ')
-}
-
-function variantSkus(item) {
-  return Array.isArray(item?.variant_skus) ? item.variant_skus : []
-}
-
-function variantSkuLabel(sku) {
-  if (!sku?.option_values || typeof sku.option_values !== 'object') return ''
-  const vals = Object.values(sku.option_values).filter(Boolean)
-  return vals.join(', ') || '—'
-}
+const {
+  displayGroups,
+  formatPrice,
+  itemPrice,
+  itemTags,
+  comboEntries,
+  variantOptionGroupsSummary,
+  variantSkus,
+  variantSkuLabel,
+} = usePublicMenuDisplay(props)
 
 function tagStyle(tag) {
   const color = tag?.color || '#64748b'
@@ -159,6 +139,12 @@ function tagStyle(tag) {
   padding: 0;
   margin: 0.5rem 0 0;
 }
+.rms-menu-item__combo-list {
+  padding-left: 1rem;
+  margin-left: 0.125rem;
+  border-left: 2px solid #e2e8f0;
+  font-size: 0.75rem;
+}
 .rms-menu-item__combo-list li,
 .rms-menu-item__variant-sku {
   padding: 0.25rem 0;
@@ -167,6 +153,45 @@ function tagStyle(tag) {
   flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
+}
+.rms-menu-item__combo-list li {
+  font-size: 0.75rem;
+}
+.rms-menu__category-img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+  max-height: 140px;
+}
+@media (min-width: 768px) {
+  .rms-menu__category-img {
+    max-height: 180px;
+  }
+}
+.rms-menu-item__top {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+.rms-menu-item__thumb {
+  width: 80px;
+  height: 80px;
+  flex-shrink: 0;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 8px;
+}
+@media (min-width: 768px) {
+  .rms-menu-item__thumb {
+    width: 96px;
+    height: 96px;
+  }
+}
+.rms-menu-item__content {
+  flex: 1;
+  min-width: 0;
 }
 .rms-menu-item__variant-summary {
   margin: 0.5rem 0 0;

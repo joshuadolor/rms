@@ -232,6 +232,142 @@
           </AppButton>
         </section>
 
+        <!-- Image (menu items / catalog context only): simple/combo one image; with_variants one per SKU -->
+        <section
+          v-if="isMenuItemsModule && isEdit && standaloneItem && (effectiveItemType === 'simple' || effectiveItemType === 'combo' || effectiveItemType === 'with_variants')"
+          class="bg-white dark:bg-zinc-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 lg:p-6 space-y-4"
+          data-testid="menu-item-image-section"
+        >
+          <h3 class="font-semibold text-charcoal dark:text-white flex items-center gap-2">
+            <span class="material-icons text-slate-500 dark:text-slate-400">image</span>
+            Image
+          </h3>
+          <p class="text-sm text-slate-500 dark:text-slate-400">
+            Optional. JPEG, PNG, GIF or WebP, max 2MB. Stored as 512×512 square.
+          </p>
+
+          <!-- Simple or combo: single item image -->
+          <template v-if="effectiveItemType === 'simple' || effectiveItemType === 'combo'">
+            <div class="flex flex-wrap items-start gap-4">
+              <div
+                v-if="menuItemFromApi?.image_url"
+                class="relative shrink-0"
+              >
+                <img
+                  :src="menuItemFromApi.image_url"
+                  alt=""
+                  class="w-24 h-24 object-cover rounded-lg border border-slate-200 dark:border-slate-700"
+                  data-testid="menu-item-image-preview"
+                />
+                <button
+                  type="button"
+                  class="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center shadow min-h-[44px] min-w-[44px]"
+                  aria-label="Remove image"
+                  :disabled="uploadingImageFor === 'item'"
+                  data-testid="menu-item-image-remove"
+                  @click="removeItemImage"
+                >
+                  <span class="material-icons text-lg">close</span>
+                </button>
+              </div>
+              <div class="flex flex-col gap-2">
+                <input
+                  ref="itemImageFileInputRef"
+                  type="file"
+                  accept="image/jpeg,image/png,image/gif,image/webp"
+                  class="sr-only"
+                  data-testid="menu-item-image-input"
+                  @change="onItemImageSelect"
+                />
+                <AppButton
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  class="min-h-[44px]"
+                  :disabled="uploadingImageFor === 'item'"
+                  @click="itemImageFileInputRef?.click()"
+                >
+                  <template v-if="uploadingImageFor === 'item'" #icon>
+                    <span class="material-icons animate-spin">sync</span>
+                  </template>
+                  <template v-else #icon>
+                    <span class="material-icons">upload</span>
+                  </template>
+                  {{ menuItemFromApi?.image_url ? 'Change image' : 'Upload image' }}
+                </AppButton>
+                <AppButton
+                  v-require-paid
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  class="min-h-[44px] text-primary"
+                  data-testid="menu-item-beautify-ai"
+                  @click="onBeautifyAiClick"
+                >
+                  <template #icon><span class="material-icons">auto_awesome</span></template>
+                  Beautify with AI
+                </AppButton>
+              </div>
+            </div>
+          </template>
+
+          <!-- With variants: image per SKU -->
+          <template v-else-if="effectiveItemType === 'with_variants' && menuItemFromApi?.variant_skus?.length">
+            <ul class="space-y-3">
+              <li
+                v-for="sku in menuItemFromApi.variant_skus"
+                :key="sku.uuid"
+                class="flex flex-wrap items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700"
+              >
+                <span class="font-medium text-charcoal dark:text-white min-w-[8rem]">{{ variantSkuLabel(sku) }}</span>
+                <span class="text-slate-600 dark:text-slate-300">{{ formatBasePrice(sku.price) }}</span>
+                <div class="flex items-center gap-2">
+                  <img
+                    v-if="sku.image_url"
+                    :src="sku.image_url"
+                    alt=""
+                    class="w-12 h-12 object-cover rounded border border-slate-200 dark:border-slate-700"
+                  />
+                  <input
+                    :ref="(el) => setVariantImageInputRef(sku.uuid, el)"
+                    type="file"
+                    accept="image/jpeg,image/png,image/gif,image/webp"
+                    class="sr-only"
+                    :data-testid="`variant-image-input-${sku.uuid}`"
+                    @change="(e) => onVariantImageSelect(sku.uuid, e)"
+                  />
+                  <AppButton
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    class="min-h-[44px]"
+                    :disabled="uploadingImageFor === sku.uuid"
+                    @click="variantImageInputRefs[sku.uuid]?.click()"
+                  >
+                    <template v-if="uploadingImageFor === sku.uuid" #icon>
+                      <span class="material-icons animate-spin">sync</span>
+                    </template>
+                    <template v-else #icon><span class="material-icons">upload</span></template>
+                    {{ sku.image_url ? 'Change' : 'Add' }}
+                  </AppButton>
+                  <AppButton
+                    v-if="sku.image_url"
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    class="min-h-[44px] min-w-[44px] text-red-600 dark:text-red-400"
+                    aria-label="Remove variant image"
+                    :disabled="uploadingImageFor === sku.uuid"
+                    @click="removeVariantImage(sku.uuid)"
+                  >
+                    <span class="material-icons">close</span>
+                  </AppButton>
+                </div>
+              </li>
+            </ul>
+          </template>
+        </section>
+
         <!-- Catalog combo entries (standalone edit) -->
         <section
           v-if="standaloneItem && isMenuItemsModule && form.type === 'combo'"
@@ -482,6 +618,15 @@ const catalogItemsForSummary = ref([])
 const showSaveConfirmModal = ref(false)
 /** Snapshot after loading edit form: used to detect combo/variant deletions or text changes. */
 const initialEditState = ref(null)
+/** Loaded menu item from API (catalog context) for image_url and variant_skus[].image_url display. */
+const menuItemFromApi = ref(null)
+/** Uploading state for item or variant image (catalog context). */
+const uploadingImageFor = ref(null)
+const itemImageFileInputRef = ref(null)
+const variantImageInputRefs = ref({})
+
+/** Item type for image section: simple, combo, or with_variants (catalog context only). */
+const effectiveItemType = computed(() => form.type || 'simple')
 
 const form = reactive({
   sort_order: 0,
@@ -853,6 +998,73 @@ async function revertToBase() {
   }
 }
 
+function setVariantImageInputRef(uuid, el) {
+  if (el) variantImageInputRefs.value[uuid] = el
+  else delete variantImageInputRefs.value[uuid]
+}
+
+/** Catalog context only: upload/remove item or variant image via menuItemService. */
+async function removeItemImage() {
+  if (!itemUuid.value || !isMenuItemsModule.value) return
+  uploadingImageFor.value = 'item'
+  try {
+    await menuItemService.deleteImage(itemUuid.value)
+    toastStore.success('Image removed.')
+    await loadStandaloneMenuItem()
+  } catch (e) {
+    toastStore.error(e?.response?.data?.message ?? normalizeApiError(e).message)
+  } finally {
+    uploadingImageFor.value = null
+  }
+}
+
+function onItemImageSelect(event) {
+  const file = event.target?.files?.[0]
+  if (!file || !itemUuid.value || !isMenuItemsModule.value) return
+  uploadingImageFor.value = 'item'
+  menuItemService.uploadImage(itemUuid.value, file)
+    .then(() => {
+      toastStore.success('Image updated.')
+      return loadStandaloneMenuItem()
+    })
+    .catch((e) => toastStore.error(e?.response?.data?.message ?? normalizeApiError(e).message))
+    .finally(() => { uploadingImageFor.value = null })
+  event.target.value = ''
+}
+
+function onVariantImageSelect(skuUuid, event) {
+  const file = event.target?.files?.[0]
+  if (!file || !itemUuid.value || !skuUuid || !isMenuItemsModule.value) return
+  uploadingImageFor.value = skuUuid
+  menuItemService.uploadVariantImage(itemUuid.value, skuUuid, file)
+    .then(() => {
+      toastStore.success('Image updated.')
+      return loadStandaloneMenuItem()
+    })
+    .catch((e) => toastStore.error(e?.response?.data?.message ?? normalizeApiError(e).message))
+    .finally(() => { uploadingImageFor.value = null })
+  event.target.value = ''
+}
+
+async function removeVariantImage(skuUuid) {
+  if (!itemUuid.value || !skuUuid || !isMenuItemsModule.value) return
+  uploadingImageFor.value = skuUuid
+  try {
+    await menuItemService.deleteVariantImage(itemUuid.value, skuUuid)
+    toastStore.success('Image removed.')
+    await loadStandaloneMenuItem()
+  } catch (e) {
+    toastStore.error(e?.response?.data?.message ?? normalizeApiError(e).message)
+  } finally {
+    uploadingImageFor.value = null
+  }
+}
+
+function onBeautifyAiClick() {
+  // v-require-paid shows modal when not paid; when paid this runs — AI beautification to be implemented
+  toastStore.info('AI image beautification coming soon.')
+}
+
 async function translateLocale(targetLoc) {
   const defaultLoc = restaurant.value?.default_locale
   if (!defaultLoc || targetLoc === defaultLoc) return
@@ -933,6 +1145,7 @@ function initFormFromRestaurant() {
 
 async function loadMenuItem() {
   if (!uuid.value || !itemUuid.value) return
+  menuItemFromApi.value = null
   try {
     const res = await restaurantService.getMenuItem(uuid.value, itemUuid.value)
     const item = res?.data != null ? MenuItem.fromApi(res) : null
@@ -1028,6 +1241,11 @@ async function loadStandaloneMenuItem() {
       catalogItemsForSummary.value = raw.map((i) => MenuItem.fromApi({ data: i }))
     } else {
       catalogItemsForSummary.value = []
+    }
+    menuItemFromApi.value = {
+      ...standaloneItem.value,
+      image_url: item.image_url ?? null,
+      variant_skus: (item.variant_skus ?? []).map((s) => ({ ...s, image_url: s.image_url ?? null })),
     }
     setInitialEditState()
   } catch (e) {

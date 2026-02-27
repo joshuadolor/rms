@@ -68,6 +68,44 @@ class PublicRestaurantPage {
     await expect(this.page.getByRole('list', { name: 'Combo contents' })).toBeVisible()
   }
 
+  /**
+   * Assert a combo entry line (e.g. "Item A × 1" or "Fries × 2") is visible in the in-page public menu.
+   * Scoped to .rms-menu.
+   */
+  async expectComboEntryLineVisible(text) {
+    const menu = this.page.locator('.rms-menu')
+    await expect(menu.getByText(text)).toBeVisible()
+  }
+
+  /**
+   * Assert a menu item image is visible in the public menu (img with alt matching item name).
+   * Scoped to .rms-menu.
+   */
+  async expectMenuItemImageVisible(itemName) {
+    const menu = this.page.locator('.rms-menu')
+    await expect(menu.getByRole('img', { name: itemName })).toBeVisible()
+  }
+
+  /**
+   * Assert a category/group image is visible in the public menu (img with alt matching category name).
+   * Scoped to .rms-menu.
+   */
+  async expectCategoryImageVisible(categoryName) {
+    const menu = this.page.locator('.rms-menu')
+    await expect(menu.getByRole('img', { name: categoryName })).toBeVisible()
+  }
+
+  /**
+   * Assert an image with the given src (or src containing the substring) is visible in the public menu.
+   * Use when mocking a known image_url to verify the img element is rendered.
+   * Scoped to .rms-menu. Pass a unique substring of the URL (e.g. "e2e.test/soup.png"); avoid double quotes.
+   */
+  async expectMenuImageWithSrcVisible(srcSubstring) {
+    const menu = this.page.locator('.rms-menu')
+    const safe = String(srcSubstring).replace(/"/g, '')
+    await expect(menu.locator(`img[src*="${safe}"]`)).toBeVisible()
+  }
+
   /** Assert the Size and price options list (variant SKUs, aria-label "Size and price options") is visible. */
   async expectVariantSizeAndPriceOptionsVisible() {
     await expect(this.page.getByRole('list', { name: 'Size and price options' })).toBeVisible()

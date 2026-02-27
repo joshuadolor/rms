@@ -330,6 +330,41 @@ export async function deleteCategory(restaurantUuid, menuUuid, categoryUuid) {
 }
 
 /**
+ * Upload category image (restaurant context). Multipart form field "file"; image jpeg/png/gif/webp, max 2MB; resized to 512×512.
+ * @param {string} restaurantUuid
+ * @param {string} menuUuid
+ * @param {string} categoryUuid
+ * @param {File} file
+ * @returns {Promise<{ message: string, data: object }>}
+ */
+export async function uploadCategoryImage(restaurantUuid, menuUuid, categoryUuid, file) {
+  const form = new FormData()
+  form.append('file', file)
+  const { data } = await api.post(
+    `/restaurants/${restaurantUuid}/menus/${menuUuid}/categories/${categoryUuid}/image`,
+    form,
+    { headers: { 'Content-Type': 'multipart/form-data' } }
+  )
+  invalidateCategoriesCache(restaurantUuid, menuUuid)
+  return data
+}
+
+/**
+ * Delete category image.
+ * @param {string} restaurantUuid
+ * @param {string} menuUuid
+ * @param {string} categoryUuid
+ * @returns {Promise<{ message: string, data: object }>}
+ */
+export async function deleteCategoryImage(restaurantUuid, menuUuid, categoryUuid) {
+  const { data } = await api.delete(
+    `/restaurants/${restaurantUuid}/menus/${menuUuid}/categories/${categoryUuid}/image`
+  )
+  invalidateCategoriesCache(restaurantUuid, menuUuid)
+  return data
+}
+
+/**
  * Reorder categories. Body: { order: string[] }. Invalidates categories list cache for this menu.
  * @param {string} restaurantUuid
  * @param {string} menuUuid
@@ -440,6 +475,70 @@ export async function deleteMenuItem(uuid, itemUuid) {
   invalidateUserMenuItemsListCache()
 }
 
+/**
+ * Upload menu item image (simple/combo: one image per item). multipart/form-data, field "file". Image jpeg/png/gif/webp, max 2MB. Server resizes to 512×512.
+ * @param {string} restaurantUuid
+ * @param {string} itemUuid
+ * @param {File} file
+ * @returns {Promise<{ message: string, data: object }>}
+ */
+export async function uploadMenuItemImage(restaurantUuid, itemUuid, file) {
+  const form = new FormData()
+  form.append('file', file)
+  const { data } = await api.post(`/restaurants/${restaurantUuid}/menu-items/${itemUuid}/image`, form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+  invalidateMenuItemsCache(restaurantUuid)
+  return data
+}
+
+/**
+ * Delete menu item image.
+ * @param {string} restaurantUuid
+ * @param {string} itemUuid
+ * @returns {Promise<{ message: string, data: object }>}
+ */
+export async function deleteMenuItemImage(restaurantUuid, itemUuid) {
+  const { data } = await api.delete(`/restaurants/${restaurantUuid}/menu-items/${itemUuid}/image`)
+  invalidateMenuItemsCache(restaurantUuid)
+  return data
+}
+
+/**
+ * Upload variant SKU image. Same validation as menu item image; server resizes to 512×512.
+ * @param {string} restaurantUuid
+ * @param {string} itemUuid
+ * @param {string} skuUuid
+ * @param {File} file
+ * @returns {Promise<{ message: string, data: object }>}
+ */
+export async function uploadMenuItemVariantImage(restaurantUuid, itemUuid, skuUuid, file) {
+  const form = new FormData()
+  form.append('file', file)
+  const { data } = await api.post(
+    `/restaurants/${restaurantUuid}/menu-items/${itemUuid}/variants/${skuUuid}/image`,
+    form,
+    { headers: { 'Content-Type': 'multipart/form-data' } }
+  )
+  invalidateMenuItemsCache(restaurantUuid)
+  return data
+}
+
+/**
+ * Delete variant SKU image.
+ * @param {string} restaurantUuid
+ * @param {string} itemUuid
+ * @param {string} skuUuid
+ * @returns {Promise<{ message: string, data: object }>}
+ */
+export async function deleteMenuItemVariantImage(restaurantUuid, itemUuid, skuUuid) {
+  const { data } = await api.delete(
+    `/restaurants/${restaurantUuid}/menu-items/${itemUuid}/variants/${skuUuid}/image`
+  )
+  invalidateMenuItemsCache(restaurantUuid)
+  return data
+}
+
 export const restaurantService = {
   list: listRestaurants,
   get: getRestaurant,
@@ -465,6 +564,8 @@ export const restaurantService = {
   createCategory,
   updateCategory,
   deleteCategory,
+  uploadCategoryImage,
+  deleteCategoryImage,
   reorderCategories,
   invalidateCategoriesCache,
   reorderMenuItems,
@@ -473,6 +574,10 @@ export const restaurantService = {
   createMenuItem,
   updateMenuItem,
   deleteMenuItem,
+  uploadMenuItemImage,
+  deleteMenuItemImage,
+  uploadMenuItemVariantImage,
+  deleteMenuItemVariantImage,
   invalidateMenuItemsCache,
 }
 

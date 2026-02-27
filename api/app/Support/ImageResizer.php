@@ -103,6 +103,83 @@ final class ImageResizer
     }
 
     /**
+     * Resize image to a square: center-crop to square then resize to target size.
+     * Use for menu item images (e.g. 512×512). Same validation as resizeToFit (supported formats, dimensions).
+     *
+     * @param  int  $size  Target width and height in pixels.
+     * @return string Binary image content (same format as input).
+     *
+     * @throws \InvalidArgumentException When the file is not a supported image or GD cannot load it.
+     */
+    public static function resizeToSquare(UploadedFile $file, int $size): string
+    {
+        if (! function_exists('imagecreatefrompng')) {
+            throw new \InvalidArgumentException(
+                'PHP GD extension with PNG support is required for image uploads. ' .
+                'Docker: rebuild the API image so GD is installed (api/Dockerfile already includes it): docker compose build api && docker compose up -d api. ' .
+                'Local PHP: install the GD extension (e.g. apt install php8.2-gd, or on macOS: brew install php and ensure gd is enabled in php.ini).'
+            );
+        }
+
+        $path = $file->getRealPath();
+        if ($path === false || ! is_readable($path)) {
+            throw new \InvalidArgumentException(__('Could not read uploaded image.'));
+        }
+
+        $mime = strtolower($file->getMimeType());
+        $image = self::loadImage($path, $mime);
+        if ($image === false) {
+            throw new \InvalidArgumentException(__('Unsupported or invalid image.'));
+        }
+
+        $width = \imagesx($image);
+        $height = \imagesy($image);
+        if ($width === false || $height === false) {
+            \imagedestroy($image);
+            throw new \InvalidArgumentException(__('Could not read image dimensions.'));
+        }
+
+        $side = min($width, $height);
+        $srcX = (int) round(($width - $side) / 2);
+        $srcY = (int) round(($height - $side) / 2);
+
+        $resized = \imagecreatetruecolor($size, $size);
+        if ($resized === false) {
+            \imagedestroy($image);
+            throw new \InvalidArgumentException(__('Could not create resized image.'));
+        }
+
+        if (in_array($mime, ['image/png', 'image/gif'], true)) {
+            \imagealphablending($resized, false);
+            \imagesavealpha($resized, true);
+            $transparent = \imagecolorallocatealpha($resized, 255, 255, 255, 127);
+            if ($transparent !== false) {
+                \imagefill($resized, 0, 0, $transparent);
+            }
+        }
+
+        $success = \imagecopyresampled(
+            $resized,
+            $image,
+            0, 0, $srcX, $srcY,
+            $size,
+            $size,
+            $side,
+            $side
+        );
+        \imagedestroy($image);
+        if (! $success) {
+            \imagedestroy($resized);
+            throw new \InvalidArgumentException(__('Could not resize image.'));
+        }
+
+        $content = self::encodeImage($resized, $mime);
+        \imagedestroy($resized);
+
+        return $content;
+    }
+
+    /**
      * @return \GdImage|false
      */
     private static function loadImage(string $path, string $mime)
