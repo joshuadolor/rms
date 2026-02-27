@@ -3,6 +3,7 @@
  * Used by Template1Menu and Template2Menu so markup stays template-specific.
  */
 import { computed, toRef } from 'vue'
+import AvailabilityDisplay from '@/models/AvailabilityDisplay.js'
 
 export function usePublicMenuDisplay(props) {
   const menuGroups = toRef(props, 'menuGroups')
@@ -12,8 +13,13 @@ export function usePublicMenuDisplay(props) {
   const displayGroups = computed(() => {
     if (menuGroups.value?.length) return menuGroups.value
     if (!menuItems.value?.length) return []
-    return [{ category_name: 'Menu', category_uuid: null, items: [...menuItems.value] }]
+    return [{ category_name: 'Menu', category_uuid: null, availability: null, items: [...menuItems.value] }]
   })
+
+  /** Availability display model for a menu item or category. */
+  function getAvailabilityDisplay(availability) {
+    return AvailabilityDisplay.from(availability)
+  }
 
   function formatPrice(price) {
     const n = Number(price)
@@ -56,6 +62,7 @@ export function usePublicMenuDisplay(props) {
 
   return {
     displayGroups,
+    getAvailabilityDisplay,
     formatPrice,
     itemPrice,
     itemTags,

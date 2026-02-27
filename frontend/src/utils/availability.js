@@ -136,24 +136,74 @@ function collapseAvailabilityRanges(perDay) {
     let j = i + 1
     while (j < perDay.length && perDay[j].text === text) j++
     const dayLabel = j - i === 1 ? short : `${short}–${perDay[j - 1].short}`
-    segments.push(text === 'Closed' ? `${dayLabel} closed` : `${dayLabel} ${text}`)
+    segments.push(text === 'Closed' ? `${dayLabel} not available` : `${dayLabel} ${text}`)
     i = j
   }
   return segments.join(', ')
 }
 
 /**
- * Format an availability object (or null) into a short human-readable string for the public menu.
- * Same shape as operating_hours: keyed by sunday–saturday, each day { open, slots: [{ from, to }] }.
- * @param {Record<string, { open?: boolean, slots?: Array<{ from: string, to: string }> }> | null} availability
- * @returns {string | null} Compact summary (e.g. "Mon–Fri 11:00–15:00, Sat 10:00–14:00") or null when always available
+ * Get day key (sunday..saturday) for a date. Uses the date's local day.
+ * @param {Date} date
+ * @returns {string}
  */
-export function formatAvailabilityForDisplay(availability) {
+export function getDayKey(date) {
+  const dayIndex = date.getDay()
+  return DAY_KEYS[dayIndex]
+}
+
+/**
+ * Check if an availability schedule is "available now" (current local date and time falls within any slot for today).
+ * @param {Record<string, { open?: boolean, slots?: Array<{ from: string, to: string }> }> | null} availability
+ * @param {Date} [now]
+ * @returns {boolean} true if no schedule (null) or current time is inside a slot for today
+ */
+export function isAvailableNow(availability, now = new Date()) {
+  if (availability == null || typeof availability !== 'object') return true
+  const dayKey = getDayKey(now)
+  const day = availability[dayKey]
+  if (!day || !day.open || !Array.isArray(day.slots) || day.slots.length === 0) return false
+  const minutes = now.getHours() * 60 + now.getMinutes()
+  for (const slot of day.slots) {
+    const fromM = timeToMinutes(slot.from)
+    const toM = timeToMinutes(slot.to)
+    if (Number.isNaN(fromM) || Number.isNaN(toM)) continue
+    if (minutes >= fromM && minutes < toM) return true
+  }
+  return false
+}
+
+/**
+ * Summary of when an item/category is available (only open days), for "Available only …" copy.
+ * @param {Record<string, { open?: boolean, slots?: Array<{ from: string, to: string }> }>} availability
+ * @returns {string}
+ */
+function getAvailableOnlySummary(availability) {
+  const perDay = getAvailabilityPerDay(availability)
+  const openDays = perDay.filter((d) => d.text !== 'Closed')
+  if (!openDays.length) return ''
+  return collapseAvailabilityRanges(openDays)
+}
+
+/**
+ * Format an availability object (or null) into a short human-readable string for the public menu.
+ * When the item/category is not available at the given time, returns "Currently not available. Available only [when]".
+ * When available at the given time, returns the full schedule (e.g. "Sun–Mon not available, Tue–Sat 09:00–21:00").
+ * @param {Record<string, { open?: boolean, slots?: Array<{ from: string, to: string }> }> | null} availability
+ * @param {Date} [now] Defaults to current local date/time
+ * @returns {string | null} Compact summary or null when always available (no schedule)
+ */
+export function formatAvailabilityForDisplay(availability, now = new Date()) {
   if (availability == null || typeof availability !== 'object') return null
   const perDay = getAvailabilityPerDay(availability)
   if (!perDay.length) return null
   const allClosed = perDay.every((d) => d.text === 'Closed')
-  if (allClosed) return 'Closed'
+  if (allClosed) return null
+  const availableNow = isAvailableNow(availability, now)
+  if (!availableNow) {
+    const when = getAvailableOnlySummary(availability)
+    return when ? `Currently not available. Available only ${when}` : null
+  }
   const summary = collapseAvailabilityRanges(perDay)
   return summary || null
 }

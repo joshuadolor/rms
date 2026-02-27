@@ -166,61 +166,6 @@
   margin: 0 0 2rem;
 }
 
-.rms-template-1 .rms-menu-item {
-  background: #fff;
-  border-radius: 14px;
-  padding: 1.25rem 1.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  border-left: 4px solid var(--rms-accent);
-}
-
-.rms-template-1 .rms-menu-item__row {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 1rem;
-}
-
-.rms-template-1 .rms-menu-item__name {
-  font-weight: 700;
-  font-size: 1.0625rem;
-  color: #0f172a;
-  margin: 0 0 0.25rem;
-}
-
-.rms-template-1 .rms-menu-item__description {
-  font-size: 0.9375rem;
-  color: #64748b;
-  margin: 0 0 0.5rem;
-}
-
-.rms-template-1 .rms-menu-item__price {
-  font-weight: 700;
-  color: var(--rms-accent);
-  font-size: 1.125rem;
-  white-space: nowrap;
-}
-
-.rms-template-1 .rms-menu-item--unavailable .rms-menu-item__name {
-  opacity: 0.7;
-}
-
-.rms-menu-item__unavailable-label {
-  display: inline-block;
-  margin-left: 0.5rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 0.15rem 0.5rem;
-  border-radius: 4px;
-  background: #fef3c7;
-  color: #92400e;
-}
-
-.rms-template-2 .rms-menu-item__unavailable-label {
-  background: #f1f5f9;
-  color: #64748b;
-}
-
 .rms-template-1 .rms-about {
   background: #fff;
   border-radius: 16px;
@@ -420,46 +365,6 @@
   list-style: none;
   padding: 0;
   margin: 0 0 2.5rem;
-}
-
-.rms-template-2 .rms-menu-item {
-  padding: 1rem 0;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.rms-template-2 .rms-menu-item:last-child {
-  border-bottom: none;
-}
-
-.rms-template-2 .rms-menu-item__row {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 1rem;
-}
-
-.rms-template-2 .rms-menu-item__name {
-  font-weight: 600;
-  font-size: 1rem;
-  color: #0f172a;
-  margin: 0;
-}
-
-.rms-template-2 .rms-menu-item__price {
-  font-weight: 500;
-  color: #0f172a;
-  font-size: 1rem;
-  white-space: nowrap;
-}
-
-.rms-template-2 .rms-menu-item__description {
-  font-size: 0.875rem;
-  color: #64748b;
-  margin: 0.25rem 0 0;
-}
-
-.rms-template-2 .rms-menu-item--unavailable .rms-menu-item__name {
-  color: #94a3b8;
 }
 
 .rms-template-2 .rms-about {

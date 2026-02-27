@@ -20,21 +20,22 @@
           <h3 class="heading-utilitarian text-4xl font-extrabold mb-12 flex flex-col gap-1 text-charcoal-blue">
             <span class="flex items-center gap-4">
               <span class="bg-charcoal-blue text-white px-3 py-1 text-xl">{{ String(gIdx + 1).padStart(2, '0') }}</span>
-              <span>{{ group.category_name }}</span>
+              <span :style="categoryUnavailableNow(group.availability) ? { opacity: 0.8 } : undefined">{{ group.category_name }}</span>
               <div class="flex-grow border-t-2 border-dotted border-charcoal-blue/20"></div>
               <span class="material-symbols-outlined text-oxidized-copper">restaurant_menu</span>
             </span>
-            <span v-if="formatAvailabilityForDisplay(group.availability)" class="text-sm font-mono font-medium uppercase tracking-wider text-charcoal-blue/70">{{ formatAvailabilityForDisplay(group.availability) }}</span>
+            <span v-if="formatAvailabilityForDisplay(group.availability, now)" class="text-sm font-mono font-medium uppercase tracking-wider text-charcoal-blue/70">{{ formatAvailabilityForDisplay(group.availability, now) }}</span>
           </h3>
           <div class="space-y-16">
             <div
               v-for="item in group.items"
               :key="item.uuid"
-              class="rms-menu-item group border-b border-concrete-gray pb-8 last:border-0"
+              data-testid="public-menu-item"
+              class="group border-b border-concrete-gray pb-8 last:border-0"
             >
               <div class="flex items-center justify-between mb-3">
                 <div class="flex flex-wrap items-center gap-2 min-w-0" :class="item.is_available === false ? 'text-charcoal-blue/60' : 'group-hover:[&_.heading-utilitarian]:text-oxidized-copper'">
-                  <span class="heading-utilitarian text-3xl transition-colors">{{ item.name || 'Untitled' }}</span>
+                  <span class="heading-utilitarian text-3xl transition-colors" :style="itemUnavailableNow(item.availability) ? { opacity: 0.8 } : undefined">{{ item.name || 'Untitled' }}</span>
                   <span
                     v-for="tag in itemTags(item)"
                     :key="tag.uuid"
@@ -47,11 +48,11 @@
                     <span v-if="tag.text" class="font-mono text-xs uppercase">{{ tag.text }}</span>
                   </span>
                 </div>
-                <span v-if="item.type !== 'with_variants' && item.is_available !== false && itemPrice(item) != null" class="font-mono font-bold text-xl text-oxidized-copper shrink-0">{{ formatPrice(itemPrice(item)) }}</span>
+                <span v-if="item.type !== 'with_variants' && item.is_available !== false && itemPrice(item) != null" class="font-mono font-bold text-xl text-oxidized-copper shrink-0" :style="itemUnavailableNow(item.availability) ? { opacity: 0.8 } : undefined">{{ formatPrice(itemPrice(item)) }}</span>
                 <span v-else-if="item.type !== 'with_variants' && item.is_available === false" class="font-mono text-sm text-charcoal-blue/60 shrink-0">Not available</span>
                 <span v-else-if="item.type !== 'with_variants'" class="font-mono text-sm text-charcoal-blue/60 shrink-0">Price on request</span>
               </div>
-              <p v-if="formatAvailabilityForDisplay(item.availability)" class="text-xs font-mono uppercase tracking-wider text-charcoal-blue/60 mt-0.5">{{ formatAvailabilityForDisplay(item.availability) }}</p>
+              <p v-if="formatAvailabilityForDisplay(item.availability, now)" class="text-xs font-mono uppercase tracking-wider text-charcoal-blue/60 mt-0.5">{{ formatAvailabilityForDisplay(item.availability, now) }}</p>
               <p v-if="item.description" class="text-sm text-charcoal-blue/60 font-medium uppercase tracking-wider">{{ item.description }}</p>
               <ul v-if="item.type === 'combo' && comboEntries(item).length" class="mt-2 list-none pl-0 space-y-1 text-charcoal-blue/60 text-sm font-medium uppercase tracking-wider" aria-label="Combo contents">
                 <li v-for="(entry, eIdx) in comboEntries(item)" :key="eIdx">
@@ -67,7 +68,7 @@
                     class="flex flex-wrap items-center gap-x-3 gap-y-1 min-h-[44px]"
                   >
                     <span class="text-charcoal-blue font-medium">{{ variantSkuLabel(sku) }}</span>
-                    <span v-if="sku.price != null" class="font-mono font-bold text-oxidized-copper">{{ formatPrice(sku.price) }}</span>
+                    <span v-if="sku.price != null" class="font-mono font-bold text-oxidized-copper" :style="itemUnavailableNow(item.availability) ? { opacity: 0.8 } : undefined">{{ formatPrice(sku.price) }}</span>
                     <img v-if="sku.image_url" :src="sku.image_url" :alt="variantSkuLabel(sku)" class="w-12 h-12 object-cover rounded" />
                   </li>
                 </ul>
@@ -81,8 +82,9 @@
 </template>
 
 <script setup>
+import { ref, onMounted, onUnmounted } from 'vue'
 import { usePublicMenuDisplay } from '@/composables/usePublicMenuDisplay'
-import { formatAvailabilityForDisplay } from '@/utils/availability'
+import { formatAvailabilityForDisplay, isAvailableNow } from '@/utils/availability'
 
 const props = defineProps({
   menuGroups: { type: Array, default: () => [] },
@@ -101,4 +103,20 @@ const {
   variantSkus,
   variantSkuLabel,
 } = usePublicMenuDisplay(props)
+
+const now = ref(new Date())
+let nowInterval
+onMounted(() => {
+  nowInterval = setInterval(() => { now.value = new Date() }, 60 * 1000)
+})
+onUnmounted(() => {
+  if (nowInterval) clearInterval(nowInterval)
+})
+
+function categoryUnavailableNow(availability) {
+  return availability != null && typeof availability === 'object' && !isAvailableNow(availability, now.value)
+}
+function itemUnavailableNow(availability) {
+  return availability != null && typeof availability === 'object' && !isAvailableNow(availability, now.value)
+}
 </script>

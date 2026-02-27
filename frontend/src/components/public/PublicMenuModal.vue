@@ -63,8 +63,8 @@
                 @click="toggleCategory(gIdx)"
               >
                 <span class="rms-menu-modal__category-name">
-                  {{ group.category_name }}
-                  <span v-if="formatAvailabilityForDisplay(group.availability)" class="rms-menu-modal__category-availability">{{ formatAvailabilityForDisplay(group.availability) }}</span>
+                  <span :style="categoryUnavailableNow(group.availability) ? { opacity: 0.8 } : undefined">{{ group.category_name }}</span>
+                  <span v-if="formatAvailabilityForDisplay(group.availability, now)" class="rms-menu-modal__category-availability">{{ formatAvailabilityForDisplay(group.availability, now) }}</span>
                 </span>
                 <span class="material-icons rms-menu-modal__category-icon" aria-hidden="true">
                   {{ openIndex === gIdx ? 'expand_less' : 'expand_more' }}
@@ -88,7 +88,7 @@
                   :class="{ 'rms-menu-modal__item--highlight': highlightedUuid === item.uuid }"
                 >
                   <div class="rms-menu-modal__item-row">
-                    <span class="rms-menu-modal__item-name">
+                    <span class="rms-menu-modal__item-name" :style="itemUnavailableNow(item.availability) ? { opacity: 0.8 } : undefined">
                       {{ item.name || 'Untitled' }}
                       <span
                         v-for="tag in itemTags(item)"
@@ -103,11 +103,11 @@
                         <span class="material-symbols-outlined rms-menu-modal__tag-icon" aria-hidden="true">{{ tag.icon || 'label' }}</span>
                       </span>
                     </span>
-                    <span v-if="item.type !== 'with_variants' && item.is_available !== false && itemPrice(item) != null" class="rms-menu-modal__item-price" :style="primaryTextStyle">{{ formatPrice(itemPrice(item)) }}</span>
+                    <span v-if="item.type !== 'with_variants' && item.is_available !== false && itemPrice(item) != null" class="rms-menu-modal__item-price" :style="[primaryTextStyle, itemUnavailableNow(item.availability) ? { opacity: 0.8 } : undefined]">{{ formatPrice(itemPrice(item)) }}</span>
                     <span v-else-if="item.type !== 'with_variants' && item.is_available === false" class="rms-menu-modal__item-muted">Not available</span>
                     <span v-else-if="item.type !== 'with_variants'" class="rms-menu-modal__item-muted">Price on request</span>
                   </div>
-                  <p v-if="formatAvailabilityForDisplay(item.availability)" class="rms-menu-modal__item-availability">{{ formatAvailabilityForDisplay(item.availability) }}</p>
+                  <p v-if="formatAvailabilityForDisplay(item.availability, now)" class="rms-menu-modal__item-availability">{{ formatAvailabilityForDisplay(item.availability, now) }}</p>
                   <p v-if="item.description" class="rms-menu-modal__item-desc">{{ item.description }}</p>
                   <ul v-if="item.type === 'combo' && comboEntries(item).length" class="rms-menu-modal__combo-list" aria-label="Combo contents">
                     <li v-for="(entry, eIdx) in comboEntries(item)" :key="eIdx">
@@ -123,7 +123,7 @@
                         class="rms-menu-modal__sku"
                       >
                         <span class="rms-menu-modal__sku-label">{{ variantSkuLabel(sku) }}</span>
-                        <span v-if="sku.price != null" class="rms-menu-modal__item-price" :style="primaryTextStyle">{{ formatPrice(sku.price) }}</span>
+                        <span v-if="sku.price != null" class="rms-menu-modal__item-price" :style="[primaryTextStyle, itemUnavailableNow(item.availability) ? { opacity: 0.8 } : undefined]">{{ formatPrice(sku.price) }}</span>
                         <img v-if="sku.image_url" :src="sku.image_url" :alt="variantSkuLabel(sku)" class="rms-menu-modal__sku-img" />
                       </li>
                     </ul>
@@ -152,8 +152,8 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, nextTick } from 'vue'
-import { formatAvailabilityForDisplay } from '@/utils/availability'
+import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
+import { formatAvailabilityForDisplay, isAvailableNow } from '@/utils/availability'
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
@@ -169,6 +169,22 @@ const openIndex = ref(0)
 const highlightedUuid = ref(null)
 const itemRefs = ref({})
 const isPicking = ref(false)
+
+const now = ref(new Date())
+let nowInterval
+onMounted(() => {
+  nowInterval = setInterval(() => { now.value = new Date() }, 60 * 1000)
+})
+onUnmounted(() => {
+  if (nowInterval) clearInterval(nowInterval)
+})
+
+function categoryUnavailableNow(availability) {
+  return availability != null && typeof availability === 'object' && !isAvailableNow(availability, now.value)
+}
+function itemUnavailableNow(availability) {
+  return availability != null && typeof availability === 'object' && !isAvailableNow(availability, now.value)
+}
 
 const primary = computed(() => props.restaurant?.primary_color || '#2563eb')
 const primaryButtonStyle = computed(() => ({ backgroundColor: primary.value, borderColor: primary.value }))

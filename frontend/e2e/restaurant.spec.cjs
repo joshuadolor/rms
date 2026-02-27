@@ -304,6 +304,19 @@ function availabilitySat1000To1400() {
   }
 }
 
+/** Availability where every day is closed. formatAvailabilityForDisplay() returns null; no availability line is shown on the public menu. */
+function availabilityAllDaysClosed() {
+  return {
+    sunday: { open: false, slots: [] },
+    monday: { open: false, slots: [] },
+    tuesday: { open: false, slots: [] },
+    wednesday: { open: false, slots: [] },
+    thursday: { open: false, slots: [] },
+    friday: { open: false, slots: [] },
+    saturday: { open: false, slots: [] },
+  }
+}
+
 /** Normalize menu to API shape: name (from default locale), translations */
 function normalizeMenu(menu, defaultLocale = 'en') {
   const translations = menu.translations ?? { [defaultLocale]: { name: menu.name ?? 'Unnamed menu', description: null } }
@@ -2210,6 +2223,44 @@ test.describe('Restaurant module', () => {
       await publicPage.expectMenuSectionVisible()
       await publicPage.expectMenuItemNameVisible('All Day Coffee')
       await publicPage.expectAvailabilityTextNotVisibleInMenu('Mon–Fri 11:00–15:00')
+      await publicPage.expectNoAlwaysAvailableLabelInMenu()
+    })
+
+    test('when category or item has all-days-closed availability, no Closed label is shown (availability line absent)', async ({ page }) => {
+      const allClosed = availabilityAllDaysClosed()
+      mockPublicRestaurant(page, 'avail-all-closed', {
+        name: 'Off Hours Cafe',
+        slug: 'avail-all-closed',
+        template: 'template-1',
+        menu_groups: [
+          {
+            category_name: 'Lunch',
+            category_uuid: 'cat-closed',
+            availability: allClosed,
+            items: [
+              {
+                uuid: 'av-c1',
+                type: 'simple',
+                name: 'Weekday Soup',
+                description: null,
+                price: 5,
+                is_available: true,
+                availability: allClosed,
+                tags: [],
+              },
+            ],
+          },
+        ],
+        menu_items: [],
+        feedbacks: [],
+      })
+
+      const publicPage = new PublicRestaurantPage(page)
+      await publicPage.goToPublicBySlug('avail-all-closed')
+      await publicPage.expectTemplate1Applied()
+      await publicPage.expectMenuSectionVisible()
+      await publicPage.expectMenuItemNameVisible('Weekday Soup')
+      await publicPage.expectAvailabilityTextNotVisibleInMenu('Closed')
       await publicPage.expectNoAlwaysAvailableLabelInMenu()
     })
   })

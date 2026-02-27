@@ -262,7 +262,7 @@ class PublicRestaurantPage {
   async expectMenuHasAtLeastOneItem() {
     const menuSection = this.page.locator('.rms-menu')
     await expect(menuSection).toBeVisible()
-    await expect(menuSection.locator('.rms-menu-item').first()).toBeVisible({ timeout: 5000 })
+    await expect(menuSection.getByTestId('public-menu-item').first()).toBeVisible({ timeout: 5000 })
   }
 
   /** Assert the About section (heading "About") is visible. */
