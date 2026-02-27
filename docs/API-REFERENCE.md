@@ -533,7 +533,7 @@ Read-only list of all restaurants (same payload shape as owner GET `/api/restaur
 }
 ```
 
-Restaurant payload: uuid, name, tagline, primary_color, slug, public_url, address, latitude, longitude, phone, email, website, social_links, default_locale, currency, operating_hours, languages, logo_url, banner_url, created_at, updated_at. No internal `id`.
+Restaurant payload: uuid, name, tagline, primary_color, slug, year_established, public_url, address, latitude, longitude, phone, email, website, social_links, default_locale, currency, operating_hours, languages, logo_url, banner_url, created_at, updated_at. No internal `id`.
 
 **403** – Not a superadmin.
 
@@ -687,6 +687,8 @@ Returned by list, show, create, update, and after logo/banner upload:
   tagline: string | null;
   primary_color: string | null;  // hex, e.g. #ff5500; for public site theming
   slug: string;
+  template: string;         // e.g. "template-1" or "template-2"; valid values in config('templates.ids')
+  year_established: number | null;  // e.g. 1995 for "Est. 1995"; 1800–(current year + 1)
   public_url: string;       // e.g. https://slug.yourapp.com
   address: string | null;
   latitude: number | null;
@@ -768,6 +770,7 @@ Returns only restaurants owned by the authenticated user.
   "tagline": "string (optional, max 255)",
   "primary_color": "string (optional; hex e.g. #f00, #ff5500, #ff5500cc)",
   "slug": "string (optional; default: slug from name, unique)",
+  "template": "string (optional; one of config('templates.ids'), e.g. template-1, template-2; default: template-1)",
   "address": "string (optional, max 1000)",
   "latitude": "number (optional, -90 to 90)",
   "longitude": "number (optional, -180 to 180)",
@@ -781,7 +784,8 @@ Returns only restaurants owned by the authenticated user.
     "linkedin": "string (optional, URL)"
   },
   "default_locale": "string (optional, e.g. en, nl, ru; must be in supported locales)",
-  "operating_hours": "object (optional; see Restaurant payload operating_hours shape; timeslots must not overlap per day)"
+  "operating_hours": "object (optional; see Restaurant payload operating_hours shape; timeslots must not overlap per day)",
+  "year_established": "integer (optional, nullable; 1800 to current year + 1)"
 }
 ```
 
@@ -806,7 +810,7 @@ Returns only restaurants owned by the authenticated user.
 | PUT | `/api/restaurants/{uuid}` | Bearer + verified |
 | PATCH | `/api/restaurants/{uuid}` | Bearer + verified |
 
-**Body (JSON):** Same fields as create (except **slug**); all optional. Send only fields to change. **Slug cannot be changed** after create (subdomain stability); the API does not accept `slug` on update. **primary_color** may be set to a hex value (e.g. `#ff5500`) or `null` to clear. **operating_hours**: optional; when present, same shape as in the restaurant payload; timeslots must not overlap per day; send `null` to clear.
+**Body (JSON):** Same fields as create (except **slug**); all optional. Send only fields to change. **Slug cannot be changed** after create (subdomain stability); the API does not accept `slug` on update. **template**: optional; must be one of the allowed template IDs (e.g. `template-1`, `template-2`). **primary_color** may be set to a hex value (e.g. `#ff5500`) or `null` to clear. **operating_hours**: optional; when present, same shape as in the restaurant payload; timeslots must not overlap per day; send `null` to clear. **year_established**: optional integer, nullable; when present must be 1800 to current year + 1; send `null` to clear.
 
 **Response (200):** `{ "message": "Restaurant updated.", "data": { restaurant payload } }`  
 **403:** Not owner. **404:** Not found. **422:** Validation.
@@ -879,9 +883,103 @@ Serves the restaurant banner image. **No authentication required.** Response has
 
 ---
 
+### Contact & links (restaurant contacts)
+
+A restaurant can have **unlimited contact and link entries** (phone numbers and social/website URLs). The API path remains `/api/restaurants/{restaurant}/contacts` for backward compatibility. Each entry has a **type**, a **value** (phone number or URL), optional **label**, and **is_active** (only active entries are shown on the public site). All endpoints require **Bearer + verified** and restaurant ownership. Path parameters: **restaurant** and **contact** are **uuid** (never internal `id`). **No internal `id` in any response.**
+
+**Phone-like types** (value = phone number): `whatsapp`, `mobile`, `phone`, `fax`, `other`.  
+**Link types** (value = URL): `facebook`, `instagram`, `twitter`, `website`.
+
+#### Contact payload (owner list/show/create/update)
+
+```ts
+{
+  uuid: string;
+  type: string;        // one of: whatsapp, mobile, phone, fax, other, facebook, instagram, twitter, website
+  value: string;       // phone number (phone types) or URL (link types)
+  number: string | null;  // backward compat: same as value for phone types; null for link types
+  label: string | null;
+  is_active: boolean;
+  created_at: string;  // ISO 8601
+  updated_at: string;  // ISO 8601
+}
+```
+
+#### List contacts
+
+| Method | Path | Auth |
+|--------|------|------|
+| GET | `/api/restaurants/{restaurant}/contacts` | Bearer + verified |
+
+**Response (200):** `{ "data": [ { contact payload } ] }`  
+**404:** Restaurant not found or not owned.
+
+#### Show contact
+
+| Method | Path | Auth |
+|--------|------|------|
+| GET | `/api/restaurants/{restaurant}/contacts/{contact}` | Bearer + verified |
+
+**Response (200):** `{ "data": { contact payload } }`  
+**404:** Restaurant or contact not found, or not owned.
+
+#### Create contact
+
+| Method | Path | Auth |
+|--------|------|------|
+| POST | `/api/restaurants/{restaurant}/contacts` | Bearer + verified |
+
+**Body (JSON):**
+```json
+{
+  "type": "string (required; one of: whatsapp, mobile, phone, fax, other, facebook, instagram, twitter, website)",
+  "value": "string (required; phone number or URL; max 500; for link types must be valid URL)",
+  "number": "string (optional, backward compat; if value omitted, used as value for phone types)",
+  "label": "string (optional, max 100)",
+  "is_active": "boolean (optional, default true)"
+}
+```
+
+**Validation:** For **link types** (`facebook`, `instagram`, `twitter`, `website`), **value** must be a valid URL. For **phone types**, **value** must be present and non-empty (max 500). **type** must be one of the allowed list.
+
+**Response (201):** `{ "message": "Contact created.", "data": { contact payload } }`  
+**404:** Restaurant not found or not owned. **422:** Validation (e.g. invalid type, missing value, link type with non-URL value).
+
+#### Update contact
+
+| Method | Path | Auth |
+|--------|------|------|
+| PATCH | `/api/restaurants/{restaurant}/contacts/{contact}` | Bearer + verified |
+| PUT | `/api/restaurants/{restaurant}/contacts/{contact}` | Bearer + verified |
+
+**Body (JSON):** Send only fields to change. All optional.
+```json
+{
+  "type": "string (optional; one of: whatsapp, mobile, phone, fax, other, facebook, instagram, twitter, website)",
+  "value": "string (optional, max 500; for link types must be valid URL)",
+  "number": "string (optional, backward compat)",
+  "label": "string (optional, nullable, max 100)",
+  "is_active": "boolean (optional)"
+}
+```
+
+**Response (200):** `{ "message": "Contact updated.", "data": { contact payload } }`  
+**404:** Restaurant or contact not found, or not owned. **422:** Validation (e.g. link type with non-URL value).
+
+#### Delete contact
+
+| Method | Path | Auth |
+|--------|------|------|
+| DELETE | `/api/restaurants/{restaurant}/contacts/{contact}` | Bearer + verified |
+
+**Response (204):** No content.  
+**404:** Restaurant or contact not found, or not owned.
+
+---
+
 ### Public restaurant by slug (no auth)
 
-Returns public restaurant data and menu items for subdomain or `/r/:slug` pages. **No authentication.** Menu items are included only if **is_active** is true and (uncategorized or in a category with `is_active` true). Hidden items (is_active false) do not appear. Items with **is_available** false are still included; the frontend should show a "Not Available" indicator for them. **No internal `id` in any field.**
+Returns public restaurant data and menu items for subdomain or `/r/:slug` pages. **No authentication.** Only menu items whose **type** is `simple`, `combo`, or `with_variants` are included (items with `type` null are treated as simple; any future type is excluded). Menu items are also required to be **is_active** and (uncategorized or in a category with `is_active` true). Items with **is_available** false are still included; the frontend should show a "Not Available" indicator for them. **No internal `id` in any field.**
 
 | Method | Path | Auth |
 |--------|------|------|
@@ -897,6 +995,8 @@ Returns public restaurant data and menu items for subdomain or `/r/:slug` pages.
     "tagline": "string | null",
     "primary_color": "string | null",
     "slug": "string",
+    "template": "string",
+    "year_established": "number | null",
     "logo_url": "string | null",
     "banner_url": "string | null",
     "default_locale": "string",
@@ -908,25 +1008,99 @@ Returns public restaurant data and menu items for subdomain or `/r/:slug` pages.
     "menu_items": [
       {
         "uuid": "string",
+        "type": "simple | combo | with_variants",
         "name": "string",
         "description": "string | null",
         "price": "number | null",
         "sort_order": "number",
         "is_available": "boolean",
         "availability": "object | null",
-        "tags": [{ "uuid": "string", "color": "string", "icon": "string", "text": "string" }, ...]
+        "tags": [{ "uuid": "string", "color": "string", "icon": "string", "text": "string" }, ...],
+        "combo_entries": "optional; only when type is combo",
+        "variant_option_groups": "optional; only when type is with_variants",
+        "variant_skus": "optional; only when type is with_variants"
+      }
+    ],
+    "menu_groups": [
+      {
+        "category_name": "string",
+        "category_uuid": "string | null",
+        "availability": "object | null",
+        "items": [
+          {
+            "uuid": "string",
+            "type": "simple | combo | with_variants",
+            "name": "string",
+            "description": "string | null",
+            "price": "number | null",
+            "is_available": "boolean",
+            "availability": "object | null",
+            "tags": [...],
+            "combo_entries": "optional when type is combo",
+            "variant_option_groups": "optional when type is with_variants",
+            "variant_skus": "optional when type is with_variants"
+          }
+        ]
       }
     ],
     "feedbacks": [
       { "uuid": "string", "rating": "number (1-5)", "text": "string", "name": "string", "created_at": "string (ISO 8601)" }
+    ],
+    "contacts": [
+      { "uuid": "string", "type": "string", "value": "string", "number": "string | null", "label": "string | null" }
     ]
   }
 }
 ```
 
+**contacts** (Contact & links) contains only **active** entries (is_active true); inactive are excluded. Each has **uuid**, **type**, **value** (phone number or URL), **number** (same as value for phone types; null for link types, for backward compat), and **label**. **template** is always one of `template-1` or `template-2` (legacy values `default` and `minimal` are normalized before returning; invalid values fall back to `template-1`).
+
+**menu_groups** mirrors the Blade public page: categories sorted by sort_order; uncategorized items appear in a group with `category_name` "Menu" and `category_uuid` null. Each group has **category_name**, **category_uuid** (nullable), **availability** (object | null; same shape as operating_hours; from the category when category_uuid is non-null, null for uncategorized), and **items** (menu item payloads with same shape as **menu_items** below, minus **sort_order**). **menu_items** remains the flat list for backward compatibility.
+
+**Menu item type and optional fields:**
+- **type** is always one of `simple`, `combo`, or `with_variants`. Restaurant items that are a single "ending variant" (linked to one catalog variant via `source_variant_uuid`) are exposed as **type** `simple` with one name and one price (no variant blocks).
+- When **type** is **combo**, each item includes **combo_entries**: array of `{ "referenced_item_uuid": "string", "name": "string", "quantity": number, "modifier_label": "string | null", "variant_uuid": "string | null" }`. **name** is the referenced item's name in the requested locale (and variant label if the entry references a specific variant). Only UUIDs are used; no internal id.
+- When **type** is **with_variants**, each item includes **variant_option_groups**: array of `{ "name": "string", "values": ["string", ...] }` and **variant_skus**: array of `{ "uuid": "string", "option_values": { "GroupName": "value", ... }, "price": number, "image_url": "string | null" }`. Option groups define choices (e.g. Size, Type); each SKU is one combination with a price. For restaurant items that use a catalog item with variants, variant data comes from the catalog when the restaurant item has no own groups/SKUs.
+
 `operating_hours` has the same shape as in the restaurant payload (see **Operating hours shape** above); `null` when not set. Each **menu_item** includes **availability** (same type as operating_hours; `null` = always available). **feedbacks** contains only **approved** feedbacks (owner approves via PATCH); no internal `id` in any field.
 
 **404:** Restaurant not found for the given slug.
+
+---
+
+## Public restaurant page (HTML / SEO)
+
+The public restaurant page is **subdomain-only**. Laravel serves it as HTML for crawlers and direct visits, with meta tags and semantic sections. The Vue app mounts on the same page and fetches data from GET `/api/public/restaurants/{slug}`.
+
+| Where | Auth |
+|--------|------|
+| **GET** `http://{slug}.RESTAURANT_DOMAIN/` (e.g. `http://test.rms.local/` or `https://pizza.menus.example.com/`) | No |
+
+- **Subdomain-only:** No `/r/{slug}` path. Configure `RESTAURANT_DOMAIN` (e.g. `rms.local` for local; `menus.example.com` in production). Add `*.rms.local` to your hosts file for local dev. The response is **full server-rendered HTML (Blade)** from `resources/views/generic-templates/template-1.blade.php` or `template-2.blade.php`: hero, menu (by category), about, reviews, and meta tags. The restaurant’s **template** (`template-1` or `template-2`) selects the layout; no Vue on the public page.
+- **No internal `id`:** Only `uuid` and public identifiers are used in payloads and view data.
+
+**404:** Restaurant not found for the given slug.
+
+---
+
+## Redirects
+
+These routes live on the **main app domain** (e.g. `https://yourapp.com`), not under `/api`. They perform HTTP redirects for QR codes and similar flows. No internal `id` is used; only **uuid** in the path and for lookup.
+
+### QR code → subdomain (restaurant page)
+
+| Method | Path | Auth |
+|--------|------|------|
+| GET | `/page/r/{uuid}` | No |
+
+**Purpose:** QR codes generated by the frontend use this URL so that scanning redirects to the restaurant’s public subdomain. The path parameter is the restaurant’s **uuid** (public identifier), not slug.
+
+**Behavior:**
+
+- **Found:** Redirects **302** to `{scheme}://{slug}.{restaurant_domain}/` (e.g. `https://pizza.rms.local/` or `https://pizza.menus.example.com/`). Scheme is **https** in production, otherwise from the request. `restaurant_domain` comes from `config('app.restaurant_domain')` (e.g. `RESTAURANT_DOMAIN` in `.env`).
+- **Not found:** If no restaurant exists for the given **uuid**, returns **404**.
+
+**Example:** `GET https://yourapp.com/page/r/550e8400-e29b-41d4-a716-446655440000` → 302 to `https://pizza.yourapp.com/` (when slug is `pizza` and restaurant_domain is `yourapp.com`).
 
 ---
 
@@ -1492,6 +1666,18 @@ When **source_variant_uuid** is present, **name** in `translations` is the catal
 
 ## Changelog
 
+- **2026-02-21**: **GET /api/public/restaurants/{slug}: menu_groups availability.** Each entry in **menu_groups** now includes **availability** (object | null; same shape as operating_hours). When the group has a category (category_uuid non-null), availability is the category’s availability; when uncategorized (category_uuid null), availability is null. No internal `id` in any response.
+- **2026-02-21**: **Contact & links (restaurant contacts) refactor.** Module renamed conceptually to "Contact & links"; API path unchanged `/api/restaurants/{restaurant}/contacts`. Supports **phone types** (whatsapp, mobile, phone, fax, other) and **link types** (facebook, instagram, twitter, website). Unified **value** field (phone number or URL); **number** kept for backward compat (same as value for phone types, null for link types). Migration adds **value** column, backfills from number, makes number nullable. Validation: link types require valid URL in value; phone types require non-empty value (max 500). Owner payload and GET `/api/public/restaurants/{slug}` **contacts** now include **value** and **number**. No internal `id` in any response.
+- **2026-02-21**: **Restaurant year established.** New optional field **year_established** (integer, nullable) on restaurants: migration adds column; valid range 1800–(current year + 1). Included in restaurant payload (list, show, create response, update, logo/banner upload). Create and update accept optional **year_established**; send `null` to clear on update. GET `/api/public/restaurants/{slug}` includes **year_established** so public sites can display "Est. 1995". No internal `id` in any response.
+- **2026-02-21**: **QR redirect (backend).** New GET `/page/r/{uuid}` on the main app domain: looks up restaurant by **uuid** (not slug); if found, redirects 302 to `{scheme}://{slug}.{restaurant_domain}/`; if not found, returns 404. Used by frontend-generated QR codes. No internal `id` in any response. Documented under Redirects in this API reference.
+- **2026-02-21**: **QR code value: redirect URL (manage view).** The restaurant manage view "Web address" card displays a QR code that encodes **`[domain]/page/r/{uuid}`** (restaurant **uuid**), not the subdomain URL. Scanning the QR hits GET `/page/r/{uuid}` on the main app domain, which redirects to the restaurant’s subdomain. The frontend builds the QR URL from `VITE_APP_URL` (or `window.location.origin`) + `/page/r/` + restaurant uuid. See **Redirects** for the backend endpoint.
+- **2026-02-21**: **Public sites modal (View Menu):** The mobile sticky "View Menu" button, full-page modal with collapsible categories, menu items, tag tooltips (using `tags[].text`), and "Surprise me" (random item) use **existing** GET `/api/public/restaurants/{slug}` data only (**menu_groups**, **menu_items**, **tags**). No new or changed backend endpoints.
+- **2026-02-21**: **Public sites: ending-variant names show "Base - Option label".** GET `/api/public/restaurants/{slug}` now eager-loads **sourceVariantSku** for restaurant items with `source_variant_uuid`. The effective **name** for those items is "Base name - Variant label" (e.g. "Burger - Large", "Burger - Medium") so the public menu does not repeat the base name only.
+- **2026-02-21**: **GET /api/public/restaurants/{slug}: public sites menu scope (type, combo, variants).** Only menu items with **type** `simple`, `combo`, or `with_variants` are included (null treated as simple). Each menu item now includes **type** (`simple` | `combo` | `with_variants`). For **combo** items: **combo_entries** with `referenced_item_uuid`, `name` (locale-resolved), `quantity`, `modifier_label`, `variant_uuid`. For **with_variants** items: **variant_option_groups** (name, values) and **variant_skus** (uuid, option_values, price, image_url); variant data from catalog when restaurant item has no own groups/SKUs. Restaurant items that are a single "ending variant" (`source_variant_uuid`) are exposed as **type** `simple` with one price/name. No internal `id` in any response.
+- **2026-02-21**: **GET /api/public/restaurants/{slug}: menu_groups and template normalization.** Response now includes **menu_groups** (same shape as Blade public page: category_name, category_uuid nullable, items with uuid, name, description, price, is_available, tags; categories sorted; uncategorized as "Menu"). **menu_items** retained for backward compatibility. **template** is always returned as `template-1` or `template-2` (default/minimal normalized; invalid → template-1). No internal `id` in any response.
+- **2026-02-18**: **Public page: generic-templates template-1 and template-2.** Public restaurant page is **full Blade** (no Vue): hero, menu by category, about, reviews rendered in `resources/views/generic-templates/template-1.blade.php` or `template-2.blade.php`. Two distinct layouts: **template-1** (warm, card-based, accent color, DM Sans) and **template-2** (minimal, flat, IBM Plex Sans). Config and Restaurant::TEMPLATES use `template-1` and `template-2`; migration maps legacy `default`→`template-1`, `minimal`→`template-2`. Create/update and payloads use template-1/template-2.
+- **2026-02-18**: **Public restaurant page: subdomain-only (no /r/ path).** Public URLs are **subdomain-only** at `http://{slug}.RESTAURANT_DOMAIN/` (e.g. `http://test.rms.local/` or `https://pizza.menus.example.com/`). Path-based route `/r/{slug}` removed. Set `RESTAURANT_DOMAIN` (e.g. `rms.local` for local; add `*.rms.local` to hosts). Subdomain route is registered first so GET / on a subdomain serves the Blade HTML (meta tags, generic-templates); Vue mounts and fetches from GET `/api/public/restaurants/{slug}`. API reference and changelog updated accordingly.
+- **2026-02-20**: **Restaurant template and public SEO page.** Restaurants: new **template** field (string, default `default`; valid values from `config('templates.ids')`, e.g. `default`, `minimal`). Migration adds `template` column. Create and update accept optional **template**. Restaurant payload (owner and public) and GET `/api/public/restaurants/{slug}` response include **template**. Two Blade layouts in `resources/views/generic-templates/` (default, minimal) yield sections: meta, header, main, footer. **Public HTML page:** served at `{slug}.RESTAURANT_DOMAIN` (subdomain-only) as Blade HTML for SEO: meta tags (title, description, canonical, og:*, twitter:*) from restaurant data, semantic sections, and a Vue mount point; template choice selects the layout. No internal `id` in any response or view.
 - **2026-02-20**: **Logo/banner upload: 422 for image processing errors.** Upload logo and upload banner sections now document that 422 is also returned for image processing errors (invalid/corrupt image, resize failure), with message and errors.file indicating the reason.
 - **2026-02-20**: **Logo and banner image optimization.** On upload, logo images are resized to fit within 300×300 px and banner images within 1920×600 px (proportional; no cropping). Images already within those dimensions are stored as-is. Resizing is done server-side with PHP GD before storage; the stored file is the (possibly resized) image. No change to API response shape; no internal `id` in any response.
 - **2026-02-20**: **Availability for categories and menu items.** Categories and menu_items tables: added **availability** (JSON, nullable). Same shape as restaurant operating_hours (keyed by day sunday–saturday, each day `{ "open": bool, "slots": [ { "from": "HH:MM", "to": "HH:MM" }, ... ] }`). When **null** = "all available" (default). Validation via existing OperatingHoursRule and OperatingHoursSlotValidator (no overlapping slots per day). Category API: list/show/create/update include and accept optional **availability** (PATCH null to clear). Menu item API (restaurant): list/show/create/update include and accept optional **availability** (null to clear). GET `/api/public/restaurants/{slug}`: each menu_item in response includes **availability** (null = always available). No internal `id` in any response.

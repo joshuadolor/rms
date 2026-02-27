@@ -14,6 +14,11 @@ class Restaurant extends Model
      *
      * @var list<string>
      */
+    /**
+     * Valid template IDs (must match config('templates.ids') and generic-templates views).
+     */
+    public const TEMPLATES = ['template-1', 'template-2'];
+
     protected $fillable = [
         'name',
         'tagline',
@@ -29,6 +34,8 @@ class Restaurant extends Model
         'default_locale',
         'currency',
         'operating_hours',
+        'template',
+        'year_established',
     ];
 
     /**
@@ -102,6 +109,14 @@ class Restaurant extends Model
     public function feedbacks(): HasMany
     {
         return $this->hasMany(Feedback::class)->orderByDesc('created_at')->orderByDesc('id');
+    }
+
+    /**
+     * @return HasMany<RestaurantContact, $this>
+     */
+    public function contacts(): HasMany
+    {
+        return $this->hasMany(RestaurantContact::class)->orderBy('id');
     }
 
     /**

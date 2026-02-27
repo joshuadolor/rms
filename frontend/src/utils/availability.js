@@ -84,6 +84,8 @@ export function validateOperatingHours(operatingHours) {
   }
 }
 
+const DAY_ABBREV = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
 /**
  * Format operating_hours for display (e.g. on public restaurant page).
  * @param {Record<string, { open?: boolean, slots?: Array<{ from: string, to: string }> }> | null} operatingHours
@@ -100,4 +102,58 @@ export function formatOperatingHoursForDisplay(operatingHours) {
     const parts = day.slots.map((s) => `${s.from || '–'} – ${s.to || '–'}`).filter(Boolean)
     return { day: dayKey, label, text: parts.join(', ') }
   })
+}
+
+/**
+ * Get per-day slot text for an availability/operating_hours object (same shape).
+ * @param {Record<string, { open?: boolean, slots?: Array<{ from: string, to: string }> }>} availability
+ * @returns {{ dayKey: string, short: string, text: string }[]}
+ */
+function getAvailabilityPerDay(availability) {
+  if (!availability || typeof availability !== 'object') return []
+  return DAY_KEYS.map((dayKey, i) => {
+    const day = availability[dayKey]
+    const short = DAY_ABBREV[i]
+    if (!day || !day.open || !Array.isArray(day.slots) || day.slots.length === 0) {
+      return { dayKey, short, text: 'Closed' }
+    }
+    const parts = day.slots.map((s) => `${s.from || '–'}–${s.to || '–'}`).filter(Boolean)
+    return { dayKey, short, text: parts.join(', ') }
+  })
+}
+
+/**
+ * Collapse consecutive days with the same text into ranges (e.g. "Mon–Fri 11:00–15:00").
+ * @param {{ short: string, text: string }[]} perDay
+ * @returns {string}
+ */
+function collapseAvailabilityRanges(perDay) {
+  if (!perDay.length) return ''
+  const segments = []
+  let i = 0
+  while (i < perDay.length) {
+    const { short, text } = perDay[i]
+    let j = i + 1
+    while (j < perDay.length && perDay[j].text === text) j++
+    const dayLabel = j - i === 1 ? short : `${short}–${perDay[j - 1].short}`
+    segments.push(text === 'Closed' ? `${dayLabel} closed` : `${dayLabel} ${text}`)
+    i = j
+  }
+  return segments.join(', ')
+}
+
+/**
+ * Format an availability object (or null) into a short human-readable string for the public menu.
+ * Same shape as operating_hours: keyed by sunday–saturday, each day { open, slots: [{ from, to }] }.
+ * @param {Record<string, { open?: boolean, slots?: Array<{ from: string, to: string }> }> | null} availability
+ * @returns {string | null} Compact summary (e.g. "Mon–Fri 11:00–15:00, Sat 10:00–14:00") or null when always available
+ */
+export function formatAvailabilityForDisplay(availability) {
+  if (availability == null || typeof availability !== 'object') return null
+  const perDay = getAvailabilityPerDay(availability)
+  if (!perDay.length) return null
+  const allClosed = perDay.every((d) => d.text === 'Closed')
+  if (allClosed) return 'Closed'
+  const summary = collapseAvailabilityRanges(perDay)
+  return summary || null
 }

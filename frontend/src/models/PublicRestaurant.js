@@ -1,3 +1,5 @@
+import PublicMenuItem from './PublicMenuItem.js'
+
 /**
  * Public restaurant payload from GET /api/public/restaurants/{slug}.
  * Use PublicRestaurant.fromApi(apiResponse) when consuming the public endpoint.
@@ -18,8 +20,27 @@ export default class PublicRestaurant {
     this._languages = Array.isArray(data.languages) ? [...data.languages] : []
     this._locale = data.locale ?? this._defaultLocale
     this._description = data.description ?? null
-    this._menuItems = Array.isArray(data.menu_items) ? data.menu_items.map((i) => ({ ...i })) : []
+    this._menuItems = Array.isArray(data.menu_items) ? data.menu_items.map((i) => PublicMenuItem.fromApi(i)) : []
+    this._menuGroups = Array.isArray(data.menu_groups)
+      ? data.menu_groups.map((g) => ({
+          category_name: g.category_name ?? 'Menu',
+          category_uuid: g.category_uuid ?? null,
+          availability: g.availability ?? null,
+          items: Array.isArray(g.items) ? g.items.map((i) => PublicMenuItem.fromApi(i)) : [],
+        }))
+      : []
     this._feedbacks = Array.isArray(data.feedbacks) ? data.feedbacks.map((f) => ({ ...f })) : []
+    this._contacts = Array.isArray(data.contacts)
+      ? data.contacts.map((c) => ({
+          uuid: c.uuid ?? null,
+          type: c.type ?? 'phone',
+          value: c.value ?? c.number ?? '',
+          number: c.number ?? '',
+          label: c.label ?? null,
+        }))
+      : []
+    this._template = data.template ?? 'template-1'
+    this._yearEstablished = data.year_established ?? data.yearEstablished ?? null
   }
 
   get name() {
@@ -74,8 +95,26 @@ export default class PublicRestaurant {
     return this._menuItems
   }
 
+  /** Menu groups with PublicMenuItem instances in items. */
+  get menu_groups() {
+    return this._menuGroups
+  }
+
   get feedbacks() {
     return this._feedbacks
+  }
+
+  /** Active contacts only (public payload: uuid, type, number, label). */
+  get contacts() {
+    return this._contacts
+  }
+
+  get template() {
+    return this._template
+  }
+
+  get year_established() {
+    return this._yearEstablished
   }
 
   /** Build from API response (e.g. { data } from getPublicRestaurant). */
@@ -99,8 +138,17 @@ export default class PublicRestaurant {
       languages: [...this._languages],
       locale: this._locale,
       description: this._description,
-      menu_items: this._menuItems.map((i) => ({ ...i })),
+      menu_items: this._menuItems.map((i) => (i.toJSON ? i.toJSON() : { ...i })),
+      menu_groups: this._menuGroups.map((g) => ({
+        category_name: g.category_name,
+        category_uuid: g.category_uuid,
+        availability: g.availability ?? null,
+        items: (g.items ?? []).map((i) => (i.toJSON ? i.toJSON() : { ...i })),
+      })),
       feedbacks: this._feedbacks.map((f) => ({ ...f })),
+      contacts: this._contacts.map((c) => ({ ...c })),
+      template: this._template,
+      year_established: this._yearEstablished,
     }
   }
 }

@@ -50,19 +50,20 @@ const routes = [
     component: () => import('@/views/EmailVerifyNewView.vue'),
     meta: { requiresAuth: false },
   },
-  // Root: on subdomain (e.g. test.rms.local) show restaurant page; else landing. URL stays /
+  // Root: on subdomain (e.g. test.rms.local) show restaurant page; else landing. Public URLs are subdomain-only.
   {
     path: '/',
     name: 'Landing',
     component: () => import('@/views/RootView.vue'),
     meta: { guest: true },
   },
-  // Public restaurant by path (e.g. rms.local/r/pizza when not using subdomain)
+  // Public restaurant by slug (path-based; when SPA is loaded at /r/:slug, e.g. Vite dev without proxy).
   {
     path: '/r/:slug',
     name: 'PublicRestaurant',
     component: () => import('@/views/PublicRestaurantView.vue'),
-    meta: { requiresAuth: false },
+    props: true,
+    meta: { guest: true },
   },
   {
     path: '/app',
@@ -135,6 +136,11 @@ const routes = [
         path: 'restaurants/:uuid/content',
         name: 'RestaurantContent',
         redirect: (to) => ({ name: 'RestaurantDetail', params: to.params, query: { tab: 'settings' } }),
+      },
+      {
+        path: 'restaurants/:uuid/contacts',
+        name: 'RestaurantContacts',
+        redirect: (to) => ({ name: 'RestaurantDetail', params: to.params, query: { tab: 'profile' } }),
       },
       {
         path: 'restaurants/:uuid/menu-items',

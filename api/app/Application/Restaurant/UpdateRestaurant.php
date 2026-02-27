@@ -70,6 +70,12 @@ final readonly class UpdateRestaurant
         if (array_key_exists('operating_hours', $input)) {
             $data['operating_hours'] = $input['operating_hours'];
         }
+        if (array_key_exists('template', $input)) {
+            $data['template'] = $input['template'];
+        }
+        if (array_key_exists('year_established', $input)) {
+            $data['year_established'] = $input['year_established'] === null ? null : (int) $input['year_established'];
+        }
 
         return $this->restaurantRepository->update($restaurant, $data);
     }

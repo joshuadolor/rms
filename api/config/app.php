@@ -58,6 +58,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Public restaurant page script (Vue app)
+    |--------------------------------------------------------------------------
+    |
+    | When Laravel serves the public page at {slug}.restaurant_domain, this URL
+    | is used to load the Vue app that mounts in #app. Dev: e.g. http://localhost:8080/src/main.js.
+    | Production: set to your built frontend entry (same origin or full URL).
+    |
+    */
+    'frontend_public_script' => env('FRONTEND_PUBLIC_SCRIPT', rtrim(env('FRONTEND_URL', 'http://localhost:8080'), '/').'/src/main.js'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Restaurant subdomain root (for [slug].domain.com)
     |--------------------------------------------------------------------------
     |

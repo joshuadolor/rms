@@ -37,6 +37,8 @@ class UpdateRestaurantRequest extends FormRequest
             'social_links.linkedin' => ['nullable', 'string', 'url', 'max:500'],
             'currency' => ['sometimes', 'string', 'max:10', Rule::in(['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'CHF', 'NGN', 'MXN', 'BRL'])],
             'operating_hours' => ['sometimes', 'nullable', 'array', new OperatingHoursRule()],
+            'template' => ['sometimes', 'string', 'max:50', Rule::in(config('templates.ids', \App\Models\Restaurant::TEMPLATES))],
+            'year_established' => ['sometimes', 'nullable', 'integer', 'min:1800', 'max:' . ((int) date('Y') + 1)],
         ];
     }
 }

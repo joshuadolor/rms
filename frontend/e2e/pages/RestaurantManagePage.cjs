@@ -88,6 +88,37 @@ class RestaurantManagePage {
   async closeLogoBannerModal() {
     await this.page.getByTestId('manage-image-modal-done').click()
   }
+
+  /** Assert the Web address card QR code block is visible (restaurant has slug; contains img or canvas). */
+  async expectManageQRCodeVisible() {
+    const qrBlock = this.page.getByTestId('manage-qr-code')
+    await expect(qrBlock).toBeVisible({ timeout: 10000 })
+    await expect(qrBlock.locator('img, canvas').first()).toBeVisible({ timeout: 5000 })
+  }
+
+  /** Assert manage page has tabs: Profile, Menu, Availability, Settings (no Contacts tab). */
+  async expectManageTabsVisible() {
+    const tablist = this.page.getByTestId('manage-tabs')
+    await expect(tablist).toBeVisible()
+    await expect(this.page.getByTestId('manage-tab-profile')).toBeVisible()
+    await expect(this.page.getByTestId('manage-tab-menu')).toBeVisible()
+    await expect(this.page.getByTestId('manage-tab-availability')).toBeVisible()
+    await expect(this.page.getByTestId('manage-tab-settings')).toBeVisible()
+    await expect(this.page.getByRole('tab', { name: 'Profile' })).toBeVisible()
+    await expect(this.page.getByRole('tab', { name: 'Menu' })).toBeVisible()
+    await expect(this.page.getByRole('tab', { name: 'Availability' })).toBeVisible()
+    await expect(this.page.getByRole('tab', { name: 'Settings' })).toBeVisible()
+  }
+
+  /** Assert the Profile tab is selected (aria-selected). */
+  async expectProfileTabSelected() {
+    await expect(this.page.getByTestId('manage-tab-profile')).toHaveAttribute('aria-selected', 'true')
+  }
+
+  /** Assert the Profile tab panel (with Contact & links) is visible. */
+  async expectProfilePanelVisible() {
+    await expect(this.page.getByTestId('manage-panel-profile')).toBeVisible()
+  }
 }
 
 module.exports = { RestaurantManagePage, MINIMAL_PNG_BUFFER }

@@ -79,10 +79,13 @@ const inRestaurantContext = computed(() =>
   route.path.startsWith('/app/restaurants')
 )
 
-/** Bottom-right when no page FAB; left of page FAB when present. */
+/** Bottom-right when no page FAB; left of page FAB when present. On mobile, sit above the fixed tab bar (5.5rem + safe-area). */
 const fabPositionClasses = computed(() => {
-  const bottom = 'bottom-[max(1.5rem,env(safe-area-inset-bottom))]'
-  const right = hasPageFab.value ? 'right-[7rem]' : 'right-6'
+  const bottom =
+    'bottom-[calc(5.5rem+env(safe-area-inset-bottom,0px))] lg:bottom-6'
+  const right = hasPageFab.value
+    ? 'right-[7rem]'
+    : 'right-[max(1.5rem,env(safe-area-inset-right,0px))] lg:right-6'
   return `${bottom} ${right}`
 })
 

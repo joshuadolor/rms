@@ -67,6 +67,19 @@
             <span class="text-primary">{{ restaurant.slug }}</span><span class="text-slate-500 dark:text-slate-400">{{ publicDomainSuffix }}</span>
           </p>
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-2">Customers visit this address.</p>
+          <div v-if="qrRedirectUrl" class="mt-3 flex flex-col items-start gap-2" data-testid="manage-qr-code">
+            <img
+              v-if="qrCodeDataUrl"
+              :src="qrCodeDataUrl"
+              alt=""
+              width="140"
+              height="140"
+              class="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-zinc-900"
+              role="img"
+              aria-hidden="true"
+            >
+            <p v-if="qrCodeDataUrl" class="text-xs text-slate-500 dark:text-slate-400">Scan to open menu</p>
+          </div>
           <button type="button" data-testid="manage-copy-url" class="mt-3 inline-flex items-center gap-1.5 min-h-[44px] px-3 py-2 text-sm font-medium text-sage hover:text-primary transition-colors rounded-lg" @click="copyRestaurantUrl">
             <span class="material-icons text-lg" :class="{ 'scale-110': copyDone }">{{ copyDone ? 'check' : 'content_copy' }}</span>
             {{ copyDone ? 'Copied!' : 'Copy address' }}
@@ -250,6 +263,7 @@
 
 <script setup>
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
+import * as QRCode from 'qrcode'
 import { useRoute, useRouter } from 'vue-router'
 import AppBackLink from '@/components/AppBackLink.vue'
 import AppButton from '@/components/ui/AppButton.vue'
@@ -300,6 +314,49 @@ const publicDomainSuffix = (() => {
   return '.yourdomain.com'
 })()
 
+const qrCodeDataUrl = ref('')
+
+/** Base URL for the QR redirect (domain that serves GET /page/r/{uuid}). */
+const qrRedirectBaseUrl = (() => {
+  const fromEnv = import.meta.env.VITE_APP_URL ?? ''
+  if (typeof fromEnv === 'string' && fromEnv.trim()) return fromEnv.trim().replace(/\/+$/, '')
+  if (typeof window !== 'undefined' && window.location?.origin) return window.location.origin
+  return ''
+})()
+
+/** URL encoded in the QR code: [domain]/page/r/{uuid}. Redirect endpoint sends users to the subdomain. */
+const qrRedirectUrl = computed(() => {
+  const r = restaurant.value
+  if (!r?.uuid || !qrRedirectBaseUrl) return ''
+  return `${qrRedirectBaseUrl}/page/r/${r.uuid}`
+})
+
+/** Public subdomain URL (root) for display and copy. Uses API public_url when present, else built from slug + domain. */
+const publicSubdomainUrl = computed(() => {
+  const r = restaurant.value
+  if (!r?.slug) return ''
+  const fromApi = (r.public_url ?? '').trim()
+  if (fromApi) return fromApi.replace(/\/+$/, '')
+  const base = publicDomainSuffix.startsWith('.') ? publicDomainSuffix.slice(1) : publicDomainSuffix
+  return `https://${r.slug}.${base}`
+})
+
+watch(
+  () => qrRedirectUrl.value,
+  async (url) => {
+    if (!url) {
+      qrCodeDataUrl.value = ''
+      return
+    }
+    try {
+      qrCodeDataUrl.value = await QRCode.toDataURL(url, { width: 140, margin: 1 })
+    } catch (e) {
+      qrCodeDataUrl.value = ''
+    }
+  },
+  { immediate: true }
+)
+
 const validTabs = ['profile', 'menu', 'availability', 'settings']
 const tabFromRoute = () => {
   const t = route.query.tab
@@ -314,7 +371,10 @@ watch(activeTab, (tab) => {
 })
 watch(() => route.query.tab, (t) => {
   if (t === 'content') activeTab.value = 'settings'
-  else if (t && validTabs.includes(t)) activeTab.value = t
+  else if (t === 'contacts') {
+    activeTab.value = 'profile'
+    if (route.query.tab === 'contacts') router.replace({ query: { ...route.query, tab: 'profile' } })
+  } else if (t && validTabs.includes(t)) activeTab.value = t
 }, { immediate: true })
 
 watch(() => route.params.uuid, () => { defaultDescription.value = '' })
@@ -329,10 +389,8 @@ watch(showDeleteConfirm, (open) => {
 })
 
 function copyRestaurantUrl() {
-  const r = restaurant.value
-  if (!r?.slug) return
-  const base = publicDomainSuffix.startsWith('.') ? publicDomainSuffix.slice(1) : publicDomainSuffix
-  const url = `https://${r.slug}.${base}`
+  const url = publicSubdomainUrl.value
+  if (!url) return
   navigator.clipboard.writeText(url).then(() => {
     copyDone.value = true
     setTimeout(() => { copyDone.value = false }, 2000)

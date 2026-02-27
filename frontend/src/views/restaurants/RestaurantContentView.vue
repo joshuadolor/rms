@@ -244,6 +244,39 @@
         </template>
       </section>
 
+      <!-- Public page template -->
+      <section class="mt-8 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-slate-800 p-4 lg:p-6" data-testid="settings-section-template">
+        <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-4">Public page template</h3>
+        <p class="text-sm text-slate-600 dark:text-slate-400 mb-6">Choose the layout for your public restaurant page. This affects how your menu and info are displayed to visitors.</p>
+        <p v-if="savingTemplate" class="text-sm text-slate-500 dark:text-slate-400 mb-4" aria-live="polite">Saving…</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" role="group" aria-label="Select template">
+          <button
+            v-for="opt in TEMPLATE_OPTIONS"
+            :key="opt.id"
+            type="button"
+            :data-testid="`settings-template-${opt.id}`"
+            class="relative flex flex-col items-start p-4 sm:p-5 rounded-xl border-2 text-left min-h-[44px] touch-manipulation transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+            :class="currentTemplate === opt.id
+              ? 'border-primary bg-primary/5 dark:bg-primary/10'
+              : 'border-slate-200 dark:border-zinc-700 bg-slate-50/50 dark:bg-zinc-800/50 hover:border-slate-300 dark:hover:border-zinc-600'"
+            :aria-pressed="currentTemplate === opt.id"
+            :disabled="savingTemplate"
+            @click="selectTemplate(opt.id)"
+          >
+            <span class="absolute top-3 right-3 flex h-6 w-6 items-center justify-center rounded-full" :class="currentTemplate === opt.id ? 'bg-primary text-white' : 'bg-slate-200 dark:bg-zinc-600'">
+              <span v-if="currentTemplate === opt.id" class="material-icons text-sm" aria-hidden="true">check</span>
+            </span>
+            <!-- Placeholder for template preview image (user can add later) -->
+            <div class="w-full aspect-[4/3] rounded-lg bg-slate-200 dark:bg-zinc-700 mb-3 flex items-center justify-center" aria-hidden="true">
+              <span class="material-icons text-3xl text-slate-400 dark:text-slate-500">dashboard</span>
+            </div>
+            <span class="font-semibold text-charcoal dark:text-white">{{ opt.name }}</span>
+            <span class="text-sm text-slate-500 dark:text-slate-400 mt-1">{{ opt.description }}</span>
+          </button>
+        </div>
+        <p v-if="templateError" class="mt-3 text-sm text-red-600 dark:text-red-400" role="alert">{{ templateError }}</p>
+      </section>
+
       <!-- Confirm remove language modal -->
       <div
         v-if="localeToRemove"
@@ -294,6 +327,13 @@ const breadcrumbStore = useBreadcrumbStore()
 
 const uuid = computed(() => route.params.uuid)
 
+const ALLOWED_TEMPLATES = ['template-1', 'template-2']
+
+const TEMPLATE_OPTIONS = [
+  { id: 'template-1', name: 'Template 1', description: 'Warm, card-based layout with accent color and rounded sections.' },
+  { id: 'template-2', name: 'Template 2', description: 'Minimal, clean layout with simple typography and flat sections.' },
+]
+
 const CURRENCIES = [
   { code: 'USD', name: 'US Dollar', symbol: '$' },
   { code: 'EUR', name: 'Euro', symbol: '€' },
@@ -325,6 +365,8 @@ const languageToAdd = ref('')
 const selectedDescriptionLocale = ref('')
 const descriptionTextareaRef = ref(null)
 const languagesExpanded = ref(false)
+const savingTemplate = ref(false)
+const templateError = ref('')
 
 const defaultLocale = computed(() => restaurant.value?.default_locale ?? '')
 
@@ -351,6 +393,11 @@ const installedLanguages = computed(() => {
 const availableLocalesToAdd = computed(() => {
   const installed = new Set(installedLanguages.value)
   return LOCALE_CODES.filter((code) => !installed.has(code))
+})
+
+const currentTemplate = computed(() => {
+  const t = restaurant.value?.template
+  return ALLOWED_TEMPLATES.includes(t) ? t : 'template-1'
 })
 
 async function loadRestaurant() {
@@ -551,6 +598,34 @@ async function saveDescription(loc) {
     error.value = normalizeApiError(e).message
   } finally {
     savingLocale.value = null
+  }
+}
+
+function selectTemplate(templateId) {
+  if (savingTemplate.value) return
+  if (!ALLOWED_TEMPLATES.includes(templateId)) {
+    templateError.value = 'Please choose a valid template.'
+    return
+  }
+  if (currentTemplate.value === templateId) return
+  templateError.value = ''
+  doSaveTemplate(templateId)
+}
+
+async function doSaveTemplate(templateId) {
+  if (!restaurant.value?.uuid) return
+  savingTemplate.value = true
+  error.value = ''
+  templateError.value = ''
+  try {
+    const res = await restaurantService.update(uuid.value, { template: templateId })
+    if (res?.data) restaurant.value = Restaurant.fromApi(res).toJSON()
+    toastStore.success('Template updated.')
+  } catch (e) {
+    const errs = getValidationErrors(e)
+    templateError.value = Object.keys(errs).length ? Object.values(errs).join(' ') : normalizeApiError(e).message
+  } finally {
+    savingTemplate.value = false
   }
 }
 

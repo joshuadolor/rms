@@ -11,6 +11,8 @@ const { MenuItemFormPage } = require('./pages/MenuItemFormPage.cjs')
 const { RestaurantSettingsPage } = require('./pages/RestaurantSettingsPage.cjs')
 const { RestaurantManageAvailabilityPage } = require('./pages/RestaurantManageAvailabilityPage.cjs')
 const { RestaurantManagePage } = require('./pages/RestaurantManagePage.cjs')
+const { RestaurantContactsPage } = require('./pages/RestaurantContactsPage.cjs')
+const { RestaurantFormPage } = require('./pages/RestaurantFormPage.cjs')
 const { PublicRestaurantPage } = require('./pages/PublicRestaurantPage.cjs')
 
 const MOCK_VERIFIED_USER = {
@@ -35,6 +37,7 @@ const MOCK_RESTAURANT = {
   default_locale: 'en',
   languages: ['en'],
   currency: 'USD',
+  template: 'default',
   logo_url: null,
   banner_url: null,
   social_links: { facebook: '', instagram: '', twitter: '', linkedin: '' },
@@ -181,9 +184,11 @@ function mockRestaurantGetWithMediaUpload(page, restaurant = MOCK_RESTAURANT) {
 
 /**
  * Mock GET /api/public/restaurants/:slug for public restaurant page. Pass operating_hours to show Opening hours.
+ * Pass menu_groups (with availability and items) to test category/item availability on public templates.
+ * Options.byLocale: { [locale]: { description?, menu_groups?, ... } } — when request has ?locale=xx, merge byLocale[xx] into payload and set payload.locale.
  */
-function mockPublicRestaurant(page, slug, data = {}) {
-  const payload = {
+function mockPublicRestaurant(page, slug, data = {}, options = {}) {
+  const basePayload = {
     name: 'Test Pizza',
     slug: slug || 'test-pizza',
     description: null,
@@ -193,16 +198,53 @@ function mockPublicRestaurant(page, slug, data = {}) {
     operating_hours: {},
     ...data,
   }
+  const byLocale = options.byLocale || {}
   page.route(/^.*\/api\/public\/restaurants\/[^/]+$/, (route) => {
     if (route.request().method() !== 'GET') return route.continue()
     const urlSlug = route.request().url().match(/\/public\/restaurants\/([^/?#]+)/)?.[1]
     if (decodeURIComponent(urlSlug || '') !== slug) return route.continue()
+    const url = new URL(route.request().url())
+    const localeParam = url.searchParams.get('locale')
+    const payload = { ...basePayload }
+    if (localeParam && byLocale[localeParam]) {
+      Object.assign(payload, byLocale[localeParam])
+      payload.locale = localeParam
+    } else {
+      payload.locale = payload.default_locale ?? payload.locale ?? 'en'
+    }
     return route.fulfill({
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({ data: payload }),
     })
   })
+}
+
+/** Availability object that formats to "Mon–Fri 11:00–15:00" (same shape as operating_hours). */
+function availabilityMonFri1100To1500() {
+  const slot = [{ from: '11:00', to: '15:00' }]
+  return {
+    sunday: { open: false, slots: [] },
+    monday: { open: true, slots: [...slot] },
+    tuesday: { open: true, slots: [...slot] },
+    wednesday: { open: true, slots: [...slot] },
+    thursday: { open: true, slots: [...slot] },
+    friday: { open: true, slots: [...slot] },
+    saturday: { open: false, slots: [] },
+  }
+}
+
+/** Availability object that formats to "Sat 10:00–14:00". */
+function availabilitySat1000To1400() {
+  return {
+    sunday: { open: false, slots: [] },
+    monday: { open: false, slots: [] },
+    tuesday: { open: false, slots: [] },
+    wednesday: { open: false, slots: [] },
+    thursday: { open: false, slots: [] },
+    friday: { open: false, slots: [] },
+    saturday: { open: true, slots: [{ from: '10:00', to: '14:00' }] },
+  }
 }
 
 /** Normalize menu to API shape: name (from default locale), translations */
@@ -509,6 +551,108 @@ function mockRestaurantLanguagesAndTranslations(page, options = {}) {
   })
 }
 
+const PHONE_CONTACT_TYPES = ['whatsapp', 'mobile', 'phone', 'fax', 'other']
+
+/**
+ * Mock restaurant contacts: GET list, POST create, PATCH update, DELETE.
+ * Supports value (and number for backward compat). Link types use value as URL.
+ * @param {import('@playwright/test').Page} page
+ * @param {Array<{ uuid: string, type: string, number?: string, value?: string, label?: string | null, is_active?: boolean }>} [initialContacts]
+ */
+function mockRestaurantContacts(page, initialContacts = []) {
+  const state = initialContacts.map((c) => {
+    const type = c.type || 'phone'
+    const val = c.value ?? c.number ?? ''
+    return {
+      uuid: c.uuid,
+      type,
+      value: val,
+      number: PHONE_CONTACT_TYPES.includes(type) ? val : null,
+      label: c.label ?? null,
+      is_active: c.is_active !== false,
+      created_at: c.created_at ?? '2025-01-01T00:00:00.000000Z',
+      updated_at: c.updated_at ?? '2025-01-01T00:00:00.000000Z',
+    }
+  })
+
+  page.route(/^.*\/api\/restaurants\/[^/]+\/contacts(\/[^/]+)?$/, (route) => {
+    const url = route.request().url()
+    const method = route.request().method()
+    const contactMatch = url.match(/\/contacts\/([^/?#]+)$/)
+    const contactUuid = contactMatch ? contactMatch[1] : null
+
+    if (method === 'GET' && !contactUuid) {
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ data: state.map((c) => ({ ...c })) }),
+      })
+    }
+    if (method === 'GET' && contactUuid) {
+      const contact = state.find((c) => c.uuid === contactUuid)
+      if (!contact) {
+        return route.fulfill({ status: 404, contentType: 'application/json', body: JSON.stringify({ message: 'Contact not found.' }) })
+      }
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ data: { ...contact } }),
+      })
+    }
+    if (method === 'POST' && !contactUuid) {
+      const body = JSON.parse(route.request().postData() || '{}')
+      const type = body.type || 'phone'
+      const val = String(body.value ?? body.number ?? '').trim()
+      const newContact = {
+        uuid: 'contact-' + Date.now(),
+        type,
+        value: val,
+        number: PHONE_CONTACT_TYPES.includes(type) ? val : null,
+        label: body.label != null && String(body.label).trim() !== '' ? String(body.label).trim() : null,
+        is_active: body.is_active !== false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
+      state.push(newContact)
+      return route.fulfill({
+        status: 201,
+        contentType: 'application/json',
+        body: JSON.stringify({ message: 'Contact created.', data: newContact }),
+      })
+    }
+    if ((method === 'PATCH' || method === 'PUT') && contactUuid) {
+      const contact = state.find((c) => c.uuid === contactUuid)
+      if (!contact) {
+        return route.fulfill({ status: 404, contentType: 'application/json', body: JSON.stringify({ message: 'Contact not found.' }) })
+      }
+      const body = JSON.parse(route.request().postData() || '{}')
+      if (body.type !== undefined) contact.type = body.type
+      if (body.value !== undefined) {
+        contact.value = String(body.value).trim()
+        if (PHONE_CONTACT_TYPES.includes(contact.type)) contact.number = contact.value
+      }
+      if (body.number !== undefined) contact.number = PHONE_CONTACT_TYPES.includes(contact.type) ? String(body.number).trim() : null
+      if (body.label !== undefined) contact.label = body.label != null && String(body.label).trim() !== '' ? String(body.label).trim() : null
+      if (body.is_active !== undefined) contact.is_active = body.is_active
+      contact.updated_at = new Date().toISOString()
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ message: 'Contact updated.', data: { ...contact } }),
+      })
+    }
+    if (method === 'DELETE' && contactUuid) {
+      const idx = state.findIndex((c) => c.uuid === contactUuid)
+      if (idx === -1) {
+        return route.fulfill({ status: 404, contentType: 'application/json', body: JSON.stringify({ message: 'Contact not found.' }) })
+      }
+      state.splice(idx, 1)
+      return route.fulfill({ status: 204, body: '' })
+    }
+    return route.continue()
+  })
+}
+
 test.describe('Restaurant module', () => {
   test('unauthenticated visit to /app/restaurants redirects to login', async ({ page }) => {
     await page.goto('/app/restaurants')
@@ -580,6 +724,7 @@ test.describe('Restaurant module', () => {
     mockRestaurantCategories(page, [])
     mockRestaurantMenuItems(page, [])
     mockRestaurantLanguagesAndTranslations(page)
+    mockRestaurantContacts(page, [])
 
     await page.goto(`/app/restaurants/${MOCK_RESTAURANT.uuid}`)
 
@@ -1140,6 +1285,103 @@ test.describe('Restaurant module', () => {
     await publicPage.expectOpeningHoursSectionVisible()
   })
 
+  test.describe('Public restaurant language dropdown', () => {
+    test('single-language restaurant does not show language dropdown', async ({ page }) => {
+      mockPublicRestaurant(page, 'single-lang', {
+        name: 'Single Lang Cafe',
+        slug: 'single-lang',
+        languages: ['en'],
+      })
+
+      const publicPage = new PublicRestaurantPage(page)
+      await publicPage.goToPublicBySlug('single-lang')
+      await publicPage.expectLanguageDropdownNotVisible()
+    })
+
+    test('multi-language restaurant shows dropdown; selecting language updates URL and content', async ({ page }) => {
+      mockPublicRestaurant(
+        page,
+        'multi-lang',
+        {
+          name: 'Multi Lang Bistro',
+          slug: 'multi-lang',
+          languages: ['en', 'nl'],
+          default_locale: 'en',
+          description: 'About us in English',
+          menu_groups: [
+            {
+              category_name: 'Starters',
+              category_uuid: null,
+              availability: null,
+              items: [
+                {
+                  uuid: 'item-1',
+                  type: 'simple',
+                  name: 'Soup of the day',
+                  description: null,
+                  price: 5,
+                  is_available: true,
+                  availability: null,
+                  tags: [],
+                },
+              ],
+            },
+          ],
+          menu_items: [
+            { uuid: 'item-1', type: 'simple', name: 'Soup of the day', description: null, price: 5, is_available: true, availability: null, tags: [] },
+          ],
+        },
+        {
+          byLocale: {
+            en: {
+              description: 'About us in English',
+              menu_groups: [
+                {
+                  category_name: 'Starters',
+                  category_uuid: null,
+                  availability: null,
+                  items: [
+                    { uuid: 'item-1', type: 'simple', name: 'Soup of the day', description: null, price: 5, is_available: true, availability: null, tags: [] },
+                  ],
+                },
+              ],
+              menu_items: [
+                { uuid: 'item-1', type: 'simple', name: 'Soup of the day', description: null, price: 5, is_available: true, availability: null, tags: [] },
+              ],
+            },
+            nl: {
+              description: 'Over ons in het Nederlands',
+              menu_groups: [
+                {
+                  category_name: 'Voorgerechten',
+                  category_uuid: null,
+                  availability: null,
+                  items: [
+                    { uuid: 'item-1', type: 'simple', name: 'Soep van de dag', description: null, price: 5, is_available: true, availability: null, tags: [] },
+                  ],
+                },
+              ],
+              menu_items: [
+                { uuid: 'item-1', type: 'simple', name: 'Soep van de dag', description: null, price: 5, is_available: true, availability: null, tags: [] },
+              ],
+            },
+          },
+        }
+      )
+
+      const publicPage = new PublicRestaurantPage(page)
+      await publicPage.goToPublicBySlug('multi-lang')
+      await publicPage.expectLanguageDropdownVisible()
+      await publicPage.expectMainContainsText('About us in English')
+      await publicPage.expectTextVisible('Soup of the day')
+
+      await publicPage.selectLanguage('nl')
+      await publicPage.expectUrlHasLocale('nl')
+      await publicPage.expectMainContainsText('Over ons in het Nederlands')
+      await publicPage.expectTextVisible('Soep van de dag')
+    })
+  })
+
   test('public menu shows Not Available pill when menu item has is_available false', async ({ page }) => {
     mockPublicRestaurant(page, 'test-pizza', {
       name: 'Test Pizza',
@@ -1174,7 +1416,268 @@ test.describe('Restaurant module', () => {
     await managePage.expectLogoVisibleInManageBanner()
   })
 
-  test('public restaurant page with logo shows nav logo and hero logo block', async ({ page }) => {
+  test('manage page with slug shows QR code in Web address card', async ({ page }) => {
+    await loginAsVerifiedUser(page)
+    mockRestaurantList(page, [MOCK_RESTAURANT])
+    mockRestaurantGet(page, MOCK_RESTAURANT)
+    mockRestaurantMenus(page)
+    mockRestaurantCategories(page, [])
+    mockRestaurantMenuItems(page, [])
+    mockRestaurantLanguagesAndTranslations(page)
+
+    const managePage = new RestaurantManagePage(page)
+    await managePage.goToManagePage(MOCK_RESTAURANT.uuid)
+    await managePage.expectManageQRCodeVisible()
+  })
+
+  test.describe('Restaurant contacts', () => {
+    test('owner can see Contact & links section in Profile tab', async ({ page }) => {
+      await loginAsVerifiedUser(page)
+      mockRestaurantList(page, [MOCK_RESTAURANT])
+      mockRestaurantGet(page, MOCK_RESTAURANT)
+      mockRestaurantMenus(page)
+      mockRestaurantCategories(page, [])
+      mockRestaurantMenuItems(page, [])
+      mockRestaurantLanguagesAndTranslations(page)
+      mockRestaurantContacts(page, [])
+
+      const managePage = new RestaurantManagePage(page)
+      await managePage.goToManagePage(MOCK_RESTAURANT.uuid)
+      await managePage.expectManageTabsVisible()
+      await managePage.expectProfileTabSelected()
+      await managePage.expectProfilePanelVisible()
+
+      const contactsPage = new RestaurantContactsPage(page)
+      await contactsPage.expectContactsPanelVisible()
+      await contactsPage.expectNoContactsYetMessage()
+    })
+
+    test('owner navigating to /contacts is redirected to Profile and sees Contact & links', async ({ page }) => {
+      await loginAsVerifiedUser(page)
+      mockRestaurantList(page, [MOCK_RESTAURANT])
+      mockRestaurantGet(page, MOCK_RESTAURANT)
+      mockRestaurantMenus(page)
+      mockRestaurantCategories(page, [])
+      mockRestaurantMenuItems(page, [])
+      mockRestaurantLanguagesAndTranslations(page)
+      mockRestaurantContacts(page, [])
+
+      const contactsPage = new RestaurantContactsPage(page)
+      await contactsPage.goToContactsByRoute(MOCK_RESTAURANT.uuid)
+      await contactsPage.expectContactsPanelVisible()
+      await contactsPage.expectNoContactsYetMessage()
+    })
+
+    test('owner can add contact and list shows it', async ({ page }) => {
+      await loginAsVerifiedUser(page)
+      mockRestaurantList(page, [MOCK_RESTAURANT])
+      mockRestaurantGet(page, MOCK_RESTAURANT)
+      mockRestaurantMenus(page)
+      mockRestaurantCategories(page, [])
+      mockRestaurantMenuItems(page, [])
+      mockRestaurantLanguagesAndTranslations(page)
+      mockRestaurantContacts(page, [])
+
+      const contactsPage = new RestaurantContactsPage(page)
+      await contactsPage.goToContacts(MOCK_RESTAURANT.uuid)
+      await contactsPage.clickAddContact()
+      await contactsPage.expectContactFormVisible()
+      await contactsPage.expectContactFormHeading('Add contact or link')
+      await contactsPage.setContactType('whatsapp')
+      await contactsPage.setContactNumber('+1 234 567 8900')
+      await contactsPage.setContactLabel('Reservations')
+      await contactsPage.setContactShowOnPublic(true)
+      await contactsPage.submitContactForm()
+
+      await contactsPage.expectContactInList({ number: '+1 234 567 8900', typeLabel: 'WhatsApp', label: 'Reservations' })
+    })
+
+    test('owner can add a link (e.g. Facebook with URL) and list shows value and type', async ({ page }) => {
+      await loginAsVerifiedUser(page)
+      mockRestaurantList(page, [MOCK_RESTAURANT])
+      mockRestaurantGet(page, MOCK_RESTAURANT)
+      mockRestaurantMenus(page)
+      mockRestaurantCategories(page, [])
+      mockRestaurantMenuItems(page, [])
+      mockRestaurantContacts(page, [])
+
+      const contactsPage = new RestaurantContactsPage(page)
+      await contactsPage.goToContacts(MOCK_RESTAURANT.uuid)
+      await contactsPage.clickAddContact()
+      await contactsPage.expectContactFormVisible()
+      await contactsPage.setContactType('facebook')
+      await contactsPage.setContactNumber('https://facebook.com/example-restaurant')
+      await contactsPage.setContactLabel('Our Facebook')
+      await contactsPage.submitContactForm()
+
+      await contactsPage.expectContactInList({
+        value: 'https://facebook.com/example-restaurant',
+        typeLabel: 'Facebook',
+        label: 'Our Facebook',
+      })
+    })
+
+    test('owner sees validation error for invalid URL on link type', async ({ page }) => {
+      await loginAsVerifiedUser(page)
+      mockRestaurantList(page, [MOCK_RESTAURANT])
+      mockRestaurantGet(page, MOCK_RESTAURANT)
+      mockRestaurantMenus(page)
+      mockRestaurantCategories(page, [])
+      mockRestaurantMenuItems(page, [])
+      mockRestaurantContacts(page, [])
+
+      const contactsPage = new RestaurantContactsPage(page)
+      await contactsPage.goToContacts(MOCK_RESTAURANT.uuid)
+      await contactsPage.clickAddContact()
+      await contactsPage.expectContactFormVisible()
+      await contactsPage.setContactType('website')
+      await contactsPage.setContactNumber('not-a-valid-url')
+      await contactsPage.submitContactForm()
+
+      await contactsPage.expectContactFormValidationError(/valid URL/)
+    })
+
+    test('owner can toggle is_active for a contact', async ({ page }) => {
+      await loginAsVerifiedUser(page)
+      mockRestaurantList(page, [MOCK_RESTAURANT])
+      mockRestaurantGet(page, MOCK_RESTAURANT)
+      mockRestaurantMenus(page)
+      mockRestaurantCategories(page, [])
+      mockRestaurantMenuItems(page, [])
+      mockRestaurantLanguagesAndTranslations(page)
+      mockRestaurantContacts(page, [
+        { uuid: 'contact-1', type: 'mobile', number: '+99 888 777 6666', label: 'Kitchen', is_active: true },
+      ])
+
+      const contactsPage = new RestaurantContactsPage(page)
+      await contactsPage.goToContacts(MOCK_RESTAURANT.uuid)
+      await contactsPage.expectContactInList({ number: '+99 888 777 6666', typeLabel: 'Mobile' })
+      await contactsPage.expectContactNotMarkedHidden('+99 888 777 6666')
+
+      await contactsPage.clickToggleActiveForContact('+99 888 777 6666')
+      await contactsPage.expectContactMarkedHidden('+99 888 777 6666')
+
+      await contactsPage.clickToggleActiveForContact('+99 888 777 6666')
+      await contactsPage.expectContactNotMarkedHidden('+99 888 777 6666')
+    })
+
+    test('owner can edit a contact', async ({ page }) => {
+      await loginAsVerifiedUser(page)
+      mockRestaurantList(page, [MOCK_RESTAURANT])
+      mockRestaurantGet(page, MOCK_RESTAURANT)
+      mockRestaurantMenus(page)
+      mockRestaurantCategories(page, [])
+      mockRestaurantMenuItems(page, [])
+      mockRestaurantLanguagesAndTranslations(page)
+      mockRestaurantContacts(page, [
+        { uuid: 'contact-edit-1', type: 'phone', number: '555-0000', label: 'Old', is_active: true },
+      ])
+
+      const contactsPage = new RestaurantContactsPage(page)
+      await contactsPage.goToContacts(MOCK_RESTAURANT.uuid)
+      await contactsPage.expectContactInList({ number: '555-0000', label: 'Old' })
+
+      await contactsPage.clickEditForContact('555-0000')
+      await contactsPage.expectContactFormHeading('Edit contact')
+      await contactsPage.setContactNumber('555-9999')
+      await contactsPage.setContactLabel('Reception')
+      await contactsPage.submitContactForm()
+
+      await contactsPage.expectContactInList({ number: '555-9999', label: 'Reception' })
+    })
+
+    test('owner can delete contact with confirmation', async ({ page }) => {
+      await loginAsVerifiedUser(page)
+      mockRestaurantList(page, [MOCK_RESTAURANT])
+      mockRestaurantGet(page, MOCK_RESTAURANT)
+      mockRestaurantMenus(page)
+      mockRestaurantCategories(page, [])
+      mockRestaurantMenuItems(page, [])
+      mockRestaurantLanguagesAndTranslations(page)
+      mockRestaurantContacts(page, [
+        { uuid: 'contact-del-1', type: 'other', number: '111-222-3333', label: 'To delete', is_active: true },
+      ])
+
+      const contactsPage = new RestaurantContactsPage(page)
+      await contactsPage.goToContacts(MOCK_RESTAURANT.uuid)
+      await contactsPage.expectContactInList({ number: '111-222-3333' })
+
+      await contactsPage.clickDeleteForContact('111-222-3333')
+      await contactsPage.expectDeleteModalVisible()
+      await contactsPage.cancelDeleteContact()
+      await contactsPage.expectDeleteModalClosed()
+      await contactsPage.expectContactInList({ number: '111-222-3333' })
+
+      await contactsPage.clickDeleteForContact('111-222-3333')
+      await contactsPage.expectDeleteModalVisible()
+      await contactsPage.confirmDeleteContact()
+      await contactsPage.expectDeleteModalClosed()
+      await contactsPage.expectNoContactsYetMessage()
+    })
+
+    test('public restaurant page shows active contacts', async ({ page }) => {
+      mockPublicRestaurant(page, 'test-pizza', {
+        name: 'Test Pizza',
+        slug: 'test-pizza',
+        contacts: [
+          { uuid: 'c1', type: 'mobile', number: '+44 20 7946 0958', label: 'Reception' },
+          { uuid: 'c2', type: 'whatsapp', number: '15551234567', label: null },
+        ],
+      })
+
+      const publicPage = new PublicRestaurantPage(page)
+      await publicPage.goToPublicBySlug('test-pizza')
+      await publicPage.expectContactSectionVisible()
+      await publicPage.expectActiveContactVisible('+44 20 7946 0958')
+      await publicPage.expectActiveContactVisible('Reception')
+      await publicPage.expectActiveContactVisible('15551234567')
+    })
+
+    test('public restaurant page WhatsApp link has correct wa.me href', async ({ page }) => {
+      mockPublicRestaurant(page, 'test-pizza', {
+        name: 'Test Pizza',
+        slug: 'test-pizza',
+        contacts: [{ uuid: 'c1', type: 'whatsapp', number: '15551234567', label: null }],
+      })
+
+      const publicPage = new PublicRestaurantPage(page)
+      await publicPage.goToPublicBySlug('test-pizza')
+      await publicPage.expectContactSectionVisible()
+      await publicPage.expectWhatsAppLinkWithNumber('15551234567')
+    })
+
+    test('public restaurant page shows no contact numbers when contacts empty', async ({ page }) => {
+      mockPublicRestaurant(page, 'test-pizza', {
+        name: 'Test Pizza',
+        slug: 'test-pizza',
+        contacts: [],
+      })
+
+      const publicPage = new PublicRestaurantPage(page)
+      await publicPage.goToPublicBySlug('test-pizza')
+      await publicPage.expectContactSectionVisible()
+      await publicPage.expectNoContactNumbersListed()
+    })
+
+    test('public restaurant page shows one contact when mock has one and link type is clickable', async ({ page }) => {
+      const websiteUrl = 'https://example.com/our-restaurant'
+      mockPublicRestaurant(page, 'test-pizza', {
+        name: 'Test Pizza',
+        slug: 'test-pizza',
+        contacts: [
+          { uuid: 'c1', type: 'website', value: websiteUrl, label: 'Our site', is_active: true },
+        ],
+      })
+
+      const publicPage = new PublicRestaurantPage(page)
+      await publicPage.goToPublicBySlug('test-pizza')
+      await publicPage.expectContactSectionVisible()
+      await publicPage.expectActiveContactVisible(websiteUrl)
+      await publicPage.expectContactLinkWithHref(websiteUrl)
+    })
+  })
+
+  test('public restaurant page with logo shows header with name and hero logo block', async ({ page }) => {
     mockPublicRestaurant(page, 'test-pizza', {
       name: 'Test Pizza',
       slug: 'test-pizza',
@@ -1184,7 +1687,7 @@ test.describe('Restaurant module', () => {
 
     const publicPage = new PublicRestaurantPage(page)
     await publicPage.goToPublicBySlug('test-pizza')
-    await publicPage.expectNavLogoVisible('Test Pizza')
+    await publicPage.expectHeaderWithNameVisible('Test Pizza')
     await publicPage.expectHeroLogoBlockVisible()
   })
 
@@ -1217,6 +1720,623 @@ test.describe('Restaurant module', () => {
     await settingsPage.expectLanguagesHeadingVisible()
     await settingsPage.expectDescriptionSectionVisible()
     await settingsPage.expectDescriptionTextareaVisibleForLocale('en')
+  })
+
+  test('owner can select Minimal template in Settings and selection is reflected with no error', async ({ page }) => {
+    await loginAsVerifiedUser(page)
+    mockRestaurantList(page, [MOCK_RESTAURANT])
+    mockRestaurantGet(page, MOCK_RESTAURANT)
+    mockRestaurantMenus(page)
+    mockRestaurantCategories(page, [])
+    mockRestaurantMenuItems(page, [])
+    mockRestaurantLanguagesAndTranslations(page)
+
+    const settingsPage = new RestaurantSettingsPage(page)
+    await settingsPage.goToSettingsTab(MOCK_RESTAURANT.uuid)
+    await settingsPage.expectTemplateSectionVisible()
+    await settingsPage.expectTemplateCardSelected('template-1')
+    await settingsPage.selectTemplate('template-2')
+    await settingsPage.expectTemplateCardSelected('template-2')
+    await settingsPage.expectNoTemplateError()
+  })
+
+  test('public page /r/:slug returns 200 and Vue app mounts', async ({ page }) => {
+    mockPublicRestaurant(page, 'test-pizza', { name: 'Test Pizza', slug: 'test-pizza' })
+
+    const publicPage = new PublicRestaurantPage(page)
+    const response = await publicPage.goToPublicBySlugAndGetResponse('test-pizza')
+    expect(response).toBeTruthy()
+    expect(response.ok()).toBe(true)
+  })
+
+  test('guest sees full public page: header, hero, menu with item name and price, about, reviews section, footer', async ({ page }) => {
+    mockPublicRestaurant(page, 'test', {
+      name: 'Test Restaurant',
+      slug: 'test',
+      description: 'We serve the best food in town.',
+      menu_items: [
+        { uuid: 'item-1', name: 'Margherita', description: null, price: 10, sort_order: 0, is_available: true, availability: null, tags: [] },
+      ],
+      feedbacks: [],
+    })
+
+    const publicPage = new PublicRestaurantPage(page)
+    await publicPage.goToPublicBySlug('test')
+    await publicPage.expectHeaderWithNameVisible('Test Restaurant')
+    await publicPage.expectHeroWithNameVisible('Test Restaurant')
+    await publicPage.expectMenuSectionVisible()
+    await publicPage.expectMenuHasAtLeastOneItem()
+    await publicPage.expectMenuItemNameVisible('Margherita')
+    await publicPage.expectPriceVisibleInMenu('$10.00')
+    await publicPage.expectAboutSectionVisible()
+    await publicPage.expectReviewsSectionVisible()
+    await publicPage.expectFooterWithNameVisible('Test Restaurant')
+  })
+
+  test('guest sees public page without about when description is empty', async ({ page }) => {
+    mockPublicRestaurant(page, 'test', {
+      name: 'No About Place',
+      slug: 'test',
+      description: null,
+      menu_items: [
+        { uuid: 'item-1', name: 'Coffee', description: null, price: 3, sort_order: 0, is_available: true, availability: null, tags: [] },
+      ],
+      feedbacks: [],
+    })
+
+    const publicPage = new PublicRestaurantPage(page)
+    await publicPage.goToPublicBySlug('test')
+    await publicPage.expectHeaderWithNameVisible('No About Place')
+    await publicPage.expectMenuSectionVisible()
+    await publicPage.expectMenuHasAtLeastOneItem()
+    await publicPage.expectAboutSectionNotVisible()
+    await publicPage.expectFooterWithNameVisible('No About Place')
+  })
+
+  test('public page loads with template-1 and shows template-1 header and sections', async ({ page }) => {
+    mockPublicRestaurant(page, 'test-pizza', {
+      name: 'Test Pizza',
+      slug: 'test-pizza',
+      template: 'template-1',
+      description: 'Best pizza in town.',
+      menu_items: [
+        { uuid: 'item-1', name: 'Pepperoni', description: null, price: 12, sort_order: 0, is_available: true, availability: null, tags: [] },
+      ],
+      feedbacks: [],
+    })
+
+    const publicPage = new PublicRestaurantPage(page)
+    await publicPage.goToPublicBySlug('test-pizza')
+    await publicPage.expectTemplate1HeaderAndSectionsVisible('Test Pizza')
+  })
+
+  test('public page loads with template-2 and shows template-2 header and sections', async ({ page }) => {
+    mockPublicRestaurant(page, 'minimal-cafe', {
+      name: 'Minimal Cafe',
+      slug: 'minimal-cafe',
+      template: 'template-2',
+      description: 'Simple and minimal.',
+      menu_items: [
+        { uuid: 'item-1', name: 'Espresso', description: null, price: 2.5, sort_order: 0, is_available: true, availability: null, tags: [] },
+      ],
+      feedbacks: [],
+    })
+
+    const publicPage = new PublicRestaurantPage(page)
+    await publicPage.goToPublicBySlug('minimal-cafe')
+    await publicPage.expectTemplate2HeaderAndSectionsVisible('Minimal Cafe')
+  })
+
+  test('guest visits public page and sees restaurant name and menu section', async ({ page }) => {
+    mockPublicRestaurant(page, 'cafe-one', {
+      name: 'Cafe One',
+      slug: 'cafe-one',
+      menu_items: [
+        { uuid: 'i1', type: 'simple', name: 'Croissant', description: null, price: 4, sort_order: 0, is_available: true, availability: null, tags: [] },
+      ],
+      feedbacks: [],
+    })
+
+    const publicPage = new PublicRestaurantPage(page)
+    await publicPage.goToPublicBySlug('cafe-one')
+    await publicPage.expectHeaderWithNameVisible('Cafe One')
+    await publicPage.expectMenuSectionVisible()
+    await publicPage.expectMenuHasAtLeastOneItem()
+  })
+
+  test('public page never shows Template 1 or Template 2 label to guests', async ({ page }) => {
+    mockPublicRestaurant(page, 'no-badge', {
+      name: 'No Badge Cafe',
+      slug: 'no-badge',
+      menu_items: [
+        { uuid: 'i1', type: 'simple', name: 'Coffee', description: null, price: 3, sort_order: 0, is_available: true, availability: null, tags: [] },
+      ],
+      feedbacks: [],
+    })
+
+    const publicPage = new PublicRestaurantPage(page)
+    await publicPage.goToPublicBySlug('no-badge')
+    await publicPage.expectNoTemplateLabelVisible()
+  })
+
+  test('public menu shows simple, combo, and variant items with correct display', async ({ page }) => {
+    mockPublicRestaurant(page, 'mixed-menu', {
+      name: 'Mixed Menu Place',
+      slug: 'mixed-menu',
+      menu_items: [
+        { uuid: 's1', type: 'simple', name: 'House Salad', description: null, price: 8, sort_order: 0, is_available: true, availability: null, tags: [] },
+        {
+          uuid: 'c1',
+          type: 'combo',
+          name: 'Burger Combo',
+          description: null,
+          price: 14,
+          sort_order: 1,
+          is_available: true,
+          availability: null,
+          tags: [],
+          combo_entries: [
+            { referenced_item_uuid: 'ref-1', name: 'Cheeseburger', quantity: 1, modifier_label: null, variant_uuid: null },
+            { referenced_item_uuid: 'ref-2', name: 'Fries', quantity: 1, modifier_label: null, variant_uuid: null },
+          ],
+        },
+        {
+          uuid: 'v1',
+          type: 'with_variants',
+          name: 'Pizza',
+          description: null,
+          price: null,
+          sort_order: 2,
+          is_available: true,
+          availability: null,
+          tags: [],
+          variant_option_groups: [{ name: 'Size', values: ['Small', 'Large'] }],
+          variant_skus: [
+            { uuid: 'sk1', option_values: { Size: 'Small' }, price: 10, image_url: null },
+            { uuid: 'sk2', option_values: { Size: 'Large' }, price: 16, image_url: null },
+          ],
+        },
+      ],
+      feedbacks: [],
+    })
+
+    const publicPage = new PublicRestaurantPage(page)
+    await publicPage.goToPublicBySlug('mixed-menu')
+    await publicPage.expectMenuSectionVisible()
+    await publicPage.expectMenuItemNameVisible('House Salad')
+    await publicPage.expectTextVisible('$8.00')
+    await publicPage.expectMenuItemNameVisible('Burger Combo')
+    await publicPage.expectComboContentsListVisible()
+    await publicPage.expectTextVisible('Cheeseburger')
+    await publicPage.expectTextVisible('Fries')
+    await publicPage.expectMenuItemNameVisible('Pizza')
+    await publicPage.expectVariantSizeAndPriceOptionsVisible()
+    await publicPage.expectTextVisible('$10.00')
+    await publicPage.expectTextVisible('$16.00')
+  })
+
+  test('public menu shows Price on request for simple item with no price', async ({ page }) => {
+    mockPublicRestaurant(page, 'on-request', {
+      name: 'On Request Cafe',
+      slug: 'on-request',
+      menu_items: [
+        { uuid: 'i1', type: 'simple', name: 'Chef\'s Special', description: null, price: null, sort_order: 0, is_available: true, availability: null, tags: [] },
+      ],
+      feedbacks: [],
+    })
+
+    const publicPage = new PublicRestaurantPage(page)
+    await publicPage.goToPublicBySlug('on-request')
+    await publicPage.expectMenuSectionVisible()
+    await publicPage.expectMenuItemNameVisible('Chef\'s Special')
+    await publicPage.expectPriceOnRequestVisible()
+  })
+
+  test('public menu shows Not available for unavailable item without price', async ({ page }) => {
+    mockPublicRestaurant(page, 'sold-out', {
+      name: 'Sold Out Kitchen',
+      slug: 'sold-out',
+      menu_items: [
+        { uuid: 'u1', type: 'simple', name: 'Sold Out Soup', description: null, price: 5, sort_order: 0, is_available: false, availability: null, tags: [] },
+      ],
+      feedbacks: [],
+    })
+
+    const publicPage = new PublicRestaurantPage(page)
+    await publicPage.goToPublicBySlug('sold-out')
+    await publicPage.expectMenuSectionVisible()
+    await publicPage.expectMenuItemNameVisible('Sold Out Soup')
+    await publicPage.expectNotAvailablePillVisible()
+  })
+
+  test.describe('Public menu view: names, prices, tags', () => {
+    test('public menu shows item with name, price, and tag pills (template-1)', async ({ page }) => {
+      mockPublicRestaurant(page, 'tags-t1', {
+        name: 'Spicy Kitchen',
+        slug: 'tags-t1',
+        template: 'template-1',
+        description: null,
+        menu_items: [
+          {
+            uuid: 'tag-item-1',
+            type: 'simple',
+            name: 'Hot Wings',
+            description: null,
+            price: 9,
+            sort_order: 0,
+            is_available: true,
+            availability: null,
+            tags: [
+              { uuid: 'tag-u1', text: 'Spicy', icon: 'local_fire_department', color: '#dc2626' },
+            ],
+          },
+        ],
+        feedbacks: [],
+      })
+
+      const publicPage = new PublicRestaurantPage(page)
+      await publicPage.goToPublicBySlug('tags-t1')
+      await publicPage.expectTemplate1Applied()
+      await publicPage.expectMenuSectionVisible()
+      await publicPage.expectMenuHasAtLeastOneItem()
+      await publicPage.expectMenuItemNameVisible('Hot Wings')
+      await publicPage.expectPriceVisibleInMenu('$9.00')
+      await publicPage.expectTagIconWithTitleVisible('Spicy')
+      await publicPage.expectTagPillVisibleInMenu('Spicy')
+    })
+
+    test('public menu shows item with name, price, and tag pills (template-2)', async ({ page }) => {
+      mockPublicRestaurant(page, 'tags-t2', {
+        name: 'Vegan Cafe',
+        slug: 'tags-t2',
+        template: 'template-2',
+        description: null,
+        menu_items: [
+          {
+            uuid: 'tag-item-2',
+            type: 'simple',
+            name: 'Green Bowl',
+            description: null,
+            price: 12,
+            sort_order: 0,
+            is_available: true,
+            availability: null,
+            tags: [
+              { uuid: 'tag-u2', text: 'Vegan', icon: 'eco', color: '#16a34a' },
+            ],
+          },
+        ],
+        feedbacks: [],
+      })
+
+      const publicPage = new PublicRestaurantPage(page)
+      await publicPage.goToPublicBySlug('tags-t2')
+      await publicPage.expectTemplate2Applied()
+      await publicPage.expectMenuSectionVisible()
+      await publicPage.expectMenuHasAtLeastOneItem()
+      await publicPage.expectMenuItemNameVisible('Green Bowl')
+      await publicPage.expectPriceVisibleInMenu('$12.00')
+      await publicPage.expectTagIconWithTitleVisible('Vegan')
+      await publicPage.expectTagPillVisibleInMenu('Vegan')
+    })
+
+    test('small viewport: menu section still renders with items', async ({ page }) => {
+      mockPublicRestaurant(page, 'mobile-menu', {
+        name: 'Mobile Cafe',
+        slug: 'mobile-menu',
+        menu_items: [
+          { uuid: 'm1', type: 'simple', name: 'Croissant', description: null, price: 4, sort_order: 0, is_available: true, availability: null, tags: [] },
+        ],
+        feedbacks: [],
+      })
+
+      const publicPage = new PublicRestaurantPage(page)
+      await publicPage.setMobileViewport()
+      await publicPage.goToPublicBySlug('mobile-menu')
+      await publicPage.expectMenuSectionVisible()
+      await publicPage.expectMenuHasAtLeastOneItem()
+      await publicPage.expectMenuItemNameVisible('Croissant')
+      await publicPage.expectPriceVisibleInMenu('$4.00')
+    })
+  })
+
+  test.describe('Public menu availability (category and item)', () => {
+    test('template-1 shows formatted category and item availability when set', async ({ page }) => {
+      const categoryAvailability = availabilityMonFri1100To1500()
+      const itemAvailability = availabilitySat1000To1400()
+      mockPublicRestaurant(page, 'avail-t1', {
+        name: 'Availability Cafe',
+        slug: 'avail-t1',
+        template: 'template-1',
+        menu_groups: [
+          {
+            category_name: 'Lunch',
+            category_uuid: 'cat-1',
+            availability: categoryAvailability,
+            items: [
+              {
+                uuid: 'av-i1',
+                type: 'simple',
+                name: 'Weekend Soup',
+                description: null,
+                price: 6,
+                is_available: true,
+                availability: itemAvailability,
+                tags: [],
+              },
+            ],
+          },
+        ],
+        menu_items: [],
+        feedbacks: [],
+      })
+
+      const publicPage = new PublicRestaurantPage(page)
+      await publicPage.goToPublicBySlug('avail-t1')
+      await publicPage.expectTemplate1Applied()
+      await publicPage.expectMenuSectionVisible()
+      await publicPage.expectMenuItemNameVisible('Weekend Soup')
+      await publicPage.expectAvailabilityTextVisibleInMenu('Mon–Fri 11:00–15:00')
+      await publicPage.expectAvailabilityTextVisibleInMenu('Sat 10:00–14:00')
+    })
+
+    test('template-2 shows formatted category and item availability when set', async ({ page }) => {
+      const categoryAvailability = availabilityMonFri1100To1500()
+      const itemAvailability = availabilitySat1000To1400()
+      mockPublicRestaurant(page, 'avail-t2', {
+        name: 'Availability Bistro',
+        slug: 'avail-t2',
+        template: 'template-2',
+        menu_groups: [
+          {
+            category_name: 'Brunch',
+            category_uuid: 'cat-2',
+            availability: categoryAvailability,
+            items: [
+              {
+                uuid: 'av-i2',
+                type: 'simple',
+                name: 'Brunch Item',
+                description: null,
+                price: 12,
+                is_available: true,
+                availability: itemAvailability,
+                tags: [],
+              },
+            ],
+          },
+        ],
+        menu_items: [],
+        feedbacks: [],
+      })
+
+      const publicPage = new PublicRestaurantPage(page)
+      await publicPage.goToPublicBySlug('avail-t2')
+      await publicPage.expectTemplate2Applied()
+      await publicPage.expectMenuSectionVisible()
+      await publicPage.expectMenuItemNameVisible('Brunch Item')
+      await publicPage.expectAvailabilityTextVisibleInMenu('Mon–Fri 11:00–15:00')
+      await publicPage.expectAvailabilityTextVisibleInMenu('Sat 10:00–14:00')
+    })
+
+    test('when availability is null, no availability text or Always available in menu', async ({ page }) => {
+      mockPublicRestaurant(page, 'avail-null', {
+        name: 'Always Open Cafe',
+        slug: 'avail-null',
+        template: 'template-1',
+        menu_groups: [
+          {
+            category_name: 'All Day',
+            category_uuid: 'cat-null',
+            availability: null,
+            items: [
+              {
+                uuid: 'av-n1',
+                type: 'simple',
+                name: 'All Day Coffee',
+                description: null,
+                price: 3,
+                is_available: true,
+                availability: null,
+                tags: [],
+              },
+            ],
+          },
+        ],
+        menu_items: [],
+        feedbacks: [],
+      })
+
+      const publicPage = new PublicRestaurantPage(page)
+      await publicPage.goToPublicBySlug('avail-null')
+      await publicPage.expectTemplate1Applied()
+      await publicPage.expectMenuSectionVisible()
+      await publicPage.expectMenuItemNameVisible('All Day Coffee')
+      await publicPage.expectAvailabilityTextNotVisibleInMenu('Mon–Fri 11:00–15:00')
+      await publicPage.expectNoAlwaysAvailableLabelInMenu()
+    })
+  })
+
+  test.describe('Public page View Menu (mobile)', () => {
+    test('mobile viewport: menu modal auto-opens on first load without clicking', async ({ page }) => {
+      mockPublicRestaurant(page, 'view-menu-auto', {
+        name: 'Auto Open Cafe',
+        slug: 'view-menu-auto',
+        menu_items: [
+          { uuid: 'a1', type: 'simple', name: 'Auto Croissant', description: null, price: 4, sort_order: 0, is_available: true, availability: null, tags: [] },
+        ],
+        feedbacks: [],
+      })
+
+      const publicPage = new PublicRestaurantPage(page)
+      await publicPage.setMobileViewport()
+      await publicPage.goToPublicBySlug('view-menu-auto')
+      await publicPage.expectMenuModalOpen()
+    })
+
+    test('mobile viewport: sticky View Menu button is visible; clicking opens menu modal', async ({ page }) => {
+      mockPublicRestaurant(page, 'view-menu-cafe', {
+        name: 'View Menu Cafe',
+        slug: 'view-menu-cafe',
+        menu_items: [
+          { uuid: 'vm1', type: 'simple', name: 'Croissant', description: null, price: 4, sort_order: 0, is_available: true, availability: null, tags: [] },
+        ],
+        feedbacks: [],
+      })
+
+      const publicPage = new PublicRestaurantPage(page)
+      await publicPage.setMobileViewport()
+      await publicPage.goToPublicBySlug('view-menu-cafe')
+      // On mobile the modal may auto-open; close it so we can test the button click path.
+      await publicPage.closeMenuModalViaHeaderButton()
+      await publicPage.expectMenuModalClosed()
+      await publicPage.expectStickyViewMenuButtonVisible()
+      await publicPage.clickStickyViewMenuButton()
+      await publicPage.expectMenuModalOpen()
+    })
+
+    test('modal close: closing via header button dismisses dialog and sticky button is visible again', async ({ page }) => {
+      mockPublicRestaurant(page, 'view-menu-close', {
+        name: 'Close Modal Cafe',
+        slug: 'view-menu-close',
+        menu_items: [
+          { uuid: 'c1', type: 'simple', name: 'Coffee', description: null, price: 3, sort_order: 0, is_available: true, availability: null, tags: [] },
+        ],
+        feedbacks: [],
+      })
+
+      const publicPage = new PublicRestaurantPage(page)
+      await publicPage.setMobileViewport()
+      await publicPage.goToPublicBySlug('view-menu-close')
+      await publicPage.closeMenuModalViaHeaderButton()
+      await publicPage.expectMenuModalClosed()
+      await publicPage.expectStickyViewMenuButtonVisible()
+      await publicPage.clickStickyViewMenuButton()
+      await publicPage.expectMenuModalOpen()
+      await publicPage.closeMenuModalViaHeaderButton()
+      await publicPage.expectMenuModalClosed()
+      await publicPage.expectStickyViewMenuButtonVisible()
+    })
+
+    test('modal close: Escape key dismisses menu modal', async ({ page }) => {
+      mockPublicRestaurant(page, 'view-menu-esc', {
+        name: 'Escape Cafe',
+        slug: 'view-menu-esc',
+        menu_items: [
+          { uuid: 'e1', type: 'simple', name: 'Espresso', description: null, price: 2, sort_order: 0, is_available: true, availability: null, tags: [] },
+        ],
+        feedbacks: [],
+      })
+
+      const publicPage = new PublicRestaurantPage(page)
+      await publicPage.setMobileViewport()
+      await publicPage.goToPublicBySlug('view-menu-esc')
+      await publicPage.closeMenuModalViaHeaderButton()
+      await publicPage.expectMenuModalClosed()
+      await publicPage.clickStickyViewMenuButton()
+      await publicPage.expectMenuModalOpen()
+      await publicPage.closeMenuModalViaEscape()
+      await publicPage.expectMenuModalClosed()
+    })
+
+    test('collapsible categories: category header present; first category open by default shows menu items', async ({ page }) => {
+      mockPublicRestaurant(page, 'view-menu-cats', {
+        name: 'Categories Cafe',
+        slug: 'view-menu-cats',
+        menu_items: [
+          { uuid: 'cat1', type: 'simple', name: 'Muffin', description: null, price: 5, sort_order: 0, is_available: true, availability: null, tags: [] },
+        ],
+        feedbacks: [],
+      })
+
+      const publicPage = new PublicRestaurantPage(page)
+      await publicPage.setMobileViewport()
+      await publicPage.goToPublicBySlug('view-menu-cats')
+      await publicPage.expectMenuModalOpen()
+      await publicPage.expectModalCategoryHeaderVisible('Menu')
+      await publicPage.expectModalMenuItemVisible('Muffin')
+      await publicPage.expectModalMenuItemVisible('$5.00')
+    })
+
+    test('Surprise me: with menu items, click Surprise me and an item gets highlighted', async ({ page }) => {
+      mockPublicRestaurant(page, 'view-menu-surprise', {
+        name: 'Surprise Cafe',
+        slug: 'view-menu-surprise',
+        menu_items: [
+          { uuid: 's1', type: 'simple', name: 'Scone', description: null, price: 4, sort_order: 0, is_available: true, availability: null, tags: [] },
+          { uuid: 's2', type: 'simple', name: 'Toast', description: null, price: 5, sort_order: 1, is_available: true, availability: null, tags: [] },
+        ],
+        feedbacks: [],
+      })
+
+      const publicPage = new PublicRestaurantPage(page)
+      await publicPage.setMobileViewport()
+      await publicPage.goToPublicBySlug('view-menu-surprise')
+      await publicPage.expectMenuModalOpen()
+      await publicPage.clickSurpriseMeInModal()
+      await publicPage.expectModalItemHighlighted()
+    })
+
+    test('empty menu: Surprise me button is disabled', async ({ page }) => {
+      mockPublicRestaurant(page, 'view-menu-empty', {
+        name: 'Empty Menu Cafe',
+        slug: 'view-menu-empty',
+        menu_items: [],
+        feedbacks: [],
+      })
+
+      const publicPage = new PublicRestaurantPage(page)
+      await publicPage.setMobileViewport()
+      await publicPage.goToPublicBySlug('view-menu-empty')
+      await publicPage.expectMenuModalOpen()
+      await publicPage.expectSurpriseMeDisabled()
+    })
+
+    test('template-1: sticky View Menu bar and menu modal work', async ({ page }) => {
+      mockPublicRestaurant(page, 't1-view-menu', {
+        name: 'T1 View Menu',
+        slug: 't1-view-menu',
+        template: 'template-1',
+        menu_items: [
+          { uuid: 't1-1', type: 'simple', name: 'Croissant', description: null, price: 4, sort_order: 0, is_available: true, availability: null, tags: [] },
+        ],
+        feedbacks: [],
+      })
+
+      const publicPage = new PublicRestaurantPage(page)
+      await publicPage.setMobileViewport()
+      await publicPage.goToPublicBySlug('t1-view-menu')
+      await publicPage.expectTemplate1Applied()
+      await publicPage.closeMenuModalViaHeaderButton()
+      await publicPage.expectMenuModalClosed()
+      await publicPage.expectStickyViewMenuButtonVisible()
+      await publicPage.clickStickyViewMenuButton()
+      await publicPage.expectMenuModalOpen()
+      await publicPage.expectModalMenuItemVisible('Croissant')
+    })
+
+    test('template-2: sticky View Menu bar and menu modal work', async ({ page }) => {
+      mockPublicRestaurant(page, 't2-view-menu', {
+        name: 'T2 View Menu',
+        slug: 't2-view-menu',
+        template: 'template-2',
+        menu_items: [
+          { uuid: 't2-1', type: 'simple', name: 'Espresso', description: null, price: 2.5, sort_order: 0, is_available: true, availability: null, tags: [] },
+        ],
+        feedbacks: [],
+      })
+
+      const publicPage = new PublicRestaurantPage(page)
+      await publicPage.setMobileViewport()
+      await publicPage.goToPublicBySlug('t2-view-menu')
+      await publicPage.expectTemplate2Applied()
+      await publicPage.closeMenuModalViaHeaderButton()
+      await publicPage.expectMenuModalClosed()
+      await publicPage.expectStickyViewMenuButtonVisible()
+      await publicPage.clickStickyViewMenuButton()
+      await publicPage.expectMenuModalOpen()
+      await publicPage.expectModalMenuItemVisible('Espresso')
+    })
   })
 
   test('owner can change description for selected locale and save', async ({ page }) => {
@@ -1832,6 +2952,70 @@ test.describe('Restaurant module', () => {
     await page.getByLabel('Restaurant name').fill('Updated Pizza')
     await page.getByRole('button', { name: 'Save changes' }).click()
     await expect(page.getByLabel('Restaurant name')).toHaveValue('Updated Pizza', { timeout: 10000 })
+  })
+
+  test('owner can set year established on profile and persist', async ({ page }) => {
+    await loginAsVerifiedUser(page)
+    mockRestaurantList(page, [MOCK_RESTAURANT])
+    mockRestaurantGet(page, MOCK_RESTAURANT)
+    mockRestaurantMenus(page)
+    mockRestaurantCategories(page, [])
+    mockRestaurantMenuItems(page, [])
+    mockRestaurantLanguagesAndTranslations(page)
+
+    const availabilityPage = new RestaurantManageAvailabilityPage(page)
+    const formPage = new RestaurantFormPage(page)
+    await availabilityPage.goToManagePage(MOCK_RESTAURANT.uuid)
+    await availabilityPage.goToProfileTab()
+    await formPage.expandAdvancedDetails()
+    await formPage.fillYearEstablished('1995')
+    await formPage.submitSaveChanges()
+    await formPage.expectYearEstablishedValue('1995')
+  })
+
+  test('owner can set year established on create and value persists after navigate', async ({ page }) => {
+    await loginAsVerifiedUser(page)
+    const createdRestaurant = { ...MOCK_RESTAURANT, uuid: 'rstr-new-1', name: 'New Restaurant', slug: 'new-restaurant', year_established: 1995 }
+    page.route(LIST_OR_CREATE_RESTAURANTS, (route) => {
+      if (route.request().method() === 'GET') {
+        return route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ data: [], meta: { current_page: 1, last_page: 1, per_page: 15, total: 0 } }),
+        })
+      }
+      if (route.request().method() === 'POST') {
+        const body = JSON.parse(route.request().postData() || '{}')
+        const data = {
+          ...createdRestaurant,
+          name: body.name || 'New Restaurant',
+          slug: body.slug || 'new-restaurant',
+          year_established: body.year_established != null ? Number(body.year_established) : null,
+        }
+        return route.fulfill({
+          status: 201,
+          contentType: 'application/json',
+          body: JSON.stringify({ message: 'Restaurant created.', data }),
+        })
+      }
+      return route.continue()
+    })
+    mockRestaurantGet(page, createdRestaurant)
+    mockRestaurantMenus(page)
+    mockRestaurantCategories(page, [])
+    mockRestaurantMenuItems(page, [])
+    mockRestaurantLanguagesAndTranslations(page)
+
+    const formPage = new RestaurantFormPage(page)
+    await formPage.goToCreatePage()
+    await formPage.fillName('New Restaurant')
+    await formPage.expandAdvancedDetails()
+    await formPage.fillYearEstablished('1995')
+    await formPage.submitCreate()
+
+    await expect(page).toHaveURL(/\/app\/restaurants\/rstr-new-1/)
+    await formPage.expandAdvancedDetails()
+    await formPage.expectYearEstablishedValue('1995')
   })
 
   test('owner can toggle menu active from Menu tab', async ({ page }) => {

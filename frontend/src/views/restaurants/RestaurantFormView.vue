@@ -96,56 +96,37 @@
           <p v-if="fieldErrors.description" id="form-description-error" class="text-xs text-red-600 dark:text-red-400 mt-1" role="alert">{{ fieldErrors.description }}</p>
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Shown on your public page. Add more languages in Settings.</p>
         </div>
-      </section>
 
-      <!-- Advanced details: clickable header to expand/collapse -->
-      <section
-        class="bg-white dark:bg-zinc-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden"
-        data-testid="form-section-advanced"
-      >
-        <button
-          type="button"
-          class="w-full p-4 lg:p-6 border-b border-slate-200 dark:border-slate-800 text-left flex items-center justify-between gap-2 hover:bg-slate-50 dark:hover:bg-zinc-800/50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-inset rounded-t-xl"
-          :aria-expanded="moreDetailsOpen"
-          data-testid="form-toggle-advanced"
-          @click="moreDetailsOpen = !moreDetailsOpen"
-        >
-          <h3 class="font-semibold text-charcoal dark:text-white flex items-center gap-2">
-            <span class="material-icons text-slate-500 dark:text-slate-400">tune</span>
-            Advanced details
-          </h3>
-          <span class="material-icons text-slate-500 dark:text-slate-400 transition-transform shrink-0" :class="{ 'rotate-180': moreDetailsOpen }">expand_more</span>
-        </button>
-        <div v-show="moreDetailsOpen" class="p-4 lg:p-6 space-y-6">
-          <div class="grid gap-4 sm:grid-cols-2">
-            <AppInput v-model="form.email" label="Email (optional)" type="email" placeholder="contact@restaurant.com" :error="fieldErrors.email" />
-            <AppInput v-model="form.website" label="Website (optional)" type="url" placeholder="https://example.com" :error="fieldErrors.website" />
-          </div>
-          <div>
-            <h4 class="font-medium text-charcoal dark:text-white flex items-center gap-2 mb-3">
-              <span class="material-icons text-slate-500 dark:text-slate-400 text-lg">share</span>
-              Social links (optional)
-            </h4>
-            <div class="grid gap-4 sm:grid-cols-2">
-              <AppInput v-model="form.social_links.facebook" label="Facebook URL" type="url" placeholder="https://facebook.com/..." :error="fieldErrors['social_links.facebook']" />
-              <AppInput v-model="form.social_links.instagram" label="Instagram URL" type="url" placeholder="https://instagram.com/..." :error="fieldErrors['social_links.instagram']" />
-              <AppInput v-model="form.social_links.twitter" label="Twitter URL" type="url" placeholder="https://twitter.com/..." :error="fieldErrors['social_links.twitter']" />
-              <AppInput v-model="form.social_links.linkedin" label="LinkedIn URL" type="url" placeholder="https://linkedin.com/..." :error="fieldErrors['social_links.linkedin']" />
-            </div>
-          </div>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <AppInput v-model="form.email" label="Email (optional)" type="email" placeholder="contact@restaurant.com" :error="fieldErrors.email" />
+          <AppInput v-model="form.website" label="Website (optional)" type="url" placeholder="https://example.com" :error="fieldErrors.website" />
+        </div>
+        <AppInput
+          v-model="form.year_established"
+          label="Year established (optional)"
+          type="number"
+          placeholder="e.g. 1995"
+          :error="fieldErrors.year_established"
+          data-testid="form-input-year-established"
+          class="[&_input]:min-h-[44px]"
+        />
 
-          <!-- Availability: only when not embedded (embed uses Availability tab) -->
-          <div v-if="!embed">
-            <h4 class="font-medium text-charcoal dark:text-white flex items-center gap-2 mb-3">
-              <span class="material-icons text-slate-500 dark:text-slate-400 text-lg">schedule</span>
-              Availability
-            </h4>
-            <RestaurantAvailabilitySchedule
-              v-model="form.operatingHours"
-              :day-errors="availabilityDayErrors"
-              :summary-error="availabilitySummaryError"
-            />
-          </div>
+        <!-- Availability: only when not embedded (embed uses Availability tab) -->
+        <div v-if="!embed" class="pt-4 border-t border-slate-200 dark:border-slate-800">
+          <h4 class="font-medium text-charcoal dark:text-white flex items-center gap-2 mb-3">
+            <span class="material-icons text-slate-500 dark:text-slate-400 text-lg">schedule</span>
+            Availability
+          </h4>
+          <RestaurantAvailabilitySchedule
+            v-model="form.operatingHours"
+            :day-errors="availabilityDayErrors"
+            :summary-error="availabilitySummaryError"
+          />
+        </div>
+
+        <!-- Contact & links: only when editing an existing restaurant -->
+        <div v-if="isEdit && uuid" class="pt-4 border-t border-slate-200 dark:border-slate-800" data-testid="form-section-contact-and-links">
+          <ContactAndLinksEditor :restaurant-uuid="uuid" :active="true" />
         </div>
       </section>
 
@@ -183,6 +164,7 @@ import AppInput from '@/components/ui/AppInput.vue'
 import AppButton from '@/components/ui/AppButton.vue'
 import AppBackLink from '@/components/AppBackLink.vue'
 import RestaurantAvailabilitySchedule from '@/components/restaurant/RestaurantAvailabilitySchedule.vue'
+import ContactAndLinksEditor from '@/components/restaurant/ContactAndLinksEditor.vue'
 import Restaurant from '@/models/Restaurant.js'
 import { validateOperatingHours } from '@/utils/availability'
 import { restaurantService, getValidationErrors, normalizeApiError } from '@/services'
@@ -212,7 +194,6 @@ const fieldErrors = ref({})
 const availabilityDayErrors = ref({})
 const availabilitySummaryError = ref('')
 const restaurant = ref(null)
-const moreDetailsOpen = ref(false)
 
 const form = reactive({
   name: '',
@@ -222,7 +203,7 @@ const form = reactive({
   email: '',
   website: '',
   description: '',
-  social_links: { facebook: '', instagram: '', twitter: '', linkedin: '' },
+  year_established: '',
   latitude: '',
   longitude: '',
   operatingHours: {},
@@ -231,6 +212,8 @@ const form = reactive({
 const MAX = { name: 255, tagline: 255, address: 1000, phone: 50, email: 255, website: 500, socialUrl: 500 }
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const URL_RE = /^https?:\/\/.+/i
+const YEAR_ESTABLISHED_MIN = 1800
+const yearEstablishedMax = () => new Date().getFullYear() + 1
 
 // Sync description with Settings tab when embed: receive from parent, emit on change
 watch(() => props.defaultDescription, (val) => {
@@ -251,17 +234,21 @@ function validateForm() {
   if (form.phone && form.phone.length > MAX.phone) err.phone = `Phone must be at most ${MAX.phone} characters.`
   if (form.email && !EMAIL_RE.test(form.email)) err.email = 'Please enter a valid email address.'
   if (form.website && !URL_RE.test(form.website)) err.website = 'Please enter a valid URL.'
-  const social = form.social_links || {}
-  ;['facebook', 'instagram', 'twitter', 'linkedin'].forEach((key) => {
-    const v = social[key]
-    if (v && !URL_RE.test(v)) err[`social_links.${key}`] = 'Please enter a valid URL.'
-  })
+  const yearStr = String(form.year_established ?? '').trim()
+  if (yearStr !== '') {
+    const year = parseInt(yearStr, 10)
+    const maxYear = yearEstablishedMax()
+    if (Number.isNaN(year) || year !== Number(yearStr) || !Number.isInteger(year)) {
+      err.year_established = 'Please enter a valid year (e.g. 1995).'
+    } else if (year < YEAR_ESTABLISHED_MIN || year > maxYear) {
+      err.year_established = `Year must be between ${YEAR_ESTABLISHED_MIN} and ${maxYear}.`
+    }
+  }
   fieldErrors.value = err
   return Object.keys(err).length === 0
 }
 
 function buildPayload() {
-  const social = form.social_links || {}
   const payload = {
     name: form.name.trim(),
     tagline: form.tagline.trim() || undefined,
@@ -269,15 +256,16 @@ function buildPayload() {
     phone: form.phone.trim() || undefined,
     email: form.email.trim() || undefined,
     website: form.website.trim() || undefined,
-    social_links: {
-      facebook: social.facebook?.trim() || undefined,
-      instagram: social.instagram?.trim() || undefined,
-      twitter: social.twitter?.trim() || undefined,
-      linkedin: social.linkedin?.trim() || undefined,
-    },
   }
   const hours = props.embed && props.operatingHours != null ? props.operatingHours : form.operatingHours
   if (hours && typeof hours === 'object' && Object.keys(hours).length) payload.operating_hours = hours
+  const yearStr = String(form.year_established ?? '').trim()
+  if (yearStr !== '') {
+    const year = parseInt(yearStr, 10)
+    if (!Number.isNaN(year) && Number.isInteger(year)) payload.year_established = year
+  } else {
+    payload.year_established = null
+  }
   return payload
 }
 
@@ -350,12 +338,7 @@ async function loadRestaurant() {
       form.description = ''
       form.email = r.email ?? ''
       form.website = r.website ?? ''
-      form.social_links = {
-        facebook: r.social_links?.facebook ?? '',
-        instagram: r.social_links?.instagram ?? '',
-        twitter: r.social_links?.twitter ?? '',
-        linkedin: r.social_links?.linkedin ?? '',
-      }
+      form.year_established = r.year_established != null ? String(r.year_established) : ''
       form.latitude = r.latitude != null ? String(r.latitude) : ''
       form.longitude = r.longitude != null ? String(r.longitude) : ''
       if (!props.embed) form.operatingHours = r.operating_hours ?? {}

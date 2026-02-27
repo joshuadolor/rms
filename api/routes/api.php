@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\MenuItemController;
 use App\Http\Controllers\Api\MenuItemTagController;
 use App\Http\Controllers\Api\OwnerFeedbackController;
 use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\RestaurantContactController;
 use App\Http\Controllers\Api\RestaurantController;
 use App\Http\Controllers\Api\RestaurantLanguageController;
 use App\Http\Controllers\Api\RestaurantTranslationController;
@@ -94,7 +95,7 @@ Route::post('/auth/instagram', [SocialAuthController::class, 'instagram'])->midd
 Route::get('/restaurants/{uuid}/logo', [RestaurantController::class, 'serveLogo']);
 Route::get('/restaurants/{uuid}/banner', [RestaurantController::class, 'serveBanner']);
 
-// Public restaurant page by slug (no auth). For [slug].domain.com and /r/:slug.
+// Public restaurant page by slug (no auth). For {slug}.RESTAURANT_DOMAIN (subdomain-only).
 Route::get('/public/restaurants/{slug}', [PublicRestaurantController::class, 'show']);
 
 // Public feedback submission (no auth); rate-limited.
@@ -118,6 +119,13 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::get('/restaurants/{restaurant}/feedbacks', [FeedbackController::class, 'index']);
     Route::match(['put', 'patch'], '/restaurants/{restaurant}/feedbacks/{feedback}', [FeedbackController::class, 'update']);
     Route::delete('/restaurants/{restaurant}/feedbacks/{feedback}', [FeedbackController::class, 'destroy']);
+
+    // Restaurant contacts (owner CRUD; restaurant and contact identified by uuid)
+    Route::get('/restaurants/{restaurant}/contacts', [RestaurantContactController::class, 'index']);
+    Route::post('/restaurants/{restaurant}/contacts', [RestaurantContactController::class, 'store']);
+    Route::get('/restaurants/{restaurant}/contacts/{contact}', [RestaurantContactController::class, 'show']);
+    Route::match(['put', 'patch'], '/restaurants/{restaurant}/contacts/{contact}', [RestaurantContactController::class, 'update']);
+    Route::delete('/restaurants/{restaurant}/contacts/{contact}', [RestaurantContactController::class, 'destroy']);
 
     // Restaurant languages (install / uninstall locales per restaurant)
     Route::get('/restaurants/{restaurant}/languages', [RestaurantLanguageController::class, 'index']);

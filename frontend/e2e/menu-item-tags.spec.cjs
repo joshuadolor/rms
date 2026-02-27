@@ -88,11 +88,19 @@ function mockPublicRestaurantWithTaggedItem(page, slug, menuItems = []) {
         data: {
           name: 'Test Pizza',
           slug: slug || 'test-pizza',
+          tagline: null,
+          primary_color: null,
+          logo_url: null,
+          banner_url: null,
+          default_locale: 'en',
+          template: 'template-1',
           description: null,
           currency: 'USD',
           languages: ['en'],
+          locale: 'en',
           menu_items: menuItems,
           operating_hours: {},
+          feedbacks: [],
         },
       }),
     })
@@ -115,7 +123,7 @@ test.describe('Menu item tags', () => {
     await tagsPage.expectTagWithText('Vegan')
   })
 
-  test('public menu shows tag icon and tooltip for menu item with tags', async ({ page }) => {
+  test('public menu shows menu item with name, price, and tag pills (icon, title, label)', async ({ page }) => {
     const menuItems = [
       {
         uuid: 'item-1',
@@ -130,7 +138,11 @@ test.describe('Menu item tags', () => {
 
     const publicPage = new PublicRestaurantPage(page)
     await publicPage.goToPublicBySlug('test-pizza')
+    await publicPage.expectMenuSectionVisible()
+    await publicPage.expectMenuHasAtLeastOneItem()
     await publicPage.expectMenuItemNameVisible('Margherita')
+    await publicPage.expectPriceVisibleInMenu('$10.00')
     await publicPage.expectTagIconWithTitleVisible('Spicy')
+    await publicPage.expectTagPillVisibleInMenu('Spicy')
   })
 })

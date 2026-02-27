@@ -1,11 +1,14 @@
 # Dev: docker compose up. Then open http://localhost (via nginx) or http://localhost:8080 (Vite). Mailhog: :8025
 services:
-  nginx:   # Single origin: / → frontend, /api → API. Use http://localhost
+  nginx:   # Single origin: / → frontend, /api → API. *.rms.local → Laravel (Blade). Use http://localhost or http://test.rms.local
     build:
       context: ./docker/nginx
       dockerfile: Dockerfile
     ports:
       - "80:80"
+    volumes:
+      # Mount config so edits apply without rebuild. Restart or reload nginx after editing: docker compose restart nginx
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
       - api
       - frontend

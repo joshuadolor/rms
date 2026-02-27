@@ -328,6 +328,25 @@ test.describe('Feedbacks (public)', () => {
     await publicPage.expectReviewsSectionVisible()
     await publicPage.expectNoReviewsYet()
     await publicPage.expectFeedbackFormVisible()
+    await publicPage.expectFeedbackFormInReviewsSection()
+  })
+
+  test('template-1: Reviews & feedback section contains reviews and feedback form', async ({ page }) => {
+    mockPublicRestaurantWithFeedbacks(page, 'pizza-place', { feedbacks: [] })
+    const publicPage = new PublicRestaurantPage(page)
+    await publicPage.goToPublicBySlug('pizza-place')
+    await publicPage.expectTemplate1Applied()
+    await publicPage.expectFeedbackFormInReviewsSection()
+    await publicPage.expectNoReviewsYet()
+  })
+
+  test('template-2: Reviews & feedback section contains reviews and feedback form', async ({ page }) => {
+    mockPublicRestaurantWithFeedbacks(page, 'minimal-cafe', { template: 'template-2', feedbacks: [] })
+    const publicPage = new PublicRestaurantPage(page)
+    await publicPage.goToPublicBySlug('minimal-cafe')
+    await publicPage.expectTemplate2Applied()
+    await publicPage.expectFeedbackFormInReviewsSection()
+    await publicPage.expectNoReviewsYet()
   })
 
   test('guest sees approved reviews when present', async ({ page }) => {
@@ -347,6 +366,7 @@ test.describe('Feedbacks (public)', () => {
     await publicPage.expectReviewVisible('Amazing pizza!')
     await publicPage.expectReviewVisible('Alex')
     await publicPage.expectFeedbackFormVisible()
+    await publicPage.expectFeedbackFormInReviewsSection()
   })
 
   test('guest can submit valid feedback and sees success message', async ({ page }) => {
@@ -357,6 +377,19 @@ test.describe('Feedbacks (public)', () => {
     await publicPage.setFeedbackRating(5)
     await publicPage.setFeedbackName('E2E Tester')
     await publicPage.setFeedbackMessage('Loved the menu.')
+    await publicPage.submitFeedbackForm()
+    await publicPage.expectFeedbackSuccessMessage('Thank you for your feedback')
+  })
+
+  test('template-2: guest can submit feedback and sees success message', async ({ page }) => {
+    mockPublicRestaurantWithFeedbacks(page, 'minimal-cafe', { template: 'template-2', feedbacks: [] })
+    const publicPage = new PublicRestaurantPage(page)
+    await publicPage.goToPublicBySlug('minimal-cafe')
+    await publicPage.expectTemplate2Applied()
+    await publicPage.expectFeedbackFormVisible()
+    await publicPage.setFeedbackRating(4)
+    await publicPage.setFeedbackName('T2 Guest')
+    await publicPage.setFeedbackMessage('Great experience.')
     await publicPage.submitFeedbackForm()
     await publicPage.expectFeedbackSuccessMessage('Thank you for your feedback')
   })

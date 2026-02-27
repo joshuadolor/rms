@@ -205,6 +205,8 @@ class SuperadminController extends Controller
             'tagline' => $restaurant->tagline,
             'primary_color' => $restaurant->primary_color,
             'slug' => $restaurant->slug,
+            'template' => $restaurant->template ?? 'default',
+            'year_established' => $restaurant->year_established !== null ? (int) $restaurant->year_established : null,
             'public_url' => $publicUrl,
             'address' => $restaurant->address,
             'latitude' => $restaurant->latitude !== null ? (float) $restaurant->latitude : null,

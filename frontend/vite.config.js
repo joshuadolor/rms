@@ -27,6 +27,8 @@ export default defineConfig({
             target: proxyTarget,
             changeOrigin: true,
           },
+          // Do NOT proxy /r — the Vue app serves /r/:slug and renders Template1/Template2 (from resources/generic-templates).
+          // Proxying /r would return Laravel Blade HTML and the new templates would never show.
         }
       : undefined,
   },

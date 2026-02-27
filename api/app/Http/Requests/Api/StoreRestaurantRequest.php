@@ -36,6 +36,8 @@ class StoreRestaurantRequest extends FormRequest
             'social_links.linkedin' => ['nullable', 'string', 'url', 'max:500'],
             'default_locale' => ['nullable', 'string', 'max:10', Rule::in(config('locales.supported', ['en', 'nl', 'ru']))],
             'operating_hours' => ['nullable', 'array', new OperatingHoursRule()],
+            'template' => ['nullable', 'string', 'max:50', Rule::in(config('templates.ids', \App\Models\Restaurant::TEMPLATES))],
+            'year_established' => ['nullable', 'integer', 'min:1800', 'max:' . ((int) date('Y') + 1)],
         ];
     }
 }

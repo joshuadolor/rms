@@ -1,410 +1,247 @@
 <template>
+  <!-- When showing Template1/Template2, do NOT add rms-template-1/2 so the old CSS does not override the reference template styling -->
   <div
-    class="min-h-screen font-display bg-background-light dark:bg-background-dark text-charcoal dark:text-gray-100 public-restaurant-page"
-    :style="publicAccentStyle"
+    class="rms-public public-restaurant-page"
+    :class="data ? 'rms-public-vue' : templateClass"
+    :style="wrapperStyle"
   >
     <!-- Loading -->
-    <div v-if="loading" class="flex min-h-screen items-center justify-center">
-      <div class="text-center">
-        <span class="material-icons text-4xl animate-spin" style="color: var(--public-accent)">sync</span>
-        <p class="mt-3 text-slate-500 dark:text-slate-400">Loading…</p>
-      </div>
+    <div v-if="loading" class="rms-public__loading">
+      <span class="material-icons rms-public__spinner" aria-hidden="true">sync</span>
+      <p class="rms-public__loading-text">Loading…</p>
     </div>
 
     <!-- Error -->
-    <div v-else-if="error" class="flex min-h-screen items-center justify-center p-6">
-      <div class="max-w-md rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-slate-800 p-8 text-center shadow-lg">
-        <span class="material-icons text-5xl text-slate-300 dark:text-slate-600">restaurant</span>
-        <h1 class="mt-4 text-xl font-bold text-charcoal dark:text-white">Restaurant not found</h1>
-        <p class="mt-2 text-slate-500 dark:text-slate-400">{{ error }}</p>
+    <div v-else-if="error" class="rms-public__error">
+      <div class="rms-public__error-card">
+        <span class="material-icons rms-public__error-icon" aria-hidden="true">restaurant</span>
+        <h1 class="rms-public__error-title">Restaurant not found</h1>
+        <p class="rms-public__error-message">{{ error }}</p>
         <router-link
           :to="{ name: 'Landing' }"
-          class="mt-6 min-h-[44px] inline-flex items-center gap-2 font-semibold hover:underline py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-          style="color: var(--public-accent)"
+          class="rms-public__error-link"
         >
-          <span class="material-icons text-lg">arrow_back</span>
+          <span class="material-icons" aria-hidden="true">arrow_back</span>
           Back to home
         </router-link>
       </div>
     </div>
 
     <template v-else-if="data">
-      <!-- Sticky nav -->
-      <nav class="sticky top-0 z-50 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <a
-            href="#"
-            class="flex items-center gap-3 min-h-[44px] rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-            aria-label="Scroll to top"
-            @click.prevent="scrollToTop"
-          >
-            <div
-              v-if="data.logo_url"
-              class="w-12 h-12 sm:w-14 sm:h-14 rounded-xl overflow-hidden shrink-0 ring-1 ring-slate-200 dark:ring-slate-700"
-            >
-              <img :src="data.logo_url" :alt="data.name" class="w-full h-full object-cover" />
-            </div>
-            <div
-              v-else
-              class="w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center shrink-0"
-              style="background-color: var(--public-accent)"
-            >
-              <span class="material-icons text-white text-2xl sm:text-3xl">restaurant</span>
-            </div>
-            <span class="font-bold text-lg tracking-tight text-charcoal dark:text-white truncate max-w-[180px] sm:max-w-none">
-              {{ data.name }}
-            </span>
-          </a>
-          <div class="flex items-center gap-4">
-            <div class="hidden sm:flex items-center gap-6">
-              <a
-                href="#"
-                class="min-h-[44px] min-w-[44px] inline-flex items-center text-sm font-medium text-slate-600 dark:text-slate-400 transition-colors hover:opacity-80 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-                style="color: var(--public-accent)"
-                aria-label="Scroll to top"
-                @click.prevent="scrollToTop"
-              >Home</a>
-              <a href="#menu" class="min-h-[44px] inline-flex items-center text-sm font-medium text-slate-600 dark:text-slate-400 transition-colors hover:opacity-80 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary" style="color: var(--public-accent)">Menu</a>
-              <a href="#about" class="min-h-[44px] inline-flex items-center text-sm font-medium text-slate-600 dark:text-slate-400 transition-colors hover:opacity-80 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary" style="color: var(--public-accent)">About</a>
-              <a href="#reviews" class="min-h-[44px] inline-flex items-center text-sm font-medium text-slate-600 dark:text-slate-400 transition-colors hover:opacity-80 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary" style="color: var(--public-accent)">Reviews</a>
-            </div>
-            <div v-if="data.languages?.length > 1" class="flex flex-wrap gap-1.5">
-              <button
-                v-for="loc in data.languages"
-                :key="loc"
-                type="button"
-                class="min-h-[44px] min-w-[44px] flex items-center justify-center px-2.5 py-2.5 rounded-lg text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-                :class="locale === loc
-                  ? 'text-white'
-                  : 'bg-slate-100 dark:bg-zinc-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-zinc-600'"
-                :style="locale === loc ? { backgroundColor: 'var(--public-accent)' } : undefined"
-                @click="setLocale(loc)"
-              >
-                {{ loc.toUpperCase() }}
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      <!-- Hero -->
-      <section class="relative min-h-[50vh] sm:min-h-[60vh] flex items-end justify-center overflow-hidden">
-        <template v-if="data.banner_url">
-          <img
-            :src="data.banner_url"
-            :alt="data.name"
-            class="absolute inset-0 w-full h-full object-cover"
-          />
-          <div class="absolute inset-0 bg-gradient-to-t from-charcoal/90 via-charcoal/40 to-transparent" />
-        </template>
-        <div
-          v-else
-          class="absolute inset-0 opacity-95"
-          style="background: linear-gradient(135deg, var(--public-accent) 0%, var(--public-accent) 50%, rgba(0,0,0,0.3) 100%);"
-        />
-        <div class="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 pb-12 sm:pb-16 pt-24">
-          <div v-if="data.logo_url" class="mb-4 sm:mb-6" data-testid="public-hero-logo">
-            <img
-              :src="data.logo_url"
-              :alt="data.name"
-              class="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-2xl object-cover ring-2 ring-white/50 shadow-xl"
-            />
-          </div>
-          <span class="font-semibold tracking-[0.2em] uppercase text-xs sm:text-sm block mb-2 text-white/90" style="color: var(--public-accent)">
-            {{ data.name }}
-          </span>
-          <h1 class="text-4xl sm:text-5xl md:text-6xl font-bold text-white tracking-tight drop-shadow-lg">
-            {{ data.name }}
-          </h1>
-          <p class="mt-3 text-white/90 text-lg max-w-2xl">
-            {{ data.description ? truncateDescription(data.description, 120) : 'Discover our menu and story.' }}
-          </p>
-          <a
-            href="#menu"
-            class="mt-6 min-h-[44px] inline-flex items-center gap-2 text-white font-semibold py-3 px-6 rounded-lg shadow-lg transition-all hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-            style="background-color: var(--public-accent); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2);"
-          >
-            Explore Menu
-            <span class="material-icons text-xl">arrow_forward</span>
-          </a>
-        </div>
-        <div class="absolute bottom-6 left-1/2 -translate-x-1/2 text-white/80 animate-bounce">
-          <span class="material-icons">expand_more</span>
-        </div>
-      </section>
-
-      <!-- About -->
-      <section id="about" class="py-16 sm:py-24 bg-cream/50 dark:bg-zinc-900/50 border-y border-slate-100 dark:border-slate-800">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6">
-          <h2 class="text-2xl sm:text-3xl font-bold text-charcoal dark:text-white flex items-center gap-2 mb-6">
-            <span class="w-2 h-8 rounded-full shrink-0" style="background-color: var(--public-accent)" aria-hidden="true"></span>
-            About
-          </h2>
-          <div class="max-w-3xl space-y-8">
-            <div>
-              <p
-                v-if="data.description"
-                class="text-slate-600 dark:text-slate-300 text-lg leading-relaxed whitespace-pre-wrap"
-              >
-                {{ data.description }}
-              </p>
-              <p v-else class="text-slate-500 dark:text-slate-400 italic">No description yet.</p>
-            </div>
-            <!-- Opening hours: only when set -->
-            <div v-if="displayHours.length" class="pt-4 border-t border-slate-200 dark:border-slate-700">
-              <h3 class="text-lg font-semibold text-charcoal dark:text-white flex items-center gap-2 mb-3">
-                <span class="material-icons text-xl" style="color: var(--public-accent)">schedule</span>
-                Opening hours
-              </h3>
-              <ul class="space-y-1.5 text-slate-600 dark:text-slate-300" role="list">
-                <li
-                  v-for="row in displayHours"
-                  :key="row.day"
-                  class="flex flex-wrap items-baseline gap-2 min-h-[44px] sm:min-h-0 sm:py-0.5"
-                >
-                  <span class="w-24 sm:w-28 shrink-0 font-medium text-charcoal dark:text-white">{{ row.label }}</span>
-                  <span>{{ row.text }}</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Menu -->
-      <section id="menu" class="py-16 sm:py-24">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6">
-          <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10">
-            <h2 class="text-2xl sm:text-3xl font-bold text-charcoal dark:text-white flex items-center gap-2">
-            <span class="w-2 h-8 rounded-full shrink-0" style="background-color: var(--public-accent)" aria-hidden="true"></span>
-            Our Menu
-            </h2>
-            <span
-              v-if="data.menu_items?.length"
-              class="text-sm font-medium px-3 py-1 rounded-full"
-              style="background-color: color-mix(in srgb, var(--public-accent) 10%, transparent); color: var(--public-accent)"
-            >
-              {{ data.menu_items.length }} {{ data.menu_items.length === 1 ? 'item' : 'items' }}
-            </span>
-          </div>
-
-          <ul v-if="data.menu_items?.length" class="space-y-4">
-            <li
-              v-for="item in data.menu_items"
-              :key="item.uuid"
-              class="group relative bg-white dark:bg-zinc-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 sm:p-6 shadow-sm hover:shadow-md transition-shadow"
-            >
-              <!-- Not Available overlay: visible but clearly marked -->
-              <div
-                v-if="item.is_available === false"
-                class="absolute inset-0 rounded-xl bg-slate-900/40 dark:bg-slate-950/50 flex items-center justify-center z-10 min-h-[44px]"
-                aria-live="polite"
-              >
-                <span
-                  class="inline-flex items-center gap-2 min-h-[44px] min-w-[44px] px-4 py-2 rounded-lg bg-amber-500 text-white font-semibold text-sm shadow-lg"
-                  style="touch-action: manipulation; -webkit-tap-highlight-color: transparent;"
-                >
-                  <span class="material-icons text-lg" aria-hidden="true">info</span>
-                  Not Available
-                </span>
-              </div>
-              <div class="flex gap-4">
-                <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-lg bg-slate-100 dark:bg-zinc-800 flex items-center justify-center shrink-0">
-                  <span class="material-icons text-2xl sm:text-3xl opacity-70" style="color: var(--public-accent)">restaurant</span>
-                </div>
-                <div class="min-w-0 flex-1">
-                  <div class="flex flex-wrap items-center gap-2 gap-y-1">
-                    <h3 class="font-bold text-lg text-charcoal dark:text-white transition-colors group-hover:[color:var(--public-accent)]">
-                      {{ item.name || 'Untitled' }}
-                    </h3>
-                    <span
-                      v-for="tag in (item.tags || [])"
-                      :key="tag.uuid"
-                      class="inline-flex items-center justify-center w-8 h-8 rounded-full shrink-0 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-primary"
-                      :style="tag.color ? { backgroundColor: `${tag.color}20`, color: tag.color } : undefined"
-                      :title="tag.text"
-                      :aria-label="tag.text ? `${tag.text} tag` : 'Tag'"
-                    >
-                      <span v-if="tag.icon" class="material-icons text-lg">{{ tag.icon }}</span>
-                      <span v-else class="material-icons text-lg">label</span>
-                    </span>
-                  </div>
-                  <p
-                    v-if="item.description"
-                    class="mt-1 text-sm text-slate-500 dark:text-slate-400 leading-relaxed"
-                  >
-                    {{ item.description }}
-                  </p>
-                  <p
-                    v-if="item.price != null && !Number.isNaN(Number(item.price))"
-                    class="mt-1.5 text-sm font-medium text-charcoal dark:text-white"
-                  >
-                    {{ formatCurrency(Number(item.price), data.currency) }}
-                  </p>
-                </div>
-              </div>
-            </li>
-          </ul>
-
-          <div
-            v-else
-            class="rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-slate-800 p-12 text-center"
-          >
-            <span class="material-icons text-5xl text-slate-300 dark:text-slate-600">restaurant_menu</span>
-            <p class="mt-4 text-slate-500 dark:text-slate-400">No menu items yet.</p>
-          </div>
-        </div>
-      </section>
-
-      <!-- Reviews (approved feedbacks) -->
-      <section id="reviews" class="py-16 sm:py-24 bg-cream/50 dark:bg-zinc-900/50 border-y border-slate-100 dark:border-slate-800">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6">
-          <h2 class="text-2xl sm:text-3xl font-bold text-charcoal dark:text-white flex items-center gap-2 mb-6">
-            <span class="w-2 h-8 rounded-full shrink-0" style="background-color: var(--public-accent)" aria-hidden="true"></span>
-            What people say
-          </h2>
-
-          <ul v-if="data.feedbacks?.length" class="space-y-6">
-            <li
-              v-for="fb in data.feedbacks"
-              :key="fb.uuid"
-              class="rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-6"
-            >
-              <div class="flex items-center gap-0.5 mb-2" :aria-label="`Rating: ${fb.rating} out of 5`">
-                <span
-                  v-for="star in 5"
-                  :key="star"
-                  class="material-icons text-xl"
-                  :class="star <= (fb.rating || 0) ? 'text-amber-500' : 'text-slate-200 dark:text-slate-600'"
-                >
-                  {{ star <= (fb.rating || 0) ? 'star' : 'star_border' }}
-                </span>
-              </div>
-              <p class="text-charcoal dark:text-white whitespace-pre-wrap">{{ fb.text || '—' }}</p>
-              <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                — {{ fb.name || 'Anonymous' }}
-                <span v-if="fb.created_at" class="ml-1">· {{ formatDate(fb.created_at) }}</span>
-              </p>
-            </li>
-          </ul>
-
-          <div
-            v-else
-            class="rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-slate-800 p-8 text-center"
-          >
-            <span class="material-icons text-5xl text-slate-300 dark:text-slate-600">rate_review</span>
-            <p class="mt-4 text-slate-500 dark:text-slate-400">No reviews yet. Be the first to leave feedback below.</p>
-          </div>
-
-          <!-- Submit feedback form -->
-          <div id="feedback" class="mt-10 sm:mt-12">
-            <h3 class="text-xl font-bold text-charcoal dark:text-white mb-4">Leave your feedback</h3>
+      <Template1
+        v-if="templateComponent === 'Template1'"
+        :restaurant="data"
+        :languages="data.languages || []"
+        :current-locale="locale"
+        @select-locale="onSelectLocale"
+      >
+        <template #feedback-form>
+          <section id="feedback" class="rms-feedback rms-feedback--template-1" aria-labelledby="feedback-heading">
+            <h3 id="feedback-heading" class="rms-feedback__title">Leave your feedback</h3>
             <form
               novalidate
-              class="max-w-xl space-y-4 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-6"
+              class="rms-feedback__form"
               @submit.prevent="submitFeedback"
             >
-              <p v-if="feedbackError" class="text-sm text-red-600 dark:text-red-400" role="alert">{{ feedbackError }}</p>
-              <p v-if="feedbackSuccess" class="text-sm text-green-600 dark:text-green-400" role="status">{{ feedbackSuccess }}</p>
+              <p v-if="feedbackError" class="rms-feedback__error" role="alert">{{ feedbackError }}</p>
+              <p v-if="feedbackSuccess" class="rms-feedback__success" role="status">{{ feedbackSuccess }}</p>
 
-              <div>
-                <label for="feedback-rating" class="block text-sm font-medium text-charcoal dark:text-white mb-1.5">Rating (1–5) <span class="text-red-500">*</span></label>
-                <div class="flex items-center gap-1 min-h-[44px]">
+              <div class="rms-feedback__field">
+                <label for="feedback-rating" class="rms-feedback__label">Rating (1–5) <span class="rms-feedback__required">*</span></label>
+                <div class="rms-feedback__stars" role="group" aria-label="Rating 1 to 5 stars">
                   <button
                     v-for="r in 5"
                     :key="r"
                     type="button"
-                    class="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-primary"
-                    :class="feedbackRating === r ? 'opacity-100' : 'opacity-50 hover:opacity-80'"
-                    :style="feedbackRating === r ? { color: 'var(--public-accent)' } : undefined"
+                    class="rms-feedback__star-btn"
+                    :class="{ 'rms-feedback__star-btn--active': r <= feedbackRating }"
                     :aria-label="`${r} star${r > 1 ? 's' : ''}`"
                     :aria-pressed="feedbackRating === r"
                     @click="feedbackRating = r"
                   >
-                    <span class="material-icons text-4xl">star</span>
+                    <span class="material-icons" aria-hidden="true">star</span>
                   </button>
                 </div>
-                <p v-if="fieldErrors.rating" class="mt-1 text-sm text-red-600 dark:text-red-400">{{ fieldErrors.rating }}</p>
+                <p v-if="fieldErrors.rating" class="rms-feedback__field-error">{{ fieldErrors.rating }}</p>
               </div>
 
-              <div>
-                <label for="feedback-name" class="block text-sm font-medium text-charcoal dark:text-white mb-1.5">Your name <span class="text-red-500">*</span></label>
+              <div class="rms-feedback__field">
+                <label for="feedback-name" class="rms-feedback__label">Your name <span class="rms-feedback__required">*</span></label>
                 <input
                   id="feedback-name"
                   v-model="feedbackName"
                   type="text"
                   autocomplete="name"
                   maxlength="255"
-                  class="w-full min-h-[44px] px-3 py-2 rounded-lg border bg-white dark:bg-zinc-800 text-charcoal dark:text-white border-slate-300 dark:border-slate-600 focus:ring-2 focus:ring-offset-1 focus:ring-primary focus:border-primary"
+                  class="rms-feedback__input"
                   :aria-invalid="!!fieldErrors.name"
                   :aria-describedby="fieldErrors.name ? 'feedback-name-error' : undefined"
                 />
-                <p id="feedback-name-error" v-if="fieldErrors.name" class="mt-1 text-sm text-red-600 dark:text-red-400">{{ fieldErrors.name }}</p>
+                <p id="feedback-name-error" v-if="fieldErrors.name" class="rms-feedback__field-error">{{ fieldErrors.name }}</p>
               </div>
 
-              <div>
-                <label for="feedback-text" class="block text-sm font-medium text-charcoal dark:text-white mb-1.5">Your message <span class="text-red-500">*</span></label>
+              <div class="rms-feedback__field">
+                <label for="feedback-text" class="rms-feedback__label">Your message <span class="rms-feedback__required">*</span></label>
                 <textarea
                   id="feedback-text"
                   v-model="feedbackText"
                   rows="4"
                   maxlength="65535"
-                  class="w-full min-h-[44px] px-3 py-2 rounded-lg border bg-white dark:bg-zinc-800 text-charcoal dark:text-white border-slate-300 dark:border-slate-600 focus:ring-2 focus:ring-offset-1 focus:ring-primary focus:border-primary resize-y"
+                  class="rms-feedback__input rms-feedback__textarea"
                   :aria-invalid="!!fieldErrors.text"
                   :aria-describedby="fieldErrors.text ? 'feedback-text-error' : undefined"
                 />
-                <p id="feedback-text-error" v-if="fieldErrors.text" class="mt-1 text-sm text-red-600 dark:text-red-400">{{ fieldErrors.text }}</p>
+                <p id="feedback-text-error" v-if="fieldErrors.text" class="rms-feedback__field-error">{{ fieldErrors.text }}</p>
               </div>
 
               <button
                 type="submit"
-                class="min-h-[44px] px-6 py-2.5 font-semibold rounded-lg text-white transition-opacity hover:opacity-90 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-                style="background-color: var(--public-accent)"
+                class="rms-feedback__submit"
                 :disabled="feedbackSubmitting"
               >
                 {{ feedbackSubmitting ? 'Sending…' : 'Send feedback' }}
               </button>
             </form>
-          </div>
-        </div>
-      </section>
+          </section>
+        </template>
+      </Template1>
+      <Template2
+        v-else
+        :restaurant="data"
+        :languages="data.languages || []"
+        :current-locale="locale"
+        @select-locale="onSelectLocale"
+      >
+        <template #feedback-form>
+          <section id="feedback" class="rms-feedback rms-feedback--template-2" aria-labelledby="feedback-heading">
+            <h3 id="feedback-heading" class="rms-feedback__title">Leave your feedback</h3>
+            <form
+              novalidate
+              class="rms-feedback__form"
+              @submit.prevent="submitFeedback"
+            >
+              <p v-if="feedbackError" class="rms-feedback__error" role="alert">{{ feedbackError }}</p>
+              <p v-if="feedbackSuccess" class="rms-feedback__success" role="status">{{ feedbackSuccess }}</p>
 
-      <!-- Footer -->
-      <footer class="py-8 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-zinc-900/50">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div class="flex items-center gap-2">
-            <div class="w-7 h-7 rounded flex items-center justify-center" style="background-color: var(--public-accent)">
-              <span class="material-icons text-white text-sm">restaurant</span>
-            </div>
-            <span class="text-sm font-semibold text-charcoal dark:text-white">{{ data.name }}</span>
-          </div>
-          <p class="text-xs text-slate-400 dark:text-slate-500">Powered by RMS</p>
-        </div>
-      </footer>
+              <div class="rms-feedback__field">
+                <label for="feedback-rating" class="rms-feedback__label">Rating (1–5) <span class="rms-feedback__required">*</span></label>
+                <div class="rms-feedback__stars" role="group" aria-label="Rating 1 to 5 stars">
+                  <button
+                    v-for="r in 5"
+                    :key="r"
+                    type="button"
+                    class="rms-feedback__star-btn"
+                    :class="{ 'rms-feedback__star-btn--active': r <= feedbackRating }"
+                    :aria-label="`${r} star${r > 1 ? 's' : ''}`"
+                    :aria-pressed="feedbackRating === r"
+                    @click="feedbackRating = r"
+                  >
+                    <span class="material-icons" aria-hidden="true">star</span>
+                  </button>
+                </div>
+                <p v-if="fieldErrors.rating" class="rms-feedback__field-error">{{ fieldErrors.rating }}</p>
+              </div>
+
+              <div class="rms-feedback__field">
+                <label for="feedback-name" class="rms-feedback__label">Your name <span class="rms-feedback__required">*</span></label>
+                <input
+                  id="feedback-name"
+                  v-model="feedbackName"
+                  type="text"
+                  autocomplete="name"
+                  maxlength="255"
+                  class="rms-feedback__input"
+                  :aria-invalid="!!fieldErrors.name"
+                  :aria-describedby="fieldErrors.name ? 'feedback-name-error' : undefined"
+                />
+                <p id="feedback-name-error" v-if="fieldErrors.name" class="rms-feedback__field-error">{{ fieldErrors.name }}</p>
+              </div>
+
+              <div class="rms-feedback__field">
+                <label for="feedback-text" class="rms-feedback__label">Your message <span class="rms-feedback__required">*</span></label>
+                <textarea
+                  id="feedback-text"
+                  v-model="feedbackText"
+                  rows="4"
+                  maxlength="65535"
+                  class="rms-feedback__input rms-feedback__textarea"
+                  :aria-invalid="!!fieldErrors.text"
+                  :aria-describedby="fieldErrors.text ? 'feedback-text-error' : undefined"
+                />
+                <p id="feedback-text-error" v-if="fieldErrors.text" class="rms-feedback__field-error">{{ fieldErrors.text }}</p>
+              </div>
+
+              <button
+                type="submit"
+                class="rms-feedback__submit"
+                :disabled="feedbackSubmitting"
+              >
+                {{ feedbackSubmitting ? 'Sending…' : 'Send feedback' }}
+              </button>
+            </form>
+          </section>
+        </template>
+      </Template2>
+
+      <!-- Mobile-only: spacer so sticky "View Menu" bar does not cover footer -->
+      <div class="rms-view-menu-spacer" aria-hidden="true" />
+
+      <!-- Mobile-only: sticky "View Menu" button -->
+      <div class="rms-view-menu-bar">
+        <button
+          ref="viewMenuBtnRef"
+          type="button"
+          class="rms-view-menu-bar__btn"
+          :style="stickyButtonStyle"
+          aria-label="View menu"
+          @click="menuModalOpen = true"
+        >
+          View Menu
+        </button>
+      </div>
+
+      <PublicMenuModal
+        v-model="menuModalOpen"
+        :restaurant="data"
+      />
     </template>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, computed, watch, nextTick, onBeforeUnmount } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { restaurantService, feedbackService, normalizeApiError } from '@/services'
 import PublicRestaurant from '@/models/PublicRestaurant.js'
-import { formatOperatingHoursForDisplay } from '@/utils/availability'
-import { formatCurrency, formatDate } from '@/utils/format'
+import Template1 from '@/components/public/templates/Template1.vue'
+import Template2 from '@/components/public/templates/Template2.vue'
+import PublicMenuModal from '@/components/public/PublicMenuModal.vue'
+
+// Load template CSS (same class names as Blade)
+import '@/assets/public-restaurant-templates.css'
 
 const props = defineProps({
   slug: { type: String, default: '' },
 })
 
 const route = useRoute()
+const router = useRouter()
+
+function getInitialLocale() {
+  try {
+    const el = document.getElementById('app')
+    const dataLocale = el?.getAttribute?.('data-locale')
+    if (dataLocale != null && String(dataLocale).trim() !== '') return String(dataLocale).trim()
+  } catch (_) {}
+  return route.query.locale ?? ''
+}
+
 const slug = computed(() => props.slug || route.params.slug || '')
-const locale = ref(route.query.locale ?? '')
+const locale = ref(getInitialLocale())
 const loading = ref(true)
 const error = ref(null)
 const data = ref(null)
 
-// Feedback form (public submit)
 const feedbackRating = ref(0)
 const feedbackName = ref('')
 const feedbackText = ref('')
@@ -413,20 +250,91 @@ const feedbackError = ref('')
 const feedbackSuccess = ref('')
 const feedbackSubmitting = ref(false)
 
-const displayHours = computed(() => formatOperatingHoursForDisplay(data.value?.operating_hours ?? null))
+const DEFAULT_ACCENT = '#2563eb'
 
-const DEFAULT_ACCENT = '#ee4b2b'
+/** Default document title (from index.html). Restored when leaving public page or on error. */
+const DEFAULT_DOCUMENT_TITLE = 'RMS — Restaurant Management System'
+/** App name for public page title: "[Restaurant name] | [App name]". Configurable via VITE_APP_NAME. */
+const APP_NAME = import.meta.env.VITE_APP_NAME ?? 'RMS'
 
-const publicAccentStyle = computed(() => ({
-  '--public-accent': data.value?.primary_color || DEFAULT_ACCENT,
-}))
+const menuModalOpen = ref(false)
+/** Only auto-open View Menu modal once per page load on mobile. */
+const hasAutoOpenedModal = ref(false)
 
-function truncateDescription(text, maxLen) {
-  const t = (text || '').trim().replace(/\s+/g, ' ')
+/** Truncate description for meta (SEO best practice ~155 chars). */
+function truncateForMeta(text, maxLen = 155) {
+  if (!text || typeof text !== 'string') return ''
+  const t = text.trim()
   if (t.length <= maxLen) return t
-  return t.slice(0, maxLen).trim() + '…'
+  return t.slice(0, maxLen - 1).trimEnd() + '…'
 }
 
+/** Ensure meta element exists (by name or property), set content, mark for cleanup. */
+function setMeta(nameOrProperty, content, isProperty = false) {
+  const attr = isProperty ? 'property' : 'name'
+  let el = document.querySelector(`meta[${attr}="${nameOrProperty}"]`)
+  if (!el) {
+    el = document.createElement('meta')
+    el.setAttribute(attr, nameOrProperty)
+    el.setAttribute('data-rms-seo', '')
+    document.head.appendChild(el)
+  }
+  el.setAttribute('content', content || '')
+}
+
+/** Remove all meta tags we added for public page SEO. */
+function removeSeoMeta() {
+  document.querySelectorAll('meta[data-rms-seo]').forEach((el) => el.remove())
+}
+
+/** Apply SEO title and meta from restaurant data. */
+function applyPublicPageSeo(restaurant) {
+  if (!restaurant?.name) return
+  const title = `${restaurant.name} | ${APP_NAME}`
+  document.title = title
+  const description = truncateForMeta(restaurant.description)
+  if (description) setMeta('description', description)
+  setMeta('og:title', title, true)
+  setMeta('og:description', description, true)
+  setMeta('og:type', 'website', true)
+  const canonicalUrl = typeof window !== 'undefined' ? window.location.href : ''
+  if (canonicalUrl) setMeta('og:url', canonicalUrl, true)
+  const image = restaurant.banner_url || restaurant.logo_url
+  if (image) setMeta('og:image', image, true)
+  setMeta('twitter:card', image ? 'summary_large_image' : 'summary')
+  setMeta('twitter:title', title)
+  setMeta('twitter:description', description)
+  if (image) setMeta('twitter:image', image)
+}
+
+/** Restore default title and remove our meta tags. */
+function clearPublicPageSeo() {
+  document.title = DEFAULT_DOCUMENT_TITLE
+  removeSeoMeta()
+}
+const viewMenuBtnRef = ref(null)
+
+const wrapperStyle = computed(() => ({
+  '--rms-accent': data.value?.primary_color || DEFAULT_ACCENT,
+}))
+
+const stickyButtonStyle = computed(() => ({
+  backgroundColor: data.value?.primary_color || DEFAULT_ACCENT,
+}))
+
+/** template-1 (default) vs template-2 (minimal); same as Blade resolveTemplate. */
+const templateClass = computed(() => {
+  const t = data.value?.template ?? 'template-1'
+  if (t === 'template-2' || t === 'minimal') return 'rms-template-2'
+  return 'rms-template-1'
+})
+
+/** Which template component to render (Template1 | Template2). */
+const templateComponent = computed(() => {
+  const t = data.value?.template ?? 'template-1'
+  if (t === 'template-2' || t === 'minimal') return 'Template2'
+  return 'Template1'
+})
 async function fetchRestaurant() {
   if (!slug.value) {
     error.value = 'Missing restaurant slug.'
@@ -441,8 +349,8 @@ async function fetchRestaurant() {
     const res = await restaurantService.getPublicRestaurant(slug.value, params)
     const model = PublicRestaurant.fromApi(res)
     data.value = model.toJSON()
-    if (data.value && !locale.value) {
-      locale.value = data.value.locale ?? data.value.default_locale ?? 'en'
+    if (data.value) {
+      locale.value = data.value.locale ?? data.value.default_locale ?? locale.value ?? 'en'
     }
   } catch (e) {
     if (e?.response?.status === 404) {
@@ -455,13 +363,15 @@ async function fetchRestaurant() {
   }
 }
 
-function setLocale(loc) {
-  locale.value = loc
+function onSelectLocale(code) {
+  if (!code || typeof code !== 'string') return
+  locale.value = code
+  router.replace({
+    name: route.name,
+    params: route.params,
+    query: { ...route.query, locale: code },
+  })
   fetchRestaurant()
-}
-
-function scrollToTop() {
-  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 function validateFeedbackForm() {
@@ -517,7 +427,175 @@ async function submitFeedback() {
 }
 
 watch(slug, () => {
-  locale.value = route.query.locale ?? ''
+  const fromQuery = route.query.locale ?? ''
+  if (fromQuery) locale.value = fromQuery
   fetchRestaurant()
 }, { immediate: true })
+
+watch(menuModalOpen, (open) => {
+  if (!open) {
+    nextTick(() => viewMenuBtnRef.value?.focus())
+  }
+})
+
+watch(data, (val) => {
+  if (val?.name) {
+    applyPublicPageSeo(val)
+  } else {
+    clearPublicPageSeo()
+  }
+  // On mobile, auto-open View Menu modal once when restaurant data has loaded.
+  if (val && !hasAutoOpenedModal.value && typeof window !== 'undefined' && window.innerWidth < 768) {
+    hasAutoOpenedModal.value = true
+    menuModalOpen.value = true
+  }
+}, { immediate: true })
+
+onBeforeUnmount(clearPublicPageSeo)
 </script>
+
+<style scoped>
+.rms-public__loading,
+.rms-public__error {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.rms-public__spinner {
+  font-size: 2.5rem;
+  color: var(--rms-accent, #2563eb);
+  animation: rms-spin 1s linear infinite;
+}
+
+.rms-public__loading-text {
+  margin-top: 0.75rem;
+  color: #64748b;
+}
+
+.rms-public__error-card {
+  max-width: 28rem;
+  padding: 2rem;
+  text-align: center;
+  background: #fff;
+  border-radius: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
+}
+
+.rms-public__error-icon {
+  font-size: 3rem;
+  color: #94a3b8;
+}
+
+.rms-public__error-title {
+  margin-top: 1rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.rms-public__error-message {
+  margin-top: 0.5rem;
+  color: #64748b;
+}
+
+.rms-public__error-link {
+  margin-top: 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: var(--rms-accent, #2563eb);
+  text-decoration: none;
+  min-height: 44px;
+}
+
+.rms-public__error-link:hover {
+  text-decoration: underline;
+}
+
+@keyframes rms-spin {
+  to { transform: rotate(360deg); }
+}
+
+.rms-opening-hours {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.rms-opening-hours__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+  min-height: 44px;
+  align-items: center;
+}
+
+.rms-opening-hours__day {
+  font-weight: 600;
+  color: #0f172a;
+  min-width: 6rem;
+}
+
+.rms-opening-hours__slots {
+  color: #475569;
+}
+
+/* Mobile-only: spacer so fixed bar doesn't cover footer (height matches bar) */
+.rms-view-menu-spacer {
+  display: block;
+  height: 56px;
+  flex-shrink: 0;
+}
+@media (min-width: 768px) {
+  .rms-view-menu-spacer {
+    display: none;
+  }
+}
+
+/* Mobile-only: sticky "View Menu" bar */
+.rms-view-menu-bar {
+  display: flex;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  padding: 0.5rem 1rem;
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  background: #fff;
+  border-top: 1px solid #e2e8f0;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.06);
+}
+@media (min-width: 768px) {
+  .rms-view-menu-bar {
+    display: none;
+  }
+}
+
+.rms-view-menu-bar__btn {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.625rem 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.rms-view-menu-bar__btn:hover {
+  opacity: 0.9;
+}
+.rms-view-menu-bar__btn:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+</style>

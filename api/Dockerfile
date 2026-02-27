@@ -5,7 +5,11 @@ RUN apk add --no-cache \
     zip \
     sqlite \
     sqlite-dev \
-    && docker-php-ext-install -j$(nproc) pdo_sqlite
+    libpng-dev \
+    libjpeg-turbo-dev \
+    libwebp-dev \
+    && docker-php-ext-configure gd --with-jpeg --with-webp \
+    && docker-php-ext-install -j$(nproc) pdo_sqlite gd
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 

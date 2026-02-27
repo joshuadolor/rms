@@ -45,6 +45,8 @@ export default class Restaurant {
     this._createdAt = data.created_at ?? data.createdAt ?? null
     this._updatedAt = data.updated_at ?? data.updatedAt ?? null
     this._currency = data.currency ?? 'USD'
+    this._template = data.template ?? 'template-1'
+    this._yearEstablished = data.year_established ?? null
   }
 
   get uuid() {
@@ -135,6 +137,14 @@ export default class Restaurant {
     return this._currency
   }
 
+  get template() {
+    return this._template
+  }
+
+  get year_established() {
+    return this._yearEstablished
+  }
+
   /** Build from API response (data object or { data } wrapper). Use when consuming restaurant APIs. */
   static fromApi(apiResponse) {
     const data = apiResponse?.data ?? apiResponse
@@ -169,6 +179,8 @@ export default class Restaurant {
       created_at: this._createdAt,
       updated_at: this._updatedAt,
       currency: this._currency,
+      template: this._template,
+      year_established: this._yearEstablished,
     }
   }
 }

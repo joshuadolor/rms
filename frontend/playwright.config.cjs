@@ -13,19 +13,20 @@ module.exports = defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
   use: {
-    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:8082',
+    baseURL: process.env.PLAYWRIGHT_BASE_URL || `http://localhost:${process.env.PLAYWRIGHT_PORT || '8082'}`,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
-    command: 'npx vite --port 8082',
-    url: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:8082',
+    command: `npx vite --port ${process.env.PLAYWRIGHT_PORT || '8082'}`,
+    url: process.env.PLAYWRIGHT_BASE_URL || `http://localhost:${process.env.PLAYWRIGHT_PORT || '8082'}`,
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
-    // Proxy /api to the Laravel API so tests can use relative URLs.
+    // Proxy /api to the Laravel API so tests can use relative URLs. E2E=1 so Vite does not proxy /r (SPA serves /r/:slug).
     env: {
       ...process.env,
+      E2E: '1',
       VITE_PROXY_TARGET: process.env.VITE_PROXY_TARGET || process.env.E2E_API_BASE || 'http://localhost:3000',
     },
   },

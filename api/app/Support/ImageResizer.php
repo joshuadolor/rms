@@ -22,6 +22,14 @@ final class ImageResizer
      */
     public static function resizeToFit(UploadedFile $file, int $maxWidth, int $maxHeight): string
     {
+        if (! function_exists('imagecreatefrompng')) {
+            throw new \InvalidArgumentException(
+                'PHP GD extension with PNG support is required for image uploads. ' .
+                'Docker: rebuild the API image so GD is installed (api/Dockerfile already includes it): docker compose build api && docker compose up -d api. ' .
+                'Local PHP: install the GD extension (e.g. apt install php8.2-gd, or on macOS: brew install php and ensure gd is enabled in php.ini).'
+            );
+        }
+
         $path = $file->getRealPath();
         if ($path === false || ! is_readable($path)) {
             throw new \InvalidArgumentException(__('Could not read uploaded image.'));
@@ -33,10 +41,10 @@ final class ImageResizer
             throw new \InvalidArgumentException(__('Unsupported or invalid image.'));
         }
 
-        $width = imagesx($image);
-        $height = imagesy($image);
+        $width = \imagesx($image);
+        $height = \imagesy($image);
         if ($width === false || $height === false) {
-            imagedestroy($image);
+            \imagedestroy($image);
             throw new \InvalidArgumentException(__('Could not read image dimensions.'));
         }
 
@@ -52,28 +60,28 @@ final class ImageResizer
 
         if ($newWidth === $width && $newHeight === $height) {
             $content = (string) file_get_contents($path);
-            imagedestroy($image);
+            \imagedestroy($image);
 
             return $content;
         }
 
-        $resized = imagecreatetruecolor($newWidth, $newHeight);
+        $resized = \imagecreatetruecolor($newWidth, $newHeight);
         if ($resized === false) {
-            imagedestroy($image);
+            \imagedestroy($image);
             throw new \InvalidArgumentException(__('Could not create resized image.'));
         }
 
         // Preserve transparency for PNG and GIF.
         if (in_array($mime, ['image/png', 'image/gif'], true)) {
-            imagealphablending($resized, false);
-            imagesavealpha($resized, true);
-            $transparent = imagecolorallocatealpha($resized, 255, 255, 255, 127);
+            \imagealphablending($resized, false);
+            \imagesavealpha($resized, true);
+            $transparent = \imagecolorallocatealpha($resized, 255, 255, 255, 127);
             if ($transparent !== false) {
-                imagefill($resized, 0, 0, $transparent);
+                \imagefill($resized, 0, 0, $transparent);
             }
         }
 
-        $success = imagecopyresampled(
+        $success = \imagecopyresampled(
             $resized,
             $image,
             0, 0, 0, 0,
@@ -82,14 +90,14 @@ final class ImageResizer
             $width,
             $height
         );
-        imagedestroy($image);
+        \imagedestroy($image);
         if (! $success) {
-            imagedestroy($resized);
+            \imagedestroy($resized);
             throw new \InvalidArgumentException(__('Could not resize image.'));
         }
 
         $content = self::encodeImage($resized, $mime);
-        imagedestroy($resized);
+        \imagedestroy($resized);
 
         return $content;
     }
@@ -100,10 +108,10 @@ final class ImageResizer
     private static function loadImage(string $path, string $mime)
     {
         return match ($mime) {
-            'image/jpeg', 'image/jpg' => @imagecreatefromjpeg($path),
-            'image/png' => @imagecreatefrompng($path),
-            'image/gif' => @imagecreatefromgif($path),
-            'image/webp' => @imagecreatefromwebp($path),
+            'image/jpeg', 'image/jpg' => @\imagecreatefromjpeg($path),
+            'image/png' => @\imagecreatefrompng($path),
+            'image/gif' => @\imagecreatefromgif($path),
+            'image/webp' => @\imagecreatefromwebp($path),
             default => false,
         };
     }
@@ -116,10 +124,10 @@ final class ImageResizer
         ob_start();
         try {
             $result = match ($mime) {
-                'image/jpeg', 'image/jpg' => imagejpeg($image, null, 90),
-                'image/png' => imagepng($image, null, 9),
-                'image/gif' => imagegif($image, null),
-                'image/webp' => imagewebp($image, null, 90),
+                'image/jpeg', 'image/jpg' => \imagejpeg($image, null, 90),
+                'image/png' => \imagepng($image, null, 9),
+                'image/gif' => \imagegif($image, null),
+                'image/webp' => \imagewebp($image, null, 90),
                 default => false,
             };
             if ($result === false) {

@@ -143,6 +143,35 @@ class RestaurantSettingsPage {
     await this.page.getByTestId('settings-add-language-select').selectOption(localeValue)
     await this.page.getByTestId('settings-add-language-button').click()
   }
+
+  // --- Public page template section ---
+
+  /** Assert the "Public page template" section is visible. */
+  async expectTemplateSectionVisible() {
+    await expect(this.page.getByTestId('settings-section-template')).toBeVisible()
+    await expect(this.page.getByRole('heading', { name: 'Public page template' })).toBeVisible()
+  }
+
+  /** Select a template by id (e.g. 'default', 'minimal') by clicking its card. */
+  async selectTemplate(templateId) {
+    await this.page.getByTestId(`settings-template-${templateId}`).click()
+  }
+
+  /** Assert the template card with the given id is in selected state (aria-pressed="true"). */
+  async expectTemplateCardSelected(templateId) {
+    await expect(this.page.getByTestId(`settings-template-${templateId}`)).toHaveAttribute('aria-pressed', 'true')
+  }
+
+  /** Assert the template card with the given id is not selected. */
+  async expectTemplateCardNotSelected(templateId) {
+    await expect(this.page.getByTestId(`settings-template-${templateId}`)).toHaveAttribute('aria-pressed', 'false')
+  }
+
+  /** Assert no template error message is visible in the template section. */
+  async expectNoTemplateError() {
+    const section = this.page.getByTestId('settings-section-template')
+    await expect(section.getByText('Please choose a valid template.')).not.toBeVisible()
+  }
 }
 
 module.exports = { RestaurantSettingsPage }

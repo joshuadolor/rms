@@ -15,7 +15,7 @@ Each restaurant gets a public URL as soon as it’s created: **`[slug].domain.co
    Without this, only explicitly defined subdomains resolve. With it, any `[slug].menus.example.com` resolves to the same server.
 
 3. **Nginx**  
-   One server block accepts all subdomains, e.g. `server_name *.menus.example.com menus.example.com;`. Same app is served; the frontend reads `Host` (e.g. `pizza-place.menus.example.com`) and uses the subdomain part as the restaurant slug to load the right content.
+   Subdomain requests (e.g. `test.rms.local`) must be sent to **Laravel**, which serves the Blade public page. The main domain (e.g. `rms.local`) is served by the frontend (Vue). In dev, `docker/nginx/default.conf` has a server block for `*.rms.local` that proxies to the API so **http://test.rms.local** returns the Blade template.
 
 ## Local dev (Docker)
 
@@ -51,8 +51,7 @@ Each restaurant gets a public URL as soon as it’s created: **`[slug].domain.co
    In `api/.env` set `RESTAURANT_DOMAIN=rms.local` (or your domain) so the API returns `public_url` like `http://pizza.rms.local` on restaurant payloads.
 
 5. **Open the subdomain**  
-   **`http://<slug>.rms.local`** or **`http://<slug>.localhost`**  
-   The app will show the public page for that restaurant (e.g. `http://pizza.rms.local/` → public page for slug `pizza`).
+   **`http://test.rms.local`** (with `test.rms.local` in hosts and nginx routing `*.rms.local` to Laravel). Laravel serves the **Blade** public page (template-1 or template-2). Use a restaurant slug that exists (e.g. slug `test`).
 
 6. **Fallback by path**  
    **`http://rms.local/r/<slug>`** still works without subdomain DNS (e.g. `http://rms.local/r/pizza`).
@@ -66,11 +65,7 @@ Each restaurant gets a public URL as soon as it’s created: **`[slug].domain.co
    Add a wildcard A or CNAME for your restaurant domain, e.g. `*.menus.example.com` → your server.
 
 2. **Nginx**  
-   In your server block, set:
-   ```nginx
-   server_name *.menus.example.com menus.example.com;
-   ```
-   Keep the same `location /` and `location /api` (and `/sanctum`) as in `docker/nginx/default.conf` so the same app is served for all subdomains.
+   Route **subdomains** (e.g. `pizza.menus.example.com`) to Laravel so the Blade public page is served. Route the **main domain** (e.g. `menus.example.com`) to the frontend and `/api` to Laravel. See `docker/nginx/default.conf`: one server block for `*.rms.local` → API; one for `rms.local` → frontend + `/api` to API.
 
 3. **API env**  
    Set `RESTAURANT_DOMAIN=menus.example.com` (no scheme, no subdomain). The API will then return `public_url` like `https://pizza-place.menus.example.com` (scheme from the request).
