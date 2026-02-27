@@ -16,32 +16,44 @@
         ref="panelRef"
         @keydown="onPanelKeydown"
       >
-        <div class="rms-item-detail-modal__header">
-          <h2 id="rms-item-detail-title" class="rms-item-detail-modal__title">
-            {{ item?.name || 'Item details' }}
-          </h2>
-          <button
-            ref="closeBtnRef"
-            type="button"
-            class="rms-item-detail-modal__close"
-            :style="primaryButtonStyle"
-            aria-label="Close"
-            @click="close"
-          >
-            <span class="material-icons" aria-hidden="true">close</span>
-          </button>
-        </div>
+        <button
+          ref="closeBtnRef"
+          type="button"
+          class="rms-item-detail-modal__close"
+          :style="primaryButtonStyle"
+          aria-label="Close"
+          @click="close"
+        >
+          <span class="material-icons" aria-hidden="true">close</span>
+        </button>
 
-        <div class="rms-item-detail-modal__scroll" v-if="item">
-          <p v-if="categoryName" class="rms-item-detail-modal__category">{{ categoryName }}</p>
-          <img
-            v-if="item.image_url"
-            :src="item.image_url"
-            :alt="item.name || 'Item'"
-            class="rms-item-detail-modal__img"
-          />
-          <h3 class="rms-item-detail-modal__name">{{ item.name || 'Untitled' }}</h3>
+        <div
+          class="rms-item-detail-modal__scroll"
+          :class="{ 'rms-item-detail-modal__scroll--body-empty': !hasBodyContent }"
+          v-if="item"
+        >
+          <!-- Card: image on top, dark gradient overlay, category + name on gradient -->
+          <div class="rms-item-detail-modal__card">
+            <div
+              class="rms-item-detail-modal__card-bg"
+              :class="{ 'rms-item-detail-modal__card-bg--has-image': item.image_url }"
+            >
+              <img
+                v-if="item.image_url"
+                :src="item.image_url"
+                :alt="''"
+                class="rms-item-detail-modal__card-img"
+                aria-hidden="true"
+              />
+            </div>
+            <div class="rms-item-detail-modal__card-gradient" aria-hidden="true" />
+            <div class="rms-item-detail-modal__card-text">
+              <p v-if="categoryName" class="rms-item-detail-modal__card-category ">{{ categoryName }}</p>
+              <h2 id="rms-item-detail-title" class="rms-item-detail-modal__card-name ">{{ item.name || 'Untitled' }}</h2>
+            </div>
+          </div>
 
+          <div v-if="hasBodyContent" class="rms-item-detail-modal__body mb-5">
           <!-- Price: simple/combo = single price; with_variants = "From $X.XX" + optional variant list -->
           <div class="rms-item-detail-modal__price-wrap">
             <template v-if="item.type === 'with_variants'">
@@ -72,6 +84,7 @@
               {{ entry.name }} × {{ entry.quantity }}{{ entry.modifier_label ? ` (${entry.modifier_label})` : '' }}
             </li>
           </ul>
+          </div>
         </div>
       </div>
     </div>
@@ -129,6 +142,15 @@ const lowestVariantPrice = computed(() => {
   if (!skus.length) return null
   const prices = skus.map((s) => (s.price != null ? Number(s.price) : null)).filter((p) => p != null)
   return prices.length ? Math.min(...prices) : null
+})
+
+const hasBodyContent = computed(() => {
+  const item = props.item
+  if (!item) return false
+  if (item.description) return true
+  if (item.type === 'combo' && comboEntries(item).length) return true
+  if (item.type === 'with_variants') return lowestVariantPrice.value != null || variantSkus(item).length > 0
+  return itemPrice(item) != null || item.is_available === false
 })
 
 const FOCUSABLE_SELECTOR = 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
@@ -216,6 +238,7 @@ function close() {
   display: flex;
   flex-direction: column;
   pointer-events: auto;
+  overflow: hidden;
 }
 
 @media (max-width: 380px) {
@@ -224,29 +247,11 @@ function close() {
   }
 }
 
-.rms-item-detail-modal__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px;
-  padding-top: 16px;
-  border-bottom: 1px solid #e2e8f0;
-  flex-shrink: 0;
-  gap: 0.75rem;
-}
-
-.rms-item-detail-modal__title {
-  margin: 0;
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #0f172a;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  min-width: 0;
-}
-
 .rms-item-detail-modal__close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 2;
   min-width: 44px;
   min-height: 44px;
   display: inline-flex;
@@ -254,11 +259,12 @@ function close() {
   justify-content: center;
   padding: 0;
   border: none;
-  border-radius: 8px;
+  border-radius: 50%;
   color: #fff;
   cursor: pointer;
   flex-shrink: 0;
   transition: opacity 0.15s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .rms-item-detail-modal__close:hover {
@@ -279,39 +285,92 @@ function close() {
   overflow-x: hidden;
   flex: 1;
   min-height: 0;
-  padding: 16px 20px 20px;
-  padding-bottom: 24px;
+  padding: 0;
   -webkit-overflow-scrolling: touch;
 }
 
-@media (min-width: 640px) {
-  .rms-item-detail-modal__scroll {
-    padding-left: 20px;
-    padding-right: 20px;
-    padding-bottom: 24px;
+.rms-item-detail-modal__scroll--body-empty {
+  padding-bottom: 0;
+}
+
+.rms-item-detail-modal__card {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 1rem 1rem 0 0;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+@media (max-width: 380px) {
+  .rms-item-detail-modal__card {
+    border-radius: 0;
   }
 }
 
-.rms-item-detail-modal__category {
-  margin: 0 0 0.5rem;
-  font-size: 0.875rem;
-  color: #64748b;
+.rms-item-detail-modal__card-bg {
+  position: absolute;
+  inset: 0;
+  background: #1e293b;
 }
 
-.rms-item-detail-modal__img {
+.rms-item-detail-modal__card-bg--has-image .rms-item-detail-modal__card-img {
+  opacity: 1;
+}
+
+.rms-item-detail-modal__card-img {
+  position: absolute;
+  inset: 0;
   width: 100%;
-  max-height: 240px;
+  height: 100%;
   object-fit: cover;
-  border-radius: 8px;
-  margin-bottom: 1rem;
+  opacity: 0;
+  transition: opacity 0.2s;
 }
 
-.rms-item-detail-modal__name {
-  margin: 0 0 0.5rem;
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #0f172a;
-  line-height: 1.3;
+.rms-item-detail-modal__card-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.4) 40%, transparent 70%);
+  pointer-events: none;
+}
+
+.rms-item-detail-modal__card-text {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 1.5rem 1.25rem 1.25rem;
+  padding-right: 3.5rem;
+}
+
+.rms-item-detail-modal__card-category {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.rms-item-detail-modal__card-name {
+  margin: 0;
+  font-size: 2.2rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.rms-item-detail-modal__body {
+  padding: 16px 20px 0;
+}
+
+@media (min-width: 640px) {
+  .rms-item-detail-modal__body {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
 }
 
 .rms-item-detail-modal__price-wrap {

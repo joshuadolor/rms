@@ -17,13 +17,14 @@
           class="md:col-span-6 p-12 border-b md:border-b-0 border-r border-charcoal-blue bg-white"
           :class="{ 'md:border-r-0': gIdx === displayGroups.length - 1 }"
         >
-          <img
-            v-if="group.image_url"
-            :src="group.image_url"
-            :alt="group.category_name || 'Category'"
-            loading="lazy"
-            class="w-full aspect-square object-cover rounded mb-6 max-h-[140px] md:max-h-[180px]"
-          />
+          <div v-if="group.image_url" class="aspect-square w-full max-w-[140px] md:max-w-[180px] rounded overflow-hidden mb-6">
+            <img
+              :src="group.image_url"
+              :alt="group.category_name || 'Category'"
+              loading="lazy"
+              class="w-full h-full object-cover"
+            />
+          </div>
           <h3 class="heading-utilitarian text-4xl font-extrabold mb-12 flex flex-col gap-1 text-charcoal-blue">
             <span class="flex items-center gap-4">
               <span class="bg-charcoal-blue text-white px-3 py-1 text-xl">{{ String(gIdx + 1).padStart(2, '0') }}</span>

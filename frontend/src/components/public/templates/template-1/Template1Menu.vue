@@ -6,13 +6,14 @@
     </div>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-12">
       <div v-for="(group, gIdx) in displayGroups" :key="gIdx" class="flex flex-col">
-        <img
-          v-if="group.image_url"
-          :src="group.image_url"
-          :alt="group.category_name || 'Category'"
-          loading="lazy"
-          class="w-full aspect-square object-cover rounded-lg mb-4 max-h-[140px] md:max-h-[180px]"
-        />
+        <div v-if="group.image_url" class="aspect-square w-full max-w-[140px] md:max-w-[180px] rounded-lg overflow-hidden mb-4">
+          <img
+            :src="group.image_url"
+            :alt="group.category_name || 'Category'"
+            loading="lazy"
+            class="w-full h-full object-cover"
+          />
+        </div>
         <h3 class="text-sm font-bold uppercase tracking-[0.2em] text-t1-neutral-muted mb-8 border-b border-t1-border pb-2">
           <span :style="getAvailabilityDisplay(group.availability).isUnavailableNow(now) ? { opacity: 0.8 } : undefined">{{ group.category_name }}</span>
           <span v-if="getAvailabilityDisplay(group.availability).label(now)" class="block text-xs font-normal normal-case tracking-normal mt-1">{{ getAvailabilityDisplay(group.availability).label(now) }}</span>

@@ -2,13 +2,14 @@
   <section class="rms-menu" id="menu" aria-labelledby="menu-heading">
     <h3 id="menu-heading" class="rms-menu__heading">{{ menuHeading }}</h3>
     <div v-for="(group, gIdx) in displayGroups" :key="gIdx" class="rms-menu__group">
-      <img
-        v-if="group.image_url"
-        :src="group.image_url"
-        :alt="group.category_name || 'Category'"
-        loading="lazy"
-        class="rms-menu__category-img"
-      />
+      <div v-if="group.image_url" class="rms-menu__category-img-wrap">
+        <img
+          :src="group.image_url"
+          :alt="group.category_name || 'Category'"
+          loading="lazy"
+          class="rms-menu__category-img"
+        />
+      </div>
       <h4 class="rms-menu__category">{{ group.category_name }}</h4>
       <ul class="rms-menu__list">
         <li
@@ -213,18 +214,26 @@ function tagStyle(tag) {
 .rms-menu-item__combo-list li {
   font-size: 0.75rem;
 }
-.rms-menu__category-img {
-  width: 100%;
+.rms-menu__category-img-wrap {
   aspect-ratio: 1;
-  object-fit: cover;
-  border-radius: 8px;
-  margin-bottom: 0.75rem;
+  width: 100%;
+  max-width: 140px;
   max-height: 140px;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
 }
 @media (min-width: 768px) {
-  .rms-menu__category-img {
+  .rms-menu__category-img-wrap {
+    max-width: 180px;
     max-height: 180px;
   }
+}
+.rms-menu__category-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 .rms-menu-item__top {
   display: flex;
@@ -257,8 +266,10 @@ function tagStyle(tag) {
 .rms-menu-item__sku-img {
   width: 48px;
   height: 48px;
+  aspect-ratio: 1;
   object-fit: cover;
   border-radius: 6px;
+  flex-shrink: 0;
 }
 
 .rms-menu-item__card {
