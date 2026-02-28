@@ -271,8 +271,8 @@ const router = useRouter()
 const { t } = useI18n()
 const appStore = useAppStore()
 
-/** Supported locale codes for public templates (fallback to en if unknown). */
-const SUPPORTED_PUBLIC_LOCALES = ['en', 'es', 'zh', 'fil', 'de', 'fr', 'uk', 'ru', 'ja', 'nl']
+/** Supported locale codes for public templates (fallback to en if unknown). Must match i18n messages and config/locales.js. */
+const SUPPORTED_PUBLIC_LOCALES = ['en', 'es', 'ar', 'zh', 'fil', 'de', 'fr', 'uk', 'ru', 'ja', 'nl']
 
 /** Use only URL ?locale= so the first API call uses no locale param and the API returns the restaurant's default_locale and its description. */
 function getInitialLocale() {

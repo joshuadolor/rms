@@ -13,7 +13,7 @@
         <div class="block w-full text-center text-sm font-bold uppercase tracking-tight text-t1-neutral-dark">{{ restaurantName || 'Restaurant' }}</div>
       </div>
       <div class="text-center text-t1-neutral-muted text-sm space-y-2">
-        <p>© {{ currentYear }} {{ restaurantName || 'Restaurant' }}. All rights reserved.</p>
+        <p>© {{ currentYear }} {{ restaurantName || 'Restaurant' }}. {{ $t('public.allRightsReserved') }}</p>
       </div>
     </div>
   </footer>
