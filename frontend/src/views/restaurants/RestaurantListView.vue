@@ -2,12 +2,12 @@
   <div class="-mx-4 px-4 py-2 -my-2 lg:mx-0 lg:px-0 lg:py-0 lg:my-0 bg-cream/40 dark:bg-sage/5 rounded-2xl lg:rounded-none min-h-[60vh] lg:min-h-0">
     <header class="mb-6 lg:mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div>
-        <span v-if="!embed" class="text-xs font-semibold uppercase tracking-wider text-primary/80 dark:text-primary/90">Locations</span>
+        <span v-if="!embed" class="text-xs font-semibold uppercase tracking-wider text-primary/80 dark:text-primary/90">{{ $t('app.locations') }}</span>
         <h2 class="text-2xl font-bold tracking-tight text-charcoal dark:text-white lg:text-3xl mt-0.5">
-          {{ embed ? 'Manage restaurants' : 'Your restaurants' }}
+          {{ embed ? $t('app.manageRestaurants') : $t('app.yourRestaurants') }}
         </h2>
         <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">
-          {{ embed ? 'Switch to another location or add a new one.' : 'Manage menus and details for each location.' }}
+          {{ embed ? $t('app.restaurantsListSubtitleEmbed') : $t('app.restaurantsListSubtitle') }}
         </p>
       </div>
       <router-link to="/app/restaurants/new" class="inline-flex shrink-0">
@@ -15,7 +15,7 @@
           <template #icon>
             <span class="material-icons">add</span>
           </template>
-          Add restaurant
+          {{ $t('app.addRestaurant') }}
         </AppButton>
       </router-link>
     </header>
@@ -40,16 +40,16 @@
         <div class="absolute bottom-1/4 right-1/4 w-24 h-24 rounded-full border-2 border-primary/15 -translate-x-1/2 translate-y-1/2" />
       </div>
       <div class="relative">
-        <h3 class="text-xl font-bold text-charcoal dark:text-white lg:text-2xl mb-2">Add your first location</h3>
+        <h3 class="text-xl font-bold text-charcoal dark:text-white lg:text-2xl mb-2">{{ $t('app.addFirstLocation') }}</h3>
         <p class="text-slate-600 dark:text-slate-400 text-sm max-w-md mx-auto mb-8">
-          Create a restaurant to get your menu online, share your address and hours, and let customers find you.
+          {{ $t('app.addFirstLocationHint') }}
         </p>
         <router-link to="/app/restaurants/new">
           <AppButton variant="primary" class="min-h-[48px] px-6 shadow-lg shadow-primary/20 transition-transform hover:scale-[1.02] active:scale-[0.98]">
             <template #icon>
               <span class="material-icons">restaurant</span>
             </template>
-            Create restaurant
+            {{ $t('app.createRestaurant') }}
           </AppButton>
         </router-link>
       </div>

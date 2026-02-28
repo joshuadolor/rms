@@ -4,8 +4,8 @@
     <template v-if="user?.isSuperadmin">
       <div data-testid="superadmin-dashboard">
       <header class="mb-6 lg:mb-8">
-        <h2 class="text-xl font-bold text-charcoal dark:text-white lg:text-2xl">Dashboard</h2>
-        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">System overview.</p>
+        <h2 class="text-xl font-bold text-charcoal dark:text-white lg:text-2xl">{{ $t('app.dashboard') }}</h2>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">{{ $t('app.dashboardSuperadminSubtitle') }}</p>
       </header>
       <div v-if="statsError" class="mb-6 p-4 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 text-sm" role="alert">
         {{ statsError }}
@@ -16,7 +16,7 @@
             <div class="p-2 bg-primary/10 rounded-lg shrink-0">
               <span class="material-icons text-primary">storefront</span>
             </div>
-            <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Restaurants</p>
+            <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">{{ $t('app.restaurants') }}</p>
           </div>
           <p class="text-2xl font-bold text-charcoal dark:text-white">{{ stats?.restaurantsCount ?? '—' }}</p>
         </div>
@@ -25,7 +25,7 @@
             <div class="p-2 bg-primary/10 rounded-lg shrink-0">
               <span class="material-icons text-primary">people</span>
             </div>
-            <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Users</p>
+            <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">{{ $t('app.users') }}</p>
           </div>
           <p class="text-2xl font-bold text-charcoal dark:text-white">{{ stats?.usersCount ?? '—' }}</p>
         </div>
@@ -34,15 +34,15 @@
             <div class="p-2 bg-primary/10 rounded-lg shrink-0">
               <span class="material-icons text-primary">payments</span>
             </div>
-            <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Paid users</p>
+            <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">{{ $t('app.paidUsers') }}</p>
           </div>
           <p class="text-2xl font-bold text-charcoal dark:text-white">{{ stats?.paidUsersCount ?? '—' }}</p>
         </div>
       </div>
       <div class="bg-white dark:bg-zinc-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
         <div class="p-4 lg:p-6">
-          <h3 class="font-bold text-charcoal dark:text-white mb-2">Welcome, {{ user?.fullName }}</h3>
-          <p class="text-slate-500 dark:text-slate-400 text-sm">Use <router-link to="/app/superadmin/users" class="text-primary hover:underline">Users</router-link> or <router-link to="/app/superadmin/restaurants" class="text-primary hover:underline">Restaurants</router-link> to manage the system.</p>
+          <h3 class="font-bold text-charcoal dark:text-white mb-2">{{ $t('app.dashboardWelcome') }} {{ user?.fullName }}</h3>
+          <p class="text-slate-500 dark:text-slate-400 text-sm">{{ $t('app.dashboardSuperadminHint') }}</p>
         </div>
       </div>
       </div>
@@ -51,8 +51,8 @@
     <!-- Owner dashboard -->
     <template v-else>
       <header class="mb-6 lg:mb-8">
-        <h2 class="text-xl font-bold text-charcoal dark:text-white lg:text-2xl">Dashboard</h2>
-        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Manage and monitor your restaurant in one place.</p>
+        <h2 class="text-xl font-bold text-charcoal dark:text-white lg:text-2xl">{{ $t('app.dashboard') }}</h2>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">{{ $t('app.dashboardSubtitle') }}</p>
       </header>
 
     <!-- Stats Grid (placeholder): 1 col mobile, 2 at md, 4 at lg -->
@@ -63,7 +63,7 @@
             <span class="material-icons text-primary">shopping_bag</span>
           </div>
         </div>
-        <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Total Orders</p>
+        <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">{{ $t('app.totalOrders') }}</p>
         <h3 class="text-xl font-bold text-charcoal dark:text-white lg:text-2xl">—</h3>
       </div>
       <div class="bg-white dark:bg-zinc-900 p-4 lg:p-6 rounded-xl border border-slate-200 dark:border-slate-800">
@@ -72,7 +72,7 @@
             <span class="material-icons text-primary">payments</span>
           </div>
         </div>
-        <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Revenue</p>
+        <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">{{ $t('app.revenue') }}</p>
         <h3 class="text-xl font-bold text-charcoal dark:text-white lg:text-2xl">—</h3>
       </div>
       <div class="bg-white dark:bg-zinc-900 p-4 lg:p-6 rounded-xl border border-slate-200 dark:border-slate-800">
@@ -81,7 +81,7 @@
             <span class="material-icons text-primary">menu_book</span>
           </div>
         </div>
-        <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Menu Items</p>
+        <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">{{ $t('app.menuItems') }}</p>
         <h3 class="text-xl font-bold text-charcoal dark:text-white lg:text-2xl">—</h3>
       </div>
       <!-- Locations stat: hidden until maps integration; set showLocationsSection to true to re-enable -->
@@ -91,7 +91,7 @@
             <span class="material-icons text-primary">storefront</span>
           </div>
         </div>
-        <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Locations</p>
+        <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">{{ $t('app.locations') }}</p>
         <h3 class="text-xl font-bold text-charcoal dark:text-white lg:text-2xl">—</h3>
       </div>
     </div>
@@ -99,8 +99,8 @@
     <!-- Welcome card -->
     <div class="bg-white dark:bg-zinc-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
       <div class="p-4 lg:p-6">
-        <h3 class="font-bold text-charcoal dark:text-white mb-2">Welcome, {{ user?.fullName }}</h3>
-        <p class="text-slate-500 dark:text-slate-400 text-sm">Signed in as {{ user?.email }}. Use Profile &amp; Settings to update your account or password.</p>
+        <h3 class="font-bold text-charcoal dark:text-white mb-2">{{ $t('app.dashboardWelcome') }} {{ user?.fullName }}</h3>
+        <p class="text-slate-500 dark:text-slate-400 text-sm">{{ $t('app.dashboardSignedIn', { email: user?.email }) }}</p>
       </div>
     </div>
     </template>

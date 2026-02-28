@@ -3,10 +3,10 @@
     <header class="mb-6 lg:mb-8">
       <span class="text-xs font-semibold uppercase tracking-wider text-primary/80 dark:text-primary/90">Reviews</span>
       <h2 class="text-2xl font-bold tracking-tight text-charcoal dark:text-white lg:text-3xl mt-0.5">
-        Feedbacks
+        {{ $t('app.feedbacks') }}
       </h2>
       <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">
-        View and moderate customer feedback for each restaurant.
+        {{ $t('app.feedbacksSubtitle') }}
       </p>
     </header>
 
@@ -23,14 +23,14 @@
       class="rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-slate-800 p-8 text-center"
     >
       <span class="material-icons text-5xl text-slate-300 dark:text-slate-600">rate_review</span>
-      <p class="mt-4 text-slate-500 dark:text-slate-400">Create a restaurant first to receive and manage feedbacks.</p>
+      <p class="mt-4 text-slate-500 dark:text-slate-400">{{ $t('app.feedbacksCreateFirst') }}</p>
       <router-link to="/app/restaurants/new" class="mt-6 inline-block">
-        <AppButton variant="primary" class="min-h-[44px]">Add restaurant</AppButton>
+        <AppButton variant="primary" class="min-h-[44px]">{{ $t('app.addRestaurant') }}</AppButton>
       </router-link>
     </div>
 
     <div v-else-if="restaurants.length === 1" class="rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-slate-800 p-6 text-center">
-      <p class="text-slate-500 dark:text-slate-400 mb-4">Redirecting to feedbacks…</p>
+      <p class="text-slate-500 dark:text-slate-400 mb-4">{{ $t('app.redirectingToFeedbacks') }}</p>
     </div>
 
     <div v-else class="space-y-3">
@@ -52,7 +52,7 @@
           </div>
           <div class="min-w-0 flex-1">
             <h3 class="font-semibold text-charcoal dark:text-white truncate group-hover:text-primary transition-colors">{{ r.name }}</h3>
-            <p class="text-sm text-slate-500 dark:text-slate-400">View &amp; moderate feedbacks</p>
+            <p class="text-sm text-slate-500 dark:text-slate-400">{{ $t('app.viewModerateFeedbacks') }}</p>
           </div>
           <span class="material-icons text-slate-400 group-hover:text-primary self-center shrink-0 transition-colors">chevron_right</span>
         </div>

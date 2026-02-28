@@ -9,7 +9,7 @@
       v-else-if="!restaurant"
       class="rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-slate-800 p-8 text-center"
     >
-      <p class="text-slate-500 dark:text-slate-400 mb-4">Restaurant not found.</p>
+      <p class="text-slate-500 dark:text-slate-400 mb-4">{{ $t('app.restaurantNotFound') }}</p>
       <AppBackLink to="/app/restaurants" />
     </div>
 

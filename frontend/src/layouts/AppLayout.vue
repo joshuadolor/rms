@@ -116,7 +116,24 @@
       </nav>
       <div class="p-4 border-t border-slate-200 dark:border-slate-800 space-y-3">
         <div class="flex flex-col items-start gap-2">
-          <label for="app-locale-select" class="text-xs font-medium text-slate-500 dark:text-slate-400 shrink-0">{{ $t('app.languageLabel') }}:</label>
+          <div class="flex items-center gap-1.5">
+            <label for="app-locale-select" class="text-xs font-medium text-slate-500 dark:text-slate-400 shrink-0">{{ $t('app.languageLabel') }}:</label>
+            <span class="relative inline-flex group/help">
+              <button
+                type="button"
+                class="rounded-full p-0.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 focus:ring-offset-white dark:focus:ring-offset-zinc-900 min-h-[24px] min-w-[24px] inline-flex items-center justify-center"
+                :aria-label="$t('app.languageLabelTooltip')"
+              >
+                <span class="material-icons text-base" aria-hidden="true">help_outline</span>
+              </button>
+              <span
+                class="absolute left-1/2 -translate-x-1/2 bottom-full mb-1.5 px-2.5 py-2 text-xs font-normal text-white bg-slate-700 dark:bg-slate-600 rounded-lg shadow-lg opacity-0 invisible group-hover/help:opacity-100 group-hover/help:visible group-focus-within/help:opacity-100 group-focus-within/help:visible transition-opacity z-50 w-48 text-center pointer-events-none"
+                role="tooltip"
+              >
+                {{ $t('app.languageLabelTooltip') }}
+              </span>
+            </span>
+          </div>
           <select
             id="app-locale-select"
             :value="appLocale"
