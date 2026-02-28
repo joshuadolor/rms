@@ -11,32 +11,32 @@
         {{ statsError }}
       </div>
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-6 mb-6 lg:mb-8">
-        <div class="bg-white dark:bg-zinc-900 p-4 lg:p-6 rounded-xl border border-slate-200 dark:border-slate-800 min-h-[44px] flex flex-col justify-center">
-          <div class="flex items-center gap-3 mb-2">
-            <div class="p-2 bg-primary/10 rounded-lg shrink-0">
-              <span class="material-icons text-primary">storefront</span>
-            </div>
-            <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">{{ $t('app.restaurants') }}</p>
+        <div class="rms-dashboard-card bg-white dark:bg-zinc-900 p-5 lg:p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-200 min-h-[44px] flex items-center justify-between gap-4">
+          <div class="min-w-0">
+            <p class="text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">{{ $t('app.restaurants') }}</p>
+            <p class="text-3xl lg:text-4xl font-bold tracking-tight text-charcoal dark:text-white">{{ stats?.restaurantsCount ?? '—' }}</p>
           </div>
-          <p class="text-2xl font-bold text-charcoal dark:text-white">{{ stats?.restaurantsCount ?? '—' }}</p>
+          <div class="w-14 h-14 rounded-2xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center shrink-0" aria-hidden="true">
+            <span class="material-icons text-2xl text-amber-600 dark:text-amber-400">storefront</span>
+          </div>
         </div>
-        <div class="bg-white dark:bg-zinc-900 p-4 lg:p-6 rounded-xl border border-slate-200 dark:border-slate-800 min-h-[44px] flex flex-col justify-center">
-          <div class="flex items-center gap-3 mb-2">
-            <div class="p-2 bg-primary/10 rounded-lg shrink-0">
-              <span class="material-icons text-primary">people</span>
-            </div>
-            <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">{{ $t('app.users') }}</p>
+        <div class="rms-dashboard-card bg-white dark:bg-zinc-900 p-5 lg:p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-200 min-h-[44px] flex items-center justify-between gap-4">
+          <div class="min-w-0">
+            <p class="text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">{{ $t('app.users') }}</p>
+            <p class="text-3xl lg:text-4xl font-bold tracking-tight text-charcoal dark:text-white">{{ stats?.usersCount ?? '—' }}</p>
           </div>
-          <p class="text-2xl font-bold text-charcoal dark:text-white">{{ stats?.usersCount ?? '—' }}</p>
+          <div class="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-slate-700/50 flex items-center justify-center shrink-0" aria-hidden="true">
+            <span class="material-icons text-2xl text-slate-600 dark:text-slate-300">people</span>
+          </div>
         </div>
-        <div class="bg-white dark:bg-zinc-900 p-4 lg:p-6 rounded-xl border border-slate-200 dark:border-slate-800 min-h-[44px] flex flex-col justify-center">
-          <div class="flex items-center gap-3 mb-2">
-            <div class="p-2 bg-primary/10 rounded-lg shrink-0">
-              <span class="material-icons text-primary">payments</span>
-            </div>
-            <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">{{ $t('app.paidUsers') }}</p>
+        <div class="rms-dashboard-card bg-white dark:bg-zinc-900 p-5 lg:p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-200 min-h-[44px] flex items-center justify-between gap-4">
+          <div class="min-w-0">
+            <p class="text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">{{ $t('app.paidUsers') }}</p>
+            <p class="text-3xl lg:text-4xl font-bold tracking-tight text-charcoal dark:text-white">{{ stats?.paidUsersCount ?? '—' }}</p>
           </div>
-          <p class="text-2xl font-bold text-charcoal dark:text-white">{{ stats?.paidUsersCount ?? '—' }}</p>
+          <div class="w-14 h-14 rounded-2xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center shrink-0" aria-hidden="true">
+            <span class="material-icons text-2xl text-emerald-600 dark:text-emerald-400">payments</span>
+          </div>
         </div>
       </div>
       <div class="bg-white dark:bg-zinc-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
@@ -55,44 +55,52 @@
         <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">{{ $t('app.dashboardSubtitle') }}</p>
       </header>
 
-    <!-- Stats Grid (placeholder): 1 col mobile, 2 at md, 4 at lg -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6 lg:mb-8">
-      <div class="bg-white dark:bg-zinc-900 p-4 lg:p-6 rounded-xl border border-slate-200 dark:border-slate-800">
-        <div class="flex justify-between items-start mb-3 lg:mb-4">
-          <div class="p-2 bg-primary/10 rounded-lg">
-            <span class="material-icons text-primary">shopping_bag</span>
-          </div>
+    <!-- Stats Grid: Restaurants, Menu items, Feedbacks (with approved/rejected inside) -->
+    <div v-if="ownerStatsError" class="mb-6 p-4 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 text-sm" role="alert">
+      {{ ownerStatsError }}
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6 mb-6 lg:mb-8">
+      <!-- Restaurants -->
+      <div class="rms-dashboard-card bg-white dark:bg-zinc-900 p-5 lg:p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-200 min-h-[44px] flex items-center justify-between gap-4">
+        <div class="min-w-0">
+          <p class="text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">{{ $t('app.restaurants') }}</p>
+          <p class="text-3xl lg:text-4xl font-bold tracking-tight text-charcoal dark:text-white">{{ ownerStats?.restaurantsCount ?? '—' }}</p>
         </div>
-        <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">{{ $t('app.totalOrders') }}</p>
-        <h3 class="text-xl font-bold text-charcoal dark:text-white lg:text-2xl">—</h3>
+        <div class="w-14 h-14 rounded-2xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center shrink-0" aria-hidden="true">
+          <span class="material-icons text-2xl text-amber-600 dark:text-amber-400">storefront</span>
+        </div>
       </div>
-      <div class="bg-white dark:bg-zinc-900 p-4 lg:p-6 rounded-xl border border-slate-200 dark:border-slate-800">
-        <div class="flex justify-between items-start mb-3 lg:mb-4">
-          <div class="p-2 bg-primary/10 rounded-lg">
-            <span class="material-icons text-primary">payments</span>
-          </div>
+      <!-- Menu items -->
+      <div class="rms-dashboard-card bg-white dark:bg-zinc-900 p-5 lg:p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-200 min-h-[44px] flex items-center justify-between gap-4">
+        <div class="min-w-0">
+          <p class="text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">{{ $t('app.menuItems') }}</p>
+          <p class="text-3xl lg:text-4xl font-bold tracking-tight text-charcoal dark:text-white">{{ ownerStats?.menuItemsCount ?? '—' }}</p>
         </div>
-        <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">{{ $t('app.revenue') }}</p>
-        <h3 class="text-xl font-bold text-charcoal dark:text-white lg:text-2xl">—</h3>
+        <div class="w-14 h-14 rounded-2xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center shrink-0" aria-hidden="true">
+          <span class="material-icons text-2xl text-amber-600 dark:text-amber-400">menu_book</span>
+        </div>
       </div>
-      <div class="bg-white dark:bg-zinc-900 p-4 lg:p-6 rounded-xl border border-slate-200 dark:border-slate-800">
-        <div class="flex justify-between items-start mb-3 lg:mb-4">
-          <div class="p-2 bg-primary/10 rounded-lg">
-            <span class="material-icons text-primary">menu_book</span>
+      <!-- Feedbacks: total + approved/rejected inside -->
+      <div class="rms-dashboard-card bg-white dark:bg-zinc-900 p-5 lg:p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-200 min-h-[44px] flex flex-col sm:col-span-2">
+        <div class="flex items-center justify-between gap-4 mb-3">
+          <div class="min-w-0">
+            <p class="text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">{{ $t('app.feedbacks') }}</p>
+            <p class="text-3xl lg:text-4xl font-bold tracking-tight text-charcoal dark:text-white">{{ ownerStats?.feedbacksTotal ?? '—' }}</p>
+          </div>
+          <div class="w-14 h-14 rounded-2xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center shrink-0" aria-hidden="true">
+            <span class="material-icons text-2xl text-amber-600 dark:text-amber-400">rate_review</span>
           </div>
         </div>
-        <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">{{ $t('app.menuItems') }}</p>
-        <h3 class="text-xl font-bold text-charcoal dark:text-white lg:text-2xl">—</h3>
-      </div>
-      <!-- Locations stat: hidden until maps integration; set showLocationsSection to true to re-enable -->
-      <div v-if="showLocationsSection" class="bg-white dark:bg-zinc-900 p-4 lg:p-6 rounded-xl border border-slate-200 dark:border-slate-800">
-        <div class="flex justify-between items-start mb-3 lg:mb-4">
-          <div class="p-2 bg-primary/10 rounded-lg">
-            <span class="material-icons text-primary">storefront</span>
-          </div>
+        <div class="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-100 dark:border-slate-700/80">
+          <span class="inline-flex items-center gap-1.5 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-medium px-2.5 py-1 min-h-[28px]">
+            <span class="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" aria-hidden="true" />
+            {{ ownerStats?.feedbacksApproved ?? 0 }} {{ $t('app.feedbacksApproved') }}
+          </span>
+          <span class="inline-flex items-center gap-1.5 rounded-full bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 text-xs font-medium px-2.5 py-1 min-h-[28px]">
+            <span class="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" aria-hidden="true" />
+            {{ ownerStats?.feedbacksRejected ?? 0 }} {{ $t('app.feedbacksRejected') }}
+          </span>
         </div>
-        <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">{{ $t('app.locations') }}</p>
-        <h3 class="text-xl font-bold text-charcoal dark:text-white lg:text-2xl">—</h3>
       </div>
     </div>
 
@@ -111,16 +119,17 @@
 import { ref, watch, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useAppStore } from '@/stores/app'
-import { superadminService } from '@/services'
-import { normalizeApiError } from '@/services'
+import { superadminService, dashboardService, normalizeApiError } from '@/services'
 
 const appStore = useAppStore()
 const { user } = storeToRefs(appStore)
 
 const stats = ref(null)
 const statsError = ref('')
+const ownerStats = ref(null)
+const ownerStatsError = ref('')
 
-async function loadStats() {
+async function loadSuperadminStats() {
   if (!user.value?.isSuperadmin) return
   statsError.value = ''
   try {
@@ -131,9 +140,23 @@ async function loadStats() {
   }
 }
 
-onMounted(() => loadStats())
-watch(user, () => loadStats(), { immediate: false })
+async function loadOwnerStats() {
+  if (user.value?.isSuperadmin) return
+  ownerStatsError.value = ''
+  try {
+    ownerStats.value = await dashboardService.getStats()
+  } catch (err) {
+    const normalized = normalizeApiError(err)
+    ownerStatsError.value = normalized.message
+  }
+}
 
-// Re-enable when maps integration is ready
-const showLocationsSection = false
+onMounted(() => {
+  loadSuperadminStats()
+  loadOwnerStats()
+})
+watch(user, () => {
+  loadSuperadminStats()
+  loadOwnerStats()
+}, { immediate: false })
 </script>

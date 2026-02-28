@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\EmailVerificationController;
 use App\Http\Controllers\Api\PublicFeedbackController;
 use App\Http\Controllers\Api\PublicRestaurantController;
@@ -113,6 +114,7 @@ Route::post('/public/restaurants/{slug}/feedback', [PublicFeedbackController::cl
 
 // Auth (protected) — require verified email
 Route::middleware(['auth:sanctum', 'verified'])->group(function () {
+    Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/logout-all', [AuthController::class, 'logoutAll']);
     Route::get('/user', [AuthController::class, 'user']);

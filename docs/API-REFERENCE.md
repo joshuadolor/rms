@@ -754,6 +754,35 @@ type DayHours = { open: boolean; slots: Array<{ from: string; to: string }> };
 
 ---
 
+### Owner dashboard stats
+
+| Method | Path | Auth |
+|--------|------|------|
+| GET | `/api/dashboard/stats` | Bearer + verified |
+
+Returns counts for the authenticated owner: restaurants, catalog menu items, and feedbacks (total, approved, rejected).
+
+**Response (200):**
+```json
+{
+  "data": {
+    "restaurants_count": 2,
+    "menu_items_count": 12,
+    "feedbacks_total": 5,
+    "feedbacks_approved": 3,
+    "feedbacks_rejected": 2
+  }
+}
+```
+
+- **restaurants_count:** Number of restaurants owned by the user.
+- **menu_items_count:** Number of standalone (catalog) menu items owned by the user (from the Menu items page).
+- **feedbacks_total:** Total feedbacks across all of the user's restaurants.
+- **feedbacks_approved:** Feedbacks with `is_approved: true`.
+- **feedbacks_rejected:** Feedbacks with `is_approved: false`.
+
+---
+
 ### List restaurants
 
 | Method | Path | Auth |
@@ -1812,6 +1841,7 @@ The Settings UI uses **POST /api/translate** for "Translate from default" (resta
 
 ## Changelog
 
+- **2026-02-28**: **Owner dashboard stats.** New **GET /api/dashboard/stats** (Bearer + verified) returns counts for the authenticated owner: **restaurants_count**, **menu_items_count** (catalog/standalone only), **feedbacks_total**, **feedbacks_approved**, **feedbacks_rejected**. Used by the owner dashboard to display Menu items, Restaurants, and Feedbacks (total, approved, rejected). No internal `id` in response.
 - **2026-02-18**: **Category list/show payload: fallback for blank translations.** When returning category payloads (list, show, create, update, image upload/delete), the API now fills blank **name** and **description** for any locale with the restaurant’s **default_locale** value, or the first non-empty value across locales. So when the default language is changed (e.g. to Spanish), categories that have no Spanish translation still return a displayable value (e.g. from English). Response shape unchanged; only empty values are replaced for display.
 - **2026-02-28**: **Translation: API as client only; supported-languages check.** All translation logic lives in the external service (LibreTranslate); the API only validates input, calls the service, and returns responses. New **GET /api/translate/languages** (Bearer + verified, same rate limit as translate) returns the list of languages supported by the service (proxied from the service’s languages endpoint). **POST /api/translate** now checks `from_locale` and `to_locale` against that list before calling translate; returns **422** with `errors.from_locale` or `errors.to_locale` ("Language not supported.") when a locale is not supported. No internal `id` in any response.
 - **2026-02-28**: **GET /api/public/restaurants/{slug}: optional owner viewer metadata.** Endpoint remains public (no required auth) but now accepts optional Bearer context. Response now includes `viewer` with `is_owner` and `owner_admin_url` (only set for authenticated owner viewers). Guests and non-owner viewers receive `is_owner: false` and `owner_admin_url: null`. No internal `id` exposed.
