@@ -50,8 +50,9 @@ class CategoryController extends Controller
             return response()->json(['message' => __('Menu not found.')], 404);
         }
 
+        $defaultLocale = $restaurantModel->default_locale ?? 'en';
         return response()->json([
-            'data' => $categories->map(fn (Category $c) => $this->categoryPayload($c, $restaurant, $menu)),
+            'data' => $categories->map(fn (Category $c) => $this->categoryPayload($c, $restaurant, $menu, $defaultLocale)),
         ]);
     }
 
@@ -70,7 +71,8 @@ class CategoryController extends Controller
             return response()->json(['message' => __('Category not found.')], 404);
         }
 
-        return response()->json(['data' => $this->categoryPayload($categoryModel, $restaurant, $menu)]);
+        $defaultLocale = $restaurantModel->default_locale ?? 'en';
+        return response()->json(['data' => $this->categoryPayload($categoryModel, $restaurant, $menu, $defaultLocale)]);
     }
 
     /**
@@ -111,9 +113,10 @@ class CategoryController extends Controller
             return response()->json(['message' => __('Menu not found.')], 404);
         }
 
+        $defaultLocale = $restaurantModel->default_locale ?? 'en';
         return response()->json([
             'message' => __('Category created.'),
-            'data' => $this->categoryPayload($category, $restaurant, $menu),
+            'data' => $this->categoryPayload($category, $restaurant, $menu, $defaultLocale),
         ], 201);
     }
 
@@ -141,9 +144,11 @@ class CategoryController extends Controller
             return response()->json(['message' => __('Category not found.')], 404);
         }
 
+        $restaurantModel = $this->getRestaurant->handle($request->user(), $restaurant);
+        $defaultLocale = $restaurantModel?->default_locale ?? 'en';
         return response()->json([
             'message' => __('Category updated.'),
-            'data' => $this->categoryPayload($categoryModel, $restaurant, $menu),
+            'data' => $this->categoryPayload($categoryModel, $restaurant, $menu, $defaultLocale),
         ]);
     }
 
@@ -207,9 +212,10 @@ class CategoryController extends Controller
             return response()->json(['message' => $e->getMessage(), 'errors' => ['file' => [$e->getMessage()]]], 422);
         }
 
+        $defaultLocale = $categoryModel->menu->restaurant->default_locale ?? 'en';
         return response()->json([
             'message' => __('Image updated.'),
-            'data' => $this->categoryPayload($categoryModel, $restaurant, $menu),
+            'data' => $this->categoryPayload($categoryModel, $restaurant, $menu, $defaultLocale),
         ]);
     }
 
@@ -253,23 +259,41 @@ class CategoryController extends Controller
             return response()->json(['message' => $e->getMessage()], 403);
         }
 
+        $defaultLocale = $categoryModel->menu->restaurant->default_locale ?? 'en';
         return response()->json([
             'message' => __('Image removed.'),
-            'data' => $this->categoryPayload($categoryModel, $restaurant, $menu),
+            'data' => $this->categoryPayload($categoryModel, $restaurant, $menu, $defaultLocale),
         ]);
     }
 
     /**
+     * Build category payload. When defaultLocale is provided, blank name/description for any locale
+     * are filled from the default locale or first non-empty value so changing default language
+     * does not leave blank display values.
+     *
      * @return array<string, mixed>
      */
-    private function categoryPayload(Category $category, string $restaurantUuid, string $menuUuid): array
+    private function categoryPayload(Category $category, string $restaurantUuid, string $menuUuid, ?string $defaultLocale = null): array
     {
         $translations = [];
         foreach ($category->translations as $t) {
             $translations[$t->locale] = [
-                'name' => $t->name,
-                'description' => $t->description,
+                'name' => $t->name ?? '',
+                'description' => $t->description ?? '',
             ];
+        }
+
+        if ($defaultLocale !== null) {
+            $fallbackName = $this->fallbackTranslationValue($translations, 'name', $defaultLocale);
+            $fallbackDescription = $this->fallbackTranslationValue($translations, 'description', $defaultLocale);
+            foreach ($translations as $locale => $vals) {
+                if (trim((string) $vals['name']) === '') {
+                    $translations[$locale]['name'] = $fallbackName;
+                }
+                if (trim((string) $vals['description']) === '') {
+                    $translations[$locale]['description'] = $fallbackDescription;
+                }
+            }
         }
 
         $baseUrl = rtrim(config('app.url'), '/');
@@ -287,5 +311,23 @@ class CategoryController extends Controller
             'created_at' => $category->created_at?->toIso8601String(),
             'updated_at' => $category->updated_at?->toIso8601String(),
         ];
+    }
+
+    /**
+     * First try default locale, then first non-empty value across locales.
+     */
+    private function fallbackTranslationValue(array $translations, string $key, string $defaultLocale): string
+    {
+        $v = $translations[$defaultLocale][$key] ?? null;
+        if ($v !== null && trim((string) $v) !== '') {
+            return (string) $v;
+        }
+        foreach ($translations as $vals) {
+            $v = $vals[$key] ?? null;
+            if ($v !== null && trim((string) $v) !== '') {
+                return (string) $v;
+            }
+        }
+        return '';
     }
 }

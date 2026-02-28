@@ -144,12 +144,27 @@
                 <AppButton
                   v-if="restaurant && selectedLocale !== restaurant.default_locale"
                   type="button"
-                  variant="ghost"
+                  variant="secondary"
                   size="sm"
                   class="min-h-[44px]"
-                  :disabled="translatingLocale === selectedLocale"
+                  :disabled="!!translatingLocale"
+                  :aria-busy="translatingLocale === selectedLocale"
+                  aria-label="Translate from default language"
+                  data-testid="menu-item-translate-from-default"
                   @click="translateLocale(selectedLocale)"
                 >
+                  <template #icon>
+                    <span
+                      v-if="translatingLocale === selectedLocale"
+                      class="material-icons animate-spin text-lg"
+                      aria-hidden="true"
+                    >sync</span>
+                    <span
+                      v-else
+                      class="material-icons text-lg"
+                      aria-hidden="true"
+                    >translate</span>
+                  </template>
                   {{ translatingLocale === selectedLocale ? 'Translating…' : 'Translate from default' }}
                 </AppButton>
               </div>

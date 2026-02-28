@@ -217,6 +217,8 @@
             type="text"
             placeholder="e.g. Starters, Main courses"
             :error="categoryFormError"
+            :disabled="!!translatingCategoryLocale"
+            :aria-busy="!!translatingCategoryLocale"
           />
           <div>
             <label :for="'category-desc-' + selectedCategoryLocale" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
@@ -227,7 +229,10 @@
               v-model="categoryForm.translations[selectedCategoryLocale].description"
               rows="3"
               placeholder="Short description for this category"
+              :readonly="!!translatingCategoryLocale"
+              :aria-busy="!!translatingCategoryLocale"
               class="w-full min-h-[44px] rounded-lg ring-1 ring-gray-200 dark:ring-zinc-700 focus:ring-2 focus:ring-primary transition-all bg-background-light dark:bg-zinc-800 border-0 py-3 px-4 text-charcoal dark:text-white resize-none"
+              :class="{ 'opacity-70 cursor-wait': !!translatingCategoryLocale }"
             />
           </div>
 
@@ -282,10 +287,42 @@
           </div>
         </form>
         <template #footer>
-          <AppButton variant="secondary" class="min-h-[44px]" type="button" @click="closeCategoryModal">Cancel</AppButton>
-          <AppButton variant="primary" class="min-h-[44px]" type="button" :disabled="savingCategory" @click="saveCategory">
-            {{ savingCategory ? 'Saving…' : 'Save' }}
-          </AppButton>
+          <div class="flex flex-wrap items-center justify-between gap-3 w-full">
+            <div class="flex items-center gap-2">
+              <AppButton
+                v-if="hasMultipleLanguages && selectedCategoryLocale !== defaultLocale"
+                type="button"
+                variant="secondary"
+                size="sm"
+                class="min-h-[44px]"
+                :disabled="!!translatingCategoryLocale || savingCategory"
+                :aria-busy="translatingCategoryLocale === selectedCategoryLocale"
+                :aria-label="translatingCategoryLocale === selectedCategoryLocale ? 'Translating category from default language' : 'Translate from default language'"
+                data-testid="category-translate-from-default"
+                @click="translateCategoryFromDefault(selectedCategoryLocale)"
+              >
+                <template #icon>
+                  <span
+                    v-if="translatingCategoryLocale === selectedCategoryLocale"
+                    class="material-icons animate-spin text-lg"
+                    aria-hidden="true"
+                  >sync</span>
+                  <span
+                    v-else
+                    class="material-icons text-lg"
+                    aria-hidden="true"
+                  >translate</span>
+                </template>
+                {{ translatingCategoryLocale === selectedCategoryLocale ? 'Translating…' : 'Translate from default' }}
+              </AppButton>
+            </div>
+            <div class="flex items-center gap-2">
+              <AppButton variant="secondary" class="min-h-[44px]" type="button" @click="closeCategoryModal">Cancel</AppButton>
+              <AppButton variant="primary" class="min-h-[44px]" type="button" :disabled="savingCategory" @click="saveCategory">
+                {{ savingCategory ? 'Saving…' : 'Save' }}
+              </AppButton>
+            </div>
+          </div>
         </template>
       </AppModal>
 
@@ -491,7 +528,7 @@ import AppButton from '@/components/ui/AppButton.vue'
 import Restaurant from '@/models/Restaurant.js'
 import Menu from '@/models/Menu.js'
 import Category from '@/models/Category.js'
-import { restaurantService, normalizeApiError } from '@/services'
+import { restaurantService, localeService, normalizeApiError } from '@/services'
 import { useToastStore } from '@/stores/toast'
 import { getLocaleDisplay } from '@/config/locales'
 
@@ -520,6 +557,7 @@ const editingCategory = ref(null)
 const categoryForm = ref({ translations: {} })
 const categoryFormError = ref('')
 const savingCategory = ref(false)
+const translatingCategoryLocale = ref(null)
 const uploadingCategoryImage = ref(false)
 const categoryImageInputRef = ref(null)
 const selectedCategoryLocale = ref('en')
@@ -838,6 +876,43 @@ function closeCategoryModal() {
   editingCategory.value = null
   categoryForm.value = { translations: {} }
   categoryFormError.value = ''
+  translatingCategoryLocale.value = null
+}
+
+/** Translate category name (and description if present) from default locale to selected locale via API. */
+async function translateCategoryFromDefault(loc) {
+  const def = defaultLocale.value
+  if (!def || def === loc) return
+  const translations = categoryForm.value.translations ?? {}
+  const defaultName = (translations[def]?.name ?? '').trim()
+  if (!defaultName) {
+    toastStore.info('Default category name is empty. Add a name for the default language first.')
+    return
+  }
+  translatingCategoryLocale.value = loc
+  categoryFormError.value = ''
+  try {
+    const [nameRes, descRes] = await Promise.all([
+      localeService.translate({ text: defaultName, from_locale: def, to_locale: loc }),
+      (() => {
+        const defaultDesc = (translations[def]?.description ?? '').trim()
+        if (!defaultDesc) return Promise.resolve(null)
+        return localeService.translate({ text: defaultDesc, from_locale: def, to_locale: loc })
+      })(),
+    ])
+    const next = { ...categoryForm.value.translations }
+    if (!next[loc]) next[loc] = { name: '', description: '' }
+    next[loc].name = nameRes?.translated_text ?? defaultName
+    if (descRes?.translated_text != null) next[loc].description = descRes.translated_text
+    categoryForm.value = { ...categoryForm.value, translations: next }
+    toastStore.success('Translation applied. Click Save to store.')
+  } catch (e) {
+    const msg = normalizeApiError(e).message ?? 'Translation failed.'
+    categoryFormError.value = msg
+    toastStore.error(msg)
+  } finally {
+    translatingCategoryLocale.value = null
+  }
 }
 
 async function onCategoryImageSelect(event) {

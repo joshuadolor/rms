@@ -224,7 +224,7 @@
             <AppButton
               v-if="selectedDescriptionLocale !== defaultLocale"
               type="button"
-              variant="ghost"
+              variant="secondary"
               size="sm"
               class="min-h-[44px]"
               :disabled="!!translatingLocale"
@@ -233,8 +233,17 @@
               data-testid="settings-translate-from-default"
               @click="translateDescription(selectedDescriptionLocale)"
             >
-              <template v-if="translatingLocale === selectedDescriptionLocale" #icon>
-                <span class="material-icons animate-spin text-lg" aria-hidden="true">sync</span>
+              <template #icon>
+                <span
+                  v-if="translatingLocale === selectedDescriptionLocale"
+                  class="material-icons animate-spin text-lg"
+                  aria-hidden="true"
+                >sync</span>
+                <span
+                  v-else
+                  class="material-icons text-lg"
+                  aria-hidden="true"
+                >translate</span>
               </template>
               {{ translatingLocale === selectedDescriptionLocale ? 'Translating…' : 'Translate from default' }}
             </AppButton>
