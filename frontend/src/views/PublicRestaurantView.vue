@@ -212,6 +212,7 @@
 import { ref, computed, watch, nextTick, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { i18n } from '@/i18n'
 import { restaurantService, feedbackService, normalizeApiError } from '@/services'
 import PublicRestaurant from '@/models/PublicRestaurant'
 import Template1 from '@/components/public/templates/Template1.vue'
@@ -227,7 +228,7 @@ const props = defineProps({
 
 const route = useRoute()
 const router = useRouter()
-const { t, locale: i18nLocale } = useI18n()
+const { t } = useI18n()
 
 /** Supported locale codes for public templates (fallback to en if unknown). */
 const SUPPORTED_PUBLIC_LOCALES = ['en', 'es', 'zh', 'fil', 'de', 'fr', 'uk', 'ru', 'ja', 'nl']
@@ -447,7 +448,7 @@ watch(data, (val) => {
   // Sync i18n locale so public template static content (About, Contact Us, etc.) uses the current language.
   const loc = val?.locale ?? locale.value
   if (loc && SUPPORTED_PUBLIC_LOCALES.includes(loc)) {
-    i18nLocale.value = loc
+    i18n.global.locale.value = loc
   }
   // On mobile, auto-open View Menu modal once when restaurant data has loaded.
   if (val && !hasAutoOpenedModal.value && typeof window !== 'undefined' && window.innerWidth < 768) {

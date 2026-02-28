@@ -31,7 +31,7 @@
           @click="closeSidebar"
         >
           <span class="material-icons">dashboard</span>
-          <span>Dashboard</span>
+          <span>{{ $t('app.dashboard') }}</span>
         </router-link>
         <!-- Superadmin-only: Users -->
         <router-link
@@ -42,7 +42,7 @@
           @click="closeSidebar"
         >
           <span class="material-icons">people</span>
-          <span>Users</span>
+          <span>{{ $t('app.users') }}</span>
         </router-link>
         <router-link
           v-if="user?.isSuperadmin"
@@ -52,7 +52,7 @@
           @click="closeSidebar"
         >
           <span class="material-icons">feedback</span>
-          <span>Owner feedbacks</span>
+          <span>{{ $t('app.ownerFeedbacks') }}</span>
         </router-link>
         <!-- Owner-only: Restaurants, Menu items, Feedbacks -->
         <template v-if="!user?.isSuperadmin">
@@ -63,16 +63,16 @@
             @click="closeSidebar"
           >
             <span class="material-icons">storefront</span>
-            <span>Restaurants</span>
-          </router-link>
-          <router-link
+<span>{{ $t('app.restaurants') }}</span>
+        </router-link>
+        <router-link
             to="/app/menu-items"
             class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-colors text-slate-600 dark:text-slate-400 hover:bg-sage/10 dark:hover:bg-sage/15 hover:text-sage min-h-[44px]"
             :class="{ 'nav-link-active': isNavActive('/app/menu-items') }"
             @click="closeSidebar"
           >
             <span class="material-icons">restaurant_menu</span>
-            <span>Menu items</span>
+            <span>{{ $t('app.menuItems') }}</span>
           </router-link>
           <router-link
             to="/app/feedbacks"
@@ -81,7 +81,7 @@
             @click="closeSidebar"
           >
             <span class="material-icons">rate_review</span>
-            <span>Feedbacks</span>
+            <span>{{ $t('app.feedbacks') }}</span>
           </router-link>
           <router-link
             to="/app/owner-feedback"
@@ -90,7 +90,7 @@
             @click="closeSidebar"
           >
             <span class="material-icons">feedback</span>
-            <span>Feature request</span>
+            <span>{{ $t('app.featureRequest') }}</span>
           </router-link>
         </template>
         <!-- Superadmin: Restaurants (view-only list) -->
@@ -102,7 +102,7 @@
           @click="closeSidebar"
         >
           <span class="material-icons">storefront</span>
-          <span>Restaurants</span>
+          <span>{{ $t('app.restaurants') }}</span>
         </router-link>
         <router-link
           to="/app/profile"
@@ -111,10 +111,25 @@
           @click="closeSidebar"
         >
           <span class="material-icons">settings</span>
-          <span>Profile &amp; Settings</span>
+          <span>{{ $t('app.profile') }}</span>
         </router-link>
       </nav>
-      <div class="p-4 border-t border-slate-200 dark:border-slate-800">
+      <div class="p-4 border-t border-slate-200 dark:border-slate-800 space-y-3">
+        <div class="flex flex-col items-start gap-2">
+          <label for="app-locale-select" class="text-xs font-medium text-slate-500 dark:text-slate-400 shrink-0">{{ $t('app.languageLabel') }}:</label>
+          <select
+            id="app-locale-select"
+            :value="appLocale"
+            class="flex-1 w-full min-h-[44px] rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-zinc-800 text-charcoal dark:text-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:outline-none"
+            aria-label="App language"
+            data-testid="app-locale-select"
+            @change="onAppLocaleChange($event.target.value)"
+          >
+            <option v-for="loc in APP_LOCALES" :key="loc.code" :value="loc.code">
+              {{ loc.flag }} {{ loc.label }}
+            </option>
+          </select>
+        </div>
         <div class="flex items-center gap-3 p-2">
           <div class="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 font-semibold shrink-0">
             {{ userInitial }}
@@ -126,8 +141,8 @@
           <button
             type="button"
             class="text-slate-400 hover:text-primary p-2 rounded min-h-[44px] min-w-[44px] flex items-center justify-center -m-1"
-            title="Sign out"
-            aria-label="Sign out"
+            :title="$t('app.logout')"
+            :aria-label="$t('app.logout')"
             @click="handleLogout"
           >
             <span class="material-icons text-xl">logout</span>
@@ -173,11 +188,13 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
+import { i18n } from '@/i18n'
 import { useAppStore } from '@/stores/app'
 import { BREADCRUMB_CONFIG } from '@/config/breadcrumbs'
+import { APP_LOCALES, setStoredAppLocale } from '@/config/app-locales'
 import AppBreadcrumbs from '@/components/AppBreadcrumbs.vue'
 import HelpLegendFab from '@/components/HelpLegendFab.vue'
 
@@ -186,11 +203,23 @@ const route = useRoute()
 const appStore = useAppStore()
 const { user } = storeToRefs(appStore)
 
+const appLocale = computed({
+  get: () => i18n.global.locale.value,
+  set: (v) => { i18n.global.locale.value = v },
+})
+
 const sidebarOpen = ref(false)
 
 const BODY_CLASS = 'rms-app-layout'
-onMounted(() => document.body.classList.add(BODY_CLASS))
+function applyDocDir(loc) {
+  document.documentElement.dir = loc === 'ar' ? 'rtl' : 'ltr'
+}
+onMounted(() => {
+  document.body.classList.add(BODY_CLASS)
+  applyDocDir(i18n.global.locale.value)
+})
 onBeforeUnmount(() => document.body.classList.remove(BODY_CLASS))
+watch(() => i18n.global.locale.value, applyDocDir)
 
 const userInitial = computed(() => {
   const n = user.value?.fullName || user.value?.email || '?'
@@ -206,6 +235,13 @@ function isNavActive(basePath, exact = false) {
 
 function closeSidebar() {
   sidebarOpen.value = false
+}
+
+function onAppLocaleChange(code) {
+  if (!code) return
+  i18n.global.locale.value = code
+  setStoredAppLocale(code)
+  applyDocDir(code)
 }
 
 function handleLogout() {
