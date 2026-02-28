@@ -8,9 +8,9 @@
         <span class="text-xl font-bold tracking-tight uppercase text-t1-neutral-dark">{{ name || 'Restaurant' }}</span>
       </div>
       <nav class="hidden md:flex items-center gap-10">
-        <a class="text-sm font-medium min-h-[44px] flex items-center hover:text-t1-primary transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-t1-primary focus-visible:ring-offset-2 rounded" href="#menu">Menu</a>
-        <a class="text-sm font-medium min-h-[44px] flex items-center hover:text-t1-primary transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-t1-primary focus-visible:ring-offset-2 rounded" href="#reviews">Reviews</a>
-        <a class="text-sm font-medium min-h-[44px] flex items-center hover:text-t1-primary transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-t1-primary focus-visible:ring-offset-2 rounded" href="#contact">Contact</a>
+        <a class="text-sm font-medium min-h-[44px] flex items-center hover:text-t1-primary transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-t1-primary focus-visible:ring-offset-2 rounded" href="#menu">{{ $t('app.menu') }}</a>
+        <a class="text-sm font-medium min-h-[44px] flex items-center hover:text-t1-primary transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-t1-primary focus-visible:ring-offset-2 rounded" href="#reviews">{{ $t('public.reviewsNav') }}</a>
+        <a class="text-sm font-medium min-h-[44px] flex items-center hover:text-t1-primary transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-t1-primary focus-visible:ring-offset-2 rounded" href="#contact">{{ $t('public.contactNav') }}</a>
         <button
           v-if="!isOwnerViewer"
           type="button"

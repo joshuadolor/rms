@@ -46,6 +46,15 @@ class PublicRestaurantController extends Controller
         $baseUrl = rtrim(config('app.url'), '/');
         $translation = $restaurant->translations()->where('locale', $locale)->first();
         $description = $translation?->description ?? null;
+        // Fallback: if current locale has no description, use default locale's so the About section can show content
+        if (($description === null || trim((string) $description) === '') && $locale !== ($restaurant->default_locale ?? 'en')) {
+            $defaultTranslation = $restaurant->translations()->where('locale', $restaurant->default_locale ?? 'en')->first();
+            $description = $defaultTranslation?->description ?? $description;
+        }
+        if ($description === null || trim((string) $description) === '') {
+            $firstWithDescription = $restaurant->translations()->whereNotNull('description')->where('description', '!=', '')->first();
+            $description = $firstWithDescription?->description ?? $description;
+        }
 
         // Eager-load relations required for public payload: combo breakdown (combo_entries), variant data, and item/category images.
         // When item is from catalog (source_menu_item_uuid), source's type and combo_entries are used for combo display.

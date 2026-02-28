@@ -1,7 +1,7 @@
 <template>
   <section class="rms-menu max-w-6xl mx-auto px-6 py-20" id="menu" aria-labelledby="menu-heading-t1">
     <div class="text-center mb-16">
-      <h2 id="menu-heading-t1" class="text-3xl font-bold tracking-tight mb-2 text-t1-neutral-dark">Our Menu</h2>
+      <h2 id="menu-heading-t1" class="text-3xl font-bold tracking-tight mb-2 text-t1-neutral-dark">{{ $t('public.ourMenu') }}</h2>
       <div class="w-12 h-1 mx-auto rounded" :style="primaryBarStyle"></div>
     </div>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-12">

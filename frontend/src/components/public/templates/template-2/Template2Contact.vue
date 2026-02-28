@@ -3,7 +3,7 @@
     <div class="max-w-[1400px] mx-auto border-x border-charcoal-blue grid grid-cols-1 md:grid-cols-12">
       <div class="p-12 md:p-20 border-b md:border-b-0 space-y-16" :class="hasSchedule ? 'md:col-span-5 md:border-r border-charcoal-blue' : 'md:col-span-12 border-charcoal-blue'">
         <div>
-          <h2 id="contact-heading-t2" class="heading-utilitarian text-5xl font-extrabold mb-12 text-charcoal-blue">Contact Us</h2>
+          <h2 id="contact-heading-t2" class="heading-utilitarian text-5xl font-extrabold mb-12 text-charcoal-blue">{{ $t('public.contactUs') }}</h2>
           <div class="space-y-12">
             <div v-for="c in contacts" :key="c.uuid" class="flex gap-6 group">
               <div class="w-12 h-12 bg-concrete-gray border border-charcoal-blue flex items-center justify-center shrink-0 group-hover:bg-charcoal-blue group-hover:text-white transition-colors">
@@ -55,7 +55,7 @@
         </div>
       </div>
       <div v-if="hasSchedule" class="md:col-span-7 p-12 md:p-20 bg-white space-y-12">
-        <h2 class="heading-utilitarian text-5xl font-extrabold text-charcoal-blue">Operating Hours</h2>
+        <h2 class="heading-utilitarian text-5xl font-extrabold text-charcoal-blue">{{ $t('public.openingHours') }}</h2>
         <div class="grid grid-cols-1 gap-4">
           <div
             v-for="row in displayHours"

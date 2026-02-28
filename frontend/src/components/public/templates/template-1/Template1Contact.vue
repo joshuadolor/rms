@@ -2,7 +2,7 @@
   <section class="max-w-6xl mx-auto px-6 py-20" id="contact" aria-labelledby="contact-heading-t1">
     <div class="grid grid-cols-1 gap-16" :class="{ 'md:grid-cols-2': hasSchedule }">
       <div>
-        <h2 id="contact-heading-t1" class="text-3xl font-bold tracking-tight mb-8 text-t1-neutral-dark">Contact Us</h2>
+        <h2 id="contact-heading-t1" class="text-3xl font-bold tracking-tight mb-8 text-t1-neutral-dark">{{ $t('public.contactUs') }}</h2>
         <div class="space-y-6">
           <div v-for="c in contacts" :key="c.uuid" class="flex gap-4">
             <span class="material-symbols-outlined text-t1-neutral-muted shrink-0" :aria-hidden="true">
@@ -42,11 +42,11 @@
               <p v-else class="text-t1-neutral-muted">{{ contactVal(c) }}</p>
             </div>
           </div>
-          <div v-if="!contacts.length" class="text-t1-neutral-muted">No contact numbers or links listed.</div>
+          <div v-if="!contacts.length" class="text-t1-neutral-muted">{{ $t('public.noContactListed') }}</div>
         </div>
       </div>
       <div v-if="hasSchedule">
-        <h2 class="text-3xl font-bold tracking-tight mb-8 text-t1-neutral-dark">Opening Hours</h2>
+        <h2 class="text-3xl font-bold tracking-tight mb-8 text-t1-neutral-dark">{{ $t('public.openingHours') }}</h2>
         <div class="space-y-3">
           <div
             v-for="row in displayHours"
@@ -64,6 +64,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { formatOperatingHoursForDisplay } from '@/utils/availability'
 import { buildWhatsAppUrl, contactValue, isLinkType } from '@/utils/contact'
 
@@ -72,6 +73,7 @@ const props = defineProps({
   operatingHours: { type: Object, default: null },
 })
 
+const { t } = useI18n()
 const displayHours = computed(() => formatOperatingHoursForDisplay(props.operatingHours))
 const hasSchedule = computed(() => displayHours.value.some((row) => row.text !== 'Closed'))
 
@@ -86,18 +88,12 @@ function contactIcon(type) {
 }
 
 function contactTypeLabel(type) {
-  const labels = {
-    whatsapp: 'WhatsApp',
-    mobile: 'Mobile',
-    phone: 'Phone',
-    fax: 'Fax',
-    other: 'Contact',
-    facebook: 'Facebook',
-    instagram: 'Instagram',
-    twitter: 'Twitter',
-    website: 'Website',
-  }
-  return labels[type] ?? type
+  const key = 'public.' + type
+  try {
+    const translated = t(key)
+    if (translated && translated !== key) return translated
+  } catch (_) {}
+  return type
 }
 
 function whatsAppUrl(number) {

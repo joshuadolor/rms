@@ -16,6 +16,7 @@
       <Template1Hero
         :name="restaurant.name"
         :tagline="restaurant.tagline"
+        :description="(restaurant.description || '').trim()"
         :logo-url="restaurant.logo_url || ''"
         :banner-url="restaurant.banner_url"
       />
@@ -37,13 +38,14 @@
       <section id="reviews" class="rms-reviews-and-feedback" aria-labelledby="reviews-section-heading">
         <div class="rms-reviews-and-feedback__inner max-w-6xl mx-auto px-6 py-12 md:py-16">
           <h2 id="reviews-section-heading" class="rms-reviews-and-feedback__title text-2xl font-bold text-t1-neutral-dark mb-8 md:mb-10">
-            Reviews & feedback
+            {{ $t('public.reviewsAndFeedback') }}
           </h2>
           <div class="rms-reviews-feedback-grid grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-[2rem]">
             <div class="rms-reviews-feedback-grid__reviews min-w-0">
               <Template1Reviews
                 :feedbacks="restaurant.feedbacks || []"
                 :primary-color="restaurant.primary_color"
+                :empty-message="$t('public.noReviewsYet')"
               />
             </div>
             <div class="rms-reviews-feedback-grid__form min-w-0">

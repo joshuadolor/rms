@@ -38,7 +38,7 @@
       <section id="reviews" class="rms-reviews-and-feedback" aria-labelledby="reviews-section-heading">
         <div class="rms-reviews-and-feedback__inner max-w-[1400px] border-2 border-charcoal-blue mx-auto px-6 py-12 md:py-16">
           <h2 id="reviews-section-heading" class="rms-reviews-and-feedback__title heading-utilitarian text-3xl md:text-5xl font-extrabold uppercase tracking-wide text-charcoal-blue mb-8 md:mb-10">
-            Reviews & feedback
+            {{ $t('public.reviewsAndFeedback') }}
           </h2>
           <div class="rms-reviews-and-feedback__box border-charcoal-blue bg-pale-stone">
             <div class="rms-reviews-feedback-grid grid grid-cols-1 md:grid-cols-[1fr_auto] gap-0">
@@ -46,6 +46,7 @@
                 <Template2Reviews
                   :feedbacks="restaurant.feedbacks || []"
                   :nested="true"
+                  :empty-message="$t('public.noReviewsYet')"
                 />
               </div>
               <div class="rms-reviews-feedback-grid__form min-w-0 p-6 md:p-8 md:min-w-[500px]">

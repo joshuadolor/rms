@@ -13,9 +13,9 @@
         </span>
       </div>
       <nav class="hidden md:flex items-center gap-1">
-        <a class="heading-utilitarian text-sm px-6 py-3 min-h-[44px] flex items-center hover:bg-concrete-gray transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-oxidized-copper focus-visible:ring-offset-2 rounded" href="#menu">01. Menu</a>
-        <a class="heading-utilitarian text-sm px-6 py-3 min-h-[44px] flex items-center hover:bg-concrete-gray transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-oxidized-copper focus-visible:ring-offset-2 rounded" href="#reviews">02. Reviews</a>
-        <a class="heading-utilitarian text-sm px-6 py-3 min-h-[44px] flex items-center hover:bg-concrete-gray transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-oxidized-copper focus-visible:ring-offset-2 rounded" href="#contact">03. Contact</a>
+        <a class="heading-utilitarian text-sm px-6 py-3 min-h-[44px] flex items-center hover:bg-concrete-gray transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-oxidized-copper focus-visible:ring-offset-2 rounded" href="#menu">{{ $t('public.t2MenuNav') }}</a>
+        <a class="heading-utilitarian text-sm px-6 py-3 min-h-[44px] flex items-center hover:bg-concrete-gray transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-oxidized-copper focus-visible:ring-offset-2 rounded" href="#reviews">{{ $t('public.t2ReviewsNav') }}</a>
+        <a class="heading-utilitarian text-sm px-6 py-3 min-h-[44px] flex items-center hover:bg-concrete-gray transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-oxidized-copper focus-visible:ring-offset-2 rounded" href="#contact">{{ $t('public.t2ContactNav') }}</a>
         <button
           v-if="!isOwnerViewer"
           type="button"

@@ -24,6 +24,8 @@
           </div>
           <h1 class="text-4xl md:text-6xl font-bold mb-4">{{ name || 'Restaurant' }}</h1>
           <p v-if="tagline" class="text-lg md:text-xl font-light opacity-90">{{ tagline }}</p>
+          <p v-if="description && !tagline" class="text-lg md:text-xl font-light opacity-90 line-clamp-3">{{ description }}</p>
+          <p v-else-if="description" class="mt-2 text-base md:text-lg font-light opacity-85 line-clamp-2">{{ description }}</p>
         </div>
       </div>
     </div>
@@ -34,6 +36,7 @@
 defineProps({
   name: { type: String, default: '' },
   tagline: { type: String, default: '' },
+  description: { type: String, default: '' },
   logoUrl: { type: String, default: '' },
   bannerUrl: { type: String, default: '' },
 })

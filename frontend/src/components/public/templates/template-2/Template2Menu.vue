@@ -4,7 +4,7 @@
       <div class="grid grid-cols-1 md:grid-cols-12 border-x border-charcoal-blue">
         <div class="md:col-span-12 p-12 md:p-20 border-b border-charcoal-blue flex flex-col md:flex-row justify-between items-end gap-8">
           <div>
-            <h2 id="menu-heading-t2" class="heading-utilitarian text-6xl md:text-8xl font-extrabold leading-none text-charcoal-blue">Our Menu</h2>
+            <h2 id="menu-heading-t2" class="heading-utilitarian text-6xl md:text-8xl font-extrabold leading-none text-charcoal-blue">{{ $t('public.ourMenu') }}</h2>
           </div>
           <div v-if="menuDescription" class="text-right hidden md:block">
             <p class="font-mono text-xs uppercase opacity-70 mb-2">{{ menuDescription }}</p>

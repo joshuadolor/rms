@@ -37,7 +37,7 @@
       >
         <template #feedback-form>
           <section id="feedback" class="rms-feedback rms-feedback--template-1" aria-labelledby="feedback-heading">
-            <h3 id="feedback-heading" class="rms-feedback__title">Leave your feedback</h3>
+            <h3 id="feedback-heading" class="rms-feedback__title">{{ t('public.leaveFeedback') }}</h3>
             <form
               novalidate
               class="rms-feedback__form"
@@ -47,7 +47,7 @@
               <p v-if="feedbackSuccess" class="rms-feedback__success" role="status">{{ feedbackSuccess }}</p>
 
               <div class="rms-feedback__field">
-                <label for="feedback-rating" class="rms-feedback__label">Rating (1–5) <span class="rms-feedback__required">*</span></label>
+                <label for="feedback-rating" class="rms-feedback__label">{{ t('public.ratingLabel') }} <span class="rms-feedback__required">*</span></label>
                 <div class="rms-feedback__stars" role="group" aria-label="Rating 1 to 5 stars">
                   <button
                     v-for="r in 5"
@@ -66,7 +66,7 @@
               </div>
 
               <div class="rms-feedback__field">
-                <label for="feedback-name" class="rms-feedback__label">Your name <span class="rms-feedback__required">*</span></label>
+                <label for="feedback-name" class="rms-feedback__label">{{ t('public.yourName') }} <span class="rms-feedback__required">*</span></label>
                 <input
                   id="feedback-name"
                   v-model="feedbackName"
@@ -81,7 +81,7 @@
               </div>
 
               <div class="rms-feedback__field">
-                <label for="feedback-text" class="rms-feedback__label">Your message <span class="rms-feedback__required">*</span></label>
+                <label for="feedback-text" class="rms-feedback__label">{{ t('public.yourMessage') }} <span class="rms-feedback__required">*</span></label>
                 <textarea
                   id="feedback-text"
                   v-model="feedbackText"
@@ -99,7 +99,7 @@
                 class="rms-feedback__submit"
                 :disabled="feedbackSubmitting"
               >
-                {{ feedbackSubmitting ? 'Sending…' : 'Send feedback' }}
+                {{ feedbackSubmitting ? '…' : t('public.sendFeedback') }}
               </button>
             </form>
           </section>
@@ -114,7 +114,7 @@
       >
         <template #feedback-form>
           <section id="feedback" class="rms-feedback rms-feedback--template-2" aria-labelledby="feedback-heading">
-            <h3 id="feedback-heading" class="rms-feedback__title">Leave your feedback</h3>
+            <h3 id="feedback-heading" class="rms-feedback__title">{{ t('public.leaveFeedback') }}</h3>
             <form
               novalidate
               class="rms-feedback__form"
@@ -124,7 +124,7 @@
               <p v-if="feedbackSuccess" class="rms-feedback__success" role="status">{{ feedbackSuccess }}</p>
 
               <div class="rms-feedback__field">
-                <label for="feedback-rating" class="rms-feedback__label">Rating (1–5) <span class="rms-feedback__required">*</span></label>
+                <label for="feedback-rating" class="rms-feedback__label">{{ t('public.ratingLabel') }} <span class="rms-feedback__required">*</span></label>
                 <div class="rms-feedback__stars" role="group" aria-label="Rating 1 to 5 stars">
                   <button
                     v-for="r in 5"
@@ -143,7 +143,7 @@
               </div>
 
               <div class="rms-feedback__field">
-                <label for="feedback-name" class="rms-feedback__label">Your name <span class="rms-feedback__required">*</span></label>
+                <label for="feedback-name" class="rms-feedback__label">{{ t('public.yourName') }} <span class="rms-feedback__required">*</span></label>
                 <input
                   id="feedback-name"
                   v-model="feedbackName"
@@ -158,7 +158,7 @@
               </div>
 
               <div class="rms-feedback__field">
-                <label for="feedback-text" class="rms-feedback__label">Your message <span class="rms-feedback__required">*</span></label>
+                <label for="feedback-text" class="rms-feedback__label">{{ t('public.yourMessage') }} <span class="rms-feedback__required">*</span></label>
                 <textarea
                   id="feedback-text"
                   v-model="feedbackText"
@@ -176,7 +176,7 @@
                 class="rms-feedback__submit"
                 :disabled="feedbackSubmitting"
               >
-                {{ feedbackSubmitting ? 'Sending…' : 'Send feedback' }}
+                {{ feedbackSubmitting ? '…' : t('public.sendFeedback') }}
               </button>
             </form>
           </section>
@@ -196,7 +196,7 @@
           aria-label="View menu"
           @click="menuModalOpen = true"
         >
-          View Menu
+          {{ t('public.viewMenu') }}
         </button>
       </div>
 
@@ -211,6 +211,7 @@
 <script setup>
 import { ref, computed, watch, nextTick, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { restaurantService, feedbackService, normalizeApiError } from '@/services'
 import PublicRestaurant from '@/models/PublicRestaurant'
 import Template1 from '@/components/public/templates/Template1.vue'
@@ -226,14 +227,14 @@ const props = defineProps({
 
 const route = useRoute()
 const router = useRouter()
+const { t, locale: i18nLocale } = useI18n()
 
+/** Supported locale codes for public templates (fallback to en if unknown). */
+const SUPPORTED_PUBLIC_LOCALES = ['en', 'es', 'zh', 'fil', 'de', 'fr', 'uk', 'ru', 'ja', 'nl']
+
+/** Use only URL ?locale= so the first API call uses no locale param and the API returns the restaurant's default_locale and its description. */
 function getInitialLocale() {
-  try {
-    const el = document.getElementById('app')
-    const dataLocale = el?.getAttribute?.('data-locale')
-    if (dataLocale != null && String(dataLocale).trim() !== '') return String(dataLocale).trim()
-  } catch (_) {}
-  return route.query.locale ?? ''
+  return (route.query.locale ?? '').trim()
 }
 
 const slug = computed(() => props.slug || route.params.slug || '')
@@ -442,6 +443,11 @@ watch(data, (val) => {
     applyPublicPageSeo(val)
   } else {
     clearPublicPageSeo()
+  }
+  // Sync i18n locale so public template static content (About, Contact Us, etc.) uses the current language.
+  const loc = val?.locale ?? locale.value
+  if (loc && SUPPORTED_PUBLIC_LOCALES.includes(loc)) {
+    i18nLocale.value = loc
   }
   // On mobile, auto-open View Menu modal once when restaurant data has loaded.
   if (val && !hasAutoOpenedModal.value && typeof window !== 'undefined' && window.innerWidth < 768) {
