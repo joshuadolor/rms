@@ -61,9 +61,12 @@ Used wherever the API returns a user object:
   "name": "string (required, max 255)",
   "email": "string (required, email, unique)",
   "password": "string (required, min 8, letters + numbers)",
-  "password_confirmation": "string (required, must match password)"
+  "password_confirmation": "string (required, must match password)",
+  "locale": "string (optional: en, es, ar; used for verification email language)"
 }
 ```
+
+**Email language:** Optional **locale** (body) or **Accept-Language** header sets the language for the verification email (subject and body). Supported: `en`, `es`, `ar`. When `ar`, the email is rendered RTL. Default: `en`.
 
 **Response (201):** No token. User must verify email before logging in.
 ```json
@@ -144,14 +147,24 @@ Use the refresh token stored in the **HttpOnly** cookie to get a new access toke
 **Body:**
 ```json
 {
-  "email": "string (required, email)"
+  "email": "string (required, email)",
+  "locale": "string (optional: en, es, ar; used for reset email language)"
 }
 ```
+
+**Email language:** Optional **locale** (body) or **Accept-Language** header sets the language for the password reset email (subject and body). Supported: `en`, `es`, `ar`. When `ar`, the email is rendered RTL. Default: `en`.
 
 **Response (200):** Same message whether or not the email exists (no enumeration).
 ```json
 {
   "message": "If that email exists in our system, we have sent a password reset link."
+}
+```
+
+**Response (503):** When the server cannot send the reset email (e.g. mail config or APP_KEY issue). Frontend should show this message instead of a success state.
+```json
+{
+  "message": "We couldn't send the reset link right now. Please try again in a few minutes."
 }
 ```
 
@@ -246,9 +259,12 @@ When a user changes their email in profile, a verification link is sent to the *
 **Body (when not authenticated):**
 ```json
 {
-  "email": "string (required, email)"
+  "email": "string (required, email)",
+  "locale": "string (optional: en, es, ar; used for verification email language)"
 }
 ```
+
+**Email language:** Optional **locale** (body) or **Accept-Language** header sets the language for the verification email. Supported: `en`, `es`, `ar`. When `ar`, the email is RTL. Default: `en`.
 
 **Response (200):** Generic message (no enumeration).
 ```json
@@ -376,12 +392,14 @@ All require `Authorization: Bearer <token>` and **verified email**.
 ```json
 {
   "name": "string (optional, max 255)",
-  "email": "string (optional, email, unique; triggers verification flow)"
+  "email": "string (optional, email, unique; triggers verification flow)",
+  "locale": "string (optional: en, es, ar; used for 'verify new email' notification when email is changed)"
 }
 ```
 
 - **Name:** Updated immediately.
 - **Email:** If provided and different from current email, the new address is stored as **pending**. A verification link is sent to the new email; the stored `email` is only updated after the user clicks that link. Until then, login and account remain on the current email.
+- **Email language:** When changing email, optional **locale** (body) or **Accept-Language** sets the language of the "verify new email" notification. Supported: `en`, `es`, `ar` (RTL when `ar`).
 
 **Response (200) when only name updated or no email change:**
 ```json
@@ -1928,6 +1946,10 @@ The Settings UI uses **POST /api/translate** for "Translate from default" (resta
 ---
 
 ## Changelog
+
+- **2026-02-28**: **Transactional emails: redesign and request-language (locale).** Mail templates updated per design: accent #2563eb, white header with 2px accent border, body wrapper #f1f5f9, inner card white ~570px with border and shadow, primary button #2563eb, footer #0f172a with #94a3b8 text, panel/subcopy accent border and muted background; system fonts only. **Locale-aware emails:** Endpoints that send email accept optional **locale** (request body) or **Accept-Language** header. Supported: `en`, `es`, `ar`. When locale is `ar`, the email is rendered RTL (`dir="rtl"` and `lang="ar"` on the mail layout). Affected: **POST /api/forgot-password**, **POST /api/register**, **POST /api/email/resend**, **PATCH /api/user** (when email change triggers verify-new-email). Laravel lang files added (`lang/en.json`, `lang/es.json`, `lang/ar.json`) for notification and mail copy. API response messages for those endpoints use the same locale when set.
+
+- **2026-02-18**: **Forgot password: 503 when reset email cannot be sent.** When the server cannot send the password reset email (e.g. APP_KEY missing, mail failure), **POST /api/forgot-password** now returns **503** with a generic message so the frontend can show an error instead of a success state. Success (200) unchanged when the request is accepted (same generic message; no user enumeration).
 
 - **2026-02-28**: **Legal content: multilingual (en, es, ar).** Public **GET /api/legal/terms** and **GET /api/legal/privacy** accept optional query parameter **locale** (`en`, `es`, `ar`); fallback to `en` if missing or invalid. Response shape unchanged: `{ "data": { "content": "..." } }`. Superadmin **GET /api/superadmin/legal** returns all three locales: `{ "data": { "en": { "terms_of_service", "privacy_policy" }, "es": { ... }, "ar": { ... } } }`. **PATCH /api/superadmin/legal** accepts per-locale body so superadmin can update one or all locales. `site_legal` table now stores content per locale (e.g. `terms_of_service_en`, `privacy_policy_es`). No internal `id` in any response.
 - **2026-02-28**: **Legal content (Terms of Service, Privacy Policy).** New **GET /api/legal/terms** and **GET /api/legal/privacy** (no auth) return HTML content for modals on auth pages. Superadmin: **GET /api/superadmin/legal** and **PUT/PATCH /api/superadmin/legal** to read and update both texts. New `site_legal` table (terms_of_service, privacy_policy columns). No internal `id` in any response.

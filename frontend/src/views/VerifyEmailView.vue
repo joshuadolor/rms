@@ -1,93 +1,125 @@
 <template>
   <AuthLayout>
-    <div class="max-w-md mx-auto">
-      <!-- Main message block: one focal, one headline, one line -->
-      <div class="text-center pt-2 pb-10">
-        <div class="w-14 h-14 mx-auto rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center mb-6">
-          <span class="material-icons text-2xl text-primary" aria-hidden="true">mail_outline</span>
+    <div class="space-y-8 max-w-md mx-auto">
+      <!-- Mobile RMS header -->
+      <div class="lg:hidden flex items-center gap-2">
+        <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+          <span class="material-icons text-white text-sm" aria-hidden="true">restaurant</span>
         </div>
-        <h2 class="text-2xl font-bold text-charcoal dark:text-white mb-2">Check your email</h2>
-        <p class="text-charcoal/70 dark:text-white/70 text-[15px] leading-snug">
-          We sent a verification link to <strong class="text-charcoal dark:text-white">{{ displayEmail }}</strong>. Click it to continue.
-        </p>
-        <p class="mt-4 text-sm text-primary font-medium">
-          You’re one step away from managing your menu.
-        </p>
+        <span class="text-lg font-bold tracking-tight text-primary">{{ $t('app.name') }}</span>
       </div>
 
-      <!-- Soft note (e.g. from 403 redirect) – not warning-styled -->
+      <!-- Optional: Back to sign in -->
+      <router-link
+        :to="{ name: 'Login' }"
+        class="inline-flex items-center gap-1 text-sm text-charcoal/60 dark:text-white/60 hover:text-primary transition-colors"
+      >
+        <span class="material-icons text-lg" aria-hidden="true">arrow_back</span>
+        {{ $t('verify.backToSignIn') }}
+      </router-link>
+
+      <!-- Query-message alert (same style as other auth: sage info) -->
       <div
         v-if="route.query.message"
         role="alert"
-        class="mb-6 p-3 rounded-lg bg-primary/5 dark:bg-primary/10 border border-primary/10 text-charcoal/90 dark:text-white/90 text-sm"
+        class="p-3 rounded-lg bg-primary/5 dark:bg-primary/10 border border-primary/10 text-charcoal/90 dark:text-white/90 text-sm"
       >
         {{ route.query.message }}
       </div>
 
-      <!-- Secondary: check spam + resend (text link, cooldown) -->
-      <div class="mb-8 space-y-3">
-        <p class="text-sm text-charcoal/50 dark:text-white/50">
-          Check your spam folder. Didn’t get it?
-          <button
-            type="button"
-            class="inline-flex items-center gap-1.5 font-medium text-primary hover:text-primary/80 disabled:opacity-50 disabled:cursor-not-allowed"
-            :disabled="resendCooldown > 0 || resendLoading"
-            @click="user ? handleResendAuthenticated() : (resendEmail ? handleResendGuest() : (showGuestEmail = true))"
-          >
-            <span v-if="resendLoading" class="material-icons animate-spin text-lg" aria-hidden="true">sync</span>
-            {{ resendCooldown > 0 ? $t('app.resendIn', { seconds: resendCooldown }) : resendLoading ? $t('app.sendingResend') : $t('app.resendLink') }}
-          </button>
-        </p>
-        <!-- Guest without email: minimal one-line resend -->
-        <form
-          v-if="!user && showGuestEmail"
-          class="flex flex-wrap items-center gap-2"
-          novalidate
-          @submit.prevent="handleResendGuest"
-        >
-          <input
-            v-model="resendEmail"
-            type="email"
-            :placeholder="$t('app.emailPlaceholder')"
-            class="flex-1 min-w-[140px] px-3 py-2 text-sm border border-primary/20 rounded-lg bg-white dark:bg-zinc-800 text-charcoal dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-            :aria-required="true"
-            :aria-invalid="!!resendError"
-            :aria-describedby="resendError ? 'verify-resend-email-error' : undefined"
-          />
-          <p v-if="resendError" id="verify-resend-email-error" class="text-xs text-red-600 dark:text-red-400 w-full basis-full" role="alert">{{ resendError }}</p>
-          <button
-            type="submit"
-            class="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 disabled:opacity-50"
-            :disabled="resendCooldown > 0 || resendLoading"
-          >
-            <span v-if="resendLoading" class="material-icons animate-spin text-base" aria-hidden="true">sync</span>
-            {{ resendLoading ? 'Sending…' : 'Resend' }}
-          </button>
-        </form>
-        <div v-if="resendSuccess" class="text-sm text-sage-700 dark:text-sage-300" role="status">
-          {{ resendSuccess }}
+      <!-- Main block: icon, headline, body, actions -->
+      <div class="space-y-6 text-center">
+        <div class="w-16 h-16 mx-auto rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center" aria-hidden="true">
+          <span class="material-icons text-3xl text-primary">mail_outline</span>
         </div>
-        <div v-if="resendError" class="text-sm text-red-600 dark:text-red-400" role="alert">
-          {{ resendError }}
+        <h2 class="text-3xl font-bold text-charcoal dark:text-white">
+          {{ $t('verify.checkYourEmail') }}
+        </h2>
+        <div class="space-y-4">
+          <p class="text-charcoal/60 dark:text-white/60 leading-relaxed">
+            {{ $t('verify.sentToEmail', { email: displayEmail }) }}
+          </p>
+          <p class="text-sm text-primary font-medium">
+            {{ $t('verify.oneStepAway') }}
+          </p>
         </div>
-      </div>
 
-      <!-- Actions: single primary CTA, then sign out as subtle link -->
-      <div class="space-y-4">
-        <router-link :to="{ name: 'Login' }">
-          <AppButton variant="primary" class="w-full justify-center py-3.5">
-            Go to sign in
-          </AppButton>
-        </router-link>
-        <p v-if="user" class="text-center">
-          <button
-            type="button"
-            class="text-sm text-charcoal/50 dark:text-white/50 hover:text-charcoal dark:hover:text-white transition-colors"
-            @click="handleSignOut"
+        <!-- Resend: one place for success/error feedback -->
+        <div class="space-y-4">
+          <p class="text-sm text-charcoal/60 dark:text-white/60">
+            {{ $t('verify.checkSpam') }}
+            <button
+              type="button"
+              class="inline-flex items-center gap-1.5 font-medium text-primary hover:text-primary/80 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] py-2 -my-2"
+              :disabled="resendCooldown > 0 || resendLoading"
+              @click="user ? handleResendAuthenticated() : (resendEmail ? handleResendGuest() : (showGuestEmail = true))"
+            >
+              <span
+                v-if="resendLoading"
+                class="material-icons text-lg verify-spinner"
+                aria-hidden="true"
+              >sync</span>
+              {{ resendCooldown > 0 ? $t('app.resendIn', { seconds: resendCooldown }) : resendLoading ? $t('verify.sending') : $t('verify.resend') }}
+            </button>
+          </p>
+
+          <!-- Guest without email: minimal one-line resend -->
+          <form
+            v-if="!user && showGuestEmail"
+            class="flex flex-wrap items-center gap-2"
+            novalidate
+            @submit.prevent="handleResendGuest"
           >
-            Sign out
-          </button>
-        </p>
+            <input
+              v-model="resendEmail"
+              type="email"
+              :placeholder="$t('app.emailPlaceholder')"
+              class="flex-1 min-w-[140px] px-3 py-2 text-sm border border-primary/20 rounded-lg bg-white dark:bg-zinc-800 text-charcoal dark:text-white focus:outline-none focus:ring-2 focus:ring-primary min-h-[44px]"
+              :aria-required="true"
+              :aria-invalid="!!resendError"
+              :aria-describedby="resendError ? 'verify-resend-email-error' : undefined"
+            />
+            <p v-if="resendError" id="verify-resend-email-error" class="text-xs text-red-600 dark:text-red-400 w-full basis-full" role="alert">{{ resendError }}</p>
+            <AppButton
+              type="submit"
+              variant="secondary"
+              class="min-h-[44px]"
+              :disabled="resendCooldown > 0 || resendLoading"
+            >
+              <template v-if="resendLoading" #icon>
+                <span class="material-icons text-base verify-spinner" aria-hidden="true">sync</span>
+              </template>
+              {{ resendLoading ? $t('verify.sending') : $t('verify.resend') }}
+            </AppButton>
+          </form>
+
+          <!-- Single feedback area for resend success or error -->
+          <div
+            v-if="resendSuccess || resendError"
+            :role="resendError ? 'alert' : 'status'"
+            :class="resendSuccess ? 'p-3 rounded-lg bg-sage/10 dark:bg-sage/20 border border-sage/30 text-sage-700 dark:text-sage-300 text-sm' : 'p-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 text-sm'"
+          >
+            {{ resendSuccess || resendError }}
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="space-y-4 pt-2">
+          <router-link :to="{ name: 'Login' }">
+            <AppButton variant="primary" class="w-full justify-center py-3.5 min-h-[44px]">
+              {{ $t('verify.goToSignIn') }}
+            </AppButton>
+          </router-link>
+          <p v-if="user" class="text-center">
+            <button
+              type="button"
+              class="min-h-[44px] py-2 text-sm text-charcoal/50 dark:text-white/50 hover:text-charcoal dark:hover:text-white transition-colors"
+              @click="handleSignOut"
+            >
+              {{ $t('verify.signOut') }}
+            </button>
+          </p>
+        </div>
       </div>
     </div>
   </AuthLayout>
@@ -96,12 +128,14 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
 import AuthLayout from '@/layouts/AuthLayout.vue'
 import AppButton from '@/components/ui/AppButton.vue'
 import { useAppStore } from '@/stores/app'
 import { authService, normalizeApiError } from '@/services'
 
+const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const appStore = useAppStore()
@@ -139,7 +173,7 @@ async function handleResendAuthenticated() {
   resendLoading.value = true
   try {
     const data = await authService.resendVerificationEmail()
-    resendSuccess.value = data.message ?? 'Verification email sent. Please check your inbox.'
+    resendSuccess.value = data.message ?? t('verify.resendSuccessDefault')
     startCooldown()
   } catch (e) {
     resendError.value = normalizeApiError(e).message
@@ -153,11 +187,11 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 async function handleResendGuest() {
   const emailVal = resendEmail.value?.trim()
   if (!emailVal) {
-    resendError.value = 'Please enter your email address.'
+    resendError.value = t('verify.emailRequired')
     return
   }
   if (!EMAIL_RE.test(emailVal)) {
-    resendError.value = 'Please enter a valid email address.'
+    resendError.value = t('verify.emailInvalid')
     return
   }
   resendError.value = ''
@@ -165,7 +199,7 @@ async function handleResendGuest() {
   resendLoading.value = true
   try {
     const data = await authService.resendVerificationEmail({ email: emailVal })
-    resendSuccess.value = data.message ?? 'If that email is registered and unverified, we sent a new link.'
+    resendSuccess.value = data.message ?? t('verify.resendSuccessGuestDefault')
     startCooldown()
   } catch (e) {
     resendError.value = normalizeApiError(e).message
@@ -179,3 +213,18 @@ function handleSignOut() {
   router.push({ name: 'Landing' })
 }
 </script>
+
+<style scoped>
+@media (prefers-reduced-motion: reduce) {
+  .verify-spinner {
+    animation: none;
+  }
+}
+.verify-spinner {
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+</style>

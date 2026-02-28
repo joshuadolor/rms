@@ -1,8 +1,19 @@
 <?php
 
-// When running in Docker with MAIL_HOST=mailhog, force SMTP so Mailhog receives mail (overrides .env).
+// Local Mailhog: when not in testing, if MAIL_HOST is mailhog or 127.0.0.1 and MAIL_PORT is 1025,
+// force SMTP with that host/port and no encryption so Mailhog receives mail (verify + forgot-password).
 // Skip in testing so phpunit.xml MAIL_MAILER=array is used (no real SMTP).
-$useMailhog = (getenv('APP_ENV') ?: '') !== 'testing' && (getenv('MAIL_HOST') ?: '') === 'mailhog';
+$mailHost = env('MAIL_HOST', '');
+$mailPort = (int) env('MAIL_PORT', 0);
+$useMailhog = env('APP_ENV', '') !== 'testing'
+    && in_array($mailHost, ['mailhog', '127.0.0.1'], true)
+    && $mailPort === 1025;
+
+// .env stores MAIL_ENCRYPTION=null as the string "null"; SMTP expects actual null for no encryption.
+$mailEncryption = env('MAIL_ENCRYPTION');
+if ($mailEncryption === null || $mailEncryption === '' || $mailEncryption === 'null') {
+    $mailEncryption = null;
+}
 
 return [
 
@@ -45,11 +56,11 @@ return [
             'transport' => 'smtp',
             'scheme' => env('MAIL_SCHEME'),
             'url' => env('MAIL_URL'),
-            'host' => $useMailhog ? 'mailhog' : env('MAIL_HOST', '127.0.0.1'),
+            'host' => $useMailhog ? $mailHost : env('MAIL_HOST', '127.0.0.1'),
             'port' => $useMailhog ? 1025 : (int) env('MAIL_PORT', 1025),
             'username' => env('MAIL_USERNAME'),
             'password' => env('MAIL_PASSWORD'),
-            'encryption' => $useMailhog ? null : env('MAIL_ENCRYPTION'),
+            'encryption' => $useMailhog ? null : $mailEncryption,
             'timeout' => null,
             'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
         ],

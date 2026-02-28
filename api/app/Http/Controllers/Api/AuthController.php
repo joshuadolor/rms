@@ -13,8 +13,10 @@ use App\Http\Requests\Api\LoginRequest;
 use App\Http\Requests\Api\RegisterRequest;
 use App\Services\Auth\RefreshTokenCookie;
 use App\Services\Auth\RefreshTokenService;
+use App\Support\MailLocale;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 
 class AuthController extends Controller
 {
@@ -28,6 +30,9 @@ class AuthController extends Controller
 
     public function register(RegisterRequest $request): JsonResponse
     {
+        $locale = MailLocale::resolve($request);
+        App::setLocale($locale);
+
         $result = $this->registerUser->handle($request->validated());
 
         return response()->json([

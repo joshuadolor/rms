@@ -10,6 +10,7 @@
 import axios from 'axios'
 import { useAppStore } from '@/stores/app'
 import { getSessionToken, getSessionTokenType } from '@/auth/session'
+import { getStoredAppLocale, getDefaultAppLocale } from '@/config/app-locales'
 
 const rawBase = import.meta.env.VITE_API_URL ?? ''
 // Ensure no trailing slash so paths like '/login' become base/login
@@ -49,6 +50,9 @@ api.interceptors.request.use((config) => {
     const type = getSessionTokenType() || 'Bearer'
     config.headers.Authorization = `${type} ${token}`
   }
+  // Send app locale so backend can use it for email language (e.g. forgot-password, verify email).
+  const appLocale = getStoredAppLocale() ?? getDefaultAppLocale()
+  if (appLocale) config.headers['Accept-Language'] = appLocale
   return config
 })
 

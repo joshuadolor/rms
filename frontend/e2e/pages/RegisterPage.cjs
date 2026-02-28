@@ -77,10 +77,10 @@ class RegisterPage {
     await expect(this.page.getByRole('alert').filter({ hasText: textOrRegex })).toBeVisible()
   }
 
-  /** Assert redirect to verify-email page with success heading. */
+  /** Assert redirect to verify-email page with success heading (i18n-safe). */
   async expectRedirectedToVerifyEmail() {
     await expect(this.page).toHaveURL(/\/verify-email/)
-    await expect(this.page.getByRole('heading', { name: 'Check your email' })).toBeVisible()
+    await expect(this.page.getByRole('heading', { name: /check your email|revisa tu correo|تحقق من بريدك/i })).toBeVisible()
   }
 
   // ---- Legal modal (Terms of Service / Privacy Policy) ----

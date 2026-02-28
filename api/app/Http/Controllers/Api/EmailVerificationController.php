@@ -6,8 +6,10 @@ use App\Application\EmailVerification\VerifyEmail;
 use App\Application\EmailVerification\VerifyNewEmail;
 use App\Domain\Auth\Contracts\UserRepositoryInterface;
 use App\Http\Controllers\Controller;
+use App\Support\MailLocale;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 use Illuminate\Validation\ValidationException;
 
 class EmailVerificationController extends Controller
@@ -51,9 +53,17 @@ class EmailVerificationController extends Controller
     /**
      * Resend verification email.
      * Authenticated: use current user. Guest: require email in body, generic message to avoid enumeration.
+     * Optional locale (body or Accept-Language) sets the language for the verification email.
      */
     public function resend(Request $request): JsonResponse
     {
+        $request->validate([
+            'locale' => MailLocale::validationRule(),
+        ]);
+
+        $locale = MailLocale::resolve($request);
+        App::setLocale($locale);
+
         $genericMessage = __('If that email exists and is unverified, we have sent a new verification link.');
 
         if ($request->user()) {

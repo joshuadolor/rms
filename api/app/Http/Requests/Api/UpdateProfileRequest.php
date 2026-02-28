@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api;
 
+use App\Support\MailLocale;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -29,6 +30,7 @@ class UpdateProfileRequest extends FormRequest
                 Rule::unique('users', 'email')->ignore($user->id),
                 Rule::unique('users', 'pending_email')->ignore($user->id),
             ],
+            'locale' => MailLocale::validationRule(),
         ];
     }
 }

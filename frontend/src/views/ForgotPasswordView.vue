@@ -18,7 +18,7 @@
         </router-link>
         <h2 class="text-3xl font-bold text-charcoal dark:text-white">{{ $t('app.forgotPassword') }}</h2>
         <p class="text-charcoal/60 dark:text-white/60">
-          {{ sent ? 'Check your email for a reset link.' : 'Enter your email and we’ll send you a link to reset your password.' }}
+          {{ sent ? $t('app.forgotCheckEmail') : $t('app.forgotIntro') }}
         </p>
       </div>
 
@@ -54,37 +54,37 @@
           <template v-if="loading" #icon>
             <span class="material-icons animate-spin text-lg" aria-hidden="true">sync</span>
           </template>
-          {{ loading ? 'Sending…' : 'Send reset link' }}
+          {{ loading ? $t('app.sending') : $t('app.sendResetLink') }}
         </AppButton>
       </form>
 
       <!-- Success state -->
       <div v-else class="space-y-6">
-        <div class="p-4 rounded-lg bg-sage/10 dark:bg-sage/20 border border-sage/30 flex items-start gap-3">
+        <div class="my-5 p-4 rounded-lg bg-sage/10 dark:bg-sage/20 border border-sage/30 flex items-start gap-3">
           <span class="material-icons text-sage text-2xl shrink-0">mark_email_read</span>
           <div>
-            <p class="font-medium text-charcoal dark:text-white">Check your inbox</p>
+            <p class="font-medium text-charcoal dark:text-white">{{ $t('app.checkInbox') }}</p>
             <p class="text-sm text-charcoal/70 dark:text-white/70 mt-1">
-              We sent a reset link to <strong>{{ email }}</strong>. The link expires in 1 hour.
+              {{ $t('app.sentResetLinkTo', { email }) }}
             </p>
           </div>
         </div>
         <router-link :to="{ name: 'Login' }">
-          <AppButton variant="secondary" class="w-full justify-center">Back to sign in</AppButton>
+          <AppButton variant="secondary" class="w-full justify-center">{{ $t('verify.backToSignIn') }}</AppButton>
         </router-link>
         <p class="text-center text-sm text-charcoal/60 dark:text-white/60">
-          Didn’t get the email?
+          {{ $t('app.didntGetEmail') }}
           <button type="button" class="font-medium text-primary hover:text-primary/80" @click="sent = false">
-            Try again
+            {{ $t('app.tryAgain') }}
           </button>
         </p>
       </div>
 
       <!-- Register link -->
       <p class="text-center text-sm text-charcoal/60 dark:text-white/60">
-        Don’t have an account?
+        {{ $t('app.dontHaveAccount') }}
         <router-link :to="{ name: 'Register' }" class="font-medium text-primary hover:text-primary/80">
-          Create one
+          {{ $t('app.createOne') }}
         </router-link>
       </p>
     </div>
@@ -93,11 +93,13 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import AuthLayout from '@/layouts/AuthLayout.vue'
 import AppInput from '@/components/ui/AppInput.vue'
 import AppButton from '@/components/ui/AppButton.vue'
 import { authService, normalizeApiError, getValidationErrors } from '@/services'
 
+const { t } = useI18n()
 const email = ref('')
 const loading = ref(false)
 const error = ref('')
@@ -110,11 +112,11 @@ function validateEmail() {
   fieldErrors.value = { email: '' }
   const e = email.value.trim()
   if (!e) {
-    fieldErrors.value.email = 'Please enter your email address.'
+    fieldErrors.value.email = t('verify.emailRequired')
     return false
   }
   if (!EMAIL_RE.test(e)) {
-    fieldErrors.value.email = 'Please enter a valid email address.'
+    fieldErrors.value.email = t('verify.emailInvalid')
     return false
   }
   return true
@@ -132,7 +134,7 @@ async function handleSubmit() {
     const errors = getValidationErrors(e)
     if (errors.email) fieldErrors.value.email = errors.email
     const { message } = normalizeApiError(e)
-    error.value = message || 'Something went wrong. Please try again.'
+    error.value = message || t('app.somethingWentWrong')
   } finally {
     loading.value = false
   }

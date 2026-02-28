@@ -11,6 +11,10 @@ const { execSync } = require('child_process')
 const { test, expect } = require('@playwright/test')
 const { createE2eUser } = require('./helpers/e2e-user.cjs')
 const { RegisterPage } = require('./pages/RegisterPage.cjs')
+const { VerifyEmailPage } = require('./pages/VerifyEmailPage.cjs')
+const { EmailVerifyConfirmPage } = require('./pages/EmailVerifyConfirmPage.cjs')
+const { EmailVerifyNewPage } = require('./pages/EmailVerifyNewPage.cjs')
+const { LoginPage } = require('./pages/LoginPage.cjs')
 
 const REFRESH_COOKIE_NAME = 'rms_refresh'
 
@@ -125,15 +129,14 @@ test.describe('Login', () => {
       })
     })
 
-    await page.goto('/login')
-    await page.getByPlaceholder(/you@example\.com/i).fill('unverified@example.com')
-    await page.getByPlaceholder(/••••••••/).fill('password123')
-    await page.getByRole('button', { name: /sign in/i }).click()
+    const loginPage = new LoginPage(page)
+    await loginPage.goto()
+    await loginPage.login('unverified@example.com', 'password123')
 
-    await expect(page).toHaveURL(/\/verify-email/)
-    await expect(page).toHaveURL(/email=unverified(%40|@)example\.com/)
-    await expect(page.getByRole('heading', { name: 'Check your email' })).toBeVisible()
-    await expect(page.getByText(/unverified@example\.com/)).toBeVisible()
+    const verifyEmailPage = new VerifyEmailPage(page)
+    await verifyEmailPage.expectVerifyEmailUrl('unverified@example.com')
+    await verifyEmailPage.expectCheckYourEmailHeadingVisible()
+    await verifyEmailPage.expectEmailDisplayed(/unverified@example\.com/)
   })
 
   test('successful login redirects to /app and shows Sign out', async ({ page }) => {
@@ -358,16 +361,18 @@ test.describe('Forgot password', () => {
 
   test('empty email shows validation error', async ({ page }) => {
     await page.goto('/forgot-password')
-    await page.getByPlaceholder(/you@example\.com/i).fill('')
+    await page.getByLabel(/email address/i).fill('')
     await page.getByRole('button', { name: /send reset link/i }).click()
-    await expect(page.getByText('Please enter your email address.')).toBeVisible()
+    // i18n: verify.emailRequired (en / es / ar). Error is shown in role=alert under the field.
+    await expect(page.getByRole('alert').filter({ hasText: /please enter your email|introduce tu correo|يرجى إدخال بريدك/i })).toBeVisible()
   })
 
   test('invalid email shows validation error', async ({ page }) => {
     await page.goto('/forgot-password')
-    await page.getByPlaceholder(/you@example\.com/i).fill('not-an-email')
+    await page.getByLabel(/email address/i).fill('not-an-email')
     await page.getByRole('button', { name: /send reset link/i }).click()
-    await expect(page.getByText('Please enter a valid email address.')).toBeVisible()
+    // i18n: verify.emailInvalid (en / es / ar). Error is shown in role=alert under the field.
+    await expect(page.getByRole('alert').filter({ hasText: /please enter a valid email|introduce un correo.*válido|يرجى إدخال بريد إلكتروني صحيح/i })).toBeVisible()
   })
 
   test('Back to sign in goes to /login', async ({ page }) => {
@@ -394,10 +399,110 @@ test.describe('Reset password', () => {
 })
 
 test.describe('Verify email page', () => {
-  test('shows resend option after register flow', async ({ page }) => {
-    await page.goto('/verify-email?email=user@example.com')
-    await expect(page.getByRole('heading', { name: 'Check your email' })).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Resend link' })).toBeVisible()
+  test('land on verify-email page and see resend', async ({ page }) => {
+    const verifyEmailPage = new VerifyEmailPage(page)
+    await verifyEmailPage.goto({ email: 'user@example.com' })
+    await verifyEmailPage.expectCheckYourEmailHeadingVisible()
+    await verifyEmailPage.expectResendVisible()
+  })
+
+  test('Back to sign in link goes to login', async ({ page }) => {
+    const verifyEmailPage = new VerifyEmailPage(page)
+    await verifyEmailPage.goto({ email: 'user@example.com' })
+    await verifyEmailPage.expectBackToSignInLinkVisible()
+    await verifyEmailPage.clickBackToSignIn()
+    await expect(page).toHaveURL(/\/login/)
+  })
+
+  test('Go to sign in CTA is visible', async ({ page }) => {
+    const verifyEmailPage = new VerifyEmailPage(page)
+    await verifyEmailPage.goto({ email: 'user@example.com' })
+    await verifyEmailPage.expectGoToSignInButtonVisible()
+  })
+})
+
+test.describe('Email verify confirm (/email/verify)', () => {
+  const signedParams = { uuid: 'usr-001', hash: 'abc123', expires: '9999999999', signature: 'sig' }
+
+  test('shows success card when API returns 200', async ({ page }) => {
+    await page.route(/\/api\/email\/verify\/[^/]+\/[^/]+/, (route) => {
+      if (route.request().method() !== 'GET') return route.continue()
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          message: 'Email verified successfully. You can now log in.',
+          user: { uuid: 'usr-001', name: 'Test', email: 'test@example.com', email_verified_at: '2025-01-01T00:00:00Z' },
+        }),
+      })
+    })
+
+    const confirmPage = new EmailVerifyConfirmPage(page)
+    await confirmPage.goto(signedParams)
+    await confirmPage.waitForResult(15000)
+    await confirmPage.expectSuccessCardVisible()
+  })
+
+  test('shows failure card when API returns 422', async ({ page }) => {
+    await page.route(/\/api\/email\/verify\/[^/]+\/[^/]+/, (route) => {
+      if (route.request().method() !== 'GET') return route.continue()
+      route.fulfill({
+        status: 422,
+        contentType: 'application/json',
+        body: JSON.stringify({ message: 'Invalid or expired link.', errors: { email: ['Invalid or expired link.'] } }),
+      })
+    })
+
+    const confirmPage = new EmailVerifyConfirmPage(page)
+    await confirmPage.goto(signedParams)
+    await confirmPage.waitForResult(15000)
+    await confirmPage.expectFailureCardVisible()
+  })
+
+  test('shows failure card when link params are missing', async ({ page }) => {
+    await page.goto('/email/verify')
+    const confirmPage = new EmailVerifyConfirmPage(page)
+    await confirmPage.waitForResult(5000)
+    await confirmPage.expectFailureCardVisible()
+  })
+})
+
+test.describe('Email verify new (/email/verify-new)', () => {
+  const signedParams = { uuid: 'usr-002', hash: 'def456', expires: '9999999999', signature: 'sig2' }
+
+  test('shows success card when API returns 200', async ({ page }) => {
+    await page.route(/\/api\/email\/verify-new\/[^/]+\/[^/]+/, (route) => {
+      if (route.request().method() !== 'GET') return route.continue()
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          message: 'Your email has been updated and verified.',
+          user: { uuid: 'usr-002', name: 'Test', email: 'new@example.com', email_verified_at: '2025-01-01T00:00:00Z' },
+        }),
+      })
+    })
+
+    const newPage = new EmailVerifyNewPage(page)
+    await newPage.goto(signedParams)
+    await newPage.waitForResult(15000)
+    await newPage.expectSuccessCardVisible()
+  })
+
+  test('shows failure card when API returns 422', async ({ page }) => {
+    await page.route(/\/api\/email\/verify-new\/[^/]+\/[^/]+/, (route) => {
+      if (route.request().method() !== 'GET') return route.continue()
+      route.fulfill({
+        status: 422,
+        contentType: 'application/json',
+        body: JSON.stringify({ message: 'Invalid or expired link.', errors: { email: ['Invalid or expired link.'] } }),
+      })
+    })
+
+    const newPage = new EmailVerifyNewPage(page)
+    await newPage.goto(signedParams)
+    await newPage.waitForResult(15000)
+    await newPage.expectFailureCardVisible()
   })
 })
 
@@ -762,15 +867,16 @@ test.describe('Email delivery (real API + Mailhog)', () => {
       const countAfterRegister = getMessageCount(bodyAfterRegister)
       expect(countAfterRegister).toBeGreaterThanOrEqual(1)
 
-      await page.goto(`/verify-email?email=${encodeURIComponent(email)}`)
-      await expect(page.getByRole('button', { name: 'Resend link' })).toBeVisible()
+      const verifyEmailPage = new VerifyEmailPage(page)
+      await verifyEmailPage.goto({ email })
+      await verifyEmailPage.expectResendVisible()
 
       // Wait for resend API to succeed (ensures CORS / API is reachable from the app origin)
       const resendResponsePromise = page.waitForResponse(
         (res) => res.url().includes('/api/email/resend') && res.request().method() === 'POST',
         { timeout: 15000 }
       )
-      await page.getByRole('button', { name: 'Resend link' }).click()
+      await verifyEmailPage.clickResend()
       const resendResponse = await resendResponsePromise
       expect(
         resendResponse.ok(),

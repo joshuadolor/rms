@@ -31,6 +31,8 @@ The app sends mail for forgot-password reset links, email verification, and othe
 
 If you run the API in Docker with a `mailhog` service, set `MAIL_HOST=mailhog`; the config will use SMTP port 1025 and no encryption automatically.
 
+**Troubleshooting: forgot-password email not in Mailhog** — (1) **APP_KEY must be set** — Password reset uses Laravel’s token broker, which requires `APP_KEY`. If `APP_KEY` is empty, the request succeeds but no email is sent and the log shows a `TypeError` about `$hashKey`. Run `php artisan key:generate` and ensure `.env` contains the generated `APP_KEY`. (2) Ensure Mailhog is running, and in `.env`: `MAIL_MAILER=smtp`, `MAIL_HOST=127.0.0.1` (or `mailhog` in Docker), `MAIL_PORT=1025`, `MAIL_ENCRYPTION=null`. After changing `.env`, run `php artisan config:clear`.
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:

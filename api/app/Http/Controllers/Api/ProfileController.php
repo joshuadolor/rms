@@ -7,7 +7,9 @@ use App\Application\Profile\UpdateProfile;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\ChangePasswordRequest;
 use App\Http\Requests\Api\UpdateProfileRequest;
+use App\Support\MailLocale;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\App;
 
 class ProfileController extends Controller
 {
@@ -18,9 +20,13 @@ class ProfileController extends Controller
 
     /**
      * Update profile: name (immediate) and/or email (pending until new email is verified).
+     * Optional locale sets the language for the "verify new email" notification when email is changed.
      */
     public function update(UpdateProfileRequest $request): JsonResponse
     {
+        $locale = MailLocale::resolve($request);
+        App::setLocale($locale);
+
         $result = $this->updateProfile->handle($request->user(), $request->validated());
 
         return response()->json([
