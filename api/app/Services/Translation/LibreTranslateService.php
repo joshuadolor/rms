@@ -4,6 +4,7 @@ namespace App\Services\Translation;
 
 use App\Contracts\TranslationServiceInterface;
 use App\Exceptions\TranslationException;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 
 /**
@@ -22,18 +23,28 @@ final class LibreTranslateService implements TranslationServiceInterface
             return '';
         }
 
+        $source = $this->mapToServiceCode($fromLocale);
+        $target = $this->mapToServiceCode($toLocale);
+
         $payload = [
             'q' => $text,
-            'source' => $fromLocale,
-            'target' => $toLocale,
+            'source' => $source,
+            'target' => $target,
         ];
 
         if ($this->apiKey !== null && $this->apiKey !== '') {
             $payload['api_key'] = $this->apiKey;
         }
 
-        $response = Http::timeout(15)
-            ->post(rtrim($this->baseUrl, '/') . '/translate', $payload);
+        try {
+            $response = Http::timeout(15)
+                ->post(rtrim($this->baseUrl, '/') . '/translate', $payload);
+        } catch (ConnectionException $e) {
+            throw new TranslationException(
+                'Translation service is temporarily unavailable. The LibreTranslate container may still be starting (it can take a minute). Please try again.',
+                $e
+            );
+        }
 
         if (! $response->successful()) {
             throw new TranslationException(
@@ -64,7 +75,15 @@ final class LibreTranslateService implements TranslationServiceInterface
     public function getSupportedLanguages(): array
     {
         $url = rtrim($this->baseUrl, '/') . '/languages';
-        $request = Http::timeout(10)->get($url);
+
+        try {
+            $request = Http::timeout(10)->get($url);
+        } catch (ConnectionException $e) {
+            throw new TranslationException(
+                'Translation service is temporarily unavailable. The LibreTranslate container may still be starting (it can take a minute). Please try again.',
+                $e
+            );
+        }
 
         if (! $request->successful()) {
             throw new TranslationException(
@@ -94,5 +113,16 @@ final class LibreTranslateService implements TranslationServiceInterface
         }
 
         return $normalized;
+    }
+
+    /**
+     * Map app locale code to the code expected by the translation service.
+     * Uses config('translation.locale_map'); falls back to the given code if not mapped.
+     */
+    private function mapToServiceCode(string $appCode): string
+    {
+        $map = config('translation.locale_map', []);
+
+        return $map[$appCode] ?? $appCode;
     }
 }

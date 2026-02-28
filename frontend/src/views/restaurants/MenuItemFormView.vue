@@ -1092,11 +1092,13 @@ async function translateLocale(targetLoc) {
   translatingLocale.value = targetLoc
   error.value = ''
   try {
+    let usedFallback = false
     if (name) {
       const resName = await localeService.translate({ text: name, from_locale: defaultLoc, to_locale: targetLoc })
       if (resName.translated_text != null) {
         if (!form.translations[targetLoc]) form.translations[targetLoc] = { name: '', description: null }
         form.translations[targetLoc].name = resName.translated_text
+        if (resName.fallback) usedFallback = true
       }
     }
     if (desc) {
@@ -1104,9 +1106,14 @@ async function translateLocale(targetLoc) {
       if (resDesc.translated_text != null) {
         if (!form.translations[targetLoc]) form.translations[targetLoc] = { name: '', description: null }
         form.translations[targetLoc].description = resDesc.translated_text
+        if (resDesc.fallback) usedFallback = true
       }
     }
-    toastStore.success('Translation applied. Review and save.')
+    if (usedFallback) {
+      toastStore.info('Translation not available for this language. Original text shown — you can edit it.')
+    } else {
+      toastStore.success('Translation applied. Review and save.')
+    }
   } catch (e) {
     error.value = normalizeApiError(e).message
   } finally {

@@ -20,9 +20,10 @@ services:
     ports:
       - "3306:3306"   # optional: for local DB tools (e.g. TablePlus, mysql CLI)
     environment:
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-rms}
-      MYSQL_USER: ${MYSQL_USER:-rms}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-rms_secret}
+      # Same DB_* as API; only root password is MySQL-specific.
+      MYSQL_DATABASE: ${DB_DATABASE:-rms}
+      MYSQL_USER: ${DB_USERNAME:-rms}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-rms_secret}
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_secret}
     volumes:
       - mysql_data:/var/lib/mysql
@@ -64,6 +65,8 @@ services:
       - MAIL_ENCRYPTION=${MAIL_ENCRYPTION:-null}
       - MAIL_FROM_ADDRESS=${MAIL_FROM_ADDRESS:-noreply@rms.local}
       - MAIL_FROM_NAME=${MAIL_FROM_NAME:-RMS}
+      # When set (e.g. .rms.local), cookie is sent on all subdomains. Leave empty when using localhost so cookie is bound to localhost (required for refresh-after-reload).
+      - REFRESH_TOKEN_COOKIE_DOMAIN=${REFRESH_TOKEN_COOKIE_DOMAIN:-}
       # Machine translation: set TRANSLATION_DRIVER=libre and LIBRE_TRANSLATE_URL when using libretranslate service
       - TRANSLATION_DRIVER=${TRANSLATION_DRIVER:-libre}
       - LIBRE_TRANSLATE_URL=${LIBRE_TRANSLATE_URL:-http://libretranslate:5000}
@@ -73,8 +76,7 @@ services:
         condition: service_healthy
       mailhog:
         condition: service_started
-      libretranslate:
-        condition: service_started
+    # API starts without waiting for libretranslate. Translation returns 502 until LibreTranslate is ready (first start can take 1–2 min).
 
   frontend:
     image: node:22-alpine
@@ -106,8 +108,8 @@ services:
     ports:
       - "${LIBRE_TRANSLATE_PORT:-5001}:5000"
     environment:
-      # Optional: disable suggested languages to reduce memory; or leave default
-      - LT_LOAD_ONLY=en,es,fr,de,nl,ru
+      # Only load these languages (reduces memory/startup). Use codes from https://docs.libretranslate.com/guides/supported_languages/ — e.g. tl not fil for Tagalog.
+      - LT_LOAD_ONLY=en,es,zh,de,fr,uk,ru,ja,nl,ar
     # First start can be slow while models load; API returns 503 until LibreTranslate is ready
 
   # Local only: DB admin UI. Login with root/root_secret or rms/rms_secret. Do not enable in production.

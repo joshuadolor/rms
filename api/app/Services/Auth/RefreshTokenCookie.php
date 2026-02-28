@@ -2,6 +2,7 @@
 
 namespace App\Services\Auth;
 
+use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Cookie;
 
 final readonly class RefreshTokenCookie
@@ -11,23 +12,39 @@ final readonly class RefreshTokenCookie
         return (string) config('refresh_tokens.cookie.name', 'rms_refresh');
     }
 
-    public function make(string $plainToken): Cookie
+    /**
+     * Resolve cookie domain from request so it works on both localhost and rms.local.
+     * - localhost / 127.0.0.1 → null (cookie bound to that host, sent on refresh).
+     * - Otherwise use REFRESH_TOKEN_COOKIE_DOMAIN (e.g. .rms.local) so cookie is sent on all subdomains.
+     */
+    public function resolveDomain(Request $request): ?string
+    {
+        $host = strtolower((string) $request->getHost());
+        if ($host === 'localhost' || $host === '127.0.0.1') {
+            return null;
+        }
+
+        $configured = config('refresh_tokens.cookie.domain');
+
+        return $configured && $configured !== '' ? $configured : null;
+    }
+
+    public function make(string $plainToken, ?Request $request = null): Cookie
     {
         $ttlDays = (int) config('refresh_tokens.cookie.ttl_days', 30);
         $minutes = max(1, $ttlDays * 24 * 60);
 
         $path = (string) config('refresh_tokens.cookie.path', '/');
-        $domain = config('refresh_tokens.cookie.domain');
+        $domain = $request ? $this->resolveDomain($request) : (config('refresh_tokens.cookie.domain') ?: null);
         $sameSite = strtolower((string) config('refresh_tokens.cookie.same_site', 'lax'));
         $secure = ! app()->environment('local') || $sameSite === 'none';
 
-        // cookie() helper signature is minutes-based; this returns Symfony Cookie instance.
         return cookie(
             $this->name(),
             $plainToken,
             $minutes,
             $path,
-            $domain ?: null,
+            $domain,
             $secure,
             true,
             false,
@@ -35,10 +52,10 @@ final readonly class RefreshTokenCookie
         );
     }
 
-    public function forget(): Cookie
+    public function forget(?Request $request = null): Cookie
     {
         $path = (string) config('refresh_tokens.cookie.path', '/');
-        $domain = config('refresh_tokens.cookie.domain');
+        $domain = $request ? $this->resolveDomain($request) : (config('refresh_tokens.cookie.domain') ?: null);
         $sameSite = strtolower((string) config('refresh_tokens.cookie.same_site', 'lax'));
         $secure = ! app()->environment('local') || $sameSite === 'none';
 
@@ -47,7 +64,7 @@ final readonly class RefreshTokenCookie
             '',
             -60,
             $path,
-            $domain ?: null,
+            $domain,
             $secure,
             true,
             false,

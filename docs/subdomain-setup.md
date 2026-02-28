@@ -50,6 +50,8 @@ Each restaurant gets a public URL as soon as it’s created: **`[slug].domain.co
 4. **API (optional)**  
    In `api/.env` set `RESTAURANT_DOMAIN=rms.local` (or your domain) so the API returns `public_url` like `http://pizza.rms.local` on restaurant payloads.
 
+   **Auth / logged out immediately on *.rms.local:** If you use subdomains (e.g. `app.rms.local`, `test.rms.local`), set **`REFRESH_TOKEN_COOKIE_DOMAIN=.rms.local`** in `api/.env`. Otherwise the refresh cookie is bound to the current host and is not sent on other subdomains, so `/api/auth/refresh` returns 401 and you get logged out. Restart the API after changing this, then log in again.
+
 5. **Open the subdomain**  
    **`http://test.rms.local`** (with `test.rms.local` in hosts and nginx routing `*.rms.local` to Laravel). Laravel serves the **Blade** public page (template-1 or template-2). Use a restaurant slug that exists (e.g. slug `test`).
 

@@ -670,7 +670,11 @@ async function translateDescription(loc) {
     const next = { ...descriptions.value }
     next[loc] = translated
     descriptions.value = next
-    toastStore.success('Translation applied. Click Save to store.')
+    if (data?.fallback === true) {
+      toastStore.info('Translation not available for this language. Original text shown — you can edit it.')
+    } else {
+      toastStore.success('Translation applied. Click Save to store.')
+    }
   } catch (e) {
     const msg = normalizeApiError(e).message ?? 'Translation failed.'
     error.value = msg

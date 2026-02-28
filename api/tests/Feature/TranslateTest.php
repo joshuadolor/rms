@@ -124,7 +124,8 @@ class TranslateTest extends TestCase
 
     public function test_translate_returns_422_when_to_locale_not_supported(): void
     {
-        $this->bindFakeTranslationService(['en', 'es']); // no 'fr'
+        // Use a code not in service list nor in config('locales.supported')
+        $this->bindFakeTranslationService(['en', 'es']);
 
         $user = $this->createVerifiedUser();
         $token = $user->createToken('auth')->plainTextToken;
@@ -132,7 +133,7 @@ class TranslateTest extends TestCase
         $response = $this->postJson('/api/translate', [
             'text' => 'Hello',
             'from_locale' => 'en',
-            'to_locale' => 'fr',
+            'to_locale' => 'xx',
         ], [
             'Authorization' => 'Bearer ' . $token,
         ]);
@@ -253,6 +254,44 @@ class TranslateTest extends TestCase
 
         $response->assertStatus(502)
             ->assertJsonPath('message', 'LibreTranslate error: connection refused');
+    }
+
+    public function test_translate_returns_200_with_original_text_when_language_not_supported(): void
+    {
+        $this->app->bind(TranslationServiceInterface::class, function (): TranslationServiceInterface {
+            return new class implements TranslationServiceInterface
+            {
+                public function translate(string $text, string $fromLocale, string $toLocale): string
+                {
+                    throw new TranslationException('LibreTranslate error: ar is not supported');
+                }
+
+                public function isAvailable(): bool
+                {
+                    return true;
+                }
+
+                public function getSupportedLanguages(): array
+                {
+                    return [['code' => 'en', 'name' => 'English'], ['code' => 'es', 'name' => 'Spanish']];
+                }
+            };
+        });
+
+        $user = $this->createVerifiedUser();
+        $token = $user->createToken('auth')->plainTextToken;
+
+        $response = $this->postJson('/api/translate', [
+            'text' => 'Hello world',
+            'from_locale' => 'en',
+            'to_locale' => 'ar',
+        ], [
+            'Authorization' => 'Bearer ' . $token,
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('translated_text', 'Hello world')
+            ->assertJsonPath('fallback', true);
     }
 
     /**

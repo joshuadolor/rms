@@ -1,6 +1,10 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { fileURLToPath, URL } from 'node:url'
+import path from 'node:path'
+
+const rootDir = fileURLToPath(new URL('.', import.meta.url))
+const projectRoot = path.resolve(rootDir, '..')
 
 // When set, Vite proxies /api and /sanctum to this URL (e.g. http://localhost:3000 or http://api:3000 in Docker).
 // Leave unset to disable proxy; then set VITE_API_URL to the full API base URL.
@@ -8,6 +12,8 @@ const proxyTarget = process.env.VITE_PROXY_TARGET || ''
 
 export default defineConfig({
   plugins: [vue()],
+  // Single source: load .env from project root (next to docker-compose.yml).
+  envDir: projectRoot,
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),

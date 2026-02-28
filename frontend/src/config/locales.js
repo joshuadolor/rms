@@ -6,6 +6,7 @@
 export const SUPPORTED_LOCALES = [
   { code: 'en', label: 'English', flag: '🇺🇸' },
   { code: 'es', label: 'Spanish', flag: '🇪🇸' },
+  { code: 'ar', label: 'Arabic', flag: '🇸🇦' },
   { code: 'zh', label: 'Chinese', flag: '🇨🇳' },
   { code: 'fil', label: 'Tagalog', flag: '🇵🇭' },
   { code: 'de', label: 'German', flag: '🇩🇪' },

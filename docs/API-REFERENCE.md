@@ -133,7 +133,7 @@ Use the refresh token stored in the **HttpOnly** cookie to get a new access toke
 
 **Behavior:** On success, the API **rotates** the refresh token by setting a **new** `rms_refresh` cookie and revoking the previous refresh token server-side. On **401** or **403**, the API also **clears** the refresh cookie to prevent client refresh loops and to avoid stale-cookie downgrade behavior.
 
-**Subdomain setups:** If the app and public site use different subdomains (e.g. app at `app.rms.local`, public at `test.rms.local`), the refresh cookie must be set for the parent domain so the browser sends it on all subdomains. Set **`REFRESH_TOKEN_COOKIE_DOMAIN=.rms.local`** (or your parent domain with leading dot) in the API `.env`. Otherwise the cookie is bound to the current host and refresh will return 401 "Invalid or expired refresh token" on the public page even when the user is logged in on another subdomain.
+**Cookie domain (staying logged in on refresh):** The API sets the refresh cookie domain from the request host so both **localhost** and **rms.local** work. When the request host is `localhost` or `127.0.0.1`, the cookie is bound to that host (no domain), so it is sent on refresh. When the host is e.g. `rms.local`, the cookie uses **`REFRESH_TOKEN_COOKIE_DOMAIN`** (e.g. `.rms.local`) so it is sent on that host and all subdomains. Set `REFRESH_TOKEN_COOKIE_DOMAIN=.rms.local` in root `.env` when using `http://rms.local`; when using `http://localhost` you can leave it unset. Restart the API after changing it, then log in again.
 
 **Errors:**
 - **401** – Missing/invalid/expired/revoked refresh token cookie (also clears refresh cookie): `{ "message": "Invalid or expired refresh token." }`
@@ -1928,21 +1928,32 @@ Each object may include optional `targets` (array of target language codes), dep
 }
 ```
 
-`from_locale` and `to_locale` must be supported by the external service (see `GET /api/translate/languages`). The API validates this before calling the service.
+`from_locale` and `to_locale` are accepted if they appear in the service’s supported list **or** in `config('locales.supported')` (restaurant languages), so "Translate" works for all installed languages even when the service doesn’t list them.
 
-**Response (200):**
+**Response (200) — success:**
 ```json
 {
   "translated_text": "string"
 }
 ```
 
+**Response (200) — fallback (language not supported by service):**  
+When the service returns an error indicating the language is not supported (e.g. "ar is not supported"), the API returns **200** with the **original text** so the UI does not break; the user can edit or paste a translation manually.
+```json
+{
+  "translated_text": "string (same as request body text)",
+  "fallback": true,
+  "message": "Translation is not available for this language. Original text shown."
+}
+```
+The frontend should treat this as success and fill the field with `translated_text`; it may show an info message when `fallback` is true.
+
 **429:** Too many requests; wait before retrying.  
 **503:** Translation service not configured or unavailable.  
-**502:** Translation service error (e.g. LibreTranslate unreachable or returned an error).  
-**422:** Validation (e.g. missing or invalid fields), or **source/target language not supported** by the service (`errors.from_locale` or `errors.to_locale`: "Language not supported.").
+**502:** Translation service error (e.g. LibreTranslate unreachable or returned an error other than "language not supported").  
+**422:** Validation (e.g. missing or invalid fields), or **source/target locale not in allowed set** (`errors.from_locale` or `errors.to_locale`: "Language not supported.").
 
-**Configuration (backend):** To enable machine translation, set `TRANSLATION_DRIVER=libre` and `LIBRE_TRANSLATE_URL` (e.g. `https://libre.example.com`). Optional: `LIBRE_TRANSLATE_API_KEY` for instances that require an API key. When not configured, the stub driver is used and the translate endpoints return **503**. Ensure the service has the required languages loaded (e.g. LibreTranslate `LT_LOAD_ONLY`); the API does not install languages.
+**Configuration (backend):** To enable machine translation, set `TRANSLATION_DRIVER=libre` and `LIBRE_TRANSLATE_URL` (e.g. `https://libre.example.com`). Optional: `LIBRE_TRANSLATE_API_KEY` for instances that require an API key. When not configured, the stub driver is used and the translate endpoints return **503**. Ensure the service has the required languages loaded (e.g. LibreTranslate `LT_LOAD_ONLY`); the API does not install languages. **Locale codes:** The app sends the same codes LibreTranslate expects (ISO 639-1: `en`, `es`, `ar`, `zh`, `de`, `fr`, `ru`, `ja`, etc.). `config('locales.supported')` and the translate API use these codes; only add `config('translation.locale_map')` if your instance uses a different code for a language. When the service does not support a requested language, the API returns 200 with the original text and `fallback: true` instead of 502.
 
 The Settings UI uses **POST /api/translate** for "Translate from default" (restaurant description): it sends the default locale's description as `text` with `from_locale` and `to_locale`, then saves the returned `translated_text` to the restaurant translation for the target locale.
 
@@ -1950,6 +1961,7 @@ The Settings UI uses **POST /api/translate** for "Translate from default" (resta
 
 ## Changelog
 
+- **2026-02-28**: **POST /api/translate: fallback when language not supported.** When the translation service returns an error indicating the language is not supported (e.g. "ar is not supported"), the API now returns **200** with `translated_text` equal to the request text, `fallback: true`, and a `message` so the UI can show the original text and the user can edit or paste a translation. Validation allows any locale in the service list or in `config('locales.supported')`. Optional `config('translation.locale_map')` for app code → service code mapping. No internal `id` in any response.
 - **2026-02-28**: **POST /api/reset-password: rate limited.** Reset-password now uses `throttle:auth.forgot-password` (3/min per IP in production) to prevent spam and token brute-force; aligns with forgot-password.
 - **2026-02-28**: **Transactional emails: redesign and request-language (locale).** Mail templates updated per design: accent #2563eb, white header with 2px accent border, body wrapper #f1f5f9, inner card white ~570px with border and shadow, primary button #2563eb, footer #0f172a with #94a3b8 text, panel/subcopy accent border and muted background; system fonts only. **Locale-aware emails:** Endpoints that send email accept optional **locale** (request body) or **Accept-Language** header. Supported: `en`, `es`, `ar`. When locale is `ar`, the email is rendered RTL (`dir="rtl"` and `lang="ar"` on the mail layout). Affected: **POST /api/forgot-password**, **POST /api/register**, **POST /api/email/resend**, **PATCH /api/user** (when email change triggers verify-new-email). Laravel lang files added (`lang/en.json`, `lang/es.json`, `lang/ar.json`) for notification and mail copy. API response messages for those endpoints use the same locale when set.
 
@@ -1960,6 +1972,7 @@ The Settings UI uses **POST /api/translate** for "Translate from default" (resta
 - **2026-02-28**: **Owner dashboard stats.** New **GET /api/dashboard/stats** (Bearer + verified) returns counts for the authenticated owner: **restaurants_count**, **menu_items_count** (catalog/standalone only), **feedbacks_total**, **feedbacks_approved**, **feedbacks_rejected**. Used by the owner dashboard to display Menu items, Restaurants, and Feedbacks (total, approved, rejected). No internal `id` in response.
 - **2026-02-18**: **Category list/show payload: fallback for blank translations.** When returning category payloads (list, show, create, update, image upload/delete), the API now fills blank **name** and **description** for any locale with the restaurant’s **default_locale** value, or the first non-empty value across locales. So when the default language is changed (e.g. to Spanish), categories that have no Spanish translation still return a displayable value (e.g. from English). Response shape unchanged; only empty values are replaced for display.
 - **2026-02-28**: **Translation: API as client only; supported-languages check.** All translation logic lives in the external service (LibreTranslate); the API only validates input, calls the service, and returns responses. New **GET /api/translate/languages** (Bearer + verified, same rate limit as translate) returns the list of languages supported by the service (proxied from the service’s languages endpoint). **POST /api/translate** now checks `from_locale` and `to_locale` against that list before calling translate; returns **422** with `errors.from_locale` or `errors.to_locale` ("Language not supported.") when a locale is not supported. No internal `id` in any response.
+- **2026-02-28**: **POST /api/auth/refresh: request-aware cookie domain (fix logged out on refresh).** The refresh cookie domain is now derived from the request host: when the host is `localhost` or `127.0.0.1`, the cookie is set with no domain (bound to that host) so it is sent on refresh when using `http://localhost`. When the host is e.g. `rms.local`, the cookie uses `REFRESH_TOKEN_COOKIE_DOMAIN` (e.g. `.rms.local`) so it works across subdomains. This fixes "logged out on refresh" when using localhost. No change to response shape.
 - **2026-02-28**: **POST /api/auth/refresh: subdomain cookie domain.** Documented that for subdomain setups (e.g. app and public on different subdomains), set `REFRESH_TOKEN_COOKIE_DOMAIN` to the parent domain (e.g. `.rms.local`) so the refresh cookie is sent on all subdomains; otherwise refresh returns 401 on the public page. `.env.example` and `config/refresh_tokens.php` comments updated.
 - **2026-02-28**: **GET /api/public/restaurants/{slug}: viewer.needs_data for owner context.** When the viewer is the owner, response includes `viewer.needs_data` (boolean): `true` when the public site has no menu content (no menu_groups or no items) and/or no description; `false` otherwise. For non-owner viewers and guests, `needs_data` is always `false`. Frontend uses this to show “needs data” messaging and owner-only sticky bar. No internal `id` exposed.
 - **2026-02-28**: **GET /api/public/restaurants/{slug}: optional owner viewer metadata.** Endpoint remains public (no required auth) but now accepts optional Bearer context. Response now includes `viewer` with `is_owner` and `owner_admin_url` (only set for authenticated owner viewers). Guests and non-owner viewers receive `is_owner: false` and `owner_admin_url: null`. No internal `id` exposed.

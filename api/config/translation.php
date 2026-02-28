@@ -19,4 +19,21 @@ return [
         'api_key' => env('LIBRE_TRANSLATE_API_KEY'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Locale code mapping (app code => service code)
+    |--------------------------------------------------------------------------
+    |
+    | LibreTranslate uses ISO 639-1 codes: en, es, ar, zh, de, fr, ru, ja, etc.
+    | The app uses the same codes (see config/locales.php). Only add a mapping
+    | when your LibreTranslate instance expects a different code (e.g. zh-CN).
+    | If not in the map, the app code is sent as-is.
+    |
+    */
+    'locale_map' => [
+        'zh' => env('TRANSLATION_LOCALE_ZH', 'zh'),
+        // App uses fil (Filipino); LibreTranslate uses tl (Tagalog).
+        'fil' => 'tl',
+    ],
+
 ];

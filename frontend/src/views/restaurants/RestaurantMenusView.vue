@@ -905,7 +905,12 @@ async function translateCategoryFromDefault(loc) {
     next[loc].name = nameRes?.translated_text ?? defaultName
     if (descRes?.translated_text != null) next[loc].description = descRes.translated_text
     categoryForm.value = { ...categoryForm.value, translations: next }
-    toastStore.success('Translation applied. Click Save to store.')
+    const usedFallback = nameRes?.fallback === true || descRes?.fallback === true
+    if (usedFallback) {
+      toastStore.info('Translation not available for this language. Original text shown — you can edit it.')
+    } else {
+      toastStore.success('Translation applied. Click Save to store.')
+    }
   } catch (e) {
     const msg = normalizeApiError(e).message ?? 'Translation failed.'
     categoryFormError.value = msg

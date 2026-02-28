@@ -16,6 +16,7 @@ return [
     'supported' => [
         'en',   // English
         'es',   // Spanish
+        'ar',   // Arabic
         'zh',   // Chinese
         'fil',  // Tagalog
         'de',   // German

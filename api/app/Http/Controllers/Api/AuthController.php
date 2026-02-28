@@ -51,7 +51,7 @@ class AuthController extends Controller
             'user' => $this->userPayload($result['user']),
             'token' => $result['token'],
             'token_type' => 'Bearer',
-        ])->cookie($this->refreshTokenCookie->make($refreshToken));
+        ])->cookie($this->refreshTokenCookie->make($refreshToken, $request));
     }
 
     /**
@@ -66,11 +66,11 @@ class AuthController extends Controller
         } catch (InvalidRefreshTokenException $e) {
             return response()
                 ->json(['message' => $e->getMessage()], 401)
-                ->cookie($this->refreshTokenCookie->forget());
+                ->cookie($this->refreshTokenCookie->forget($request));
         } catch (UnverifiedEmailException|DeactivatedUserException $e) {
             return response()
                 ->json(['message' => $e->getMessage()], 403)
-                ->cookie($this->refreshTokenCookie->forget());
+                ->cookie($this->refreshTokenCookie->forget($request));
         }
 
         return response()->json([
@@ -78,7 +78,7 @@ class AuthController extends Controller
             'user' => $this->userPayload($result['user']),
             'token' => $result['token'],
             'token_type' => 'Bearer',
-        ])->cookie($this->refreshTokenCookie->make($result['refresh_token']));
+        ])->cookie($this->refreshTokenCookie->make($result['refresh_token'], $request));
     }
 
     public function logout(Request $request): JsonResponse
@@ -90,7 +90,7 @@ class AuthController extends Controller
 
         return response()
             ->json(['message' => 'Logged out successfully.'])
-            ->cookie($this->refreshTokenCookie->forget());
+            ->cookie($this->refreshTokenCookie->forget($request));
     }
 
     /**
@@ -104,7 +104,7 @@ class AuthController extends Controller
 
         return response()
             ->json(['message' => 'Logged out from all devices successfully.'])
-            ->cookie($this->refreshTokenCookie->forget());
+            ->cookie($this->refreshTokenCookie->forget($request));
     }
 
     public function user(Request $request): JsonResponse

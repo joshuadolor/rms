@@ -4,14 +4,14 @@ RESTful API backend for the Restaurant Management System. See [restaurant-manage
 
 ## Quick start with Docker (recommended)
 
-**Single source for env:** use the **root `.env`** (same folder as `docker-compose.yml`). Docker Compose and the API container both use this file (the API’s `/app/.env` is mounted from it). Copy from `.env.example`, then generate the Laravel app key:
+**Single source for env:** the **root `.env`** (same folder as `docker-compose.yml`) is the only env file. The API container mounts it at `/app/.env`; the frontend (Vite) loads it via `envDir` when you run `npm run dev` from the host. Do not create `api/.env` or `frontend/.env`. Copy from `.env.example`, then generate the Laravel app key:
 
 ```bash
 cp .env.example .env
 docker compose run --rm api php artisan key:generate
 ```
 
-Edit `.env` if you need different DB passwords, URLs, etc. If you don’t create `.env`, Compose falls back to defaults in `docker-compose.yml`; the API container still needs a root `.env` file (and `APP_KEY`) to boot.
+Edit `.env` if you need different DB passwords, URLs, etc. If you don’t create `.env`, Compose falls back to defaults in `docker-compose.yml`; the API container still needs a root `.env` file (and `APP_KEY`) to boot. Run Laravel artisan inside Docker so the API uses the root `.env` and `DB_HOST=mysql`: `docker compose exec api php artisan <command>` (e.g. `config:clear`, `migrate`).
 
 From the project root:
 
