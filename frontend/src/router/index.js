@@ -223,7 +223,8 @@ router.beforeEach(async (to) => {
     }
   }
 
-  if (isGuestRoute && isAuthenticated) {
+  const isPublicRestaurantRoute = to.name === 'PublicRestaurant'
+  if (isGuestRoute && isAuthenticated && !isPublicRestaurantRoute) {
     return isVerified ? { name: 'App' } : (knownEmail ? { name: 'VerifyEmail', query: { email: knownEmail } } : { name: 'VerifyEmail' })
   }
 

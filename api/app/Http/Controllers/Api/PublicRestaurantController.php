@@ -103,6 +103,10 @@ class PublicRestaurantController extends Controller
             ->values()
             ->all();
 
+        $viewer = $request->user('sanctum');
+        $isOwnerViewer = $viewer !== null && $restaurant->isOwnedBy($viewer);
+        $ownerAdminUrl = $isOwnerViewer ? $this->buildOwnerAdminUrl($restaurant->uuid) : null;
+
         return response()->json([
             'data' => [
                 'name' => $restaurant->name,
@@ -127,8 +131,22 @@ class PublicRestaurantController extends Controller
                 'menu_groups' => $menuGroups,
                 'feedbacks' => $approvedFeedbacks,
                 'contacts' => $activeContacts,
+                'viewer' => [
+                    'is_owner' => $isOwnerViewer,
+                    'owner_admin_url' => $ownerAdminUrl,
+                ],
             ],
         ]);
+    }
+
+    /**
+     * Build the owner-facing admin URL for this restaurant on the frontend app.
+     */
+    private function buildOwnerAdminUrl(string $restaurantUuid): string
+    {
+        $frontendUrl = rtrim((string) (config('app.frontend_url') ?: config('app.url')), '/');
+
+        return $frontendUrl . '/app/restaurants/' . $restaurantUuid . '?tab=profile';
     }
 
     /** Map legacy or invalid template to a valid one; valid: template-1, template-2. API never returns "default" or "minimal". */

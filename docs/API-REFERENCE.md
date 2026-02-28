@@ -1010,13 +1010,13 @@ A restaurant can have **unlimited contact and link entries** (phone numbers and 
 
 ---
 
-### Public restaurant by slug (no auth)
+### Public restaurant by slug (optional auth context)
 
-Returns public restaurant data and menu items for subdomain or `/r/:slug` pages. **No authentication.** Only menu items whose **type** is `simple`, `combo`, or `with_variants` are included (items with `type` null are treated as simple; any future type is excluded). Menu items are also required to be **is_active** and (uncategorized or in a category with `is_active` true). Items with **is_available** false are still included; the frontend should show a "Not Available" indicator for them. **No internal `id` in any field.**
+Returns public restaurant data and menu items for subdomain or `/r/:slug` pages. Authentication is **not required**; guests can always use this endpoint. If a valid Bearer token is provided, the response includes viewer ownership metadata (`viewer.is_owner`, `viewer.owner_admin_url`) so the frontend can detect when the current viewer owns the restaurant. Only menu items whose **type** is `simple`, `combo`, or `with_variants` are included (items with `type` null are treated as simple; any future type is excluded). Menu items are also required to be **is_active** and (uncategorized or in a category with `is_active` true). Items with **is_available** false are still included; the frontend should show a "Not Available" indicator for them. **No internal `id` in any field.**
 
 | Method | Path | Auth |
 |--------|------|------|
-| GET | `/api/public/restaurants/{slug}` | No |
+| GET | `/api/public/restaurants/{slug}` | No (optional Bearer for viewer context) |
 
 **Query:** `locale` (optional). If provided and installed for the restaurant, description and menu item names/descriptions use that locale; otherwise the restaurant’s default locale is used.
 
@@ -1084,7 +1084,11 @@ Returns public restaurant data and menu items for subdomain or `/r/:slug` pages.
     ],
     "contacts": [
       { "uuid": "string", "type": "string", "value": "string", "number": "string | null", "label": "string | null" }
-    ]
+    ],
+    "viewer": {
+      "is_owner": "boolean",
+      "owner_admin_url": "string | null"
+    }
   }
 }
 ```
@@ -1099,6 +1103,11 @@ Returns public restaurant data and menu items for subdomain or `/r/:slug` pages.
 - When **type** is **with_variants**, each item includes **variant_option_groups**: array of `{ "name": "string", "values": ["string", ...] }` and **variant_skus**: array of `{ "uuid": "string", "option_values": { "GroupName": "value", ... }, "price": number, "image_url": "string | null" }`. Option groups define choices (e.g. Size, Type); each SKU is one combination with a price; **image_url** is the full URL to the variant image (or null). For restaurant items that use a catalog item with variants, variant data (including **image_url** when the catalog variant has an image) comes from the catalog when the restaurant item has no own groups/SKUs. The same serve URL is used; the backend serves the catalog variant’s image when the restaurant item has no own variant image.
 
 `operating_hours` has the same shape as in the restaurant payload (see **Operating hours shape** above); `null` when not set. Each **menu_item** includes **availability** (same type as operating_hours; `null` = always available). **feedbacks** contains only **approved** feedbacks (owner approves via PATCH); no internal `id` in any field.
+
+**viewer metadata:**
+- **Guests or non-owner users:** `viewer.is_owner = false`, `viewer.owner_admin_url = null`.
+- **Authenticated owner viewer:** `viewer.is_owner = true` and `viewer.owner_admin_url` contains the frontend admin/manage URL for that restaurant (used to guide owner edits from public pages).
+- Invalid/missing Bearer tokens do not break this endpoint for public use; it still returns the normal public payload.
 
 **404:** Restaurant not found for the given slug.
 
@@ -1739,6 +1748,33 @@ When **source_variant_uuid** is present, **name** in `translations` is the catal
 
 ## Machine translation
 
+The API does not perform translation itself; it is a client of an external service (e.g. LibreTranslate). It validates input, checks that requested languages are supported by the service, calls the service, and returns the response (or maps errors to HTTP status).
+
+### List supported languages
+
+| Method | Path | Auth | Rate limit |
+|--------|------|------|------------|
+| GET | `/api/translate/languages` | Bearer + verified | 30/min (per user or IP) |
+
+Returns the list of languages supported by the external translation service (proxied from the service’s languages endpoint, e.g. LibreTranslate `GET /languages`). Use this to know which `from_locale` and `to_locale` values are valid for `POST /api/translate`.
+
+**Response (200):**
+```json
+{
+  "data": [
+    { "code": "en", "name": "English" },
+    { "code": "es", "name": "Spanish" }
+  ]
+}
+```
+
+Each object may include optional `targets` (array of target language codes), depending on the service.
+
+**503:** Translation service not configured or unavailable.  
+**502:** Translation service error (e.g. languages endpoint unreachable or invalid response).
+
+---
+
 ### Translate text
 
 | Method | Path | Auth | Rate limit |
@@ -1754,6 +1790,8 @@ When **source_variant_uuid** is present, **name** in `translations` is the catal
 }
 ```
 
+`from_locale` and `to_locale` must be supported by the external service (see `GET /api/translate/languages`). The API validates this before calling the service.
+
 **Response (200):**
 ```json
 {
@@ -1763,12 +1801,19 @@ When **source_variant_uuid** is present, **name** in `translations` is the catal
 
 **429:** Too many requests; wait before retrying.  
 **503:** Translation service not configured or unavailable.  
-**422:** Validation (e.g. missing or invalid fields).
+**502:** Translation service error (e.g. LibreTranslate unreachable or returned an error).  
+**422:** Validation (e.g. missing or invalid fields), or **source/target language not supported** by the service (`errors.from_locale` or `errors.to_locale`: "Language not supported.").
+
+**Configuration (backend):** To enable machine translation, set `TRANSLATION_DRIVER=libre` and `LIBRE_TRANSLATE_URL` (e.g. `https://libre.example.com`). Optional: `LIBRE_TRANSLATE_API_KEY` for instances that require an API key. When not configured, the stub driver is used and the translate endpoints return **503**. Ensure the service has the required languages loaded (e.g. LibreTranslate `LT_LOAD_ONLY`); the API does not install languages.
+
+The Settings UI uses **POST /api/translate** for "Translate from default" (restaurant description): it sends the default locale's description as `text` with `from_locale` and `to_locale`, then saves the returned `translated_text` to the restaurant translation for the target locale.
 
 ---
 
 ## Changelog
 
+- **2026-02-28**: **Translation: API as client only; supported-languages check.** All translation logic lives in the external service (LibreTranslate); the API only validates input, calls the service, and returns responses. New **GET /api/translate/languages** (Bearer + verified, same rate limit as translate) returns the list of languages supported by the service (proxied from the service’s languages endpoint). **POST /api/translate** now checks `from_locale` and `to_locale` against that list before calling translate; returns **422** with `errors.from_locale` or `errors.to_locale` ("Language not supported.") when a locale is not supported. No internal `id` in any response.
+- **2026-02-28**: **GET /api/public/restaurants/{slug}: optional owner viewer metadata.** Endpoint remains public (no required auth) but now accepts optional Bearer context. Response now includes `viewer` with `is_owner` and `owner_admin_url` (only set for authenticated owner viewers). Guests and non-owner viewers receive `is_owner: false` and `owner_admin_url: null`. No internal `id` exposed.
 - **2026-02-27**: **GET /api/public/restaurants/{slug}: catalog image fallback for menu items and variants.** When a restaurant menu item has no own image but is linked to a catalog item (`source_menu_item_uuid`) that has an image, **image_url** is now set to the same restaurant-scoped URL and `GET /api/restaurants/{restaurant}/menu-items/{item}/image` serves the catalog item’s image. When variant data comes from the catalog and a catalog variant has an image, **variant_skus**[].**image_url** is set and `GET /api/restaurants/{restaurant}/menu-items/{item}/variants/{sku}/image` serves the catalog variant’s image. No new routes; behavior documented under Public restaurant by slug.
 - **2026-02-27**: **GET /api/public/restaurants/{slug}: catalog combo type and combo_entries.** When a restaurant menu item is linked to a catalog item (`source_menu_item_uuid` set, no `source_variant_uuid`), the public API now uses the **source’s type** and **source’s combo_entries** for that item. So a catalog combo added to a restaurant is exposed as **type: combo** with **combo_entries** from the catalog, fixing items that previously appeared as type `simple` with no breakdown.
 - **2026-02-27**: **GET /api/public/restaurants/{slug}: combo_entries, image_url.** For **combo** items, **combo_entries** is always present (array; empty if none); controller eager-loads `comboEntries` and nested relations. Every menu item (flat and in **menu_groups**[].**items**) includes **image_url** (full URL to restaurant-scoped item image or null). Each **menu_groups** entry includes **image_url** (category image full URL or null); category image requires `category.menu` to be loaded. Documented in response schema. No internal `id` in any response.
@@ -1814,6 +1859,7 @@ When **source_variant_uuid** is present, **name** in `translations` is the catal
 - **2026-02-18**: Menus: clarified that a restaurant can have multiple menus and that POST create can be called repeatedly.
 - **2026-02-18**: User-level menu items: GET/POST `/api/menu-items`, GET/PATCH/DELETE `/api/menu-items/{item}` for standalone list/create and for editing any owned item (standalone or restaurant). Payload may include `restaurant_uuid` (null for standalone).
 - **2026-02-18**: Menus: CRUD + reorder (GET/POST/PATCH/DELETE `/api/restaurants/{restaurant}/menus`, POST reorder). Categories: CRUD + reorder under menus; translations per locale (GET/POST/PATCH/DELETE `/api/restaurants/{restaurant}/menus/{menu}/categories`, POST reorder). Menu items: optional `category_uuid`, payload includes `category_uuid`; POST `/api/restaurants/{restaurant}/categories/{category}/menu-items/reorder` to reorder items within a category. All by `uuid`; no internal `id` in responses.
+- **2026-02-18**: **Machine translation (translate service):** Document 502 response for translation service errors and configuration (TRANSLATION_DRIVER=libre, LIBRE_TRANSLATE_URL, optional LIBRE_TRANSLATE_API_KEY). No API change.
 - **2026-02-16**: Security: logo/banner uploads use server-derived file extension from MIME type (not client filename). POST `/api/translate` rate-limited (30/min per user). API reference: upload storage note, Machine translation section with rate limit.
 - **2026-02-14**: Restaurants: free-tier limit (one restaurant per user; 403 when exceeded). Update slug validated for uniqueness (422 if taken). Docs: free-tier error, public logo/banner with Content-Type, slug uniqueness, upload validation (2MB, image types, custom message).
 - **2026-02-14**: Restaurants API: CRUD (list, show, create, update, delete) and media (upload logo/banner, public serve URLs). All by `uuid`; no internal `id` in responses. Endpoints: GET/POST `/api/restaurants`, GET/PUT/PATCH/DELETE `/api/restaurants/{uuid}`, POST `/api/restaurants/{uuid}/logo`, POST `/api/restaurants/{uuid}/banner`, GET `/api/restaurants/{uuid}/logo`, GET `/api/restaurants/{uuid}/banner`.

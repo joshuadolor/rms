@@ -621,6 +621,23 @@ function mockRestaurantLanguagesAndTranslations(page, options = {}) {
   })
 }
 
+/**
+ * Mock POST /api/translate for machine translation. Returns 200 with { translated_text }.
+ * @param {import('@playwright/test').Page} page
+ * @param {{ translatedText?: string }} [options] - translatedText to return (default: 'Translated text')
+ */
+function mockTranslateApi(page, options = {}) {
+  const translatedText = options.translatedText ?? 'Translated text'
+  page.route(/^.*\/api\/translate$/, (route) => {
+    if (route.request().method() !== 'POST') return route.continue()
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ translated_text: translatedText }),
+    })
+  })
+}
+
 const PHONE_CONTACT_TYPES = ['whatsapp', 'mobile', 'phone', 'fax', 'other']
 
 /**
@@ -1819,6 +1836,71 @@ test.describe('Restaurant module', () => {
     expect(response.ok()).toBe(true)
   })
 
+  test('owner sees owner guidance and actionable admin CTA when admin URL is available', async ({ page }) => {
+    await loginAsVerifiedUser(page)
+    const ownerAdminUrl = '/app/restaurants/rstr-1111-2222-3333/manage'
+    mockPublicRestaurant(page, 'owner-notice-url', {
+      name: 'Owner Notice URL Cafe',
+      slug: 'owner-notice-url',
+      viewer: {
+        is_owner: true,
+        owner_admin_url: ownerAdminUrl,
+      },
+      menu_items: [
+        { uuid: 'item-1', name: 'Owner Latte', description: null, price: 5, sort_order: 0, is_available: true, availability: null, tags: [] },
+      ],
+      feedbacks: [],
+    })
+
+    const publicPage = new PublicRestaurantPage(page)
+    await publicPage.goToPublicBySlug('owner-notice-url')
+    await publicPage.expectOwnerNoticeVisible()
+    await publicPage.expectOwnerAdminCtaVisible(ownerAdminUrl)
+  })
+
+  test('guest/non-owner does not see owner guidance and keeps existing public header behavior', async ({ page }) => {
+    mockPublicRestaurant(page, 'guest-no-owner-notice', {
+      name: 'Guest Header Cafe',
+      slug: 'guest-no-owner-notice',
+      viewer: {
+        is_owner: false,
+        owner_admin_url: null,
+      },
+      menu_items: [
+        { uuid: 'item-1', name: 'Guest Espresso', description: null, price: 3, sort_order: 0, is_available: true, availability: null, tags: [] },
+      ],
+      feedbacks: [],
+    })
+
+    const publicPage = new PublicRestaurantPage(page)
+    await publicPage.goToPublicBySlug('guest-no-owner-notice')
+    await publicPage.expectOwnerNoticeNotVisible()
+    await publicPage.expectGuestPlaceholderCtaVisible()
+  })
+
+  test('owner sees actionable fallback guidance when owner admin URL is missing', async ({ page }) => {
+    await loginAsVerifiedUser(page)
+    mockPublicRestaurant(page, 'owner-notice-no-url', {
+      name: 'Owner Notice Fallback Cafe',
+      slug: 'owner-notice-no-url',
+      viewer: {
+        is_owner: true,
+        owner_admin_url: null,
+      },
+      menu_items: [
+        { uuid: 'item-1', name: 'Fallback Cappuccino', description: null, price: 4, sort_order: 0, is_available: true, availability: null, tags: [] },
+      ],
+      feedbacks: [],
+    })
+
+    const publicPage = new PublicRestaurantPage(page)
+    await publicPage.goToPublicBySlug('owner-notice-no-url')
+    await publicPage.expectOwnerNoticeVisible()
+    await publicPage.expectOwnerAdminFallbackVisible()
+    await publicPage.expectOwnerAdminCtaNotVisible()
+    await publicPage.expectOwnerAdminUrlPlaceholderNotVisible()
+  })
+
   test('guest sees full public page: header, hero, menu with item name and price, about, reviews section, footer', async ({ page }) => {
     mockPublicRestaurant(page, 'test', {
       name: 'Test Restaurant',
@@ -2553,6 +2635,30 @@ test.describe('Restaurant module', () => {
     await settingsPage.clickSaveDescription()
     await settingsPage.expectDescriptionValueForLocale('en', 'Our pizza is the best.')
     await expect(page.getByTestId('settings-error')).toHaveAttribute('class', expect.stringContaining('sr-only'))
+  })
+
+  test('Settings Translate from default calls API and fills description for selected locale', async ({ page }) => {
+    const restaurantWithEnFr = { ...MOCK_RESTAURANT, languages: ['en', 'fr'], default_locale: 'en' }
+    await loginAsVerifiedUser(page)
+    mockRestaurantList(page, [restaurantWithEnFr])
+    mockRestaurantGet(page, restaurantWithEnFr)
+    mockRestaurantMenus(page)
+    mockRestaurantCategories(page, [])
+    mockRestaurantMenuItems(page, [])
+    mockRestaurantLanguagesAndTranslations(page, {
+      languages: ['en', 'fr'],
+      descriptionByLocale: { en: 'Our pizza is the best.' },
+    })
+    mockTranslateApi(page, { translatedText: 'Notre pizza est la meilleure.' })
+
+    const settingsPage = new RestaurantSettingsPage(page)
+    await settingsPage.goToSettingsTab(MOCK_RESTAURANT.uuid)
+    await settingsPage.expectDescriptionSectionVisible()
+    await settingsPage.selectDescriptionLocale('fr')
+    await settingsPage.expectTranslateFromDefaultVisible()
+    await settingsPage.clickTranslateFromDefault()
+    await expect(page.getByTestId('settings-translate-from-default')).toContainText('Translate from default', { timeout: 10000 })
+    await settingsPage.expectDescriptionValueForLocale('fr', 'Notre pizza est la meilleure.')
   })
 
   test('Settings when more than 5 languages shows Show all languages and Show less', async ({ page }) => {

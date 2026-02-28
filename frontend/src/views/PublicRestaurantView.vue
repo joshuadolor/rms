@@ -212,6 +212,7 @@
 import { ref, computed, watch, nextTick, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { restaurantService, feedbackService, normalizeApiError } from '@/services'
+import PublicRestaurant from '@/models/PublicRestaurant'
 import Template1 from '@/components/public/templates/Template1.vue'
 import Template2 from '@/components/public/templates/Template2.vue'
 import PublicMenuModal from '@/components/public/PublicMenuModal.vue'
@@ -346,9 +347,7 @@ async function fetchRestaurant() {
   try {
     const params = locale.value ? { locale: locale.value } : {}
     const res = await restaurantService.getPublicRestaurant(slug.value, params)
-    // Use raw API payload so menu_groups/items keep combo_entries and image_url (no model serialization loss)
-    const payload = res?.data ?? res
-    data.value = payload ? { ...payload } : null
+    data.value = PublicRestaurant.fromApi(res).toJSON()
     if (data.value) {
       locale.value = data.value.locale ?? data.value.default_locale ?? locale.value ?? 'en'
     }

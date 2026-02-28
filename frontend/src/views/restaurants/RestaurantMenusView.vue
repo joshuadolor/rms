@@ -242,28 +242,30 @@
                 alt=""
                 class="w-20 h-20 object-cover rounded-lg border border-slate-200 dark:border-slate-700"
               />
-              <label class="cursor-pointer">
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png,image/gif,image/webp"
-                  class="sr-only"
-                  :disabled="!!uploadingCategoryImage"
-                  @change="onCategoryImageSelect"
-                />
-                <AppButton
-                  type="button"
-                  variant="secondary"
-                  size="sm"
-                  class="min-h-[44px]"
-                  :disabled="!!uploadingCategoryImage"
-                >
-                  <template v-if="uploadingCategoryImage" #icon>
-                    <span class="material-icons animate-spin">sync</span>
-                  </template>
-                  <template v-else #icon><span class="material-icons">upload</span></template>
-                  {{ editingCategory.image_url ? 'Change image' : 'Upload image' }}
-                </AppButton>
-              </label>
+              <input
+                ref="categoryImageInputRef"
+                type="file"
+                accept="image/jpeg,image/png,image/gif,image/webp"
+                class="sr-only"
+                aria-hidden="true"
+                tabindex="-1"
+                :disabled="!!uploadingCategoryImage"
+                @change="onCategoryImageSelect"
+              />
+              <AppButton
+                type="button"
+                variant="secondary"
+                size="sm"
+                class="min-h-[44px]"
+                :disabled="!!uploadingCategoryImage"
+                @click="categoryImageInputRef?.click()"
+              >
+                <template v-if="uploadingCategoryImage" #icon>
+                  <span class="material-icons animate-spin">sync</span>
+                </template>
+                <template v-else #icon><span class="material-icons">upload</span></template>
+                {{ editingCategory.image_url ? 'Change image' : 'Upload image' }}
+              </AppButton>
               <AppButton
                 v-if="editingCategory.image_url"
                 type="button"
@@ -519,6 +521,7 @@ const categoryForm = ref({ translations: {} })
 const categoryFormError = ref('')
 const savingCategory = ref(false)
 const uploadingCategoryImage = ref(false)
+const categoryImageInputRef = ref(null)
 const selectedCategoryLocale = ref('en')
 const addMenuModalOpen = ref(false)
 const addMenuForm = ref({ translations: {} })

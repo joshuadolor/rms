@@ -212,9 +212,12 @@
             ref="descriptionTextareaRef"
             :value="currentDescriptionValue"
             rows="4"
+            :readonly="!!translatingLocale"
             :data-testid="`settings-description-${selectedDescriptionLocale}`"
             class="w-full rounded-lg ring-1 ring-slate-200 dark:ring-zinc-700 focus:ring-2 focus:ring-primary bg-white dark:bg-zinc-800 border-0 py-3 px-4 text-charcoal dark:text-white resize-y mb-4"
+            :class="{ 'opacity-70 cursor-wait': !!translatingLocale }"
             :placeholder="`Description (${getLocaleDisplay(selectedDescriptionLocale)})`"
+            :aria-busy="!!translatingLocale"
             @input="onDescriptionInput"
           />
           <div class="flex flex-wrap items-center justify-end gap-2">
@@ -224,10 +227,16 @@
               variant="ghost"
               size="sm"
               class="min-h-[44px]"
+              :disabled="!!translatingLocale"
+              :aria-busy="translatingLocale === selectedDescriptionLocale"
+              :aria-label="translatingLocale === selectedDescriptionLocale ? 'Translating description from default language' : 'Translate from default language'"
               data-testid="settings-translate-from-default"
               @click="translateDescription(selectedDescriptionLocale)"
             >
-              Translate from default
+              <template v-if="translatingLocale === selectedDescriptionLocale" #icon>
+                <span class="material-icons animate-spin text-lg" aria-hidden="true">sync</span>
+              </template>
+              {{ translatingLocale === selectedDescriptionLocale ? 'Translating…' : 'Translate from default' }}
             </AppButton>
             <AppButton
               type="button"
@@ -310,7 +319,7 @@ import AppButton from '@/components/ui/AppButton.vue'
 import AppBackLink from '@/components/AppBackLink.vue'
 import { LOCALE_CODES, getLocaleDisplay } from '@/config/locales'
 import Restaurant from '@/models/Restaurant.js'
-import { restaurantService, getValidationErrors, normalizeApiError } from '@/services'
+import { restaurantService, localeService, getValidationErrors, normalizeApiError } from '@/services'
 import { useToastStore } from '@/stores/toast'
 import { useBreadcrumbStore } from '@/stores/breadcrumb'
 
@@ -360,6 +369,7 @@ const addingLanguage = ref(false)
 const removingLocale = ref(null)
 const localeToRemove = ref(null)
 const savingLocale = ref(null)
+const translatingLocale = ref(null)
 const descriptions = ref({})
 const languageToAdd = ref('')
 const selectedDescriptionLocale = ref('')
@@ -629,15 +639,35 @@ async function doSaveTemplate(templateId) {
   }
 }
 
-/** Copy default locale description into this locale (local only). User clicks Save to persist. */
-function translateDescription(loc) {
+/** Translate default locale description into this locale via API; fill local state. User clicks Save to persist. */
+async function translateDescription(loc) {
   const def = restaurant.value?.default_locale
   if (!def || def === loc) return
   const defDesc = (props.embed ? props.defaultDescription : null) ?? descriptions.value[def] ?? ''
-  if (defDesc) {
+  const trimmed = (defDesc ?? '').trim()
+  if (!trimmed) {
+    toastStore.info('Default description is empty. Add a description for the default language first.')
+    return
+  }
+  translatingLocale.value = loc
+  error.value = ''
+  try {
+    const data = await localeService.translate({
+      text: trimmed,
+      from_locale: def,
+      to_locale: loc,
+    })
+    const translated = data?.translated_text ?? ''
     const next = { ...descriptions.value }
-    next[loc] = defDesc
+    next[loc] = translated
     descriptions.value = next
+    toastStore.success('Translation applied. Click Save to store.')
+  } catch (e) {
+    const msg = normalizeApiError(e).message ?? 'Translation failed.'
+    error.value = msg
+    toastStore.error(msg)
+  } finally {
+    translatingLocale.value = null
   }
 }
 

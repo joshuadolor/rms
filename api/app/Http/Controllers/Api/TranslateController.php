@@ -15,7 +15,29 @@ class TranslateController extends Controller
     ) {}
 
     /**
-     * Translate text using the configured service (e.g. LibreTranslate). For use when adding translations.
+     * List languages supported by the external translation service (e.g. LibreTranslate).
+     * Proxies the service’s languages endpoint so the frontend knows what is available.
+     */
+    public function languages(): JsonResponse
+    {
+        if (! $this->translationService->isAvailable()) {
+            return response()->json([
+                'message' => __('Translation service is not configured. Set LIBRE_TRANSLATE_URL to use machine translation.'),
+            ], 503);
+        }
+
+        try {
+            $list = $this->translationService->getSupportedLanguages();
+        } catch (TranslationException $e) {
+            return response()->json(['message' => $e->getMessage()], 502);
+        }
+
+        return response()->json(['data' => $list]);
+    }
+
+    /**
+     * Translate text via the external service only. No in-app translation logic; validates input,
+     * checks that from/to locales are supported by the service, then calls the service and returns its response.
      */
     public function __invoke(Request $request): JsonResponse
     {
@@ -32,10 +54,34 @@ class TranslateController extends Controller
         }
 
         try {
+            $supported = $this->translationService->getSupportedLanguages();
+        } catch (TranslationException $e) {
+            return response()->json(['message' => $e->getMessage()], 502);
+        }
+
+        $codes = array_column($supported, 'code');
+        $from = $request->input('from_locale');
+        $to = $request->input('to_locale');
+
+        if (! in_array($from, $codes, true)) {
+            return response()->json([
+                'message' => __('The source language is not supported by the translation service.'),
+                'errors' => ['from_locale' => [__('Language not supported.')]],
+            ], 422);
+        }
+
+        if (! in_array($to, $codes, true)) {
+            return response()->json([
+                'message' => __('The target language is not supported by the translation service.'),
+                'errors' => ['to_locale' => [__('Language not supported.')]],
+            ], 422);
+        }
+
+        try {
             $translated = $this->translationService->translate(
                 $request->input('text'),
-                $request->input('from_locale'),
-                $request->input('to_locale')
+                $from,
+                $to
             );
         } catch (TranslationException $e) {
             return response()->json(['message' => $e->getMessage()], 502);

@@ -55,4 +55,44 @@ final class LibreTranslateService implements TranslationServiceInterface
     {
         return $this->baseUrl !== '';
     }
+
+    /**
+     * @return array<int, array{code: string, name: string, targets?: array<string>}>
+     *
+     * @throws TranslationException
+     */
+    public function getSupportedLanguages(): array
+    {
+        $url = rtrim($this->baseUrl, '/') . '/languages';
+        $request = Http::timeout(10)->get($url);
+
+        if (! $request->successful()) {
+            throw new TranslationException(
+                'LibreTranslate languages error: ' . ($request->json('error') ?? $request->body() ?: $request->reason()),
+                null
+            );
+        }
+
+        $languages = $request->json();
+        if (! is_array($languages)) {
+            throw new TranslationException('LibreTranslate returned invalid languages response.');
+        }
+
+        $normalized = [];
+        foreach ($languages as $item) {
+            if (! is_array($item) || ! isset($item['code']) || ! is_string($item['code'])) {
+                continue;
+            }
+            $entry = [
+                'code' => $item['code'],
+                'name' => isset($item['name']) && is_string($item['name']) ? $item['name'] : $item['code'],
+            ];
+            if (isset($item['targets']) && is_array($item['targets'])) {
+                $entry['targets'] = $item['targets'];
+            }
+            $normalized[] = $entry;
+        }
+
+        return $normalized;
+    }
 }

@@ -18,4 +18,12 @@ final class StubTranslationService implements TranslationServiceInterface
     {
         return false;
     }
+
+    /**
+     * @return array<int, array{code: string, name: string, targets?: array<string>}>
+     */
+    public function getSupportedLanguages(): array
+    {
+        return [];
+    }
 }

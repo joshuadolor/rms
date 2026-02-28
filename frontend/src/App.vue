@@ -41,6 +41,7 @@ watch(
   () => {
     if (!appStore.isAuthBootstrapped) return
     if (!route.matched.some((r) => r.meta.guest)) return
+    if (route.name === 'PublicRestaurant') return
     if (!appStore.user) return
     const isVerified = appStore.user?.isEmailVerified ?? false
     if (isVerified) {

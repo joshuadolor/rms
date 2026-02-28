@@ -508,8 +508,44 @@ class RestaurantTest extends TestCase
             ->assertJsonPath('data.menu_items', [])
             ->assertJsonPath('data.menu_groups', [])
             ->assertJsonPath('data.operating_hours', null)
-            ->assertJsonStructure(['data' => ['name', 'slug', 'template', 'logo_url', 'banner_url', 'default_locale', 'operating_hours', 'languages', 'locale', 'description', 'menu_items', 'menu_groups']]);
+            ->assertJsonPath('data.viewer.is_owner', false)
+            ->assertJsonPath('data.viewer.owner_admin_url', null)
+            ->assertJsonStructure(['data' => ['name', 'slug', 'template', 'logo_url', 'banner_url', 'default_locale', 'operating_hours', 'languages', 'locale', 'description', 'menu_items', 'menu_groups', 'viewer' => ['is_owner', 'owner_admin_url']]]);
         $response->assertJsonMissingPath('data.id');
+    }
+
+    public function test_public_restaurant_by_slug_marks_viewer_as_owner_with_admin_url_when_authenticated_owner(): void
+    {
+        $owner = $this->createVerifiedUser();
+        $restaurant = $this->createRestaurantForUser($owner, ['slug' => 'owner-view-bistro']);
+        $token = $owner->createToken('auth')->plainTextToken;
+
+        $response = $this->getJson('/api/public/restaurants/owner-view-bistro', [
+            'Authorization' => 'Bearer ' . $token,
+        ]);
+
+        $expectedBase = rtrim((string) (config('app.frontend_url') ?: config('app.url')), '/');
+        $expectedAdminUrl = $expectedBase . '/app/restaurants/' . $restaurant->uuid . '?tab=profile';
+
+        $response->assertOk()
+            ->assertJsonPath('data.viewer.is_owner', true)
+            ->assertJsonPath('data.viewer.owner_admin_url', $expectedAdminUrl);
+    }
+
+    public function test_public_restaurant_by_slug_keeps_viewer_non_owner_for_other_authenticated_user(): void
+    {
+        $owner = $this->createVerifiedUser();
+        $otherUser = $this->createVerifiedUser();
+        $restaurant = $this->createRestaurantForUser($owner, ['slug' => 'non-owner-view-bistro']);
+        $token = $otherUser->createToken('auth')->plainTextToken;
+
+        $response = $this->getJson('/api/public/restaurants/non-owner-view-bistro', [
+            'Authorization' => 'Bearer ' . $token,
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('data.viewer.is_owner', false)
+            ->assertJsonPath('data.viewer.owner_admin_url', null);
     }
 
     public function test_public_restaurant_by_slug_returns_template_from_restaurant(): void
@@ -991,13 +1027,9 @@ class RestaurantTest extends TestCase
     private function assertPublicPayloadHasNoInternalId(array $data): void
     {
         $this->assertFalse(array_key_exists('id', $data), 'Public response must not contain internal id at any level');
-        foreach ($data as $key => $value) {
+        foreach ($data as $value) {
             if (is_array($value)) {
-                foreach ($value as $i => $nested) {
-                    if (is_array($nested)) {
-                        $this->assertPublicPayloadHasNoInternalId($nested);
-                    }
-                }
+                $this->assertPublicPayloadHasNoInternalId($value);
             }
         }
     }

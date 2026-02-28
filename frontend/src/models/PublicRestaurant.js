@@ -40,6 +40,13 @@ export default class PublicRestaurant {
           label: c.label ?? null,
         }))
       : []
+    const viewer = (data.viewer && typeof data.viewer === 'object') ? data.viewer : {}
+    this._viewer = {
+      is_owner: viewer.is_owner === true,
+      owner_admin_url: typeof viewer.owner_admin_url === 'string' && viewer.owner_admin_url.trim() !== ''
+        ? viewer.owner_admin_url
+        : null,
+    }
     this._template = data.template ?? 'template-1'
     this._yearEstablished = data.year_established ?? data.yearEstablished ?? null
   }
@@ -110,6 +117,10 @@ export default class PublicRestaurant {
     return this._contacts
   }
 
+  get viewer() {
+    return this._viewer
+  }
+
   get template() {
     return this._template
   }
@@ -149,6 +160,10 @@ export default class PublicRestaurant {
       })),
       feedbacks: this._feedbacks.map((f) => ({ ...f })),
       contacts: this._contacts.map((c) => ({ ...c })),
+      viewer: {
+        is_owner: this._viewer.is_owner === true,
+        owner_admin_url: this._viewer.owner_admin_url ?? null,
+      },
       template: this._template,
       year_established: this._yearEstablished,
     }

@@ -7,6 +7,7 @@
     <Template2Header
       :name="restaurant.name"
       :logo-url="restaurant.logo_url"
+      :viewer="restaurant.viewer"
       :languages="languages"
       :current-locale="currentLocale"
       @select-locale="$emit('select-locale', $event)"

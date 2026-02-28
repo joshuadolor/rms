@@ -16,7 +16,9 @@ class PublicRestaurantPage {
   /** Navigate to the public restaurant page by slug (path /r/:slug). Waits for content (main or error) to be ready. */
   async goToPublicBySlug(slug) {
     await this.page.goto(`/r/${slug}`)
-    await expect(this.page.locator('.public-restaurant-page')).toBeVisible({ timeout: 10000 })
+    await expect(this.page.locator('.public-restaurant-page, .rms-public')).toBeVisible({
+      timeout: 10000,
+    })
     // Wait for fetch to finish: either main content or error card
     await expect(
       this.page.getByRole('main').or(this.page.locator('.rms-public__error'))
@@ -29,7 +31,9 @@ class PublicRestaurantPage {
    */
   async goToPublicBySlugAndGetResponse(slug) {
     const response = await this.page.goto(`/r/${slug}`)
-    await expect(this.page.locator('.public-restaurant-page')).toBeVisible({ timeout: 10000 })
+    await expect(this.page.locator('.public-restaurant-page, .rms-public')).toBeVisible({
+      timeout: 10000,
+    })
     await expect(
       this.page.getByRole('main').or(this.page.locator('.rms-public__error'))
     ).toBeVisible({ timeout: 10000 })
@@ -389,6 +393,63 @@ class PublicRestaurantPage {
   async expectNoTemplateLabelVisible() {
     await expect(this.page.getByText('Template 1', { exact: true })).toHaveCount(0)
     await expect(this.page.getByText('Template 2', { exact: true })).toHaveCount(0)
+  }
+
+  // --- Owner-only guidance notice (public header) ---
+
+  /** Assert the owner notice guidance message is visible in the header. */
+  async expectOwnerNoticeVisible() {
+    const ownerNotice = this.page.getByRole('status').filter({
+      has: this.page.getByText('Owner notice', { exact: true }),
+    })
+    await expect(ownerNotice).toBeVisible()
+    await expect(
+      ownerNotice.getByText('Your restaurant needs more data. Please login and update it on the admin page.')
+    ).toBeVisible()
+  }
+
+  /** Assert the owner notice guidance message is not visible. */
+  async expectOwnerNoticeNotVisible() {
+    await expect(this.page.getByRole('status').filter({
+      has: this.page.getByText('Owner notice', { exact: true }),
+    })).not.toBeVisible()
+  }
+
+  /** Assert the owner admin CTA link is visible with the expected href. */
+  async expectOwnerAdminCtaVisible(expectedHref) {
+    const ownerNotice = this.page.getByRole('status').filter({
+      has: this.page.getByText('Owner notice', { exact: true }),
+    })
+    const link = ownerNotice.getByRole('link', { name: 'Open admin page' })
+    await expect(link).toBeVisible()
+    if (expectedHref) {
+      await expect(link).toHaveAttribute('href', expectedHref)
+    }
+  }
+
+  /** Assert the owner admin CTA link is not visible. */
+  async expectOwnerAdminCtaNotVisible() {
+    await expect(this.page.getByRole('status').getByRole('link', { name: 'Open admin page' })).not.toBeVisible()
+  }
+
+  /** Assert fallback owner guidance appears when admin URL is unavailable. */
+  async expectOwnerAdminFallbackVisible() {
+    const ownerNotice = this.page.getByRole('status').filter({
+      has: this.page.getByText('Owner notice', { exact: true }),
+    })
+    await expect(
+      ownerNotice.getByText('Admin link unavailable. Please sign in to the admin page from the main app.')
+    ).toBeVisible()
+  }
+
+  /** Assert no unresolved owner admin URL placeholder is rendered. */
+  async expectOwnerAdminUrlPlaceholderNotVisible() {
+    await expect(this.page.getByText(/\[url\]/i)).not.toBeVisible()
+  }
+
+  /** Assert guest/non-owner header keeps existing disabled placeholder CTA. */
+  async expectGuestPlaceholderCtaVisible() {
+    await expect(this.page.getByRole('button', { name: '[to be implemented]' })).toBeVisible()
   }
 
   // --- Mobile View Menu: sticky button and full-page menu modal ---

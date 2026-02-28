@@ -194,6 +194,7 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::post('/restaurants/{restaurant}/categories/{category}/menu-items/reorder', [MenuItemController::class, 'reorder']);
 
     // Machine translation (LibreTranslate when configured); rate-limited
+    Route::get('/translate/languages', [TranslateController::class, 'languages'])->middleware('throttle:translate');
     Route::post('/translate', TranslateController::class)->middleware('throttle:translate');
 
     // Owner feedback (feature requests): submit and list own
