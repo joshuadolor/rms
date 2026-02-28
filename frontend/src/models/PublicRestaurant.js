@@ -46,6 +46,7 @@ export default class PublicRestaurant {
       owner_admin_url: typeof viewer.owner_admin_url === 'string' && viewer.owner_admin_url.trim() !== ''
         ? viewer.owner_admin_url
         : null,
+      needs_data: viewer.needs_data === true,
     }
     this._template = data.template ?? 'template-1'
     this._yearEstablished = data.year_established ?? data.yearEstablished ?? null
@@ -163,6 +164,7 @@ export default class PublicRestaurant {
       viewer: {
         is_owner: this._viewer.is_owner === true,
         owner_admin_url: this._viewer.owner_admin_url ?? null,
+        needs_data: this._viewer.needs_data === true,
       },
       template: this._template,
       year_established: this._yearEstablished,

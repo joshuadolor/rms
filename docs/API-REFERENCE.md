@@ -133,6 +133,8 @@ Use the refresh token stored in the **HttpOnly** cookie to get a new access toke
 
 **Behavior:** On success, the API **rotates** the refresh token by setting a **new** `rms_refresh` cookie and revoking the previous refresh token server-side. On **401** or **403**, the API also **clears** the refresh cookie to prevent client refresh loops and to avoid stale-cookie downgrade behavior.
 
+**Subdomain setups:** If the app and public site use different subdomains (e.g. app at `app.rms.local`, public at `test.rms.local`), the refresh cookie must be set for the parent domain so the browser sends it on all subdomains. Set **`REFRESH_TOKEN_COOKIE_DOMAIN=.rms.local`** (or your parent domain with leading dot) in the API `.env`. Otherwise the cookie is bound to the current host and refresh will return 401 "Invalid or expired refresh token" on the public page even when the user is logged in on another subdomain.
+
 **Errors:**
 - **401** – Missing/invalid/expired/revoked refresh token cookie (also clears refresh cookie): `{ "message": "Invalid or expired refresh token." }`
 - **403** – Email not verified (also clears refresh cookie): `{ "message": "Your email address is not verified." }`
@@ -174,7 +176,7 @@ Use the refresh token stored in the **HttpOnly** cookie to get a new access toke
 
 | Method | Path | Auth |
 |--------|------|------|
-| POST | `/api/reset-password` | No |
+| POST | `/api/reset-password` | No | 3/min (same as forgot-password) |
 
 **Body:**
 ```json
@@ -1134,7 +1136,8 @@ Returns public restaurant data and menu items for subdomain or `/r/:slug` pages.
     ],
     "viewer": {
       "is_owner": "boolean",
-      "owner_admin_url": "string | null"
+      "owner_admin_url": "string | null",
+      "needs_data": "boolean (only meaningful when is_owner is true; see below)"
     }
   }
 }
@@ -1152,8 +1155,8 @@ Returns public restaurant data and menu items for subdomain or `/r/:slug` pages.
 `operating_hours` has the same shape as in the restaurant payload (see **Operating hours shape** above); `null` when not set. Each **menu_item** includes **availability** (same type as operating_hours; `null` = always available). **feedbacks** contains only **approved** feedbacks (owner approves via PATCH); no internal `id` in any field.
 
 **viewer metadata:**
-- **Guests or non-owner users:** `viewer.is_owner = false`, `viewer.owner_admin_url = null`.
-- **Authenticated owner viewer:** `viewer.is_owner = true` and `viewer.owner_admin_url` contains the frontend admin/manage URL for that restaurant (used to guide owner edits from public pages).
+- **Guests or non-owner users:** `viewer.is_owner = false`, `viewer.owner_admin_url = null`, `viewer.needs_data = false`.
+- **Authenticated owner viewer:** `viewer.is_owner = true`, `viewer.owner_admin_url` contains the frontend admin/manage URL for that restaurant, and **`viewer.needs_data`** is computed for owner context only: `true` when the public site has insufficient content to be useful (no menu content—no menu_groups or no items in any group—and/or no description); `false` otherwise. The frontend uses this to show a “needs data” message only to the owner. When the viewer is not the owner, `needs_data` is always `false`.
 - Invalid/missing Bearer tokens do not break this endpoint for public use; it still returns the normal public payload.
 
 **404:** Restaurant not found for the given slug.
@@ -1947,6 +1950,7 @@ The Settings UI uses **POST /api/translate** for "Translate from default" (resta
 
 ## Changelog
 
+- **2026-02-28**: **POST /api/reset-password: rate limited.** Reset-password now uses `throttle:auth.forgot-password` (3/min per IP in production) to prevent spam and token brute-force; aligns with forgot-password.
 - **2026-02-28**: **Transactional emails: redesign and request-language (locale).** Mail templates updated per design: accent #2563eb, white header with 2px accent border, body wrapper #f1f5f9, inner card white ~570px with border and shadow, primary button #2563eb, footer #0f172a with #94a3b8 text, panel/subcopy accent border and muted background; system fonts only. **Locale-aware emails:** Endpoints that send email accept optional **locale** (request body) or **Accept-Language** header. Supported: `en`, `es`, `ar`. When locale is `ar`, the email is rendered RTL (`dir="rtl"` and `lang="ar"` on the mail layout). Affected: **POST /api/forgot-password**, **POST /api/register**, **POST /api/email/resend**, **PATCH /api/user** (when email change triggers verify-new-email). Laravel lang files added (`lang/en.json`, `lang/es.json`, `lang/ar.json`) for notification and mail copy. API response messages for those endpoints use the same locale when set.
 
 - **2026-02-18**: **Forgot password: 503 when reset email cannot be sent.** When the server cannot send the password reset email (e.g. APP_KEY missing, mail failure), **POST /api/forgot-password** now returns **503** with a generic message so the frontend can show an error instead of a success state. Success (200) unchanged when the request is accepted (same generic message; no user enumeration).
@@ -1956,6 +1960,8 @@ The Settings UI uses **POST /api/translate** for "Translate from default" (resta
 - **2026-02-28**: **Owner dashboard stats.** New **GET /api/dashboard/stats** (Bearer + verified) returns counts for the authenticated owner: **restaurants_count**, **menu_items_count** (catalog/standalone only), **feedbacks_total**, **feedbacks_approved**, **feedbacks_rejected**. Used by the owner dashboard to display Menu items, Restaurants, and Feedbacks (total, approved, rejected). No internal `id` in response.
 - **2026-02-18**: **Category list/show payload: fallback for blank translations.** When returning category payloads (list, show, create, update, image upload/delete), the API now fills blank **name** and **description** for any locale with the restaurant’s **default_locale** value, or the first non-empty value across locales. So when the default language is changed (e.g. to Spanish), categories that have no Spanish translation still return a displayable value (e.g. from English). Response shape unchanged; only empty values are replaced for display.
 - **2026-02-28**: **Translation: API as client only; supported-languages check.** All translation logic lives in the external service (LibreTranslate); the API only validates input, calls the service, and returns responses. New **GET /api/translate/languages** (Bearer + verified, same rate limit as translate) returns the list of languages supported by the service (proxied from the service’s languages endpoint). **POST /api/translate** now checks `from_locale` and `to_locale` against that list before calling translate; returns **422** with `errors.from_locale` or `errors.to_locale` ("Language not supported.") when a locale is not supported. No internal `id` in any response.
+- **2026-02-28**: **POST /api/auth/refresh: subdomain cookie domain.** Documented that for subdomain setups (e.g. app and public on different subdomains), set `REFRESH_TOKEN_COOKIE_DOMAIN` to the parent domain (e.g. `.rms.local`) so the refresh cookie is sent on all subdomains; otherwise refresh returns 401 on the public page. `.env.example` and `config/refresh_tokens.php` comments updated.
+- **2026-02-28**: **GET /api/public/restaurants/{slug}: viewer.needs_data for owner context.** When the viewer is the owner, response includes `viewer.needs_data` (boolean): `true` when the public site has no menu content (no menu_groups or no items) and/or no description; `false` otherwise. For non-owner viewers and guests, `needs_data` is always `false`. Frontend uses this to show “needs data” messaging and owner-only sticky bar. No internal `id` exposed.
 - **2026-02-28**: **GET /api/public/restaurants/{slug}: optional owner viewer metadata.** Endpoint remains public (no required auth) but now accepts optional Bearer context. Response now includes `viewer` with `is_owner` and `owner_admin_url` (only set for authenticated owner viewers). Guests and non-owner viewers receive `is_owner: false` and `owner_admin_url: null`. No internal `id` exposed.
 - **2026-02-27**: **GET /api/public/restaurants/{slug}: catalog image fallback for menu items and variants.** When a restaurant menu item has no own image but is linked to a catalog item (`source_menu_item_uuid`) that has an image, **image_url** is now set to the same restaurant-scoped URL and `GET /api/restaurants/{restaurant}/menu-items/{item}/image` serves the catalog item’s image. When variant data comes from the catalog and a catalog variant has an image, **variant_skus**[].**image_url** is set and `GET /api/restaurants/{restaurant}/menu-items/{item}/variants/{sku}/image` serves the catalog variant’s image. No new routes; behavior documented under Public restaurant by slug.
 - **2026-02-27**: **GET /api/public/restaurants/{slug}: catalog combo type and combo_entries.** When a restaurant menu item is linked to a catalog item (`source_menu_item_uuid` set, no `source_variant_uuid`), the public API now uses the **source’s type** and **source’s combo_entries** for that item. So a catalog combo added to a restaurant is exposed as **type: combo** with **combo_entries** from the catalog, fixing items that previously appeared as type `simple` with no breakdown.

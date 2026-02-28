@@ -115,6 +115,7 @@ class PublicRestaurantController extends Controller
         $viewer = $request->user('sanctum');
         $isOwnerViewer = $viewer !== null && $restaurant->isOwnedBy($viewer);
         $ownerAdminUrl = $isOwnerViewer ? $this->buildOwnerAdminUrl($restaurant->uuid) : null;
+        $needsData = $isOwnerViewer ? $this->computeNeedsData($menuGroups, $description) : false;
 
         return response()->json([
             'data' => [
@@ -143,9 +144,32 @@ class PublicRestaurantController extends Controller
                 'viewer' => [
                     'is_owner' => $isOwnerViewer,
                     'owner_admin_url' => $ownerAdminUrl,
+                    'needs_data' => $needsData,
                 ],
             ],
         ]);
+    }
+
+    /**
+     * Whether the public site "needs data" for owner context: no menu content (no groups or no items)
+     * and/or no description. Only meaningful when the viewer is the owner; callers should pass
+     * this only when is_owner is true, otherwise return false.
+     *
+     * @param  array<int, array{items: array}>  $menuGroups
+     */
+    private function computeNeedsData(array $menuGroups, ?string $description): bool
+    {
+        $hasMenuContent = false;
+        foreach ($menuGroups as $group) {
+            $items = $group['items'] ?? [];
+            if ($items !== []) {
+                $hasMenuContent = true;
+                break;
+            }
+        }
+        $hasDescription = $description !== null && trim($description) !== '';
+
+        return ! $hasMenuContent || ! $hasDescription;
     }
 
     /**

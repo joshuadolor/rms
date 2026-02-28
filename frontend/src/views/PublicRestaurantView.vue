@@ -31,6 +31,7 @@
       <Template1
         v-if="templateComponent === 'Template1'"
         :restaurant="data"
+        :owner-view-mode="ownerViewMode"
         :languages="data.languages || []"
         :current-locale="locale"
         @select-locale="onSelectLocale"
@@ -108,6 +109,7 @@
       <Template2
         v-else
         :restaurant="data"
+        :owner-view-mode="ownerViewMode"
         :languages="data.languages || []"
         :current-locale="locale"
         @select-locale="onSelectLocale"
@@ -183,6 +185,43 @@
         </template>
       </Template2>
 
+      <!-- Spacer so content is not hidden behind owner sticky bar -->
+      <div
+        v-if="showOwnerStickyBar || (data.viewer?.is_owner && viewAsCustomer)"
+        class="rms-owner-sticky-spacer"
+        aria-hidden="true"
+      />
+      <!-- Owner-only: sticky "view as customer" bar (hidden when not logged in or when viewing as customer) -->
+      <div
+        v-if="showOwnerStickyBar"
+        class="rms-owner-sticky"
+        role="status"
+        aria-live="polite"
+      >
+        <p class="rms-owner-sticky__text">{{ t('public.viewingAsOwner') }}</p>
+        <button
+          type="button"
+          class="rms-owner-sticky__btn"
+          :style="stickyButtonStyle"
+          @click="viewAsCustomer = true"
+        >
+          {{ t('public.viewAsCustomer') }}
+        </button>
+      </div>
+      <!-- When owner is in "view as customer" mode, show a small toggle to switch back -->
+      <div
+        v-else-if="data.viewer?.is_owner && viewAsCustomer"
+        class="rms-owner-sticky rms-owner-sticky--minimal"
+      >
+        <button
+          type="button"
+          class="rms-owner-sticky__link"
+          @click="viewAsCustomer = false"
+        >
+          {{ t('public.viewAsOwner') }}
+        </button>
+      </div>
+
       <!-- Mobile-only: spacer so sticky "View Menu" bar does not cover footer -->
       <div class="rms-view-menu-spacer" aria-hidden="true" />
 
@@ -214,6 +253,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { i18n } from '@/i18n'
 import { restaurantService, feedbackService, normalizeApiError } from '@/services'
+import { useAppStore } from '@/stores/app'
 import PublicRestaurant from '@/models/PublicRestaurant'
 import Template1 from '@/components/public/templates/Template1.vue'
 import Template2 from '@/components/public/templates/Template2.vue'
@@ -229,6 +269,7 @@ const props = defineProps({
 const route = useRoute()
 const router = useRouter()
 const { t } = useI18n()
+const appStore = useAppStore()
 
 /** Supported locale codes for public templates (fallback to en if unknown). */
 const SUPPORTED_PUBLIC_LOCALES = ['en', 'es', 'zh', 'fil', 'de', 'fr', 'uk', 'ru', 'ja', 'nl']
@@ -262,6 +303,16 @@ const APP_NAME = import.meta.env.VITE_APP_NAME ?? 'RMS'
 const menuModalOpen = ref(false)
 /** Only auto-open View Menu modal once per page load on mobile. */
 const hasAutoOpenedModal = ref(false)
+/** When true, owner sees the page as a customer (no owner notice, no sticky bar). */
+const viewAsCustomer = ref(false)
+/** Owner view mode: show owner-only UI (needs-data notice, sticky). When false, hide owner-only UI. */
+const ownerViewMode = computed(() => !!(
+  data.value?.viewer?.is_owner === true && !viewAsCustomer.value
+))
+/** Show the sticky "view as customer" bar only when owner is viewing and not in customer mode. Guests never see it. */
+const showOwnerStickyBar = computed(() => !!(
+  data.value?.viewer?.is_owner === true && !viewAsCustomer.value
+))
 
 /** Truncate description for meta (SEO best practice ~155 chars). */
 function truncateForMeta(text, maxLen = 155) {
@@ -433,6 +484,13 @@ watch(slug, () => {
   fetchRestaurant()
 }, { immediate: true })
 
+// Refetch when auth becomes available so viewer.is_owner is set (token is in-memory; first fetch may run before bootstrapAuth).
+watch(() => appStore.user, (user) => {
+  if (!user || !data.value?.slug) return
+  if (data.value.viewer?.is_owner === true) return
+  fetchRestaurant()
+}, { immediate: true })
+
 watch(menuModalOpen, (open) => {
   if (!open) {
     nextTick(() => viewMenuBtnRef.value?.focus())
@@ -563,6 +621,92 @@ onBeforeUnmount(clearPublicPageSeo)
   .rms-view-menu-spacer {
     display: none;
   }
+}
+
+.rms-owner-sticky-spacer {
+  height: 56px;
+  flex-shrink: 0;
+}
+@media (min-width: 768px) {
+  .rms-owner-sticky-spacer {
+    height: 52px;
+  }
+}
+
+/* Owner-only: sticky bar "view as customer" (hidden for guests) */
+.rms-owner-sticky {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1001;
+  padding: 0.5rem 1rem;
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  background: #0f172a;
+  color: #fff;
+  border-top: 2px solid var(--rms-accent, #ee4b2b);
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.15);
+}
+@media (min-width: 768px) {
+  .rms-owner-sticky {
+    padding: 0.625rem 1.5rem;
+  }
+}
+@media (max-width: 767px) {
+  .rms-owner-sticky {
+    bottom: 60px;
+  }
+}
+.rms-owner-sticky__text {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+.rms-owner-sticky__btn {
+  flex-shrink: 0;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.rms-owner-sticky__btn:hover {
+  opacity: 0.9;
+}
+.rms-owner-sticky__btn:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+.rms-owner-sticky--minimal {
+  justify-content: center;
+  padding: 0.375rem 1rem;
+  padding-bottom: max(0.375rem, env(safe-area-inset-bottom));
+}
+.rms-owner-sticky__link {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #94a3b8;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.rms-owner-sticky__link:hover {
+  color: #e2e8f0;
+}
+.rms-owner-sticky__link:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
 }
 
 /* Mobile-only: sticky "View Menu" bar */

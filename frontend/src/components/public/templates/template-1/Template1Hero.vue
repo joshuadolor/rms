@@ -9,7 +9,7 @@
         loading="eager"
       />
       <div v-else class="w-full h-full bg-t1-neutral-muted flex items-center justify-center text-t1-neutral-dark/60 text-sm">
-        [to be implemented]
+        {{ showOwnerPlaceholder ? $t('public.addBannerInAdmin') : '' }}
       </div>
       <div class="absolute inset-0 bg-black/30 flex items-end p-8 md:p-12">
         <div class="max-w-2xl text-white">
@@ -39,5 +39,7 @@ defineProps({
   description: { type: String, default: '' },
   logoUrl: { type: String, default: '' },
   bannerUrl: { type: String, default: '' },
+  /** When true and there is no banner, show "Add a cover image in Settings". When false (e.g. guest), show nothing. */
+  showOwnerPlaceholder: { type: Boolean, default: false },
 })
 </script>

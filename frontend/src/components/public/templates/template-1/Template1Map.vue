@@ -4,7 +4,7 @@
       <div class="w-full h-full flex flex-col items-center justify-center text-t1-neutral-muted bg-concrete-gray">
         <span class="material-symbols-outlined text-4xl mb-2">map</span>
         <p class="font-medium">Interactive Map Placeholder</p>
-        <p class="text-xs">[to be implemented]</p>
+        <p class="text-xs">{{ $t('public.mapPlaceholder') }}</p>
       </div>
     </div>
   </section>

@@ -8,7 +8,7 @@
             <span class="material-symbols-outlined text-6xl text-charcoal-blue">location_searching</span>
           </div>
           <p class="heading-utilitarian text-3xl font-extrabold text-charcoal-blue">Interactive Map Placeholder</p>
-          <div class="font-mono text-xs mt-3 bg-charcoal-blue text-white px-3 py-1 uppercase tracking-widest">[to be implemented]</div>
+          <div class="font-mono text-xs mt-3 bg-charcoal-blue text-white px-3 py-1 uppercase tracking-widest">{{ $t('public.mapPlaceholder') }}</div>
         </div>
       </div>
     </div>

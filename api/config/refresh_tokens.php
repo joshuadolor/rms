@@ -14,6 +14,8 @@ return [
         'name' => env('REFRESH_TOKEN_COOKIE', 'rms_refresh'),
         'ttl_days' => (int) env('REFRESH_TOKEN_TTL_DAYS', 30),
         'path' => env('REFRESH_TOKEN_COOKIE_PATH', '/'),
+        // When null, cookie is bound to current request host. For subdomain setups (e.g. public at test.rms.local,
+        // app at app.rms.local), set REFRESH_TOKEN_COOKIE_DOMAIN=.rms.local so the cookie is sent on all subdomains.
         'domain' => env('REFRESH_TOKEN_COOKIE_DOMAIN'),
         'same_site' => env('REFRESH_TOKEN_COOKIE_SAMESITE', 'lax'), // lax | strict | none
     ],

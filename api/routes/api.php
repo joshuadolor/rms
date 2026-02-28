@@ -75,7 +75,7 @@ Route::post('/register', [AuthController::class, 'register'])->middleware('throt
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:auth.login');
 Route::post('/auth/refresh', [AuthController::class, 'refresh'])->middleware('throttle:auth.refresh');
 Route::post('/forgot-password', ForgotPasswordController::class)->middleware('throttle:auth.forgot-password');
-Route::post('/reset-password', ResetPasswordController::class);
+Route::post('/reset-password', ResetPasswordController::class)->middleware('throttle:auth.forgot-password');
 
 // Email verification (signed URL; uses uuid so internal id is not exposed)
 Route::get('/email/verify/{uuid}/{hash}', [EmailVerificationController::class, 'verify'])

@@ -17,7 +17,7 @@
           class="bg-t1-primary text-white px-6 py-2.5 rounded text-sm font-bold tracking-wide min-h-[44px] flex items-center hover:bg-t1-primary/90 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-t1-primary focus-visible:ring-offset-2"
           disabled
         >
-          [to be implemented]
+          {{ $t('public.bookTable') }}
         </button>
         <LanguageDropdown
           :languages="languages"
@@ -39,28 +39,28 @@
       </div>
     </div>
     <div
-      v-if="isOwnerViewer"
+      v-if="showOwnerNeedsDataNotice"
       class="border-t border-t1-border bg-t1-bg"
       role="status"
       aria-live="polite"
     >
       <div class="max-w-6xl mx-auto px-6 py-3 text-sm text-t1-neutral-dark">
-        <p class="font-semibold">Owner notice</p>
-        <p class="mt-1">Your restaurant needs more data. Please login and update it on the admin page.</p>
+        <p class="font-semibold">{{ $t('app.ownerNotice') }}</p>
+        <p class="mt-1">{{ $t('public.ownerNeedsDataIntro') }}</p>
         <div class="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
           <a
             v-if="ownerAdminUrl"
             :href="ownerAdminUrl"
             class="font-semibold underline underline-offset-2 inline-flex items-center min-h-[44px]"
-            aria-label="Open admin page to update your restaurant data"
+            :aria-label="$t('public.openAdminPage')"
           >
-            Open admin page
+            {{ $t('public.openAdminPage') }}
           </a>
           <p
             v-else
             class="text-xs text-t1-neutral-dark/80"
           >
-            Admin link unavailable. Please sign in to the admin page from the main app.
+            {{ $t('app.adminLinkUnavailable') }}
           </p>
         </div>
         <p class="mt-2 text-xs text-t1-neutral-dark/80">{{ $t('app.ownerOnlyMessage') }}</p>
@@ -76,7 +76,9 @@ import LanguageDropdown from '@/components/public/LanguageDropdown.vue'
 const props = defineProps({
   name: { type: String, default: '' },
   logoUrl: { type: String, default: '' },
-  viewer: { type: Object, default: () => ({ is_owner: false, owner_admin_url: null }) },
+  viewer: { type: Object, default: () => ({ is_owner: false, owner_admin_url: null, needs_data: false }) },
+  /** When false, owner-only notice is hidden (e.g. owner toggled "view as customer"). */
+  ownerViewMode: { type: Boolean, default: true },
   languages: { type: Array, default: () => [] },
   currentLocale: { type: String, default: '' },
 })
@@ -86,6 +88,10 @@ const ownerAdminUrl = computed(() => {
   const url = props.viewer?.owner_admin_url
   return typeof url === 'string' && url.trim() !== '' ? url : null
 })
+/** Show "needs data" notice only when owner is viewing and site needs data and not in "view as customer" mode. */
+const showOwnerNeedsDataNotice = computed(() =>
+  props.ownerViewMode && isOwnerViewer.value && props.viewer?.needs_data === true
+)
 
 defineEmits(['select-locale'])
 </script>

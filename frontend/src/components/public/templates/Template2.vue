@@ -8,6 +8,7 @@
       :name="restaurant.name"
       :logo-url="restaurant.logo_url"
       :viewer="restaurant.viewer"
+      :owner-view-mode="ownerViewMode"
       :languages="languages"
       :current-locale="currentLocale"
       @select-locale="$emit('select-locale', $event)"
@@ -86,6 +87,8 @@ import PublicMenuItemDetailModal from '@/components/public/PublicMenuItemDetailM
 
 const props = defineProps({
   restaurant: { type: Object, required: true },
+  /** When false, owner-only UI (e.g. needs-data notice) is hidden. */
+  ownerViewMode: { type: Boolean, default: true },
   languages: { type: Array, default: () => [] },
   currentLocale: { type: String, default: '' },
 })
