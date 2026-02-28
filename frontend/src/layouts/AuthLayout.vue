@@ -37,18 +37,32 @@
         </div>
         <div class="bg-background-dark/80 p-6 rounded-lg">
           <h1 class="text-5xl font-bold leading-tight mb-4">
-            Manage your restaurant.<br />
-            <span class="text-primary">Simple and free.</span>
+            {{ $t('app.authHeroTitle') }}<br />
+            <span class="text-primary">{{ $t('app.authHeroTitleHighlight') }}</span>
           </h1>
           <p class="text-lg text-white/80 max-w-md">
-            Menus, QR codes, and opening hours in one place. For owners who care about clarity.
+            {{ $t('app.authHeroSubtitle') }}
           </p>
         </div>
-        <p class="text-sm text-white/50">© Restaurant Management System. Free for restaurant owners.</p>
+        <p class="text-sm text-white/50">{{ $t('app.authHeroFooter') }}</p>
       </div>
     </div>
     <!-- Right: form slot -->
-    <div class="w-full lg:w-1/2 flex items-center justify-center p-6 md:p-12 lg:p-24">
+    <div class="w-full lg:w-1/2 flex items-center justify-center p-6 md:p-12 lg:p-24 relative">
+      <!-- Language selector: upper right -->
+      <div class="absolute top-4 right-4 md:top-6 md:right-6 lg:top-8 lg:right-8 z-10">
+        <select
+          :value="appLocale"
+          class="min-h-[44px] min-w-[44px] rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-zinc-800 text-charcoal dark:text-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:outline-none cursor-pointer"
+          :aria-label="$t('app.languageLabel')"
+          data-testid="app-locale-select"
+          @change="onAppLocaleChange($event.target.value)"
+        >
+          <option v-for="loc in APP_LOCALES" :key="loc.code" :value="loc.code">
+            {{ loc.flag }} {{ loc.label }}
+          </option>
+        </select>
+      </div>
       <div class="w-full max-w-md">
         <slot />
       </div>
@@ -57,4 +71,30 @@
 </template>
 
 <script setup>
+import { computed, watch, onMounted } from 'vue'
+import { i18n } from '@/i18n'
+import { APP_LOCALES } from '@/config/app-locales'
+import { setStoredAppLocale } from '@/config/app-locales'
+
+const appLocale = computed({
+  get: () => i18n.global.locale.value,
+  set: (v) => { i18n.global.locale.value = v },
+})
+
+function applyDocDir(loc) {
+  document.documentElement.dir = loc === 'ar' ? 'rtl' : 'ltr'
+}
+
+onMounted(() => {
+  applyDocDir(i18n.global.locale.value)
+})
+
+watch(() => i18n.global.locale.value, applyDocDir)
+
+function onAppLocaleChange(code) {
+  if (!code) return
+  i18n.global.locale.value = code
+  setStoredAppLocale(code)
+  applyDocDir(code)
+}
 </script>

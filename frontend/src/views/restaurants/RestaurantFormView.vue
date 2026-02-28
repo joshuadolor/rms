@@ -2,10 +2,10 @@
   <div class="max-w-3xl" :class="{ 'pb-24': embed }" data-testid="restaurant-form">
     <header v-if="!embed" class="mb-6 lg:mb-8" data-testid="form-header">
       <h2 class="text-xl font-bold text-charcoal dark:text-white lg:text-2xl">
-        {{ isEdit ? 'Edit restaurant' : 'Add new restaurant' }}
+        {{ isEdit ? $t('app.editRestaurant') : $t('app.addNewRestaurant') }}
       </h2>
       <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
-        {{ isEdit ? 'Update details and media.' : 'Fill in the essentials to list your restaurant. You can set opening hours and contacts after creating it.' }}
+        {{ isEdit ? $t('app.formSubtitleEdit') : $t('app.formSubtitleCreate') }}
       </p>
     </header>
 
@@ -37,35 +37,35 @@
       <section class="bg-white dark:bg-zinc-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 lg:p-6 space-y-4" data-testid="form-section-basic">
         <h3 class="font-semibold text-charcoal dark:text-white flex items-center gap-2">
           <span class="material-icons text-slate-500 dark:text-slate-400">info</span>
-          Basic information
+          {{ $t('app.basicInformation') }}
         </h3>
         <AppInput
           v-model="form.name"
-          label="Restaurant name"
+          :label="$t('app.restaurantName')"
           type="text"
-          placeholder="e.g. Mama Fina's Restaurant"
+          :placeholder="$t('app.restaurantNamePlaceholder')"
           described-by="form-error"
           :error="fieldErrors.name"
           data-testid="form-input-name"
         />
         <p class="text-xs text-slate-500 dark:text-slate-400">
-          Your restaurant's web address will be created automatically from this name.
+          {{ $t('app.slugHint') }}
         </p>
         <AppInput
           v-model="form.tagline"
-          label="Tagline (optional)"
+          :label="$t('app.taglineOptional')"
           type="text"
-          placeholder="e.g. Fresh ingredients, bold flavors"
+          :placeholder="$t('app.taglinePlaceholder')"
           :error="fieldErrors.tagline"
           data-testid="form-input-tagline"
         />
         <div>
-          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1" for="form-input-address">Address (optional)</label>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1" for="form-input-address">{{ $t('app.addressOptional') }}</label>
           <textarea
             id="form-input-address"
             v-model="form.address"
             rows="2"
-            placeholder="Street, city, state"
+            :placeholder="$t('app.addressPlaceholder')"
             data-testid="form-input-address"
             class="w-full rounded-lg ring-1 ring-gray-200 dark:ring-zinc-700 focus:ring-2 focus:ring-primary transition-all bg-background-light dark:bg-zinc-800 border-0 py-3 px-4 text-charcoal dark:text-white resize-none"
             :aria-invalid="!!fieldErrors.address"
@@ -74,30 +74,30 @@
           <p v-if="fieldErrors.address" id="form-address-error" class="text-xs text-red-600 dark:text-red-400 mt-1" role="alert">{{ fieldErrors.address }}</p>
         </div>
         <div>
-          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1" for="form-input-description">Description (optional)</label>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1" for="form-input-description">{{ $t('app.descriptionOptional') }}</label>
           <textarea
             id="form-input-description"
             v-model="form.description"
             rows="4"
-            placeholder="Short description of your restaurant for the public site"
+            :placeholder="$t('app.descriptionPlaceholder')"
             data-testid="form-input-description"
             class="w-full rounded-lg ring-1 ring-gray-200 dark:ring-zinc-700 focus:ring-2 focus:ring-primary transition-all bg-background-light dark:bg-zinc-800 border-0 py-3 px-4 text-charcoal dark:text-white resize-none"
             :aria-invalid="!!fieldErrors.description"
             :aria-describedby="fieldErrors.description ? 'form-description-error' : undefined"
           />
           <p v-if="fieldErrors.description" id="form-description-error" class="text-xs text-red-600 dark:text-red-400 mt-1" role="alert">{{ fieldErrors.description }}</p>
-          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Shown on your public page. Add more languages in Settings.</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">{{ $t('app.descriptionHint') }}</p>
         </div>
 
         <div class="grid gap-4 sm:grid-cols-2">
-          <AppInput v-model="form.email" label="Email (optional)" type="email" placeholder="contact@restaurant.com" :error="fieldErrors.email" />
-          <AppInput v-model="form.website" label="Website (optional)" type="url" placeholder="https://example.com" :error="fieldErrors.website" />
+          <AppInput v-model="form.email" :label="$t('app.emailOptional')" type="email" :placeholder="$t('app.contactEmailPlaceholder')" :error="fieldErrors.email" />
+          <AppInput v-model="form.website" :label="$t('app.websiteOptional')" type="url" :placeholder="$t('app.websitePlaceholder')" :error="fieldErrors.website" />
         </div>
         <AppInput
           v-model="form.year_established"
-          label="Year established (optional)"
+          :label="$t('app.yearEstablishedOptional')"
           type="number"
-          placeholder="e.g. 1995"
+          :placeholder="$t('app.yearPlaceholder')"
           :error="fieldErrors.year_established"
           data-testid="form-input-year-established"
           class="[&_input]:min-h-[44px]"
@@ -142,7 +142,7 @@
           <template v-if="saving" #icon>
             <span class="material-icons animate-spin">sync</span>
           </template>
-          {{ saving ? 'Saving…' : (isEdit ? 'Save changes' : 'Create restaurant') }}
+          {{ saving ? $t('app.saving') : (isEdit ? $t('app.saveChanges') : $t('app.createRestaurantBtn')) }}
         </AppButton>
       </div>
     </form>

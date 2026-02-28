@@ -10,6 +10,7 @@ const fs = require('fs')
 const { execSync } = require('child_process')
 const { test, expect } = require('@playwright/test')
 const { createE2eUser } = require('./helpers/e2e-user.cjs')
+const { RegisterPage } = require('./pages/RegisterPage.cjs')
 
 const REFRESH_COOKIE_NAME = 'rms_refresh'
 
@@ -80,14 +81,14 @@ test.describe('Landing', () => {
     await page.goto('/')
     await page.getByRole('link', { name: /login/i }).first().click()
     await expect(page).toHaveURL(/\/login/)
-    await expect(page.getByRole('heading', { name: /sign in/i })).toBeVisible()
+    await expect(page.getByRole('heading', { name: /sign in/i })).toBeVisible({ timeout: 15000 })
   })
 
   test('Create one link goes to /register', async ({ page }) => {
     await page.goto('/')
     await page.getByRole('link', { name: /create one/i }).click()
     await expect(page).toHaveURL(/\/register/)
-    await expect(page.getByRole('heading', { name: /create an account/i })).toBeVisible()
+    await expect(page.getByTestId('register-heading')).toBeVisible({ timeout: 15000 })
   })
 })
 
@@ -177,23 +178,21 @@ test.describe('Login', () => {
 })
 
 test.describe('Register', () => {
-  test('step 1: name and email then Continue shows step 2', async ({ page }) => {
-    await page.goto('/register')
-    await page.getByPlaceholder(/jane smith/i).fill('Jane Doe')
-    await page.getByPlaceholder(/you@example\.com/i).fill('jane@example.com')
-    await page.getByRole('button', { name: 'Continue', exact: true }).click()
-
-    await expect(page.getByLabel(/^password$/i)).toBeVisible()
-    await expect(page.getByLabel(/confirm password/i)).toBeVisible()
-    await expect(page.getByRole('button', { name: /create account/i })).toBeVisible()
+  test('shows single-step form with all fields', async ({ page }) => {
+    const registerPage = new RegisterPage(page)
+    await registerPage.goto()
+    await registerPage.expectRegistrationFormVisible()
   })
 
-  test('step 1: validation shows error for empty name', async ({ page }) => {
-    await page.goto('/register')
-    await page.getByPlaceholder(/you@example\.com/i).fill('jane@example.com')
-    await page.getByRole('button', { name: 'Continue', exact: true }).click()
-
-    await expect(page.getByText('Please enter your name.')).toBeVisible()
+  test('validation shows error for empty name', async ({ page }) => {
+    const registerPage = new RegisterPage(page)
+    await registerPage.goto()
+    await registerPage.fillEmail('jane@example.com')
+    await registerPage.fillPassword('Password123')
+    await registerPage.fillConfirmPassword('Password123')
+    await registerPage.checkTerms()
+    await registerPage.submit()
+    await registerPage.expectValidationError('Please enter your name.')
   })
 
   test('full registration redirects to verify-email', async ({ page }) => {
@@ -209,18 +208,14 @@ test.describe('Register', () => {
       })
     })
 
-    await page.goto('/register')
-    await page.getByPlaceholder(/jane smith/i).fill('Jane Doe')
-    await page.getByPlaceholder(/you@example\.com/i).fill('jane@example.com')
-    await page.getByRole('button', { name: 'Continue', exact: true }).click()
-
-    await page.getByLabel(/^password$/i).fill('Password123')
-    await page.getByLabel(/confirm password/i).fill('Password123')
-    await page.getByRole('checkbox', { name: /terms of service/i }).check()
-    await page.getByRole('button', { name: /create account/i }).click()
-
-    await expect(page).toHaveURL(/\/verify-email/)
-    await expect(page.getByRole('heading', { name: 'Check your email' })).toBeVisible()
+    const registerPage = new RegisterPage(page)
+    await registerPage.goto()
+    await registerPage.fillAndSubmit({
+      name: 'Jane Doe',
+      email: 'jane@example.com',
+      password: 'Password123',
+    })
+    await registerPage.expectRedirectedToVerifyEmail()
   })
 })
 

@@ -1,25 +1,25 @@
 <template>
   <div>
     <header class="mb-6 lg:mb-8">
-      <h2 class="text-xl font-bold text-charcoal dark:text-white lg:text-2xl">Profile &amp; Settings</h2>
-      <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Update your account details and password.</p>
+      <h2 class="text-xl font-bold text-charcoal dark:text-white lg:text-2xl">{{ $t('app.profile') }}</h2>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">{{ $t('app.profileSubtitle') }}</p>
     </header>
 
     <div class="max-w-xl space-y-6 lg:space-y-8">
       <!-- Profile form -->
       <div class="bg-white dark:bg-zinc-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 lg:p-6">
-        <h3 class="font-semibold text-charcoal dark:text-white mb-4">Profile</h3>
+        <h3 class="font-semibold text-charcoal dark:text-white mb-4">{{ $t('app.profileSection') }}</h3>
         <form class="space-y-4" novalidate @submit.prevent="submitProfile">
           <AppInput
             v-model="profileForm.name"
-            label="Name"
+            :label="$t('app.name')"
             type="text"
             autocomplete="name"
             :error="profileFieldErrors.name"
           />
           <AppInput
             v-model="profileForm.email"
-            label="Email"
+            :label="$t('app.emailAddress')"
             type="email"
             autocomplete="email"
             :error="profileFieldErrors.email"
@@ -34,25 +34,25 @@
             <template v-if="profileLoading" #icon>
               <span class="material-icons animate-spin text-lg" aria-hidden="true">sync</span>
             </template>
-            {{ profileLoading ? 'Saving profile…' : 'Save profile' }}
+            {{ profileLoading ? $t('app.savingProfile') : $t('app.saveProfile') }}
           </AppButton>
         </form>
       </div>
 
       <!-- Change password form -->
       <div class="bg-white dark:bg-zinc-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 lg:p-6">
-        <h3 class="font-semibold text-charcoal dark:text-white mb-4">Change password</h3>
+        <h3 class="font-semibold text-charcoal dark:text-white mb-4">{{ $t('app.changePassword') }}</h3>
         <form class="space-y-4" novalidate @submit.prevent="submitPassword">
           <AppInput
             v-model="passwordForm.current_password"
-            label="Current password"
+            :label="$t('app.currentPassword')"
             type="password"
             autocomplete="current-password"
             :error="passwordFieldErrors.current_password"
           />
           <AppInput
             v-model="passwordForm.password"
-            label="New password"
+            :label="$t('app.newPassword')"
             type="password"
             autocomplete="new-password"
             hint="At least 8 characters, letters and numbers."
@@ -60,7 +60,7 @@
           />
           <AppInput
             v-model="passwordForm.password_confirmation"
-            label="Confirm new password"
+            :label="$t('app.confirmPassword')"
             type="password"
             autocomplete="new-password"
             :error="passwordFieldErrors.password_confirmation"
@@ -72,7 +72,7 @@
             <template v-if="passwordLoading" #icon>
               <span class="material-icons animate-spin text-lg" aria-hidden="true">sync</span>
             </template>
-            {{ passwordLoading ? 'Updating password…' : 'Update password' }}
+            {{ passwordLoading ? $t('app.updatingPassword') : $t('app.updatePassword') }}
           </AppButton>
         </form>
       </div>

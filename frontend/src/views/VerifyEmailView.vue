@@ -35,7 +35,7 @@
             @click="user ? handleResendAuthenticated() : (resendEmail ? handleResendGuest() : (showGuestEmail = true))"
           >
             <span v-if="resendLoading" class="material-icons animate-spin text-lg" aria-hidden="true">sync</span>
-            {{ resendCooldown > 0 ? `Resend in ${resendCooldown}s` : resendLoading ? 'Sending…' : 'Resend link' }}
+            {{ resendCooldown > 0 ? $t('app.resendIn', { seconds: resendCooldown }) : resendLoading ? $t('app.sendingResend') : $t('app.resendLink') }}
           </button>
         </p>
         <!-- Guest without email: minimal one-line resend -->
@@ -48,7 +48,7 @@
           <input
             v-model="resendEmail"
             type="email"
-            placeholder="your@email.com"
+            :placeholder="$t('app.emailPlaceholder')"
             class="flex-1 min-w-[140px] px-3 py-2 text-sm border border-primary/20 rounded-lg bg-white dark:bg-white/5 text-charcoal dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
             :aria-required="true"
             :aria-invalid="!!resendError"

@@ -14,9 +14,9 @@
           class="inline-flex items-center gap-1 text-sm text-charcoal/60 dark:text-white/60 hover:text-primary transition-colors"
         >
           <span class="material-icons text-lg">arrow_back</span>
-          Back to sign in
+          {{ $t('app.back') }} {{ $t('app.signIn').toLowerCase() }}
         </router-link>
-        <h2 class="text-3xl font-bold text-charcoal dark:text-white">Forgot password?</h2>
+        <h2 class="text-3xl font-bold text-charcoal dark:text-white">{{ $t('app.forgotPassword') }}</h2>
         <p class="text-charcoal/60 dark:text-white/60">
           {{ sent ? 'Check your email for a reset link.' : 'Enter your email and we’ll send you a link to reset your password.' }}
         </p>
@@ -39,9 +39,9 @@
           </div>
           <AppInput
             v-model="email"
-            label="Email address"
+            :label="$t('app.emailAddress')"
             type="email"
-            placeholder="you@example.com"
+            :placeholder="$t('app.emailPlaceholder')"
             described-by="forgot-form-error"
             :error="fieldErrors.email"
           >

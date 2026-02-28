@@ -13,9 +13,9 @@
           class="inline-flex items-center gap-1 text-sm text-charcoal/60 dark:text-white/60 hover:text-primary transition-colors"
         >
           <span class="material-icons text-lg">arrow_back</span>
-          Back to sign in
+          {{ $t('app.back') }} {{ $t('app.signIn').toLowerCase() }}
         </router-link>
-        <h2 class="text-3xl font-bold text-charcoal dark:text-white">Reset password</h2>
+        <h2 class="text-3xl font-bold text-charcoal dark:text-white">{{ $t('app.resetPassword') }}</h2>
         <p class="text-charcoal/60 dark:text-white/60">
           {{ success ? 'Your password has been reset. You can sign in.' : 'Enter your new password below.' }}
         </p>
@@ -28,7 +28,7 @@
           <p class="text-charcoal dark:text-white">Your password has been reset. You can sign in.</p>
         </div>
         <router-link :to="{ name: 'Login' }">
-          <AppButton variant="primary" class="w-full justify-center py-3.5">Sign in</AppButton>
+          <AppButton variant="primary" class="w-full justify-center py-3.5">{{ $t('app.signIn') }}</AppButton>
         </router-link>
       </div>
 
@@ -49,13 +49,13 @@
           </div>
           <div class="space-y-5">
             <div class="space-y-1">
-              <label for="reset-password" class="block text-sm font-medium text-charcoal/80 dark:text-white/80">New password</label>
+              <label for="reset-password" class="block text-sm font-medium text-charcoal/80 dark:text-white/80">{{ $t('app.newPassword') }}</label>
               <div class="relative">
                 <input
                   id="reset-password"
                   v-model="password"
                   :type="showPassword ? 'text' : 'password'"
-                  placeholder="At least 8 characters"
+                  :placeholder="$t('app.passwordHintPlaceholder')"
                   autocomplete="new-password"
                   :aria-describedby="fieldErrors.password ? 'reset-password-error' : 'reset-form-error'"
                   :aria-invalid="!!fieldErrors.password"
@@ -67,23 +67,23 @@
                 <button
                   type="button"
                   class="absolute inset-y-0 right-0 pr-3 flex items-center text-charcoal/40 dark:text-white/40 hover:text-primary transition-colors"
-                  :aria-label="showPassword ? 'Hide password' : 'Show password'"
+                  :aria-label="showPassword ? $t('app.hidePassword') : $t('app.showPassword')"
                   @click="showPassword = !showPassword"
                 >
                   <span class="material-icons text-lg">{{ showPassword ? 'visibility' : 'visibility_off' }}</span>
                 </button>
               </div>
               <p v-if="fieldErrors.password" id="reset-password-error" class="text-xs text-red-600 dark:text-red-400" role="alert">{{ fieldErrors.password }}</p>
-              <p v-else class="text-xs text-charcoal/60 dark:text-white/60">Minimum 8 characters</p>
+              <p v-else class="text-xs text-charcoal/60 dark:text-white/60">{{ $t('app.minimumCharacters') }}</p>
             </div>
             <div class="space-y-1">
-              <label for="reset-confirm" class="block text-sm font-medium text-charcoal/80 dark:text-white/80">Confirm password</label>
+              <label for="reset-confirm" class="block text-sm font-medium text-charcoal/80 dark:text-white/80">{{ $t('app.confirmPassword') }}</label>
               <div class="relative">
                 <input
                   id="reset-confirm"
                   v-model="confirmPassword"
                   :type="showConfirm ? 'text' : 'password'"
-                  placeholder="Repeat password"
+                  :placeholder="$t('app.repeatPassword')"
                   autocomplete="new-password"
                   :aria-describedby="fieldErrors.password_confirmation ? 'reset-confirm-error' : 'reset-form-error'"
                   :aria-invalid="!!fieldErrors.password_confirmation"
@@ -95,7 +95,7 @@
               </div>
               <p v-if="fieldErrors.password_confirmation" id="reset-confirm-error" class="text-xs text-red-600 dark:text-red-400" role="alert">{{ fieldErrors.password_confirmation }}</p>
               <p v-else-if="confirmPassword && password !== confirmPassword" class="text-xs text-red-600 dark:text-red-400">
-                Passwords don’t match
+                {{ $t('app.passwordsDontMatch') }}
               </p>
             </div>
           </div>
@@ -109,7 +109,7 @@
           <template v-if="loading" #icon>
             <span class="material-icons animate-spin text-lg" aria-hidden="true">sync</span>
           </template>
-          {{ loading ? 'Resetting…' : 'Reset password' }}
+          {{ loading ? $t('app.resetting') : $t('app.resetPassword') }}
         </AppButton>
       </form>
 

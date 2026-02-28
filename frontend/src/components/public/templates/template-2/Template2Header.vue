@@ -68,7 +68,7 @@
             Admin link unavailable. Please sign in to the admin page from the main app.
           </p>
         </div>
-        <p class="mt-2 text-xs text-charcoal-blue/80">This message is only shown to you the owner.</p>
+        <p class="mt-2 text-xs text-charcoal-blue/80">{{ $t('app.ownerOnlyMessage') }}</p>
       </div>
     </div>
   </header>

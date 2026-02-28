@@ -12,7 +12,7 @@
         <form class="space-y-4" novalidate @submit.prevent="submitForm">
           <div class="space-y-1">
             <label for="owner-feedback-message" class="block text-sm font-semibold text-gray-700 dark:text-gray-300">
-              Message <span class="text-red-500">*</span>
+              {{ $t('app.messageLabel') }} <span class="text-red-500">*</span>
             </label>
             <textarea
               id="owner-feedback-message"
@@ -21,26 +21,26 @@
               class="w-full rounded-lg ring-1 ring-gray-200 dark:ring-zinc-700 focus:ring-2 focus:ring-primary transition-all bg-background-light dark:bg-zinc-800 border-0 py-3 px-4 resize-y min-h-[44px]"
               :aria-invalid="!!fieldErrors.message"
               :aria-describedby="fieldErrors.message ? 'owner-feedback-message-error' : undefined"
-              placeholder="Describe your feature request or feedback…"
+              :placeholder="$t('app.messagePlaceholder')"
             />
             <p v-if="fieldErrors.message" id="owner-feedback-message-error" class="text-xs text-red-600 dark:text-red-400" role="alert">{{ fieldErrors.message }}</p>
-            <p v-else class="text-xs text-gray-500">Max 65,535 characters.</p>
+            <p v-else class="text-xs text-gray-500">{{ $t('app.maxCharactersHint') }}</p>
           </div>
           <AppInput
             v-model="form.title"
-            label="Title (optional)"
+            :label="$t('app.titleOptional')"
             type="text"
-            placeholder="Short summary"
+            :placeholder="$t('app.titlePlaceholder')"
             :error="fieldErrors.title"
           />
           <div class="space-y-1" v-if="restaurantOptions.length > 0">
-            <label for="owner-feedback-restaurant" class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Restaurant (optional)</label>
+            <label for="owner-feedback-restaurant" class="block text-sm font-semibold text-gray-700 dark:text-gray-300">{{ $t('app.restaurantOptional') }}</label>
             <select
               id="owner-feedback-restaurant"
               v-model="form.restaurant"
               class="w-full rounded-lg ring-1 ring-gray-200 dark:ring-zinc-700 focus:ring-2 focus:ring-primary transition-all bg-background-light dark:bg-zinc-800 border-0 py-3 px-4 min-h-[44px]"
             >
-              <option value="">— None —</option>
+              <option value="">{{ $t('app.noneOption') }}</option>
               <option v-for="r in restaurantOptions" :key="r.uuid" :value="r.uuid">{{ r.name }}</option>
             </select>
           </div>
@@ -77,7 +77,7 @@
                 class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
                 :class="f.status === 'reviewed' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'"
               >
-                {{ f.status === 'reviewed' ? 'Reviewed' : 'Pending' }}
+                {{ f.status === 'reviewed' ? $t('app.reviewed') : $t('app.pending') }}
               </span>
               <span class="text-xs text-slate-400 dark:text-slate-500">{{ f.createdLabel }}</span>
               <span v-if="f.restaurant" class="text-xs text-slate-500 dark:text-slate-400">{{ f.restaurantLabel }}</span>
@@ -91,12 +91,14 @@
 
 <script setup>
 import { reactive, ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useToastStore } from '@/stores/toast'
 import { ownerFeedbackService, restaurantService, normalizeApiError } from '@/services'
 import Restaurant from '@/models/Restaurant'
 import AppInput from '@/components/ui/AppInput.vue'
 import AppButton from '@/components/ui/AppButton.vue'
 
+const { t } = useI18n()
 const toastStore = useToastStore()
 
 const form = reactive({
@@ -118,10 +120,10 @@ const MAX_TITLE = 255
 function validate() {
   const err = { message: '', title: '' }
   const msg = (form.message ?? '').trim()
-  if (!msg) err.message = 'Message is required.'
-  else if (msg.length > MAX_MESSAGE) err.message = `Message must be at most ${MAX_MESSAGE} characters.`
+  if (!msg) err.message = t('app.messageRequired')
+  else if (msg.length > MAX_MESSAGE) err.message = t('app.messageMaxLength', { max: MAX_MESSAGE })
   const title = (form.title ?? '').trim()
-  if (title.length > MAX_TITLE) err.title = `Title must be at most ${MAX_TITLE} characters.`
+  if (title.length > MAX_TITLE) err.title = t('app.titleMaxLength', { max: MAX_TITLE })
   fieldErrors.value = err
   return !err.message && !err.title
 }
@@ -139,7 +141,7 @@ async function submitForm() {
     if (!payload.restaurant) delete payload.restaurant
     if (!payload.title) delete payload.title
     await ownerFeedbackService.submitFeedback(payload)
-    toastStore.success('Feedback submitted.')
+    toastStore.success(t('app.feedbackSubmitted'))
     form.message = ''
     form.title = ''
     form.restaurant = ''

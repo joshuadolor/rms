@@ -9,8 +9,8 @@
           </div>
           <span class="text-lg font-bold tracking-tight text-primary">RMS</span>
         </div>
-        <h2 class="text-3xl font-bold text-charcoal dark:text-white">Sign in</h2>
-        <p class="text-charcoal/60 dark:text-white/60">Access your restaurant dashboard</p>
+        <h2 class="text-3xl font-bold text-charcoal dark:text-white">{{ $t('app.signIn') }}</h2>
+        <p class="text-charcoal/60 dark:text-white/60">{{ $t('app.accessDashboard') }}</p>
       </div>
 
       <!-- Form -->
@@ -31,9 +31,9 @@
           <div class="space-y-4">
             <AppInput
               v-model="email"
-              label="Email address"
+              :label="$t('app.emailAddress')"
               type="email"
-              placeholder="you@example.com"
+              :placeholder="$t('app.emailPlaceholder')"
               autocomplete="email"
               described-by="login-form-error"
               :error="fieldErrors.email"
@@ -44,12 +44,12 @@
           </AppInput>
           <div class="space-y-1">
             <div class="flex justify-between">
-              <label for="password" class="block text-sm font-medium text-charcoal/80 dark:text-white/80">Password</label>
+              <label for="password" class="block text-sm font-medium text-charcoal/80 dark:text-white/80">{{ $t('app.password') }}</label>
               <router-link
                 :to="{ name: 'ForgotPassword' }"
                 class="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
               >
-                Forgot password?
+                {{ $t('app.forgotPassword') }}
               </router-link>
             </div>
             <div class="space-y-1">
@@ -58,7 +58,7 @@
                 id="password"
                 v-model="password"
                 :type="showPassword ? 'text' : 'password'"
-                placeholder="••••••••"
+                :placeholder="$t('app.passwordPlaceholder')"
                 autocomplete="current-password"
                 :aria-describedby="fieldErrors.password ? 'login-password-error' : 'login-form-error'"
                 :aria-invalid="!!fieldErrors.password"
@@ -70,7 +70,7 @@
               <button
                 type="button"
                 class="absolute inset-y-0 right-0 pr-3 flex items-center text-charcoal/40 dark:text-white/40 hover:text-primary transition-colors"
-                :aria-label="showPassword ? 'Hide password' : 'Show password'"
+                :aria-label="showPassword ? $t('app.hidePassword') : $t('app.showPassword')"
                 @click="showPassword = !showPassword"
               >
                 <span class="material-icons text-lg">{{ showPassword ? 'visibility' : 'visibility_off' }}</span>
@@ -88,7 +88,7 @@
             class="h-4 w-4 text-primary focus:ring-primary border-primary/20 rounded"
           />
           <label for="remember" class="ml-2 block text-sm text-charcoal/70 dark:text-white/70">
-            Remember me for 30 days
+            {{ $t('app.rememberMe') }}
           </label>
         </div>
         </div>
@@ -96,7 +96,7 @@
           <template v-if="loading" #icon>
             <span class="material-icons animate-spin text-lg" aria-hidden="true">sync</span>
           </template>
-          {{ loading ? 'Signing in…' : 'Sign in' }}
+          {{ loading ? $t('app.signingIn') : $t('app.signIn') }}
         </AppButton>
       </form>
 
@@ -106,7 +106,7 @@
             <div class="w-full border-t border-primary/10" />
           </div>
           <div class="relative flex justify-center text-sm">
-            <span class="px-4 bg-background-light dark:bg-background-dark text-charcoal/40 dark:text-white/40">Or continue with</span>
+            <span class="px-4 bg-background-light dark:bg-background-dark text-charcoal/40 dark:text-white/40">{{ $t('app.orContinueWith') }}</span>
           </div>
         </div>
 
