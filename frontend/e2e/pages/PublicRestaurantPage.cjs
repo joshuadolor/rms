@@ -123,7 +123,7 @@ class PublicRestaurantPage {
 
   /** Assert the given text is visible in the main content area (e.g. About description, any section). */
   async expectMainContainsText(text) {
-    await expect(this.page.getByRole('main').getByText(text)).toBeVisible()
+    await expect(this.page.getByRole('main').getByText(text).first()).toBeVisible()
   }
 
   /** Assert a tag icon with the given tooltip text (title) is visible on the in-page public menu. Scoped to .rms-menu to avoid matching the View Menu modal. */

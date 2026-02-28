@@ -82,6 +82,43 @@ class RegisterPage {
     await expect(this.page).toHaveURL(/\/verify-email/)
     await expect(this.page.getByRole('heading', { name: 'Check your email' })).toBeVisible()
   }
+
+  // ---- Legal modal (Terms of Service / Privacy Policy) ----
+
+  /** Click the Terms of Service link/button in the agreement checkbox label. */
+  async clickTermsOfService() {
+    await this.page.getByRole('button', { name: /terms of service|términos de servicio|شروط الخدمة/i }).click()
+  }
+
+  /** Click the Privacy Policy link/button in the agreement checkbox label. */
+  async clickPrivacyPolicy() {
+    await this.page.getByRole('button', { name: /privacy policy|política de privacidad|سياسة الخصوصية/i }).click()
+  }
+
+  /** Assert the legal content modal is visible. */
+  async expectLegalModalVisible() {
+    await expect(this.page.getByTestId('legal-content-modal')).toBeVisible()
+  }
+
+  /** Assert the legal content modal is not visible (closed). */
+  async expectLegalModalClosed() {
+    await expect(this.page.getByTestId('legal-content-modal')).not.toBeVisible()
+  }
+
+  /** Close the legal modal via the close button. */
+  async closeLegalModal() {
+    await this.page.getByTestId('legal-modal-close').click()
+  }
+
+  /** Close the legal modal by clicking the backdrop (top-left of dialog is backdrop, not the centered content panel). */
+  async closeLegalModalByOverlay() {
+    await this.page.getByTestId('legal-content-modal').click({ position: { x: 10, y: 10 } })
+  }
+
+  /** Assert the legal modal body contains the given text or matches the regex. */
+  async expectLegalModalBodyContains(textOrRegex, timeoutMs = 5000) {
+    await expect(this.page.getByTestId('legal-content-body')).toContainText(textOrRegex, { timeout: timeoutMs })
+  }
 }
 
 module.exports = { RegisterPage }

@@ -17,7 +17,7 @@
         :disabled="disabled"
         :aria-describedby="describedBy || (error ? errorId : undefined)"
         :aria-invalid="invalid || !!error"
-        class="w-full rounded-lg ring-1 ring-gray-200 dark:ring-zinc-700 focus:ring-2 focus:ring-primary transition-all bg-background-light dark:bg-zinc-800 border-0 py-3"
+        class="w-full rounded-lg ring-1 ring-gray-200 dark:ring-zinc-700 focus:ring-2 focus:ring-primary transition-all bg-white dark:bg-zinc-800 border-0 py-3"
         :class="[
           $slots.prefix ? 'pl-10' : 'pl-4',
           $slots.suffix ? 'pr-10' : 'pr-4',

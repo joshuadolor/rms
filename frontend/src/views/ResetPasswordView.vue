@@ -59,7 +59,7 @@
                   autocomplete="new-password"
                   :aria-describedby="fieldErrors.password ? 'reset-password-error' : 'reset-form-error'"
                   :aria-invalid="!!fieldErrors.password"
-                  class="block w-full pl-10 pr-10 py-3 border border-primary/20 rounded-lg bg-white dark:bg-white/5 text-charcoal dark:text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                  class="block w-full pl-10 pr-10 py-3 border border-primary/20 rounded-lg bg-white dark:bg-zinc-800 text-charcoal dark:text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                 />
                 <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-charcoal/40 dark:text-white/40">
                   <span class="material-icons text-lg">lock_outline</span>
@@ -87,7 +87,7 @@
                   autocomplete="new-password"
                   :aria-describedby="fieldErrors.password_confirmation ? 'reset-confirm-error' : 'reset-form-error'"
                   :aria-invalid="!!fieldErrors.password_confirmation"
-                  class="block w-full pl-10 pr-4 py-3 border border-primary/20 rounded-lg bg-white dark:bg-white/5 text-charcoal dark:text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                  class="block w-full pl-10 pr-4 py-3 border border-primary/20 rounded-lg bg-white dark:bg-zinc-800 text-charcoal dark:text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                 />
                 <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-charcoal/40 dark:text-white/40">
                   <span class="material-icons text-lg">lock_outline</span>

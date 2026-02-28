@@ -71,7 +71,7 @@
                 :value="slot.from"
                 type="time"
                 aria-label="Opening time"
-                class="w-full pl-9 pr-3 py-2.5 text-sm bg-background-light dark:bg-zinc-800 border-0 rounded-lg focus:ring-2 focus:ring-primary/50 text-charcoal dark:text-white min-h-[44px]"
+                class="w-full pl-9 pr-3 py-2.5 text-sm bg-white dark:bg-zinc-800 border-0 rounded-lg focus:ring-2 focus:ring-primary/50 text-charcoal dark:text-white min-h-[44px]"
                 @input="setSlotTime(dayKey, slotIndex, 'from', ($event.target).value)"
               >
             </div>
@@ -82,7 +82,7 @@
                 :value="slot.to"
                 type="time"
                 aria-label="Closing time"
-                class="w-full pl-9 pr-3 py-2.5 text-sm bg-background-light dark:bg-zinc-800 border-0 rounded-lg focus:ring-2 focus:ring-primary/50 text-charcoal dark:text-white min-h-[44px]"
+                class="w-full pl-9 pr-3 py-2.5 text-sm bg-white dark:bg-zinc-800 border-0 rounded-lg focus:ring-2 focus:ring-primary/50 text-charcoal dark:text-white min-h-[44px]"
                 @input="setSlotTime(dayKey, slotIndex, 'to', ($event.target).value)"
               >
             </div>

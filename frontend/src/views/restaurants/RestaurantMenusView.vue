@@ -231,7 +231,7 @@
               placeholder="Short description for this category"
               :readonly="!!translatingCategoryLocale"
               :aria-busy="!!translatingCategoryLocale"
-              class="w-full min-h-[44px] rounded-lg ring-1 ring-gray-200 dark:ring-zinc-700 focus:ring-2 focus:ring-primary transition-all bg-background-light dark:bg-zinc-800 border-0 py-3 px-4 text-charcoal dark:text-white resize-none"
+              class="w-full min-h-[44px] rounded-lg ring-1 ring-gray-200 dark:ring-zinc-700 focus:ring-2 focus:ring-primary transition-all bg-white dark:bg-zinc-800 border-0 py-3 px-4 text-charcoal dark:text-white resize-none"
               :class="{ 'opacity-70 cursor-wait': !!translatingCategoryLocale }"
             />
           </div>
@@ -362,7 +362,7 @@
               v-model="addMenuForm.translations[selectedAddMenuLocale].description"
               rows="3"
               placeholder="Short description for this menu"
-              class="w-full min-h-[44px] rounded-lg ring-1 ring-gray-200 dark:ring-zinc-700 focus:ring-2 focus:ring-primary transition-all bg-background-light dark:bg-zinc-800 border-0 py-3 px-4 text-charcoal dark:text-white resize-none"
+              class="w-full min-h-[44px] rounded-lg ring-1 ring-gray-200 dark:ring-zinc-700 focus:ring-2 focus:ring-primary transition-all bg-white dark:bg-zinc-800 border-0 py-3 px-4 text-charcoal dark:text-white resize-none"
             />
           </div>
         </form>
@@ -440,7 +440,7 @@
               v-model="editMenuForm.translations[selectedEditMenuLocale].description"
               rows="3"
               placeholder="Short description for this menu"
-              class="w-full min-h-[44px] rounded-lg ring-1 ring-gray-200 dark:ring-zinc-700 focus:ring-2 focus:ring-primary transition-all bg-background-light dark:bg-zinc-800 border-0 py-3 px-4 text-charcoal dark:text-white resize-none"
+              class="w-full min-h-[44px] rounded-lg ring-1 ring-gray-200 dark:ring-zinc-700 focus:ring-2 focus:ring-primary transition-all bg-white dark:bg-zinc-800 border-0 py-3 px-4 text-charcoal dark:text-white resize-none"
             />
           </div>
         </form>

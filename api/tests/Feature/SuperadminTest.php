@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Restaurant;
+use App\Models\SiteLegal;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
@@ -272,5 +273,62 @@ class SuperadminTest extends TestCase
             ->assertJsonPath('data.0.uuid', $restaurant->uuid)
             ->assertJsonPath('data.0.name', $restaurant->name)
             ->assertJsonMissingPath('data.0.id');
+    }
+
+    public function test_superadmin_legal_get_returns_all_locales(): void
+    {
+        $admin = $this->createSuperadmin();
+        $token = $this->login($admin);
+
+        $legal = SiteLegal::instance();
+        $legal->terms_of_service_en = 'T EN';
+        $legal->privacy_policy_en = 'P EN';
+        $legal->terms_of_service_es = 'T ES';
+        $legal->privacy_policy_es = 'P ES';
+        $legal->terms_of_service_ar = 'T AR';
+        $legal->privacy_policy_ar = 'P AR';
+        $legal->save();
+
+        $response = $this->getJson('/api/superadmin/legal', [
+            'Authorization' => 'Bearer ' . $token,
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('data.en.terms_of_service', 'T EN')
+            ->assertJsonPath('data.en.privacy_policy', 'P EN')
+            ->assertJsonPath('data.es.terms_of_service', 'T ES')
+            ->assertJsonPath('data.es.privacy_policy', 'P ES')
+            ->assertJsonPath('data.ar.terms_of_service', 'T AR')
+            ->assertJsonPath('data.ar.privacy_policy', 'P AR');
+    }
+
+    public function test_superadmin_legal_patch_updates_per_locale(): void
+    {
+        $admin = $this->createSuperadmin();
+        $token = $this->login($admin);
+
+        $response = $this->patchJson('/api/superadmin/legal', [
+            'en' => [
+                'terms_of_service' => 'Updated EN terms',
+                'privacy_policy' => 'Updated EN privacy',
+            ],
+            'es' => [
+                'terms_of_service' => 'Updated ES terms',
+                'privacy_policy' => null,
+            ],
+        ], [
+            'Authorization' => 'Bearer ' . $token,
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('message', 'Legal content updated.')
+            ->assertJsonPath('data.en.terms_of_service', 'Updated EN terms')
+            ->assertJsonPath('data.en.privacy_policy', 'Updated EN privacy')
+            ->assertJsonPath('data.es.terms_of_service', 'Updated ES terms');
+
+        $legal = SiteLegal::instance();
+        $this->assertSame('Updated EN terms', $legal->terms_of_service_en);
+        $this->assertSame('Updated EN privacy', $legal->privacy_policy_en);
+        $this->assertSame('Updated ES terms', $legal->terms_of_service_es);
     }
 }

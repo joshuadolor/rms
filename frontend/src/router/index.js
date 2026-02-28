@@ -187,6 +187,12 @@ const routes = [
         component: () => import('@/views/superadmin/SuperadminRestaurantsView.vue'),
         meta: { requiresSuperadmin: true },
       },
+      {
+        path: 'superadmin/legal',
+        name: 'SuperadminLegal',
+        component: () => import('@/views/superadmin/SuperadminLegalView.vue'),
+        meta: { requiresSuperadmin: true },
+      },
     ],
   },
 ]

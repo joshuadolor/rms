@@ -177,6 +177,60 @@ test.describe('Login', () => {
   })
 })
 
+/** Mock GET /api/legal/terms and GET /api/legal/privacy for legal modal tests. */
+function mockLegalApi(page, termsContent = '<p>Terms of Service content.</p>', privacyContent = '<p>Privacy Policy content.</p>') {
+  page.route(/\/api\/legal\/terms(\?.*)?$/, (route) => {
+    if (route.request().method() !== 'GET') return route.continue()
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ data: { content: termsContent } }),
+    })
+  })
+  page.route(/\/api\/legal\/privacy(\?.*)?$/, (route) => {
+    if (route.request().method() !== 'GET') return route.continue()
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ data: { content: privacyContent } }),
+    })
+  })
+}
+
+/** Mock GET /api/legal/terms and GET /api/legal/privacy with locale-aware content (query ?locale=es etc.). */
+function mockLegalApiWithLocale(page, contentByLocale = {}) {
+  const defaultTerms = '<p>Terms of Service content.</p>'
+  const defaultPrivacy = '<p>Privacy Policy content.</p>'
+  const getLocale = (url) => {
+    try {
+      const u = new URL(url)
+      return (u.searchParams.get('locale') || 'en').toLowerCase()
+    } catch {
+      return 'en'
+    }
+  }
+  page.route(/\/api\/legal\/terms(\?.*)?$/, (route) => {
+    if (route.request().method() !== 'GET') return route.continue()
+    const loc = getLocale(route.request().url())
+    const content = contentByLocale[loc]?.terms ?? contentByLocale.en?.terms ?? defaultTerms
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ data: { content } }),
+    })
+  })
+  page.route(/\/api\/legal\/privacy(\?.*)?$/, (route) => {
+    if (route.request().method() !== 'GET') return route.continue()
+    const loc = getLocale(route.request().url())
+    const content = contentByLocale[loc]?.privacy ?? contentByLocale.en?.privacy ?? defaultPrivacy
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ data: { content } }),
+    })
+  })
+}
+
 test.describe('Register', () => {
   test('shows single-step form with all fields', async ({ page }) => {
     const registerPage = new RegisterPage(page)
@@ -217,6 +271,68 @@ test.describe('Register', () => {
     })
     await registerPage.expectRedirectedToVerifyEmail()
   })
+
+  test.describe('Legal modals (Terms of Service, Privacy Policy)', () => {
+    test('Terms of Service button opens modal with content', async ({ page }) => {
+      mockLegalApi(page)
+      const registerPage = new RegisterPage(page)
+      await registerPage.goto()
+      await registerPage.clickTermsOfService()
+      await registerPage.expectLegalModalVisible()
+      await registerPage.expectLegalModalBodyContains('Terms of Service content.', 15000)
+      await registerPage.closeLegalModal()
+      await registerPage.expectLegalModalClosed()
+    })
+
+    test('Privacy Policy button opens modal with content', async ({ page }) => {
+      mockLegalApi(page)
+      const registerPage = new RegisterPage(page)
+      await registerPage.goto()
+      await registerPage.clickPrivacyPolicy()
+      await registerPage.expectLegalModalVisible()
+      await registerPage.expectLegalModalBodyContains('Privacy Policy content.', 15000)
+      await registerPage.closeLegalModal()
+      await registerPage.expectLegalModalClosed()
+    })
+
+    test('modal closes via close button', async ({ page }) => {
+      mockLegalApi(page)
+      const registerPage = new RegisterPage(page)
+      await registerPage.goto()
+      await registerPage.clickTermsOfService()
+      await registerPage.expectLegalModalVisible()
+      await registerPage.closeLegalModal()
+      await registerPage.expectLegalModalClosed()
+    })
+
+    test('modal closes via overlay click', async ({ page }) => {
+      mockLegalApi(page)
+      const registerPage = new RegisterPage(page)
+      await registerPage.goto()
+      await registerPage.clickPrivacyPolicy()
+      await registerPage.expectLegalModalVisible()
+      await registerPage.closeLegalModalByOverlay()
+      await registerPage.expectLegalModalClosed()
+    })
+
+    test('Terms modal requests and shows content for app locale (Spanish)', async ({ page }) => {
+      const spanishTerms = '<p>Términos de servicio en español.</p>'
+      mockLegalApiWithLocale(page, {
+        en: { terms: '<p>Terms of Service content.</p>', privacy: '<p>Privacy Policy content.</p>' },
+        es: { terms: spanishTerms, privacy: '<p>Política de privacidad.</p>' },
+      })
+      await page.addInitScript(() => {
+        localStorage.setItem('rms_app_locale', 'es')
+      })
+      const registerPage = new RegisterPage(page)
+      await registerPage.goto()
+      await registerPage.clickTermsOfService()
+      await registerPage.expectLegalModalVisible()
+      await registerPage.expectLegalModalBodyContains('Términos de servicio en español', 15000)
+      await registerPage.closeLegalModal()
+      await registerPage.expectLegalModalClosed()
+    })
+  })
 })
 
 test.describe('Forgot password', () => {
@@ -256,7 +372,8 @@ test.describe('Forgot password', () => {
 
   test('Back to sign in goes to /login', async ({ page }) => {
     await page.goto('/forgot-password')
-    await page.getByRole('link', { name: /back to sign in/i }).click()
+    // Link text is "Back sign in" (i18n back + signIn) or "Back to sign in" (success state)
+    await page.getByRole('link', { name: /back.*sign in/i }).click()
     await expect(page).toHaveURL(/\/login/)
   })
 })

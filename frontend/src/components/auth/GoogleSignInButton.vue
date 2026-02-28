@@ -3,7 +3,7 @@
   <button
     v-else
     type="button"
-    class="w-full flex items-center justify-center gap-3 py-3 px-4 border border-primary/20 rounded-lg bg-white dark:bg-white/5 text-charcoal dark:text-white opacity-60 cursor-not-allowed font-medium"
+    class="w-full flex items-center justify-center gap-3 py-3 px-4 border border-primary/20 rounded-lg bg-white dark:bg-zinc-800 text-charcoal dark:text-white opacity-60 cursor-not-allowed font-medium"
     disabled
   >
     <svg class="w-5 h-5" viewBox="0 0 24 24" aria-hidden="true">

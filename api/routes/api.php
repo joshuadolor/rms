@@ -19,7 +19,9 @@ use App\Http\Controllers\Api\RestaurantLanguageController;
 use App\Http\Controllers\Api\RestaurantTranslationController;
 use App\Http\Controllers\Api\ResetPasswordController;
 use App\Http\Controllers\Api\SocialAuthController;
+use App\Http\Controllers\Api\LegalContentController;
 use App\Http\Controllers\Api\SuperadminController;
+use App\Http\Controllers\Api\SuperadminLegalController;
 use App\Http\Controllers\Api\TranslateController;
 use App\Http\Controllers\Api\UserMenuItemController;
 use Illuminate\Support\Facades\Route;
@@ -111,6 +113,10 @@ Route::get('/public/restaurants/{slug}', [PublicRestaurantController::class, 'sh
 // Public feedback submission (no auth); rate-limited.
 Route::post('/public/restaurants/{slug}/feedback', [PublicFeedbackController::class, 'store'])
     ->middleware('throttle:feedback');
+
+// Public legal content (no auth) — for Terms of Service and Privacy Policy modals on auth pages
+Route::get('/legal/terms', [LegalContentController::class, 'terms']);
+Route::get('/legal/privacy', [LegalContentController::class, 'privacy']);
 
 // Auth (protected) — require verified email
 Route::middleware(['auth:sanctum', 'verified'])->group(function () {
@@ -211,5 +217,7 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
         Route::get('/restaurants', [SuperadminController::class, 'restaurants']);
         Route::get('/owner-feedbacks', [SuperadminController::class, 'ownerFeedbacks']);
         Route::patch('/owner-feedbacks/{feedback}', [SuperadminController::class, 'updateOwnerFeedback']);
+        Route::get('/legal', [SuperadminLegalController::class, 'show']);
+        Route::match(['put', 'patch'], '/legal', [SuperadminLegalController::class, 'update']);
     });
 });

@@ -13,6 +13,24 @@
 - **[Frontend: translations & menu items](docs/frontend-translations-prompt.md)** — API contract and prompt for implementing per-restaurant languages, restaurant description translations, menu items (name/description per locale), and LibreTranslate-ready translate endpoint.
 - **Subdomain setup** — Restaurants are available at `[slug].domain.com` immediately after create. See [Subdomain setup (DNS + nginx)](../docs/subdomain-setup.md) in the repo root.
 
+### Local mail (Mailhog)
+
+The app sends mail for forgot-password reset links, email verification, and other notifications. To capture mail locally:
+
+1. **Run Mailhog** — SMTP on port 1025, web UI on 8025:
+   - `mailhog` (if installed), or
+   - `docker run -p 1025:1025 -p 8025:8025 mailhog/mailhog`
+2. **Configure `.env`** (copy from `.env.example` if needed):
+   - `MAIL_MAILER=smtp`
+   - `MAIL_HOST=127.0.0.1`
+   - `MAIL_PORT=1025`
+   - `MAIL_USERNAME=null`
+   - `MAIL_PASSWORD=null`
+   - `MAIL_ENCRYPTION=null`
+3. Open **http://localhost:8025** to view received emails.
+
+If you run the API in Docker with a `mailhog` service, set `MAIL_HOST=mailhog`; the config will use SMTP port 1025 and no encryption automatically.
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:

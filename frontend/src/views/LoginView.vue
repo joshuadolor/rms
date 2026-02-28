@@ -62,7 +62,7 @@
                 autocomplete="current-password"
                 :aria-describedby="fieldErrors.password ? 'login-password-error' : 'login-form-error'"
                 :aria-invalid="!!fieldErrors.password"
-                class="block w-full pl-10 pr-10 py-3 border border-primary/20 rounded-lg bg-white dark:bg-white/5 text-charcoal dark:text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                class="block w-full pl-10 pr-10 py-3 border border-primary/20 rounded-lg bg-white dark:bg-zinc-800 text-charcoal dark:text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
               />
               <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-charcoal/40 dark:text-white/40">
                 <span class="material-icons text-lg">lock_outline</span>
@@ -115,7 +115,7 @@
           <button
             v-if="hasFacebookSso"
             type="button"
-            class="w-full flex items-center justify-center gap-3 py-3 px-4 border border-primary/20 rounded-lg bg-white dark:bg-white/5 text-charcoal dark:text-white hover:bg-primary/5 transition-all font-medium"
+            class="w-full flex items-center justify-center gap-3 py-3 px-4 border border-primary/20 rounded-lg bg-white dark:bg-zinc-800 text-charcoal dark:text-white hover:bg-primary/5 transition-all font-medium"
             @click="authService.redirectToFacebook()"
           >
             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="#1877F2" aria-hidden="true">
@@ -126,7 +126,7 @@
           <button
             v-if="hasInstagramSso"
             type="button"
-            class="w-full flex items-center justify-center gap-3 py-3 px-4 border border-primary/20 rounded-lg bg-white dark:bg-white/5 text-charcoal dark:text-white hover:bg-primary/5 transition-all font-medium"
+            class="w-full flex items-center justify-center gap-3 py-3 px-4 border border-primary/20 rounded-lg bg-white dark:bg-zinc-800 text-charcoal dark:text-white hover:bg-primary/5 transition-all font-medium"
             @click="authService.redirectToInstagram()"
           >
             <svg class="w-5 h-5" viewBox="0 0 24 24" aria-hidden="true">

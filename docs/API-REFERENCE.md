@@ -1142,6 +1142,94 @@ Returns public restaurant data and menu items for subdomain or `/r/:slug` pages.
 
 ---
 
+## Legal content (Terms of Service, Privacy Policy)
+
+Used on auth pages (e.g. register) to show Terms of Service and Privacy Policy in a modal. Content is editable by the superadmin. Supported locales: **en** (English), **es** (Spanish), **ar** (Arabic). Default fallback is **en**.
+
+### Public (no auth)
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/api/legal/terms` | No | Returns Terms of Service content (HTML string) for the requested locale. |
+| GET | `/api/legal/privacy` | No | Returns Privacy Policy content (HTML string) for the requested locale. |
+
+**Query parameters:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `locale` | string | No | Locale code: `en`, `es`, or `ar`. If missing or invalid, falls back to `en`. |
+
+**Response (200):**
+```json
+{
+  "data": {
+    "content": "string (HTML or plain text; may be empty)"
+  }
+}
+```
+
+### Superadmin (Bearer + verified + superadmin)
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/api/superadmin/legal` | Bearer + superadmin | Get Terms of Service and Privacy Policy for all locales (en, es, ar). |
+| PUT / PATCH | `/api/superadmin/legal` | Bearer + superadmin | Update Terms of Service and/or Privacy Policy per locale (one or all locales). |
+
+**GET response (200):**
+```json
+{
+  "data": {
+    "en": {
+      "terms_of_service": "string",
+      "privacy_policy": "string"
+    },
+    "es": {
+      "terms_of_service": "string",
+      "privacy_policy": "string"
+    },
+    "ar": {
+      "terms_of_service": "string",
+      "privacy_policy": "string"
+    }
+  }
+}
+```
+
+**PUT/PATCH body:** Per-locale objects. Each locale is optional; include only locales you want to update.
+
+```json
+{
+  "en": {
+    "terms_of_service": "string (optional, nullable)",
+    "privacy_policy": "string (optional, nullable)"
+  },
+  "es": {
+    "terms_of_service": "string (optional, nullable)",
+    "privacy_policy": "string (optional, nullable)"
+  },
+  "ar": {
+    "terms_of_service": "string (optional, nullable)",
+    "privacy_policy": "string (optional, nullable)"
+  }
+}
+```
+
+**Response (200):**
+```json
+{
+  "message": "Legal content updated.",
+  "data": {
+    "en": { "terms_of_service": "string", "privacy_policy": "string" },
+    "es": { "terms_of_service": "string", "privacy_policy": "string" },
+    "ar": { "terms_of_service": "string", "privacy_policy": "string" }
+  }
+}
+```
+
+**Errors:** 403 if not superadmin. No internal `id` in any response.
+
+---
+
 ## Public restaurant page (HTML / SEO)
 
 The public restaurant page is **subdomain-only**. Laravel serves it as HTML for crawlers and direct visits, with meta tags and semantic sections. The Vue app mounts on the same page and fetches data from GET `/api/public/restaurants/{slug}`.
@@ -1841,6 +1929,8 @@ The Settings UI uses **POST /api/translate** for "Translate from default" (resta
 
 ## Changelog
 
+- **2026-02-28**: **Legal content: multilingual (en, es, ar).** Public **GET /api/legal/terms** and **GET /api/legal/privacy** accept optional query parameter **locale** (`en`, `es`, `ar`); fallback to `en` if missing or invalid. Response shape unchanged: `{ "data": { "content": "..." } }`. Superadmin **GET /api/superadmin/legal** returns all three locales: `{ "data": { "en": { "terms_of_service", "privacy_policy" }, "es": { ... }, "ar": { ... } } }`. **PATCH /api/superadmin/legal** accepts per-locale body so superadmin can update one or all locales. `site_legal` table now stores content per locale (e.g. `terms_of_service_en`, `privacy_policy_es`). No internal `id` in any response.
+- **2026-02-28**: **Legal content (Terms of Service, Privacy Policy).** New **GET /api/legal/terms** and **GET /api/legal/privacy** (no auth) return HTML content for modals on auth pages. Superadmin: **GET /api/superadmin/legal** and **PUT/PATCH /api/superadmin/legal** to read and update both texts. New `site_legal` table (terms_of_service, privacy_policy columns). No internal `id` in any response.
 - **2026-02-28**: **Owner dashboard stats.** New **GET /api/dashboard/stats** (Bearer + verified) returns counts for the authenticated owner: **restaurants_count**, **menu_items_count** (catalog/standalone only), **feedbacks_total**, **feedbacks_approved**, **feedbacks_rejected**. Used by the owner dashboard to display Menu items, Restaurants, and Feedbacks (total, approved, rejected). No internal `id` in response.
 - **2026-02-18**: **Category list/show payload: fallback for blank translations.** When returning category payloads (list, show, create, update, image upload/delete), the API now fills blank **name** and **description** for any locale with the restaurant’s **default_locale** value, or the first non-empty value across locales. So when the default language is changed (e.g. to Spanish), categories that have no Spanish translation still return a displayable value (e.g. from English). Response shape unchanged; only empty values are replaced for display.
 - **2026-02-28**: **Translation: API as client only; supported-languages check.** All translation logic lives in the external service (LibreTranslate); the API only validates input, calls the service, and returns responses. New **GET /api/translate/languages** (Bearer + verified, same rate limit as translate) returns the list of languages supported by the service (proxied from the service’s languages endpoint). **POST /api/translate** now checks `from_locale` and `to_locale` against that list before calling translate; returns **422** with `errors.from_locale` or `errors.to_locale` ("Language not supported.") when a locale is not supported. No internal `id` in any response.

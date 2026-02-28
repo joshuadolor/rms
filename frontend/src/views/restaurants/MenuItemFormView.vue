@@ -181,7 +181,7 @@
                   :id="`menu-item-desc-${selectedLocale}`"
                   v-model="form.translations[selectedLocale].description"
                   rows="3"
-                  class="w-full rounded-lg ring-1 ring-gray-200 dark:ring-zinc-700 focus:ring-2 focus:ring-primary transition-all bg-background-light dark:bg-zinc-800 border-0 py-3 px-4 text-charcoal dark:text-white resize-none min-h-[44px]"
+                  class="w-full rounded-lg ring-1 ring-gray-200 dark:ring-zinc-700 focus:ring-2 focus:ring-primary transition-all bg-white dark:bg-zinc-800 border-0 py-3 px-4 text-charcoal dark:text-white resize-none min-h-[44px]"
                   :placeholder="`Description in ${getLocaleDisplay(selectedLocale)}`"
                 />
               </div>

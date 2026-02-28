@@ -66,10 +66,10 @@ class SuperadminAppPage {
     await expect(this.page.getByRole('link', { name: /menu items/i })).not.toBeVisible()
   }
 
-  /** Assert sidenav does NOT show Feedbacks link (owner nav). */
+  /** Assert sidenav does NOT show owner Feedbacks link (/app/feedbacks). Superadmin nav has "Owner feedbacks" which also matches /feedbacks/i. */
   async expectFeedbacksLinkNotVisible() {
     await this.openSidebarIfMobile()
-    await expect(this.page.getByRole('link', { name: /feedbacks/i })).not.toBeVisible()
+    await expect(this.page.locator('a[href="/app/feedbacks"]')).not.toBeVisible()
   }
 
   /** Navigate to Dashboard via sidenav. */
@@ -99,6 +99,13 @@ class SuperadminAppPage {
     await this.page.waitForURL(/\/app\/superadmin\/owner-feedbacks/, { timeout: 10000 })
   }
 
+  /** Navigate to Terms & Privacy (legal) via sidenav and wait for the page to load. */
+  async navigateToLegal() {
+    await this.openSidebarIfMobile()
+    await this._sidebar().getByRole('link', { name: /terms.*privacy|privacy.*terms/i }).click()
+    await this.page.waitForURL(/\/app\/superadmin\/legal/, { timeout: 10000 })
+  }
+
   /** Assert URL is /app/superadmin/users. */
   async expectUsersPageUrl() {
     await expect(this.page).toHaveURL(/\/app\/superadmin\/users/, { timeout: 10000 })
@@ -112,6 +119,11 @@ class SuperadminAppPage {
   /** Assert URL is /app/superadmin/owner-feedbacks. */
   async expectOwnerFeedbacksPageUrl() {
     await expect(this.page).toHaveURL(/\/app\/superadmin\/owner-feedbacks/, { timeout: 10000 })
+  }
+
+  /** Assert URL is /app/superadmin/legal. */
+  async expectLegalPageUrl() {
+    await expect(this.page).toHaveURL(/\/app\/superadmin\/legal/, { timeout: 10000 })
   }
 }
 

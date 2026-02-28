@@ -256,11 +256,13 @@ function mockPublicRestaurant(page, slug, data = {}, options = {}) {
     ...data,
   }
   const byLocale = options.byLocale || {}
-  page.route(/^.*\/api\/public\/restaurants\/[^/]+$/, (route) => {
+  const urlStr = (req) => (typeof req.url === 'function' ? req.url() : req.url || '')
+  page.route((request) => /\/api\/public\/restaurants\/[^/]+/.test(urlStr(request)), (route) => {
     if (route.request().method() !== 'GET') return route.continue()
-    const urlSlug = route.request().url().match(/\/public\/restaurants\/([^/?#]+)/)?.[1]
+    const reqUrl = urlStr(route.request())
+    const urlSlug = reqUrl.match(/\/public\/restaurants\/([^/?#]+)/)?.[1]
     if (decodeURIComponent(urlSlug || '') !== slug) return route.continue()
-    const url = new URL(route.request().url())
+    const url = new URL(reqUrl)
     const localeParam = url.searchParams.get('locale')
     const payload = { ...basePayload }
     if (localeParam && byLocale[localeParam]) {

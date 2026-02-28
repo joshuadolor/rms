@@ -67,7 +67,7 @@
             rows="2"
             :placeholder="$t('app.addressPlaceholder')"
             data-testid="form-input-address"
-            class="w-full rounded-lg ring-1 ring-gray-200 dark:ring-zinc-700 focus:ring-2 focus:ring-primary transition-all bg-background-light dark:bg-zinc-800 border-0 py-3 px-4 text-charcoal dark:text-white resize-none"
+            class="w-full rounded-lg ring-1 ring-gray-200 dark:ring-zinc-700 focus:ring-2 focus:ring-primary transition-all bg-white dark:bg-zinc-800 border-0 py-3 px-4 text-charcoal dark:text-white resize-none"
             :aria-invalid="!!fieldErrors.address"
             :aria-describedby="fieldErrors.address ? 'form-address-error' : undefined"
           />
@@ -81,7 +81,7 @@
             rows="4"
             :placeholder="$t('app.descriptionPlaceholder')"
             data-testid="form-input-description"
-            class="w-full rounded-lg ring-1 ring-gray-200 dark:ring-zinc-700 focus:ring-2 focus:ring-primary transition-all bg-background-light dark:bg-zinc-800 border-0 py-3 px-4 text-charcoal dark:text-white resize-none"
+            class="w-full rounded-lg ring-1 ring-gray-200 dark:ring-zinc-700 focus:ring-2 focus:ring-primary transition-all bg-white dark:bg-zinc-800 border-0 py-3 px-4 text-charcoal dark:text-white resize-none"
             :aria-invalid="!!fieldErrors.description"
             :aria-describedby="fieldErrors.description ? 'form-description-error' : undefined"
           />

@@ -115,12 +115,12 @@ test.describe('Profile & Settings', () => {
     await expect(page.getByRole('heading', { name: 'Profile & Settings' })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Profile', exact: true })).toBeVisible()
     await expect(page.getByLabel('Name')).toBeVisible()
-    await expect(page.getByLabel('Email')).toBeVisible()
+    await expect(page.getByLabel(/email address/i)).toBeVisible()
     await expect(page.getByRole('button', { name: 'Save profile' })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Change password' })).toBeVisible()
     await expect(page.getByLabel('Current password')).toBeVisible()
     await expect(page.getByLabel('New password', { exact: true })).toBeVisible()
-    await expect(page.getByLabel('Confirm new password')).toBeVisible()
+    await expect(page.getByLabel('Confirm password')).toBeVisible()
     await expect(page.getByRole('button', { name: 'Update password' })).toBeVisible()
   })
 
@@ -156,6 +156,7 @@ test.describe('Profile & Settings', () => {
 
     await page.goto('/app/profile')
     await page.getByLabel('Name').fill('Updated Name')
+    await page.getByLabel(/email address/i).fill(MOCK_VERIFIED_USER.email)
     await page.getByRole('button', { name: 'Save profile' }).click()
 
     await expect(page.getByText(/profile updated|saved/i)).toBeVisible({ timeout: 5000 })
@@ -164,7 +165,7 @@ test.describe('Profile & Settings', () => {
   test('profile client-side validation: invalid email shows error', async ({ page }) => {
     await loginAsVerifiedUser(page)
     await page.goto('/app/profile')
-    await page.getByLabel('Email').fill('not-an-email')
+    await page.getByLabel(/email address/i).fill('not-an-email')
     await page.getByRole('button', { name: 'Save profile' }).click()
 
     await expect(page.getByText('Please enter a valid email address.')).toBeVisible()
@@ -203,7 +204,7 @@ test.describe('Profile & Settings', () => {
     })
 
     await page.goto('/app/profile')
-    await page.getByLabel('Email').fill('taken@example.com')
+    await page.getByLabel(/email address/i).fill('taken@example.com')
     await page.getByRole('button', { name: 'Save profile' }).click()
 
     await expect(page.getByText(/already been taken|failed to update profile/i)).toBeVisible({ timeout: 5000 })
@@ -213,7 +214,7 @@ test.describe('Profile & Settings', () => {
     await loginAsVerifiedUser(page)
     await page.goto('/app/profile')
     await page.getByLabel('New password', { exact: true }).fill('NewPass123')
-    await page.getByLabel('Confirm new password').fill('NewPass123')
+    await page.getByLabel('Confirm password').fill('NewPass123')
     await page.getByRole('button', { name: 'Update password' }).click()
 
     await expect(page.getByText('Please enter your current password.')).toBeVisible()
@@ -224,7 +225,7 @@ test.describe('Profile & Settings', () => {
     await page.goto('/app/profile')
     await page.getByLabel('Current password').fill('password123')
     await page.getByLabel('New password', { exact: true }).fill('ab1')
-    await page.getByLabel('Confirm new password').fill('ab1')
+    await page.getByLabel('Confirm password').fill('ab1')
     await page.getByRole('button', { name: 'Update password' }).click()
 
     await expect(page.getByText('Password must be at least 8 characters.')).toBeVisible()
@@ -235,7 +236,7 @@ test.describe('Profile & Settings', () => {
     await page.goto('/app/profile')
     await page.getByLabel('Current password').fill('password123')
     await page.getByLabel('New password', { exact: true }).fill('12345678')
-    await page.getByLabel('Confirm new password').fill('12345678')
+    await page.getByLabel('Confirm password').fill('12345678')
     await page.getByRole('button', { name: 'Update password' }).click()
 
     await expect(page.getByText('Password must include at least one letter.')).toBeVisible()
@@ -246,7 +247,7 @@ test.describe('Profile & Settings', () => {
     await page.goto('/app/profile')
     await page.getByLabel('Current password').fill('password123')
     await page.getByLabel('New password', { exact: true }).fill('abcdefgh')
-    await page.getByLabel('Confirm new password').fill('abcdefgh')
+    await page.getByLabel('Confirm password').fill('abcdefgh')
     await page.getByRole('button', { name: 'Update password' }).click()
 
     await expect(page.getByText('Password must include at least one number.')).toBeVisible()
@@ -257,7 +258,7 @@ test.describe('Profile & Settings', () => {
     await page.goto('/app/profile')
     await page.getByLabel('Current password').fill('password123')
     await page.getByLabel('New password', { exact: true }).fill('NewPass123')
-    await page.getByLabel('Confirm new password').fill('OtherPass456')
+    await page.getByLabel('Confirm password').fill('OtherPass456')
     await page.getByRole('button', { name: 'Update password' }).click()
 
     await expect(page.getByText('Passwords do not match.')).toBeVisible()
@@ -280,7 +281,7 @@ test.describe('Profile & Settings', () => {
     await page.goto('/app/profile')
     await page.getByLabel('Current password').fill('wrongpass')
     await page.getByLabel('New password', { exact: true }).fill('NewPass123')
-    await page.getByLabel('Confirm new password').fill('NewPass123')
+    await page.getByLabel('Confirm password').fill('NewPass123')
     await page.getByRole('button', { name: 'Update password' }).click()
 
     await expect(page.getByText(/current password is incorrect|failed to update password/i)).toBeVisible({ timeout: 5000 })
@@ -300,12 +301,12 @@ test.describe('Profile & Settings', () => {
     await page.goto('/app/profile')
     await page.getByLabel('Current password').fill('password123')
     await page.getByLabel('New password', { exact: true }).fill('NewPass123')
-    await page.getByLabel('Confirm new password').fill('NewPass123')
+    await page.getByLabel('Confirm password').fill('NewPass123')
     await page.getByRole('button', { name: 'Update password' }).click()
 
     await expect(page.getByText(/password updated|updated successfully/i)).toBeVisible({ timeout: 5000 })
     await expect(page.getByLabel('Current password')).toHaveValue('')
     await expect(page.getByLabel('New password', { exact: true })).toHaveValue('')
-    await expect(page.getByLabel('Confirm new password')).toHaveValue('')
+    await expect(page.getByLabel('Confirm password')).toHaveValue('')
   })
 })

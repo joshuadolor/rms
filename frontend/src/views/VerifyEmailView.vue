@@ -49,7 +49,7 @@
             v-model="resendEmail"
             type="email"
             :placeholder="$t('app.emailPlaceholder')"
-            class="flex-1 min-w-[140px] px-3 py-2 text-sm border border-primary/20 rounded-lg bg-white dark:bg-white/5 text-charcoal dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+            class="flex-1 min-w-[140px] px-3 py-2 text-sm border border-primary/20 rounded-lg bg-white dark:bg-zinc-800 text-charcoal dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
             :aria-required="true"
             :aria-invalid="!!resendError"
             :aria-describedby="resendError ? 'verify-resend-email-error' : undefined"

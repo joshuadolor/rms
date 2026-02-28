@@ -18,7 +18,7 @@
               id="owner-feedback-message"
               v-model="form.message"
               rows="4"
-              class="w-full rounded-lg ring-1 ring-gray-200 dark:ring-zinc-700 focus:ring-2 focus:ring-primary transition-all bg-background-light dark:bg-zinc-800 border-0 py-3 px-4 resize-y min-h-[44px]"
+              class="w-full rounded-lg ring-1 ring-gray-200 dark:ring-zinc-700 focus:ring-2 focus:ring-primary transition-all bg-white dark:bg-zinc-800 border-0 py-3 px-4 resize-y min-h-[44px]"
               :aria-invalid="!!fieldErrors.message"
               :aria-describedby="fieldErrors.message ? 'owner-feedback-message-error' : undefined"
               :placeholder="$t('app.messagePlaceholder')"
@@ -38,7 +38,7 @@
             <select
               id="owner-feedback-restaurant"
               v-model="form.restaurant"
-              class="w-full rounded-lg ring-1 ring-gray-200 dark:ring-zinc-700 focus:ring-2 focus:ring-primary transition-all bg-background-light dark:bg-zinc-800 border-0 py-3 px-4 min-h-[44px]"
+              class="w-full rounded-lg ring-1 ring-gray-200 dark:ring-zinc-700 focus:ring-2 focus:ring-primary transition-all bg-white dark:bg-zinc-800 border-0 py-3 px-4 min-h-[44px]"
             >
               <option value="">{{ $t('app.noneOption') }}</option>
               <option v-for="r in restaurantOptions" :key="r.uuid" :value="r.uuid">{{ r.name }}</option>

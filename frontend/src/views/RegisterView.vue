@@ -25,7 +25,7 @@
           <button
             v-if="hasFacebookSso"
             type="button"
-            class="w-full flex items-center justify-center gap-3 min-h-[44px] py-3 px-4 border border-primary/20 rounded-lg bg-white dark:bg-white/5 text-charcoal dark:text-white hover:bg-primary/5 transition-all font-medium"
+            class="w-full flex items-center justify-center gap-3 min-h-[44px] py-3 px-4 border border-primary/20 rounded-lg bg-white dark:bg-zinc-800 text-charcoal dark:text-white hover:bg-primary/5 transition-all font-medium"
             @click="authService.redirectToFacebook()"
           >
             <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="#1877F2" aria-hidden="true">
@@ -36,7 +36,7 @@
           <button
             v-if="hasInstagramSso"
             type="button"
-            class="w-full flex items-center justify-center gap-3 min-h-[44px] py-3 px-4 border border-primary/20 rounded-lg bg-white dark:bg-white/5 text-charcoal dark:text-white hover:bg-primary/5 transition-all font-medium"
+            class="w-full flex items-center justify-center gap-3 min-h-[44px] py-3 px-4 border border-primary/20 rounded-lg bg-white dark:bg-zinc-800 text-charcoal dark:text-white hover:bg-primary/5 transition-all font-medium"
             @click="authService.redirectToInstagram()"
           >
             <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
@@ -113,7 +113,7 @@
                 :placeholder="$t('app.passwordHintPlaceholder')"
                 :aria-describedby="fieldErrors.password ? 'reg-password-error' : 'register-error'"
                 :aria-invalid="!!fieldErrors.password"
-                class="block w-full pl-10 pr-10 py-3 border border-primary/20 rounded-lg bg-white dark:bg-white/5 text-charcoal dark:text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all min-h-[44px]"
+                class="block w-full pl-10 pr-10 py-3 border border-primary/20 rounded-lg bg-white dark:bg-zinc-800 text-charcoal dark:text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all min-h-[44px]"
               />
               <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-charcoal/40 dark:text-white/40">
                 <span class="material-icons text-lg">lock_outline</span>
@@ -142,7 +142,7 @@
                 :placeholder="$t('app.repeatPassword')"
                 :aria-describedby="fieldErrors.password_confirmation ? 'reg-confirm-error' : 'register-error'"
                 :aria-invalid="!!fieldErrors.password_confirmation"
-                class="block w-full pl-10 pr-4 py-3 border border-primary/20 rounded-lg bg-white dark:bg-white/5 text-charcoal dark:text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all min-h-[44px]"
+                class="block w-full pl-10 pr-4 py-3 border border-primary/20 rounded-lg bg-white dark:bg-zinc-800 text-charcoal dark:text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all min-h-[44px]"
               />
               <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-charcoal/40 dark:text-white/40">
                 <span class="material-icons text-lg">lock_outline</span>
@@ -163,11 +163,11 @@
               :aria-invalid="!!fieldErrors.terms"
               class="h-4 w-4 text-primary focus:ring-primary border-primary/20 rounded mt-1 shrink-0"
             />
-            <label for="terms" class="flex items-center text-sm text-charcoal/70 dark:text-white/70 cursor-pointer min-h-[44px] py-2 -my-2">
+            <label for="terms" class="flex items-center flex-wrap gap-x-1 gap-y-2 text-sm text-charcoal/70 dark:text-white/70 cursor-pointer min-h-[44px] py-2 -my-2">
               {{ $t('app.agreeTermsIntro') }}
-              <a href="#" class="text-primary hover:underline">{{ $t('app.termsOfService') }}</a>
+              <button type="button" class="text-primary hover:underline font-medium min-h-[44px] min-w-[44px] inline-flex items-center justify-center -m-2 p-2" @click.prevent="openLegalModal('terms')">{{ $t('app.termsOfService') }}</button>
               {{ $t('app.and') }}
-              <a href="#" class="text-primary hover:underline">{{ $t('app.privacyPolicy') }}</a>
+              <button type="button" class="text-primary hover:underline font-medium min-h-[44px] min-w-[44px] inline-flex items-center justify-center -m-2 p-2" @click.prevent="openLegalModal('privacy')">{{ $t('app.privacyPolicy') }}</button>
             </label>
           </div>
           <p v-if="fieldErrors.terms" id="terms-error" class="text-xs text-red-600 dark:text-red-400" role="alert">{{ fieldErrors.terms }}</p>
@@ -193,6 +193,13 @@
           {{ $t('app.signIn') }}
         </router-link>
       </p>
+
+    <LegalContentModal
+      :open="legalModalOpen"
+      :type="legalModalType"
+      :locale="locale"
+      @close="legalModalOpen = false"
+    />
     </div>
   </AuthLayout>
 </template>
@@ -204,15 +211,24 @@ import AuthLayout from '@/layouts/AuthLayout.vue'
 import AppInput from '@/components/ui/AppInput.vue'
 import AppButton from '@/components/ui/AppButton.vue'
 import GoogleSignInButton from '@/components/auth/GoogleSignInButton.vue'
+import LegalContentModal from '@/components/legal/LegalContentModal.vue'
 import { useAppStore } from '@/stores/app'
 import { authService, normalizeApiError, getValidationErrors } from '@/services'
 import { useI18n } from 'vue-i18n'
 
 const router = useRouter()
 const appStore = useAppStore()
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 const UNVERIFIED_MESSAGE = 'Your email address is not verified.'
+
+const legalModalOpen = ref(false)
+const legalModalType = ref('terms')
+
+function openLegalModal(type) {
+  legalModalType.value = type
+  legalModalOpen.value = true
+}
 
 const hasGoogleSso = !!(import.meta.env.VITE_GOOGLE_CLIENT_ID ?? '')
 const hasFacebookSso = !!(import.meta.env.VITE_FACEBOOK_APP_ID ?? '')
